@@ -1,0 +1,679 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Threat Modeling</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 3px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+    margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-block;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1.25em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(55, 53, 47, 1);
+}
+.highlight-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.highlight-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.highlight-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.highlight-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.highlight-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.highlight-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.highlight-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.highlight-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.highlight-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.highlight-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.highlight-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.highlight-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.highlight-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.highlight-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.highlight-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.block-color-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.block-color-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.block-color-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.block-color-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.block-color-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.block-color-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.block-color-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.block-color-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.block-color-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.block-color-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.block-color-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.block-color-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.select-value-color-uiBlue { background-color: rgba(35, 131, 226, .07); }
+.select-value-color-pink { background-color: rgba(245, 224, 233, 1); }
+.select-value-color-purple { background-color: rgba(232, 222, 238, 1); }
+.select-value-color-green { background-color: rgba(219, 237, 219, 1); }
+.select-value-color-gray { background-color: rgba(227, 226, 224, 1); }
+.select-value-color-translucentGray { background-color: rgba(255, 255, 255, 0.0375); }
+.select-value-color-orange { background-color: rgba(250, 222, 201, 1); }
+.select-value-color-brown { background-color: rgba(238, 224, 218, 1); }
+.select-value-color-red { background-color: rgba(255, 226, 221, 1); }
+.select-value-color-yellow { background-color: rgba(253, 236, 200, 1); }
+.select-value-color-blue { background-color: rgba(211, 229, 239, 1); }
+.select-value-color-pageGlass { background-color: undefined; }
+.select-value-color-washGlass { background-color: undefined; }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="da8d9d6e-6c04-4e47-92ad-d0f8fc779542" class="page sans"><header><h1 class="page-title">Threat Modeling</h1><p class="page-description"></p></header><div class="page-body"><nav id="08e1bf70-c10c-4afe-8a79-bc049cda3646" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#6a31136f-67ae-4950-8258-64db9ad6abf0">Introduction to Threat Modeling</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#eb06d15b-bc84-4925-b6ef-acde5095c99d">STRIDE</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#6009834f-532f-4117-a99e-ecbe51e91ea1">Practical Example</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#20821003-7f3c-4e4e-bcd3-d7c4a629fe9d">Table 1 - Assets</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#0e0ac424-6478-4142-b1f8-eb930fbbbbe3">Table 2- Controls</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#a7fbdc44-5c14-4112-8038-818bfa2cc7bc">Table 3 - Threat Mapping</a></div></nav><h2 id="6a31136f-67ae-4950-8258-64db9ad6abf0" class="">Introduction to Threat Modeling</h2><p id="c001b0aa-2554-4879-bf4d-e4c17c2bd791" class="">Threat modeling is a process used by cybersecurity professionals to identify, understand, and mitigate potential security threats. It involves defining system requirements, identifying potential threats to the system, rating the threats based on potential impact and likelihood of occurrence, and finally, defining countermeasures to prevent, or mitigate the impact of, the threats. This proactive approach to identifying vulnerabilities can help organizations protect their systems and data more effectively.</p><p id="73a40660-0d09-4271-9601-1e30db39d6ba" class="">There are the majorly 3 part that plays a vital role in Threat Modeling</p><ol type="1" id="2aa6b10b-efc6-43ec-ad3e-c2f3f9b83f8c" class="numbered-list" start="1"><li>Assets</li></ol><ol type="1" id="3b8aec96-0717-4e8f-b5e1-d4955a082320" class="numbered-list" start="2"><li>Control</li></ol><ol type="1" id="cb5fe747-d224-4d7f-95cd-a49c4e2dd3ed" class="numbered-list" start="3"><li>Threat Mapping</li></ol><p id="67874e60-9e7a-43b5-8caf-55c39eb208a8" class="">Before jumping into the actual process, Most of the company are following the STRIDE`A methodology to perform the Threat Modeling of the giving architecture.</p><h3 id="eb06d15b-bc84-4925-b6ef-acde5095c99d" class="">STRIDE</h3><p id="9be434c4-554b-4215-9299-d88115004454" class=""><strong>S(Spoofing)</strong></p><ul id="76613b00-0ee5-4cc3-884b-86b6f4518840" class="bulleted-list"><li style="list-style-type:disc">A threat where one person or program successfully masquerades as another by falsifying data, thereby gaining illegitimate access.</li></ul><p id="fbaf4dbe-4dae-4e17-a70a-86b0eb235398" class=""><strong>T(Tampering)</strong></p><ul id="555362a0-89b4-47bf-b793-239916714f37" class="bulleted-list"><li style="list-style-type:disc">Tampering involves the unauthorized modification or alteration of data or systems, leading to potential security breaches or malfunctions.</li></ul><p id="83031d07-7b77-4ac3-b8a8-6cc80fc35969" class=""><strong>R(Repudiation)</strong></p><ul id="0d0d7f19-d9f2-49e4-a852-06e9bd091025" class="bulleted-list"><li style="list-style-type:disc">This threat concerns the inability to verify the identity of users or the origin of a particular action or piece of data, which can lead to disputes or denials.</li></ul><p id="bd0a6529-3db7-478b-a4df-ab225fca67ba" class=""><strong>I(Information Disclosure)</strong></p><ul id="17759b73-8f74-4487-afe6-d960c5c3d01a" class="bulleted-list"><li style="list-style-type:disc">Information disclosure threats involve the exposure of sensitive information to unauthorized parties. This can occur through various means such as hacking, data leaks, or inadequate access controls.</li></ul><p id="b9d1489b-1c64-4d09-9dbf-61e667d70ae7" class=""><strong>D(Denial of Service)</strong></p><ul id="5367aa5e-a6b9-4a25-a4f5-de4effbbe4b1" class="bulleted-list"><li style="list-style-type:disc">Denial of Service attacks aim to disrupt the availability of services, systems, or networks, rendering them inaccessible or unusable for legitimate users.</li></ul><p id="da4d8610-50f2-4b72-a836-c9a43c129f18" class=""><strong>E(Elevation of Privileges)</strong></p><ul id="3ca900e3-6b0f-481f-b1b5-d12482fa24de" class="bulleted-list"><li style="list-style-type:disc">Elevation of Privilege threats involve the unauthorized escalation of user privileges, granting individuals or programs access to resources or functionality beyond their authorized level.</li></ul><p id="f2c9cd49-8034-462a-ad0c-cfc901b3546e" class=""><strong>A(Abuse)* </strong></p><ul id="25a158bb-df07-4d5e-98e6-91fd58733b21" class="bulleted-list"><li style="list-style-type:disc">Abuse threats involve scenarios where legitimate system features are used in unintended ways that may lead to security vulnerabilities or breaches. This can include exploiting functionality to gain unauthorized access, bypass security controls, or manipulate data in harmful ways.</li></ul><p id="ddd63be5-e687-421a-919e-0ee63748ac8f" class=""><code>* Here </code><mark class="highlight-yellow"><code>Abuse </code></mark><code>term considered to be a add-on related to systenm features or vulnerable features can be used intentionally to breach the information </code></p><p id="e994856d-194e-4603-93ef-45d8f49f59c5" class="">
+</p><hr id="ce04f85a-dfd9-4944-b7bb-21d521c70260"/><h2 id="6009834f-532f-4117-a99e-ecbe51e91ea1" class="">Practical Example</h2><p id="afd67dee-0461-44c9-b29b-f6a269754d70" class="">Taking an example of very common and generic architecture and differentiate the Assets, Controls and Threat Mapping into it.</p><figure id="d47fa9c4-c09c-4185-9025-f21f76f48894" class="image"><a href="Threat%20Modeling%20da8d9d6e6c044e4792add0f8fc779542/Threat_Modeling.drawio.svg"><img style="width:672px" src="Threat%20Modeling%20da8d9d6e6c044e4792add0f8fc779542/Threat_Modeling.drawio.svg"/></a></figure><ol type="1" id="fc1c27f7-0909-4d61-9778-6533a3bc01da" class="numbered-list" start="1"><li><strong>Assets</strong>: Assets refer to the valuable resources that an organization wants to protect. These can include physical assets such as buildings and equipment, as well as digital assets such as data, software, intellectual property, and customer information. Identifying assets is the first step in threat modeling because it helps organizations prioritize their security efforts based on what needs protection the most.</li></ol><ol type="1" id="be09c802-23ab-4ee4-bdb9-db67826a3d37" class="numbered-list" start="2"><li><strong>Control</strong>: Controls are the security measures put in place to protect assets from threats. Controls can be administrative (e.g., policies and procedures), technical (e.g., firewalls and encryption), or physical (e.g., locks and security guards). Control identification involves assessing what security measures are currently in place and what additional controls may be needed to mitigate potential threats.</li></ol><ol type="1" id="a08dfff3-28a4-4a97-a8e0-175fa12e824b" class="numbered-list" start="3"><li><strong>Threats or Threats Mapping</strong>: Threats are potential events or circumstances that could harm an organization&#x27;s assets. Threats can come from various sources, including malicious actors (e.g., hackers and insiders), natural disasters, accidents, and technological failures. Threat identification involves identifying the different types of threats that could affect an organization&#x27;s assets and assessing their likelihood and potential impact.</li></ol><p id="46563dde-b83e-460b-a6ed-4b955e9fb05b" class="">
+</p><p id="458a2de2-af5c-4785-8ee8-051759d7754f" class="">To start with the process, you need to create 3 tables name as ASSETS, CONTROL, and THREAT MAPPING</p><ul id="405a5e63-28cf-4bb1-94fb-df33e7438a41" class="bulleted-list"><li style="list-style-type:disc">All the ASSETS will be mapped as A1, A2, A3 ………An.</li></ul><ul id="f35d64cb-9fd0-4a11-853b-c9986c7bcab6" class="bulleted-list"><li style="list-style-type:disc">All the CONTROL will be mapped as C1, C2, C3 ………Cn.</li></ul><ul id="7f7d9981-649b-4ca6-88ab-43cf211efbfc" class="bulleted-list"><li style="list-style-type:disc">All the THREAT MAPPING will be mapped as T1, T2, T3 ………Mn.</li></ul><p id="b299a631-b9b2-4130-9e13-e7feb0607936" class="">Going back to the Architecture.</p><h3 id="20821003-7f3c-4e4e-bcd3-d7c4a629fe9d" class="">Table 1 - Assets</h3><table id="f2d7c991-1368-42b5-9e1f-cce5fb6e407f" class="simple-table"><tbody><tr id="db754555-3f53-4564-bd1c-41ff513445fc"><td id="DrcT" class="">No. of Assets</td><td id="DL}Z" class="">List of Assets</td><td id="vW;I" class="" style="width:795px">Descriptions </td></tr><tr id="d900937f-57c8-41b8-bb29-46c365dc5d8c"><td id="DrcT" class="">A1</td><td id="DL}Z" class="">DNS</td><td id="vW;I" class="" style="width:795px">Domain Name Server</td></tr><tr id="1be699d0-1996-4595-bad4-69ab34688def"><td id="DrcT" class="">A2</td><td id="DL}Z" class="">Load Balancer</td><td id="vW;I" class="" style="width:795px">Load Balancers distribute the load of requests arriving from end users, ensuring equitable distribution across servers.</td></tr><tr id="08f9481d-d342-4a14-accc-5f44dc05d9f0"><td id="DrcT" class="">A3</td><td id="DL}Z" class="">Web Application</td><td id="vW;I" class="" style="width:795px">Web Application accessible by URL’s</td></tr><tr id="4a7947d1-a054-4329-a072-1cdc13beddc2"><td id="DrcT" class="">A4</td><td id="DL}Z" class="">Mobile Application</td><td id="vW;I" class="" style="width:795px">A clone of the web application with all the security measures w.r.t mobile devices</td></tr><tr id="33bd5fec-c2da-42ac-8df8-c5d2b9004430"><td id="DrcT" class="">A5</td><td id="DL}Z" class="">CDN</td><td id="vW;I" class="" style="width:795px">Content Delivery Networks</td></tr><tr id="726789a5-af63-4c5b-a77a-ab78454e7de5"><td id="DrcT" class="">A6</td><td id="DL}Z" class="">Web Servers</td><td id="vW;I" class="" style="width:795px">Web servers serve as the hosting platform for the application.</td></tr><tr id="c0329252-822e-43d1-bfd6-d46fe39d8820"><td id="DrcT" class="">A7</td><td id="DL}Z" class="">Cache</td><td id="vW;I" class="" style="width:795px">Caches store frequently requested information, enabling quicker response times.</td></tr><tr id="3ef52d6d-26cd-4e4d-8d6f-9f2a3078be9c"><td id="DrcT" class="">A8</td><td id="DL}Z" class="">Database</td><td id="vW;I" class="" style="width:795px">Databases store all types of information managed by the web application.</td></tr><tr id="802098f4-7ea8-42e5-9bc9-fbbc86bb253b"><td id="DrcT" class="">A9</td><td id="DL}Z" class="">Data Centre</td><td id="vW;I" class="" style="width:795px">A data centre is a facility used to house computer systems and associated components, such as telecommunications and storage systems.</td></tr><tr id="49387492-461f-4f0b-9415-9643dad1e8df"><td id="DrcT" class="">A10</td><td id="DL}Z" class="">Monitoring</td><td id="vW;I" class="" style="width:795px">Monitoring in application architecture refers to the process of observing, measuring, and analysing various aspects of an application&#x27;s performance, behaviour, and health.</td></tr></tbody></table><figure id="e7ec3e67-7a91-489f-9632-86cac09704d4" class="image"><a href="Threat%20Modeling%20da8d9d6e6c044e4792add0f8fc779542/Threat_Modeling-Page-3.drawio.png"><img style="width:658px" src="Threat%20Modeling%20da8d9d6e6c044e4792add0f8fc779542/Threat_Modeling-Page-3.drawio.png"/></a></figure><h3 id="0e0ac424-6478-4142-b1f8-eb930fbbbbe3" class="">Table 2- Controls</h3><table id="3c7069bf-f4f0-4988-80e0-529916a23582" class="simple-table"><tbody><tr id="837db716-9dad-41d9-912b-1fe4976dd2a1"><td id="DrcT" class="">No. of Controls</td><td id="DL}Z" class="">List of Controls</td><td id="vW;I" class="" style="width:778px">Descriptions </td></tr><tr id="f7fa2ba2-a643-4de9-9e34-90890136750d"><td id="DrcT" class="">C1</td><td id="DL}Z" class="">DNSSEC</td><td id="vW;I" class="" style="width:778px">Domain Name System Security Extension are the set of extension to DNS that add cryptographic authentication to DNS response. This implementation prevents from DNS spoofing </td></tr><tr id="ad0f96cc-e1c9-4d1d-b122-0a628cb1425c"><td id="DrcT" class="">C2</td><td id="DL}Z" class="">DNS Filtering and Blacklisting </td><td id="vW;I" class="" style="width:778px">Implementing DNS filtering and blacklisting services can help block access to malicious or undesirable domains.</td></tr><tr id="b39bbc80-17fb-4658-9ee6-006acda57e3d"><td id="DrcT" class="">C3</td><td id="DL}Z" class="">DNS Rate Limiting</td><td id="vW;I" class="" style="width:778px">Implementing rate limiting for DNS requests can help protect DNS servers from denial-of-service (DoS) attacks and DNS amplification attacks. By limiting the rate of DNS queries from individual clients or IP addresses, organizations can prevent malicious actors from overwhelming DNS servers with excessive query traffic and causing service disruptions.</td></tr><tr id="8e0bad5f-314a-4527-847e-3957bd246f9c"><td id="DrcT" class="">C4</td><td id="DL}Z" class="">SSL/TLS Encryption </td><td id="vW;I" class="" style="width:778px">Ensure that SSL/TLS encryption is properly configured between the client (web or mobile application) and the CDN edge servers. This helps to secure the communication channel and protect sensitive data transmitted between the application and the CDN from eavesdropping and tampering.</td></tr><tr id="e2b07057-ea66-4e71-ac4c-20113b0b51f4"><td id="DrcT" class="">C5</td><td id="DL}Z" class=""><strong>Origin Authentication</strong></td><td id="vW;I" class="" style="width:778px">Implement mechanisms to authenticate the origin servers that interact with the CDN. By verifying the authenticity of origin servers, web and mobile applications can prevent unauthorized access and mitigate the risk of DNS hijacking or spoofing attacks targeting the CDN infrastructure.</td></tr><tr id="d092c97e-8e0c-4030-a238-10324738a230"><td id="DrcT" class="">C6</td><td id="DL}Z" class=""><strong>Access Control Policies</strong></td><td id="vW;I" class="" style="width:778px">Define access control policies to restrict access to content cached on the CDN edge servers. By enforcing access controls based on user roles, permissions, and geographical locations, organizations can prevent unauthorized access to sensitive or restricted content and comply with regulatory requirements.</td></tr><tr id="d80b1272-564d-4c7f-8a25-b0511ae8e3f9"><td id="DrcT" class="">C7</td><td id="DL}Z" class=""><strong>Content Security Policies (CSP)</strong></td><td id="vW;I" class="" style="width:778px">Implement CSP headers to define and enforce security policies governing the behaviour of web content served through the CDN. CSP helps mitigate various types of attacks, such as cross-site scripting (XSS) and data injection, by specifying rules for resource loading, script execution, and content embedding within web pages.</td></tr><tr id="265ca9ec-1d7f-48fa-89ea-dbf00db9232f"><td id="DrcT" class="">C8</td><td id="DL}Z" class="">Access Control</td><td id="vW;I" class="" style="width:778px">Implement strong access controls to restrict physical and logical access to the <strong>data centre</strong>, including <strong>web servers</strong>, <strong>cache storage</strong>, and <strong>databases</strong>. This includes measures such as authentication, authorization, and <strong>least privilege access</strong>.</td></tr><tr id="8d7ebd12-c5b3-4b69-8452-1ae5ca79d23c"><td id="DrcT" class="">C9</td><td id="DL}Z" class="">Network Segmentation</td><td id="vW;I" class="" style="width:778px">Implement network segmentation to isolate different components within the data centre. This prevents <strong>unauthorized access</strong> and contains the impact of security breaches or compromises.</td></tr><tr id="d1aa4238-7694-46e8-8785-fdd8af8485ad"><td id="DrcT" class="">C10</td><td id="DL}Z" class="">Encryption</td><td id="vW;I" class="" style="width:778px">Encrypt data in transit and at rest to protect sensitive information stored in the database and cache storage. Use protocols such as SSL/TLS for data transmission and encryption algorithms for data storage.</td></tr><tr id="c53c0174-a8c4-447d-8df1-34432ade6206"><td id="DrcT" class="">C11</td><td id="DL}Z" class="">Regular Patching and Updates</td><td id="vW;I" class="" style="width:778px">Regularly apply patches and updates to the operating systems, software, and firmware of web servers, cache storage, and database systems to address known vulnerabilities and reduce the risk of exploitation by attackers.</td></tr><tr id="c7092800-584b-4ccd-a5a9-004110a4f21c"><td id="DrcT" class="">C12</td><td id="DL}Z" class="">Data Backup and Recovery</td><td id="vW;I" class="" style="width:778px">Implement regular data backup and recovery procedures to ensure the availability and integrity of critical data stored in the database and cache storage. Backup copies should be securely stored and tested regularly to verify their reliability.</td></tr><tr id="55ba399f-9a61-4f55-b258-2e1b56a23452"><td id="DrcT" class="">C13</td><td id="DL}Z" class="">Monitoring and Logging</td><td id="vW;I" class="" style="width:778px">Implement comprehensive monitoring and logging mechanisms to track and analyse activities within the data centre. This includes monitoring network traffic, system logs, and user activities to detect and respond to security incidents in real-time.</td></tr></tbody></table><figure id="6088fa97-9d3f-4c8a-a65a-5df5f9a48c6e" class="image"><a href="Threat%20Modeling%20da8d9d6e6c044e4792add0f8fc779542/Threat_Modeling.drawio_(1).svg"><img style="width:721px" src="Threat%20Modeling%20da8d9d6e6c044e4792add0f8fc779542/Threat_Modeling.drawio_(1).svg"/></a></figure><h3 id="a7fbdc44-5c14-4112-8038-818bfa2cc7bc" class="">Table 3 - Threat Mapping</h3><table id="d9cbb02e-da61-4d7b-943c-91a52a6c0e37" class="simple-table"><tbody><tr id="2dd1312d-10c8-485e-aabd-671a5d463b13"><td id="^{w;" class="block-color-red">STRIDE ➡️<br/>ASSETS ⬇️<br/></td><td id="?RI~" class="" style="width:135px">Spoofing</td><td id="\?_t" class="" style="width:132px">Tampering</td><td id="tAw{" class="" style="width:132px">Repudiation</td><td id="C[Q?" class="" style="width:138px">Information Disclosure</td><td id="kL?h" class="" style="width:132px">Denial of Service</td><td id="j`CX" class="" style="width:132px">Elevation of Privileges  </td><td id="mIcl" class="" style="width:132px">Abuse </td></tr><tr id="19962c86-0c4f-449d-b255-e3d11aa823f0"><td id="^{w;" class="block-color-red">A1</td><td id="?RI~" class="" style="width:135px">T1 → C1</td><td id="\?_t" class="" style="width:132px">T2 → C2</td><td id="tAw{" class="" style="width:132px"></td><td id="C[Q?" class="" style="width:138px"></td><td id="kL?h" class="" style="width:132px">T3 → C4</td><td id="j`CX" class="" style="width:132px"></td><td id="mIcl" class="" style="width:132px"></td></tr><tr id="663fbdff-a3bd-47d0-afd1-43e24b6a5e61"><td id="^{w;" class="block-color-red">A2</td><td id="?RI~" class="" style="width:135px">T4 → C6</td><td id="\?_t" class="" style="width:132px">T5→ C13</td><td id="tAw{" class="" style="width:132px"></td><td id="C[Q?" class="" style="width:138px"></td><td id="kL?h" class="" style="width:132px"></td><td id="j`CX" class="" style="width:132px"></td><td id="mIcl" class="" style="width:132px"></td></tr><tr id="22d933e0-5077-4c40-a5cb-023beee17b36"><td id="^{w;" class="block-color-red">A3</td><td id="?RI~" class="" style="width:135px">T7 → C6,10,11,13</td><td id="\?_t" class="" style="width:132px">T8 → C6,10,11,13</td><td id="tAw{" class="" style="width:132px">T9 → C6,10,11,13</td><td id="C[Q?" class="" style="width:138px">T10 → C6,10,11,13</td><td id="kL?h" class="" style="width:132px">T11 → C6,10,11,13</td><td id="j`CX" class="" style="width:132px">T12 → C6,10,11,13</td><td id="mIcl" class="" style="width:132px">T13 → C6,10,11,13</td></tr><tr id="4be5fcc0-5885-4f2f-b4a6-438ef40e12ad"><td id="^{w;" class="block-color-red">A4</td><td id="?RI~" class="" style="width:135px">T14 → C6,10,11,13</td><td id="\?_t" class="" style="width:132px">T15 → C6,10,11,13</td><td id="tAw{" class="" style="width:132px">T16 → C6,10,11,13</td><td id="C[Q?" class="" style="width:138px">T17 → C6,10,11,13</td><td id="kL?h" class="" style="width:132px">T18 → C6,10,11,13</td><td id="j`CX" class="" style="width:132px">T19 → C6,10,11,13</td><td id="mIcl" class="" style="width:132px">T20 → C6,10,11,13</td></tr><tr id="a75a7d7a-46be-4783-9181-92bbe462a3c9"><td id="^{w;" class="block-color-red">A5</td><td id="?RI~" class="" style="width:135px">T21 → C5</td><td id="\?_t" class="" style="width:132px">T23 → C7</td><td id="tAw{" class="" style="width:132px"></td><td id="C[Q?" class="" style="width:138px">T24 → C13</td><td id="kL?h" class="" style="width:132px"></td><td id="j`CX" class="" style="width:132px">T22 → C6</td><td id="mIcl" class="" style="width:132px"></td></tr><tr id="98f6bc40-5331-4bd3-a87f-3f0b8b758b88"><td id="^{w;" class="block-color-red">A6</td><td id="?RI~" class="" style="width:135px">T25 → C6,10,11,13</td><td id="\?_t" class="" style="width:132px">T26 → C6,10,11,13</td><td id="tAw{" class="" style="width:132px">T27 → C6,10,11,13</td><td id="C[Q?" class="" style="width:138px">T28 → C6,10,11,13</td><td id="kL?h" class="" style="width:132px">T29 → C6,10,11,13</td><td id="j`CX" class="" style="width:132px">T30 → C6,10,11,13</td><td id="mIcl" class="" style="width:132px">T31 → C6,10,11,13</td></tr><tr id="ccd5e9ed-36ae-42ae-be3c-1d0f5515883f"><td id="^{w;" class="block-color-red">A7</td><td id="?RI~" class="" style="width:135px">T32 → C6,10,11,13</td><td id="\?_t" class="" style="width:132px">T33 → C6,10,11,13</td><td id="tAw{" class="" style="width:132px">T34 → C6,10,11,13</td><td id="C[Q?" class="" style="width:138px">T35 → C6,10,11,13</td><td id="kL?h" class="" style="width:132px">T36 → C6,10,11,13</td><td id="j`CX" class="" style="width:132px">T37 → C6,10,11,13</td><td id="mIcl" class="" style="width:132px">T38 → C6,10,11,13</td></tr><tr id="49da4edf-cc02-408b-9036-869f8e4be506"><td id="^{w;" class="block-color-red">A8</td><td id="?RI~" class="" style="width:135px"></td><td id="\?_t" class="" style="width:132px">T39 → C10</td><td id="tAw{" class="" style="width:132px">T40 → C12</td><td id="C[Q?" class="" style="width:138px">T41 → C13</td><td id="kL?h" class="" style="width:132px"></td><td id="j`CX" class="" style="width:132px"></td><td id="mIcl" class="" style="width:132px"></td></tr><tr id="42026743-c9d6-4e5e-ae40-97c7929076bc"><td id="^{w;" class="block-color-red">A9</td><td id="?RI~" class="" style="width:135px">T42 → C8</td><td id="\?_t" class="" style="width:132px">T43 → C9, 11</td><td id="tAw{" class="" style="width:132px">T45 → C12</td><td id="C[Q?" class="" style="width:138px">T44 → C10, C13</td><td id="kL?h" class="" style="width:132px"></td><td id="j`CX" class="" style="width:132px"></td><td id="mIcl" class="" style="width:132px"></td></tr><tr id="af062853-24fb-44e5-bc34-3455d762483b"><td id="^{w;" class="block-color-red">A10</td><td id="?RI~" class="" style="width:135px"></td><td id="\?_t" class="" style="width:132px"></td><td id="tAw{" class="" style="width:132px"></td><td id="C[Q?" class="" style="width:138px">T46 → C13</td><td id="kL?h" class="" style="width:132px"></td><td id="j`CX" class="" style="width:132px"></td><td id="mIcl" class="" style="width:132px"></td></tr></tbody></table><p id="fbc190c4-8856-4c76-8bca-e5be61b5f749" class="">
+</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>
