@@ -1,0 +1,1617 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Advanced Threat Modeling - Comprehensive Guide</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2d2562ad-76f0-80e2-be92-f499f475bc03" class="page mono"><header><h1 class="page-title" dir="auto"><strong>Advanced Threat Modeling - Comprehensive Guide</strong></h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="ltr"><nav id="2d2562ad-76f0-8033-a6ea-c4cf35f1ee45" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-80d6-b796-d2e20b05cd86"><strong>Introduction</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8041-b666-e253fb695c44"><strong>What is Advanced Threat Modeling?</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80cf-8a26-c64e1932e724"><strong>Why Multiple Frameworks?</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-80ae-8eab-db06a6731e9d"><strong>CIA Framework (Confidentiality, Integrity, Availability)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8090-b103-eee7d936c55a"><strong>Overview</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8087-ab3c-cc5567571ffd"><strong>Confidentiality</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8014-be4a-c4a075fac7b1"><strong>Integrity</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-804d-a3c7-c250f8a33416"><strong>Availability</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80ba-a0aa-ccf26bcb8d69"><strong>CIA Threat Modeling Process</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-806d-911f-fd9d1299455d"><strong>CIA Risk Assessment Matrix</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-8035-882b-f58cd1d1d0a9"><strong>AAA Framework (Authentication, Authorization, Accounting)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8006-a749-e0ef53505dfc"><strong>Overview</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80af-9f16-f1ddb247ad96"><strong>Authentication</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80c7-9f2b-c07d160ace29"><strong>Authorization</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8097-8305-c19e48bf3292"><strong>Accounting (Auditing)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-809e-a0f5-d560ef94a8f3"><strong>AAA Threat Modeling Process</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8073-8869-efc60487adc8"><strong>AAA Risk Assessment</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-805b-815d-d005acbe20aa"><strong>Design by Action Approach</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8025-8b0b-d97601f8d083"><strong>Overview</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8067-b612-edccf4ed71d5"><strong>When to Use Design by Action</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80d2-94e6-e661ef908b4e"><strong>Design by Action Process</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80c7-ba3f-ca3bb49b8478"><strong>Design by Action Template</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-809e-a0c6-c26a22251088"><strong>Real-World Example: User Registration Action</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-80b4-aa0a-fa558a745ac5"><strong>Design by Component Approach</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8017-96ea-cc6e21875140"><strong>Overview</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80b0-83d5-ce9998c3de8a"><strong>When to Use Design by Component</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8049-b44e-fce68dac2012"><strong>Design by Component Process</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8013-92b5-d348e2a8d429"><strong>Design by Component Template</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8093-862a-e98509db4bf3"><strong>Real-World Example: Authentication Service Component</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-80c4-ae4b-d23159aaedf8"><strong>Open Threat Modeling Format (OTM)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80a4-a40e-c00f308ca482"><strong>Overview</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8091-a825-c1a5eb4448c2"><strong>OTM Structure</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8021-9faa-e1eed3dae489"><strong>OTM Core Elements</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-806d-ba12-e7b9e5a2f1da"><strong>Creating OTM from Threat Model</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8099-ade9-c37aa8c01646"><strong>OTM Integration Examples</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80dd-9d63-c4bb3ed7c873"><strong>OTM Best Practices</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-8098-83f6-f0527e28ec2e"><strong>Combining Frameworks and Approaches</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80c9-bed4-f19372587e8a"><strong>Integrated Threat Modeling Process</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8001-b73d-d85acdc09324"><strong>Comprehensive Example: E-commerce Platform</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-8022-94c6-c088c7594cb4"><strong>Advanced Threat Modeling Techniques</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-804f-98e4-c1ee38f58691"><strong>Threat Modeling for Microservices</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80e4-b542-eaeeb56ea415"><strong>Threat Modeling for APIs</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8032-be66-dceb6f79aaed"><strong>Threat Modeling for Cloud Services</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8003-8e24-cdd7bc75d209"><strong>Threat Modeling for Mobile Applications</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-801d-8a44-e14007b3fd62"><strong>Real-World Case Studies</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-807d-b231-e814a0bf6b34"><strong>Case Study 1: Payment Processing System</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8052-ab8a-c92dce3b9415"><strong>Case Study 2: Microservices Architecture</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-804e-aa04-cbd3f8b16d06"><strong>Best Practices and Recommendations</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8096-9450-f6c63e569118"><strong>Threat Modeling Best Practices</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80be-b94b-ff9c83005956"><strong>Framework Selection Guide</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8043-b775-e1626d6e6573"><strong>OTM Integration Strategy</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-80b1-bdb4-ec158ca1d4e4"><strong>Summary</strong></a></div></nav></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-80d6-b796-d2e20b05cd86" class=""><strong>Introduction</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8041-b666-e253fb695c44" class=""><strong>What is Advanced Threat Modeling?</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8025-a357-f8c7a6d9f852" class="">Advanced threat modeling goes beyond basic STRIDE analysis to provide comprehensive security assessment using multiple frameworks, design approaches, and standardized formats. It enables:</p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-806c-897f-c584633ac1a1" class="bulleted-list"><li style="list-style-type:disc"><strong>Systematic risk assessment</strong> using CIA and AAA frameworks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8082-a3fa-f145c45bf068" class="bulleted-list"><li style="list-style-type:disc"><strong>Structured analysis</strong> through design-by-action and design-by-component approaches</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-804a-b80a-e5bfd3f43a48" class="bulleted-list"><li style="list-style-type:disc"><strong>Automation and integration</strong> via OTM format</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80e4-aa5d-faa6431fe4db" class="bulleted-list"><li style="list-style-type:disc"><strong>Comprehensive coverage</strong> of security properties and access control mechanisms</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80cf-8a26-c64e1932e724" class=""><strong>Why Multiple Frameworks?</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80a2-98ce-e3d482dc9fde" class="">Different frameworks answer different questions:</p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8056-bbbc-eda91bf78402" class="bulleted-list"><li style="list-style-type:disc"><strong>CIA</strong>: What security properties must be protected?</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8084-85de-fc3dc62d78fb" class="bulleted-list"><li style="list-style-type:disc"><strong>AAA</strong>: How do we control access?</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8014-88af-cf1931f84e8d" class="bulleted-list"><li style="list-style-type:disc"><strong>STRIDE</strong>: How can the system be attacked?</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80b4-8d70-d4cb132cfe20" class="bulleted-list"><li style="list-style-type:disc"><strong>Design Approaches</strong>: How do we structure the analysis?</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80db-b665-ff3241534f9a" class="">Using multiple frameworks provides <strong>comprehensive coverage</strong> and <strong>defense in depth</strong>.</p></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-80c5-b75f-ed742cdcb825"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-80ae-8eab-db06a6731e9d" class=""><strong>CIA Framework (Confidentiality, Integrity, Availability)</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8090-b103-eee7d936c55a" class=""><strong>Overview</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80a1-8fd0-c2641f07aff8" class="">The CIA triad is the foundation of information security, representing three core security properties that must be protected.</p></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8087-ab3c-cc5567571ffd" class=""><strong>Confidentiality</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80fd-afbe-cc54975ac894" class=""><strong>Definition:</strong> Ensuring that information is accessible only to authorized users, systems, or processes.</p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80b8-a38d-fdbddb41bb23" class=""><strong>Threats to Confidentiality:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ed-b6ee-c94794d329e7" class="bulleted-list"><li style="list-style-type:disc">Unauthorized access to data</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8096-ab05-fdb8eb6e5559" class="bulleted-list"><li style="list-style-type:disc">Data interception (network sniffing, MitM)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8064-a94b-f15a4edaa49c" class="bulleted-list"><li style="list-style-type:disc">Data leakage (logs, error messages, backups)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-801b-9da9-d53276bad36f" class="bulleted-list"><li style="list-style-type:disc">Insufficient access controls</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8079-89ec-ccfac48a8aca" class="bulleted-list"><li style="list-style-type:disc">Weak encryption</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8009-85f5-e7455f498663" class=""><strong>Mitigations:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8061-ab39-c11966fd3369" class="bulleted-list"><li style="list-style-type:disc">Encryption (at rest and in transit)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8078-a093-c46d744ca18a" class="bulleted-list"><li style="list-style-type:disc">Access control (RBAC, ABAC)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8095-a6b4-e530eddc71ab" class="bulleted-list"><li style="list-style-type:disc">Data classification and labeling</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80a4-9604-e496433893d6" class="bulleted-list"><li style="list-style-type:disc">Secure communication channels (TLS/SSL)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ae-9f67-d456fcbcc162" class="bulleted-list"><li style="list-style-type:disc">Data loss prevention (DLP)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8023-a661-f105bb44d464" class="bulleted-list"><li style="list-style-type:disc">Secure storage and disposal</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-804e-b01c-e458bf978b7b" class=""><strong>Example - E-commerce Payment System:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8085-bacd-c7192e94c7e5" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Confidentiality Requirements:
+- Credit card numbers must be encrypted (PCI-DSS)
+- Customer PII must be protected (GDPR)
+- Payment tokens must not be exposed in logs
+- API keys must be stored securely
+
+Threats:
+- SQL Injection exposing credit card data
+- Unencrypted database backups
+- API keys in source code
+- Sensitive data in error messages
+
+Mitigations:
+- AES-256 encryption for data at rest
+- TLS 1.3 for data in transit
+- Tokenization for credit card numbers
+- Secure key management (HSM, Key Vault)
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8014-be4a-c4a075fac7b1" class=""><strong>Integrity</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8002-a556-fe15b485d9db" class=""><strong>Definition:</strong> Ensuring that data and systems remain accurate, complete, and unmodified by unauthorized parties.</p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80b1-bcb1-fa876743cf6e" class=""><strong>Threats to Integrity:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80db-9faa-f9f39d89131c" class="bulleted-list"><li style="list-style-type:disc">Unauthorized data modification</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-809d-a97d-f805258ac1fb" class="bulleted-list"><li style="list-style-type:disc">Data corruption</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-802d-bb22-f658dc055901" class="bulleted-list"><li style="list-style-type:disc">Tampering with system configurations</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-803c-b0fc-cf09ed26a840" class="bulleted-list"><li style="list-style-type:disc">Man-in-the-middle attacks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80c1-a642-eccd0b30e7d8" class="bulleted-list"><li style="list-style-type:disc">Insecure data transmission</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-808a-b6e5-cfe6fd0026ff" class=""><strong>Mitigations:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8052-ba56-ff04da9b7233" class="bulleted-list"><li style="list-style-type:disc">Digital signatures</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8044-80c1-e7b58db12946" class="bulleted-list"><li style="list-style-type:disc">Hash functions (SHA-256, SHA-512)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f3-af13-dbe0f9226b76" class="bulleted-list"><li style="list-style-type:disc">Checksums and integrity checks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8071-a3a2-d78b7ebd16cf" class="bulleted-list"><li style="list-style-type:disc">Access controls and audit trails</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8047-b8a1-f0d36d1fd7ec" class="bulleted-list"><li style="list-style-type:disc">Secure communication protocols</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8073-a825-f705f053f4a9" class="bulleted-list"><li style="list-style-type:disc">Version control and change management</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-803c-b2ee-deecf000fa66" class=""><strong>Example - Financial Transaction System:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80ec-aaf3-c7d2814d5380" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Integrity Requirements:
+- Transaction amounts cannot be modified
+- Account balances must be accurate
+- Audit logs must be tamper-proof
+- System configurations must be protected
+
+Threats:
+- SQL Injection modifying transaction amounts
+- Man-in-the-middle altering payment data
+- Unauthorized configuration changes
+- Log tampering to hide fraudulent activity
+
+Mitigations:
+- Database constraints and triggers
+- Digital signatures on transactions
+- Immutable audit logs
+- Configuration management tools
+- Hash-based integrity verification
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-804d-a3c7-c250f8a33416" class=""><strong>Availability</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-807d-8e49-d5ffc0e5f0b5" class=""><strong>Definition:</strong> Ensuring that systems and data are accessible and usable when needed by authorized users.</p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8009-908c-f89e1481576e" class=""><strong>Threats to Availability:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f7-be3c-d06b2b873dca" class="bulleted-list"><li style="list-style-type:disc">Denial of Service (DoS) attacks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-807f-83e0-eb9fe8e5d97a" class="bulleted-list"><li style="list-style-type:disc">Distributed Denial of Service (DDoS)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ae-aebf-d5590455b574" class="bulleted-list"><li style="list-style-type:disc">System failures and outages</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-803e-b2e9-d338b545dfa1" class="bulleted-list"><li style="list-style-type:disc">Resource exhaustion</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ab-bf06-eae7e999317b" class="bulleted-list"><li style="list-style-type:disc">Natural disasters</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-806e-b50f-f06fad55a5f0" class=""><strong>Mitigations:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8000-9e1f-cf4c33feb095" class="bulleted-list"><li style="list-style-type:disc">Redundancy and failover</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f1-9109-fba3c5ba1ce3" class="bulleted-list"><li style="list-style-type:disc">Load balancing</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8041-88cb-e91e1dd30d28" class="bulleted-list"><li style="list-style-type:disc">Rate limiting and throttling</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8023-a46e-fa989e0e6051" class="bulleted-list"><li style="list-style-type:disc">DDoS protection (CloudFlare, AWS Shield)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8001-a394-d59451e12195" class="bulleted-list"><li style="list-style-type:disc">Backup and disaster recovery</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-806d-b1ee-c3e6f66dcfb3" class="bulleted-list"><li style="list-style-type:disc">High availability architectures</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-804b-80df-e81fb6bac046" class="bulleted-list"><li style="list-style-type:disc">Monitoring and alerting</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8096-b0ef-fe26c10c8863" class=""><strong>Example - Cloud-Based SaaS Application:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8001-b84d-c60efaa5c1b6" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Availability Requirements:
+- 99.9% uptime SLA (8.76 hours downtime/year)
+- Sub-second response times
+- Graceful degradation during peak load
+- Disaster recovery within 4 hours
+
+Threats:
+- DDoS attacks overwhelming servers
+- Database connection pool exhaustion
+- Single point of failure in architecture
+- Cloud provider outages
+
+Mitigations:
+- Multi-region deployment
+- Auto-scaling based on load
+- CDN for static content
+- Database replication and failover
+- Circuit breakers and rate limiting
+- DDoS protection services
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80ba-a0aa-ccf26bcb8d69" class=""><strong>CIA Threat Modeling Process</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80d8-bb80-ccb8b5f31355" class=""><strong>Step 1: Identify Assets</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8084-a4af-d1adf10b1d1a" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Data Assets:
+- Customer PII (Confidentiality)
+- Financial transactions (Integrity)
+- System configurations (Integrity)
+- API keys and secrets (Confidentiality)
+
+System Assets:
+- Web servers (Availability)
+- Databases (Confidentiality, Integrity, Availability)
+- APIs (All three)
+- Authentication services (Confidentiality, Availability)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80f8-9425-ce1674f5e027" class=""><strong>Step 2: Assess CIA Requirements</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8052-91aa-c492d073e81b" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">For each asset, determine:
+- Confidentiality Level: Public, Internal, Confidential, Restricted
+- Integrity Level: Low, Medium, High, Critical
+- Availability Level: Standard, High, Critical
+
+Example:
+- Credit Card Data:
+  Confidentiality: Restricted (encrypted, access-controlled)
+  Integrity: Critical (cannot be modified)
+  Availability: High (must be accessible for transactions)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8097-a5aa-db56ec567d49" class=""><strong>Step 3: Identify Threats</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8018-a963-e90f27af5076" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Use CIA-specific threat categories:
+
+Confidentiality Threats:
+- Unauthorized access
+- Data leakage
+- Eavesdropping
+- Insufficient encryption
+
+Integrity Threats:
+- Data tampering
+- Unauthorized modification
+- Man-in-the-middle
+- Configuration drift
+
+Availability Threats:
+- DoS/DDoS
+- Resource exhaustion
+- System failures
+- Network outages
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-805e-9d36-e552e546592d" class=""><strong>Step 4: Map Threats to Assets</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80ae-b67e-f9fdb973cec5" class="code code-wrap"><code class="language-Markdown" style="white-space:pre-wrap;word-break:break-all">Create threat-asset matrix:
+
+| Asset | Confidentiality Threat | Integrity Threat | Availability Threat |
+|-------|----------------------|-----------------|-------------------|
+| User Database | SQL Injection | Data tampering | Connection exhaustion |
+| Payment API | API key theft | Transaction modification | Rate limit bypass |
+| Config Files | Secret exposure | Unauthorized changes | File system failure |
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80e3-9b1b-c3e87b6bb961" class=""><strong>Step 5: Assess Risk</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8070-86e7-e0c03a890cc5" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Risk = Impact × Likelihood
+
+Impact based on CIA:
+- Confidentiality: Data sensitivity, regulatory impact
+- Integrity: Business impact, trust impact
+- Availability: Revenue impact, user impact
+
+Likelihood:
+- Attack complexity
+- Existing controls
+- Threat actor capability
+- Exposure level
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8033-8d89-eecf0a88c264" class=""><strong>Step 6: Design Mitigations</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8088-a8b7-db22701c17f7" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Prioritize based on risk:
+- High Risk: Immediate mitigation
+- Medium Risk: Planned mitigation
+- Low Risk: Accept or monitor
+
+Example Mitigation Strategy:
+- Confidentiality: Encryption + Access Control
+- Integrity: Digital Signatures + Audit Logs
+- Availability: Redundancy + DDoS Protection
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-806d-911f-fd9d1299455d" class=""><strong>CIA Risk Assessment Matrix</strong></h3></div><div style="display:contents" dir="ltr"><table id="2d2562ad-76f0-8037-a972-c56205b076eb" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-800f-9f98-e535edf63e8b"><th id="~xPK" class="simple-table-header-color simple-table-header">CIA Property</th><th id="=ju=" class="simple-table-header-color simple-table-header">Impact Level</th><th id="ekb^" class="simple-table-header-color simple-table-header">Likelihood</th><th id="Tyz&lt;" class="simple-table-header-color simple-table-header">Risk Level</th><th id="m[;Q" class="simple-table-header-color simple-table-header">Mitigation Priority</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-8081-a6ab-edf9791c5483"><td id="~xPK" class="">Confidentiality (PII)</td><td id="=ju=" class="">High</td><td id="ekb^" class="">High</td><td id="Tyz&lt;" class=""><strong>CRITICAL</strong></td><td id="m[;Q" class="">Immediate</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80f4-8503-f7b48d38de8d"><td id="~xPK" class="">Integrity (Transactions)</td><td id="=ju=" class="">High</td><td id="ekb^" class="">Medium</td><td id="Tyz&lt;" class=""><strong>HIGH</strong></td><td id="m[;Q" class="">High Priority</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80e9-9223-db4d07a4de0d"><td id="~xPK" class="">Availability (API)</td><td id="=ju=" class="">Medium</td><td id="ekb^" class="">High</td><td id="Tyz&lt;" class=""><strong>HIGH</strong></td><td id="m[;Q" class="">High Priority</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-8092-b501-c1a4ebb02b1a"><td id="~xPK" class="">Confidentiality (Logs)</td><td id="=ju=" class="">Medium</td><td id="ekb^" class="">Low</td><td id="Tyz&lt;" class=""><strong>MEDIUM</strong></td><td id="m[;Q" class="">Planned</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80a7-91e4-ef65d06f0b93"><td id="~xPK" class="">Integrity (Config)</td><td id="=ju=" class="">Low</td><td id="ekb^" class="">Medium</td><td id="Tyz&lt;" class=""><strong>MEDIUM</strong></td><td id="m[;Q" class="">Planned</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-807e-881a-f282a311a7dc"><td id="~xPK" class="">Availability (Static)</td><td id="=ju=" class="">Low</td><td id="ekb^" class="">Low</td><td id="Tyz&lt;" class=""><strong>LOW</strong></td><td id="m[;Q" class="">Monitor</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-809b-b0ef-f26c6988d1c2"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-8035-882b-f58cd1d1d0a9" class=""><strong>AAA Framework (Authentication, Authorization, Accounting)</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8006-a749-e0ef53505dfc" class=""><strong>Overview</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80eb-b64d-ee28a9a57ebc" class="">AAA provides a framework for access control, ensuring that only authorized entities can access resources and that all access is tracked.</p></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80af-9f16-f1ddb247ad96" class=""><strong>Authentication</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-803c-a526-f5f073c2dc8e" class=""><strong>Definition:</strong> Verifying the identity of users, services, or systems attempting to access resources.</p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8060-923f-db295efe6515" class=""><strong>Authentication Methods:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8059-a83a-c2b6dc83c550" class="bulleted-list"><li style="list-style-type:disc"><strong>Something you know</strong>: Passwords, PINs, security questions</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80e2-8603-d220baf9889e" class="bulleted-list"><li style="list-style-type:disc"><strong>Something you have</strong>: Tokens, smart cards, mobile devices</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8088-bea4-e7e89811d9ec" class="bulleted-list"><li style="list-style-type:disc"><strong>Something you are</strong>: Biometrics (fingerprint, face, iris)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-802e-b4e4-cde701aac1a4" class="bulleted-list"><li style="list-style-type:disc"><strong>Something you do</strong>: Behavioral biometrics</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-803b-b80b-cedb8fbfe48e" class=""><strong>Multi-Factor Authentication (MFA):</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f4-baaf-f77cd4f08c16" class="bulleted-list"><li style="list-style-type:disc">Requires two or more authentication factors</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f6-b62b-f486f25c79a7" class="bulleted-list"><li style="list-style-type:disc">Significantly reduces risk of credential compromise</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8048-a614-e3591fdd46ec" class="bulleted-list"><li style="list-style-type:disc">Common combinations: Password + SMS, Password + TOTP, Password + Biometric</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-805f-bfdd-e5d7d5cb656e" class=""><strong>Threats to Authentication:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8091-bfb0-cbf8e92bec33" class="bulleted-list"><li style="list-style-type:disc">Credential theft (phishing, keyloggers)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-801e-bbfd-faf54116c01c" class="bulleted-list"><li style="list-style-type:disc">Weak passwords</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8021-988e-f5cb84467c40" class="bulleted-list"><li style="list-style-type:disc">Password reuse</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80a8-bd61-f63719cfb401" class="bulleted-list"><li style="list-style-type:disc">Session hijacking</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80c4-aa38-fa10a2f0500e" class="bulleted-list"><li style="list-style-type:disc">Brute force attacks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f8-b38a-eb9229c95343" class="bulleted-list"><li style="list-style-type:disc">Social engineering</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8047-ba41-d140e746b530" class=""><strong>Mitigations:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8040-8621-fb81bc266f9f" class="bulleted-list"><li style="list-style-type:disc">Strong password policies</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-806f-adac-ebe271ebe47f" class="bulleted-list"><li style="list-style-type:disc">Multi-factor authentication</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8033-ba4e-c2a498aa3140" class="bulleted-list"><li style="list-style-type:disc">Password managers</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-802a-ab3e-f1bfebbdf697" class="bulleted-list"><li style="list-style-type:disc">Account lockout after failed attempts</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8003-9fa6-cad3261b4b3f" class="bulleted-list"><li style="list-style-type:disc">CAPTCHA for automated attacks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8068-9cf9-e9f780e9a225" class="bulleted-list"><li style="list-style-type:disc">Secure session management</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80b5-aa1b-cabba24592a7" class="bulleted-list"><li style="list-style-type:disc">Biometric authentication</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-800e-aba6-e08d363a74a9" class=""><strong>Example - Enterprise SSO System:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8016-a32d-f29903790c80" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Authentication Requirements:
+- Support multiple identity providers (SAML, OAuth, LDAP)
+- MFA for sensitive operations
+- Session timeout after inactivity
+- Password complexity requirements
+
+Threats:
+- Credential stuffing attacks
+- Session fixation
+- Man-in-the-middle during authentication
+- Weak identity provider configuration
+
+Mitigations:
+- OAuth 2.0 with PKCE
+- SAML with proper signature validation
+- MFA enforcement
+- Session ID regeneration after login
+- Certificate pinning
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80c7-9f2b-c07d160ace29" class=""><strong>Authorization</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-806e-9aa2-e5a889c565d4" class=""><strong>Definition:</strong> Determining what actions an authenticated entity is permitted to perform on specific resources.</p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80dd-a966-e8703a53885c" class=""><strong>Authorization Models:</strong></p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80bc-b17e-c199aad4c490" class=""><strong>1. Role-Based Access Control (RBAC):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8005-8392-c073db1dbf49" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Roles: Admin, Manager, User, Guest
+Permissions assigned to roles
+Users assigned to roles
+
+Example:
+- Admin: Full access
+- Manager: Read/Write to assigned resources
+- User: Read own data, Write own data
+- Guest: Read public data only
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-804e-b26d-c38fe4b25097" class=""><strong>2. Attribute-Based Access Control (ABAC):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-804d-8455-f70d5a464dea" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Access decisions based on:
+- User attributes (department, clearance level)
+- Resource attributes (classification, owner)
+- Environmental attributes (time, location)
+- Action attributes (read, write, delete)
+
+Example:
+- User from Finance department
+- Accessing Financial data
+- During business hours
+- From corporate network
+→ Allow read access
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-801a-8168-d889bfc36097" class=""><strong>3. Discretionary Access Control (DAC):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80de-b259-c13ef0c19dfe" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Resource owners control access
+Common in file systems
+
+Example:
+- File owner sets permissions
+- Owner can grant/revoke access
+- Used in Unix/Linux file systems
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-800d-bf73-d33838b4ac6e" class=""><strong>4. Mandatory Access Control (MAC):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8059-9e16-ce238e0dd356" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">System-enforced access control
+Based on security labels
+Common in military/government systems
+
+Example:
+- Top Secret, Secret, Confidential labels
+- Users have clearance levels
+- System enforces access rules
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80bc-ae60-c99a83a5dfd8" class=""><strong>Threats to Authorization:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-809a-9cae-c5b322424e04" class="bulleted-list"><li style="list-style-type:disc">Privilege escalation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8021-bc87-e8af08bb3802" class="bulleted-list"><li style="list-style-type:disc">Insecure direct object references (IDOR)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8073-aadc-e7ae848914d8" class="bulleted-list"><li style="list-style-type:disc">Missing authorization checks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8070-98c5-d65cf90043ae" class="bulleted-list"><li style="list-style-type:disc">Broken access control</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8083-ba93-e9679fa94504" class="bulleted-list"><li style="list-style-type:disc">Overly permissive policies</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80d4-9f4f-d39988c282dc" class=""><strong>Mitigations:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8003-aa44-c623534572b6" class="bulleted-list"><li style="list-style-type:disc">Principle of least privilege</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f2-9895-ef5a6c8a3fa8" class="bulleted-list"><li style="list-style-type:disc">Regular access reviews</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80d2-a072-f8a80d6ee5b5" class="bulleted-list"><li style="list-style-type:disc">Authorization checks at every layer</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80af-80aa-d862838618b9" class="bulleted-list"><li style="list-style-type:disc">Centralized authorization service</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80c6-8222-da7a5f8f668d" class="bulleted-list"><li style="list-style-type:disc">Regular policy audits</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8096-bdfd-e13b430b3967" class="bulleted-list"><li style="list-style-type:disc">Separation of duties</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80fc-9d12-db8da4e80f9f" class=""><strong>Example - API Authorization:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8033-ac86-f3d3c796a4ec" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Authorization Requirements:
+- API endpoints require proper scopes
+- Users can only access their own data
+- Admins have additional permissions
+- Rate limiting based on user role
+
+Threats:
+- Missing authorization checks
+- Token scope escalation
+- IDOR vulnerabilities
+- Privilege escalation via API
+
+Mitigations:
+- OAuth 2.0 scopes
+- Resource-level authorization checks
+- Input validation and sanitization
+- Regular security testing
+- API gateway with authorization policies
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8097-8305-c19e48bf3292" class=""><strong>Accounting (Auditing)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8039-bf5c-c9c8b6a822e1" class=""><strong>Definition:</strong> Tracking and logging all security-relevant events for accountability, compliance, and forensic analysis.</p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8072-8f04-fef5df8c2609" class=""><strong>What to Log:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8037-a972-d7d7a43e9161" class="bulleted-list"><li style="list-style-type:disc">Authentication events (success, failure)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8046-91af-e0bbe2f283cb" class="bulleted-list"><li style="list-style-type:disc">Authorization decisions (granted, denied)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f0-a106-eab4e2fe40c4" class="bulleted-list"><li style="list-style-type:disc">Data access (read, write, delete)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8068-bd44-e4a8ff912363" class="bulleted-list"><li style="list-style-type:disc">Configuration changes</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8038-be0b-d79398fdbde0" class="bulleted-list"><li style="list-style-type:disc">Administrative actions</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-803e-a209-f733d6e7ede1" class="bulleted-list"><li style="list-style-type:disc">Security events (attacks, anomalies)</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8036-89c1-ffc27961bc5c" class=""><strong>Log Requirements:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80b5-9ba5-ee704d8fbbeb" class="bulleted-list"><li style="list-style-type:disc"><strong>Completeness</strong>: All security events logged</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8070-9bd5-cd96bcbe5c7b" class="bulleted-list"><li style="list-style-type:disc"><strong>Integrity</strong>: Logs cannot be tampered with</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80b6-8a7e-e2da780e803b" class="bulleted-list"><li style="list-style-type:disc"><strong>Retention</strong>: Appropriate retention period</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-801f-a4e7-cb1b0c744607" class="bulleted-list"><li style="list-style-type:disc"><strong>Access Control</strong>: Only authorized personnel can access logs</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f3-887c-dbe41c322acd" class="bulleted-list"><li style="list-style-type:disc"><strong>Performance</strong>: Logging doesn&#x27;t impact system performance</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80ab-a30d-e4f16952c772" class=""><strong>Threats to Accounting:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8038-872d-f4708e9a6a39" class="bulleted-list"><li style="list-style-type:disc">Log tampering</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f3-b4b9-d185a5518045" class="bulleted-list"><li style="list-style-type:disc">Insufficient logging</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-808f-b4b9-e1593a809a02" class="bulleted-list"><li style="list-style-type:disc">Log deletion</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8074-a564-d4afeae07131" class="bulleted-list"><li style="list-style-type:disc">Unauthorized log access</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-807e-a143-d5412be1baf4" class="bulleted-list"><li style="list-style-type:disc">Performance impact from excessive logging</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80f1-9673-cd439dfa03bd" class=""><strong>Mitigations:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f9-b05d-cb5f44c4e7ad" class="bulleted-list"><li style="list-style-type:disc">Immutable logs (write-once storage)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8083-875d-f3363e8d77e7" class="bulleted-list"><li style="list-style-type:disc">Centralized logging (SIEM)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-808d-a9a5-ed6b4bd7228c" class="bulleted-list"><li style="list-style-type:disc">Log integrity verification (hashes, signatures)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8007-9bc3-ef4794fbd123" class="bulleted-list"><li style="list-style-type:disc">Secure log storage</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80df-a162-ced1fcec849f" class="bulleted-list"><li style="list-style-type:disc">Regular log reviews</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80a2-a970-eb4a526e5762" class="bulleted-list"><li style="list-style-type:disc">Automated log analysis</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8041-a978-feaf04387991" class=""><strong>Example - Compliance Logging:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80f7-8e20-de06d4127f15" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Accounting Requirements (GDPR, PCI-DSS):
+- Log all access to PII
+- Log all authentication attempts
+- Log all data modifications
+- Retain logs for 7 years
+- Tamper-proof logs
+
+Implementation:
+- Structured logging (JSON format)
+- Centralized SIEM (Splunk, ELK)
+- Log encryption at rest
+- Regular integrity checks
+- Automated alerting on anomalies
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-809e-a0f5-d560ef94a8f3" class=""><strong>AAA Threat Modeling Process</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80fd-a262-f56c119707ea" class=""><strong>Step 1: Identify Authentication Points</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-801c-94a4-f3fececa3d1c" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">System Entry Points:
+- User login (web, mobile)
+- API authentication
+- Service-to-service authentication
+- Administrative access
+
+Authentication Mechanisms:
+- Username/password
+- OAuth 2.0
+- API keys
+- mTLS certificates
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80a9-b5e3-e395243e293b" class=""><strong>Step 2: Map Authorization Requirements</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8006-95a5-eeea8061cdcf" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">For each resource/action:
+- Who can access?
+- What can they do?
+- Under what conditions?
+
+Example:
+- Payment API:
+  Who: Authenticated users
+  What: Create payment, view own payments
+  Conditions: Valid payment method, sufficient balance
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80ec-a8d0-e80369d7d58d" class=""><strong>Step 3: Define Accounting Requirements</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80a2-8a4b-c6dd25d24168" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">What events to log:
+- Authentication: All login attempts
+- Authorization: All access denials
+- Data access: Sensitive data access
+- Changes: All modifications
+
+Compliance requirements:
+- GDPR: PII access logging
+- PCI-DSS: Payment data access
+- SOX: Financial data changes
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-808a-8842-c4abef7cf932" class=""><strong>Step 4: Identify AAA Threats</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-808a-874f-d4b2b9d13ccd" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Authentication Threats:
+- Weak authentication
+- Credential theft
+- Session hijacking
+- MFA bypass
+
+Authorization Threats:
+- Missing authorization checks
+- Privilege escalation
+- IDOR vulnerabilities
+- Overly permissive policies
+
+Accounting Threats:
+- Insufficient logging
+- Log tampering
+- Unauthorized log access
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80f7-b383-c0a8308de5d8" class=""><strong>Step 5: Design AAA Controls</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-802c-8ba3-c1763bcfe81e" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Authentication Controls:
+- Strong password policies
+- MFA enforcement
+- Secure session management
+- Account lockout
+
+Authorization Controls:
+- RBAC/ABAC implementation
+- Principle of least privilege
+- Regular access reviews
+- Authorization middleware
+
+Accounting Controls:
+- Comprehensive logging
+- Immutable log storage
+- Log integrity verification
+- SIEM integration
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8073-8869-efc60487adc8" class=""><strong>AAA Risk Assessment</strong></h3></div><div style="display:contents" dir="ltr"><table id="2d2562ad-76f0-80a9-b959-fcad94691657" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-8059-a798-d350209d0fad"><th id="?x~v" class="simple-table-header-color simple-table-header">AAA Component</th><th id="Pag}" class="simple-table-header-color simple-table-header">Threat</th><th id="&lt;_EL" class="simple-table-header-color simple-table-header">Impact</th><th id="dQp=" class="simple-table-header-color simple-table-header">Likelihood</th><th id="|;=D" class="simple-table-header-color simple-table-header">Risk</th><th id="O=lz" class="simple-table-header-color simple-table-header">Mitigation</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-806c-9c7c-caf532d0b272"><td id="?x~v" class="">Authentication</td><td id="Pag}" class="">Credential theft</td><td id="&lt;_EL" class="">High</td><td id="dQp=" class="">High</td><td id="|;=D" class=""><strong>CRITICAL</strong></td><td id="O=lz" class="">MFA, Strong passwords</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80d2-b9f4-caa428d9db96"><td id="?x~v" class="">Authentication</td><td id="Pag}" class="">Session hijacking</td><td id="&lt;_EL" class="">High</td><td id="dQp=" class="">Medium</td><td id="|;=D" class=""><strong>HIGH</strong></td><td id="O=lz" class="">Secure sessions, HTTPS</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80a9-a426-c6b492cb30b6"><td id="?x~v" class="">Authorization</td><td id="Pag}" class="">Privilege escalation</td><td id="&lt;_EL" class="">High</td><td id="dQp=" class="">Medium</td><td id="|;=D" class=""><strong>HIGH</strong></td><td id="O=lz" class="">Least privilege, Regular reviews</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-8043-9e92-d19ff2e2fb1b"><td id="?x~v" class="">Authorization</td><td id="Pag}" class="">Missing checks</td><td id="&lt;_EL" class="">High</td><td id="dQp=" class="">High</td><td id="|;=D" class=""><strong>CRITICAL</strong></td><td id="O=lz" class="">Authorization middleware</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-8051-8472-f8678df3cbf8"><td id="?x~v" class="">Accounting</td><td id="Pag}" class="">Log tampering</td><td id="&lt;_EL" class="">Medium</td><td id="dQp=" class="">Low</td><td id="|;=D" class=""><strong>MEDIUM</strong></td><td id="O=lz" class="">Immutable logs</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-8027-8dcf-fc01d6d4a6b2"><td id="?x~v" class="">Accounting</td><td id="Pag}" class="">Insufficient logging</td><td id="&lt;_EL" class="">High</td><td id="dQp=" class="">Medium</td><td id="|;=D" class=""><strong>HIGH</strong></td><td id="O=lz" class="">Comprehensive logging</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-8007-9068-ef4092042310"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-805b-815d-d005acbe20aa" class=""><strong>Design by Action Approach</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8025-8b0b-d97601f8d083" class=""><strong>Overview</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-801b-9e68-cc0286117b38" class="">Design by Action focuses on <strong>business operations and workflows</strong> rather than system components. It analyzes threats based on what the system <strong>does</strong> rather than what it <strong>is</strong>.</p></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8067-b612-edccf4ed71d5" class=""><strong>When to Use Design by Action</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8079-877f-e18f756bca08" class="bulleted-list"><li style="list-style-type:disc"><strong>Process-oriented systems</strong>: Workflows, business processes</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80b8-acf0-da288c73faad" class="bulleted-list"><li style="list-style-type:disc"><strong>API security</strong>: REST APIs, GraphQL endpoints</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80af-bd9b-f38dcfb4cd46" class="bulleted-list"><li style="list-style-type:disc"><strong>User journeys</strong>: Authentication flows, payment processes</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f6-b2fb-c547987a2196" class="bulleted-list"><li style="list-style-type:disc"><strong>Business operations</strong>: Order processing, data export</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f7-b18e-d25a84c3a3ae" class="bulleted-list"><li style="list-style-type:disc"><strong>Compliance requirements</strong>: GDPR data export, audit trails</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80d2-94e6-e661ef908b4e" class=""><strong>Design by Action Process</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8079-aecd-f6a27b47ad5a" class=""><strong>Step 1: Identify Critical Actions</strong></p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80f2-9532-f023428e6454" class="">List all business-critical operations:</p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8094-91b3-f843478d4a74" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Example - E-commerce Platform:
+1. User Registration
+2. User Authentication
+3. Product Browsing
+4. Add to Cart
+5. Checkout
+6. Payment Processing
+7. Order Fulfillment
+8. Order Cancellation
+9. User Profile Update
+10. Password Reset
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8060-813a-f1462fd16103" class=""><strong>Step 2: Map Action Flow</strong></p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8041-9624-e41d17261742" class="">For each action, document the flow:</p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-807a-b6a8-c096ebc23e62" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Example - Payment Processing Action:
+
+1. User initiates payment
+   → Input: Payment method, amount, order ID
+
+2. System validates payment method
+   → Check: Card validity, sufficient funds
+
+3. System processes payment
+   → External: Payment gateway API call
+
+4. System updates order status
+   → Database: Update order record
+
+5. System sends confirmation
+   → Notification: Email, SMS
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80b6-8433-d92aa06ca116" class=""><strong>Step 3: Identify Threats per Action</strong></p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80b1-b42b-e877e2a864bd" class="">For each step in the action flow, identify threats:</p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8017-b6ff-f4460466b26e" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Payment Processing - Threat Analysis:
+
+Step 1: User Input
+- Threat: Input manipulation (amount tampering)
+- CIA Impact: Integrity
+- AAA Gap: Missing input validation
+
+Step 2: Payment Validation
+- Threat: Bypass validation (race condition)
+- CIA Impact: Integrity, Confidentiality
+- AAA Gap: Insufficient authorization
+
+Step 3: External API Call
+- Threat: Man-in-the-middle, API key theft
+- CIA Impact: Confidentiality, Integrity
+- AAA Gap: Weak authentication
+
+Step 4: Database Update
+- Threat: SQL Injection, unauthorized modification
+- CIA Impact: Integrity
+- AAA Gap: Missing authorization check
+
+Step 5: Notification
+- Threat: Information disclosure, email interception
+- CIA Impact: Confidentiality
+- AAA Gap: Insufficient data protection
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-806b-afc2-f26f9d3e7c2b" class=""><strong>Step 4: Map CIA/AAA to Actions</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80af-a9ec-d328081d22b9" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Action: Payment Processing
+
+CIA Analysis:
+- Confidentiality: Payment data must be encrypted
+- Integrity: Transaction amounts cannot be modified
+- Availability: Payment service must be accessible
+
+AAA Analysis:
+- Authentication: User must be authenticated
+- Authorization: User can only pay for own orders
+- Accounting: All payment attempts must be logged
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8024-8860-df43215232b7" class=""><strong>Step 5: Design Mitigations</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80c6-8e70-fecda7602e48" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Action: Payment Processing
+
+Mitigations:
+1. Input Validation
+   - Validate amount against order total
+   - Sanitize all inputs
+   - Use parameterized queries
+
+2. Secure Communication
+   - TLS 1.3 for API calls
+   - Certificate pinning
+   - API key rotation
+
+3. Authorization Checks
+   - Verify user owns the order
+   - Check payment permissions
+   - Enforce rate limits
+
+4. Audit Logging
+   - Log all payment attempts
+   - Include user ID, amount, timestamp
+   - Store in immutable log system
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80c7-ba3f-ca3bb49b8478" class=""><strong>Design by Action Template</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80e3-8fff-dd548959942e" class="code code-wrap"><code class="language-Markdown" style="white-space:pre-wrap;word-break:break-all">## Action: [Action Name]
+
+### Description
+[What this action does]
+
+### Flow
+1. [Step 1]
+2. [Step 2]
+3. [Step 3]
+
+### CIA Requirements
+- Confidentiality: [Requirements]
+- Integrity: [Requirements]
+- Availability: [Requirements]
+
+### AAA Requirements
+- Authentication: [Requirements]
+- Authorization: [Requirements]
+- Accounting: [Requirements]
+
+### Threats
+| Step | Threat | CIA Impact | AAA Gap | Risk |
+|------|--------|------------|---------|------|
+| 1 | [Threat] | [Impact] | [Gap] | [Risk] |
+
+### Mitigations
+- [Mitigation 1]
+- [Mitigation 2]
+- [Mitigation 3]
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-809e-a0c6-c26a22251088" class=""><strong>Real-World Example: User Registration Action</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-807c-a60b-dc96f0d2adfa" class="code code-wrap"><code class="language-Markdown" style="white-space:pre-wrap;word-break:break-all">## Action: User Registration
+
+### Description
+New user creates an account in the system.
+
+### Flow
+1. User submits registration form (email, password, name)
+2. System validates input (email format, password strength)
+3. System checks if email exists
+4. System creates user account
+5. System sends verification email
+6. User clicks verification link
+7. System activates account
+
+### CIA Requirements
+- Confidentiality: Password must be hashed, email protected
+- Integrity: User data must be accurate, verification link must be valid
+- Availability: Registration service must be accessible
+
+### AAA Requirements
+- Authentication: Email verification required
+- Authorization: New users have limited permissions
+- Accounting: All registration attempts logged
+
+### Threats
+| Step | Threat | CIA Impact | AAA Gap | Risk |
+|------|--------|------------|---------|------|
+| 1 | Input injection (XSS, SQLi) | Integrity | Missing validation | HIGH |
+| 2 | Validation bypass | Integrity | Weak validation | MEDIUM |
+| 3 | Email enumeration | Confidentiality | Information disclosure | MEDIUM |
+| 4 | Account creation race condition | Integrity | Missing transaction | MEDIUM |
+| 5 | Email interception | Confidentiality | Unencrypted email | LOW |
+| 6 | Verification link tampering | Integrity | Weak token | HIGH |
+| 7 | Account activation bypass | Integrity | Missing verification | HIGH |
+
+### Mitigations
+- Input validation and sanitization
+- Strong password requirements
+- Rate limiting to prevent enumeration
+- Secure token generation for verification
+- HTTPS for all communication
+- Comprehensive logging
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-803e-b75d-cc1e7c58257a"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-80b4-aa0a-fa558a745ac5" class=""><strong>Design by Component Approach</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8017-96ea-cc6e21875140" class=""><strong>Overview</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8089-a2f5-fb814f811f42" class="">Design by Component focuses on <strong>system architecture and components</strong> rather than business operations. It analyzes threats based on what the system <strong>is</strong> rather than what it <strong>does</strong>.</p></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80b0-83d5-ce9998c3de8a" class=""><strong>When to Use Design by Component</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8074-8e56-fef8f91c2416" class="bulleted-list"><li style="list-style-type:disc"><strong>Architecture analysis</strong>: Microservices, distributed systems</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8085-ab2b-c7328212cec7" class="bulleted-list"><li style="list-style-type:disc"><strong>Infrastructure security</strong>: Cloud services, network components</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80dd-8958-ebc6d8ce2b21" class="bulleted-list"><li style="list-style-type:disc"><strong>System design</strong>: Component interactions, data flow</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-802d-b491-dbba7de75e95" class="bulleted-list"><li style="list-style-type:disc"><strong>Technology stack</strong>: Specific technologies and frameworks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8047-a81f-f26d88802fee" class="bulleted-list"><li style="list-style-type:disc"><strong>Deployment architecture</strong>: Containers, serverless, hybrid</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8049-b44e-fce68dac2012" class=""><strong>Design by Component Process</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-805b-bf45-c516d8a0f374" class=""><strong>Step 1: Identify Components</strong></p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8027-91b2-d873a3faa3ed" class="">List all system components:</p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80d2-8018-d5ad4cbd9bed" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Example - Microservices Architecture:
+
+1. API Gateway
+2. Authentication Service
+3. User Service
+4. Payment Service
+5. Order Service
+6. Notification Service
+7. Database (PostgreSQL)
+8. Cache (Redis)
+9. Message Queue (RabbitMQ)
+10. Load Balancer
+11. CDN
+12. Monitoring Service
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-805f-8a6f-d570138fb2db" class=""><strong>Step 2: Map Component Interactions</strong></p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-801a-8ba5-cff463e7d173" class="">Document how components interact:</p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80fc-8194-fac6473491f2" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Example - Component Interaction:
+
+User → API Gateway → Authentication Service
+                    ↓
+                    User Service → Database
+                    ↓
+                    Payment Service → External Payment Gateway
+                    ↓
+                    Order Service → Database
+                    ↓
+                    Notification Service → Email/SMS Gateway
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80ca-a2cb-dd41bd809d81" class=""><strong>Step 3: Identify Trust Boundaries</strong></p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8017-8c30-efcc7486261c" class="">Define trust boundaries between components:</p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80dd-8400-e6c64d6926de" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Trust Boundaries:
+
+External (Untrusted):
+- Internet users
+- External APIs
+- Third-party services
+
+DMZ (Semi-Trusted):
+- API Gateway
+- Load Balancer
+- CDN
+
+Internal (Trusted):
+- Microservices
+- Internal databases
+- Message queues
+
+Highly Trusted:
+- Authentication service
+- Key management service
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-806d-82b3-d02769ff1757" class=""><strong>Step 4: Identify Threats per Component</strong></p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-803f-9922-d96e06bfcb5a" class="">For each component, identify threats:</p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8040-887b-f907ad9c3ee3" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Component: API Gateway
+
+Threats:
+- DDoS attacks (Availability)
+- API key theft (Confidentiality)
+- Request tampering (Integrity)
+- Rate limit bypass (Availability)
+- Authentication bypass (Authorization)
+
+CIA Impact:
+- Confidentiality: Medium (API keys, tokens)
+- Integrity: High (Request manipulation)
+- Availability: High (DoS attacks)
+
+AAA Gaps:
+- Authentication: Weak API key management
+- Authorization: Missing request validation
+- Accounting: Insufficient logging
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80f5-998c-ce0639d29aae" class=""><strong>Step 5: Map CIA/AAA to Components</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8095-ac93-e1a9cf6f1122" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Component: Payment Service
+
+CIA Analysis:
+- Confidentiality: High (Payment data encryption)
+- Integrity: Critical (Transaction integrity)
+- Availability: High (Payment processing must be available)
+
+AAA Analysis:
+- Authentication: Service-to-service authentication (mTLS)
+- Authorization: Role-based access to payment functions
+- Accounting: All payment operations logged
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-803b-b72f-e95a95822a5c" class=""><strong>Step 6: Design Component-Level Mitigations</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80b7-bc86-eec8932861de" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Component: Payment Service
+
+Mitigations:
+1. Encryption
+   - TLS 1.3 for all communications
+   - AES-256 for data at rest
+   - Key management via HSM
+
+2. Authentication
+   - mTLS for service-to-service
+   - OAuth 2.0 for user authentication
+   - API key rotation
+
+3. Authorization
+   - RBAC for service functions
+   - Transaction-level authorization
+   - Principle of least privilege
+
+4. Monitoring
+   - Comprehensive logging
+   - Real-time monitoring
+   - Anomaly detection
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8013-92b5-d348e2a8d429" class=""><strong>Design by Component Template</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80a7-9350-f077417d424e" class="code code-wrap"><code class="language-Markdown" style="white-space:pre-wrap;word-break:break-all">## Component: [Component Name]
+
+### Description
+[What this component does]
+
+### Technology Stack
+- [Technology 1]
+- [Technology 2]
+
+### Trust Boundary
+[External/DMZ/Internal/Highly Trusted]
+
+### Interactions
+- Receives from: [Components]
+- Sends to: [Components]
+
+### CIA Requirements
+- Confidentiality: [Requirements]
+- Integrity: [Requirements]
+- Availability: [Requirements]
+
+### AAA Requirements
+- Authentication: [Requirements]
+- Authorization: [Requirements]
+- Accounting: [Requirements]
+
+### Threats
+| Threat | CIA Impact | AAA Gap | Risk |
+|--------|------------|---------|------|
+| [Threat] | [Impact] | [Gap] | [Risk] |
+
+### Mitigations
+- [Mitigation 1]
+- [Mitigation 2]
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8093-862a-e98509db4bf3" class=""><strong>Real-World Example: Authentication Service Component</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-808e-8ff4-c3ddb32ee22f" class="code code-wrap"><code class="language-Markdown" style="white-space:pre-wrap;word-break:break-all">## Component: Authentication Service
+
+### Description
+Handles user authentication, token generation, and session management.
+
+### Technology Stack
+- Node.js/Express
+- JWT for tokens
+- Redis for session storage
+- PostgreSQL for user data
+
+### Trust Boundary
+Internal (Trusted)
+
+### Interactions
+- Receives from: API Gateway, User Service
+- Sends to: User Service, Notification Service
+
+### CIA Requirements
+- Confidentiality: High (Passwords, tokens must be protected)
+- Integrity: High (Token signatures must be valid)
+- Availability: High (Authentication must be available)
+
+### AAA Requirements
+- Authentication: Multi-factor authentication support
+- Authorization: Token-based authorization
+- Accounting: All authentication events logged
+
+### Threats
+| Threat | CIA Impact | AAA Gap | Risk |
+|--------|------------|---------|------|
+| Password brute force | Confidentiality | Weak password policy | HIGH |
+| Token theft | Confidentiality | Insecure token storage | HIGH |
+| Session hijacking | Confidentiality | Weak session management | HIGH |
+| Token forgery | Integrity | Weak token signing | CRITICAL |
+| DoS attack | Availability | No rate limiting | MEDIUM |
+
+### Mitigations
+- Strong password requirements + MFA
+- HttpOnly, Secure cookies for tokens
+- Short token expiration + refresh tokens
+- Strong JWT signing (RS256)
+- Rate limiting and CAPTCHA
+- Comprehensive audit logging
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-80ae-8f66-ef3724e2b82a"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-80c4-ae4b-d23159aaedf8" class=""><strong>Open Threat Modeling Format (OTM)</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80a4-a40e-c00f308ca482" class=""><strong>Overview</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8029-85d6-e870dde15690" class="">OTM (Open Threat Modeling Format) is a <strong>platform-independent, machine-readable format</strong> for defining threat models. It enables automation, integration, and standardization of threat modeling.</p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8053-8eda-e44cf18f9053" class=""><strong>Key Benefits:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8067-8c67-db404149ba8b" class="bulleted-list"><li style="list-style-type:disc"><strong>Machine-readable</strong>: Enables automation and tool integration</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80e4-8595-c4f794866898" class="bulleted-list"><li style="list-style-type:disc"><strong>Platform-independent</strong>: Works with any threat modeling tool</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-806b-937b-f43a0186b867" class="bulleted-list"><li style="list-style-type:disc"><strong>Version control</strong>: Threat models can be versioned like code</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80e4-bd1e-d7cb5677a5be" class="bulleted-list"><li style="list-style-type:disc"><strong>Collaboration</strong>: Standardized format for team collaboration</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8004-983f-c68f0c1c325c" class="bulleted-list"><li style="list-style-type:disc"><strong>Integration</strong>: Connects to SAST, DAST, SIEM tools</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8091-a825-c1a5eb4448c2" class=""><strong>OTM Structure</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80f4-9aa0-fe55a0e8a538" class="">Based on the <a href="https://github.com/iriusrisk/OpenThreatModel">OTM specification</a>, an OTM document contains:</p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8068-b473-d4afd5a965c5" class="code code-wrap"><code class="language-YAML" style="white-space:pre-wrap;word-break:break-all">otmVersion: &quot;0.2.0&quot;
+project:
+  name: &quot;E-commerce Platform&quot;
+  id: &quot;ecommerce-platform-v1&quot;
+
+representations:
+  - name: &quot;System Architecture&quot;
+    id: &quot;arch-diagram-1&quot;
+    type: &quot;diagram&quot;
+    # Diagram data
+
+assets:
+  - name: &quot;User Database&quot;
+    id: &quot;asset-db-1&quot;
+    type: &quot;data-store&quot;
+    # Asset properties
+
+threats:
+  - name: &quot;SQL Injection&quot;
+    id: &quot;threat-sqli-1&quot;
+    categories: [&quot;Tampering&quot;]
+    risk:
+      likelihood: 70
+      impact: 90
+    # Threat details
+
+mitigations:
+  - name: &quot;Parameterized Queries&quot;
+    id: &quot;mitigation-1&quot;
+    riskReduction: 80
+    # Mitigation details
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8021-9faa-e1eed3dae489" class=""><strong>OTM Core Elements</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8090-a8b0-c06fdb995254" class=""><strong>1. Project</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80fd-9292-c4758d41e52e" class="code code-wrap"><code class="language-YAML" style="white-space:pre-wrap;word-break:break-all">project:
+  name: &quot;Project Name&quot;
+  id: &quot;unique-project-id&quot;
+  description: &quot;Project description&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8030-951d-e35c5e73724d" class=""><strong>2. Representations (Diagrams)</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80df-b893-dbca5d299f13" class="code code-wrap"><code class="language-YAML" style="white-space:pre-wrap;word-break:break-all">representations:
+  - name: &quot;Data Flow Diagram&quot;
+    id: &quot;dfd-1&quot;
+    type: &quot;diagram&quot;
+    size:
+      width: 800
+      height: 600
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80b8-a3f6-e5aade42d088" class=""><strong>3. Assets</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8050-a0d8-cf6fd6dfd59a" class="code code-wrap"><code class="language-YAML" style="white-space:pre-wrap;word-break:break-all">assets:
+  - name: &quot;Web Server&quot;
+    id: &quot;asset-web-1&quot;
+    type: &quot;process&quot;
+    description: &quot;Main web application server&quot;
+    attributes:
+      technology: &quot;Node.js&quot;
+      environment: &quot;Production&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-805a-ba4f-f72b3f83e79b" class=""><strong>4. Threats</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8019-ae37-fd73fed9adb5" class="code code-wrap"><code class="language-YAML" style="white-space:pre-wrap;word-break:break-all">threats:
+  - name: &quot;Cross-Site Scripting (XSS)&quot;
+    id: &quot;threat-xss-1&quot;
+    description: &quot;Attacker injects malicious scripts&quot;
+    categories:
+      - &quot;Tampering&quot;
+      - &quot;Information Disclosure&quot;
+    cwes:
+      - &quot;CWE-79&quot;
+    risk:
+      likelihood: 60
+      likelihoodComment: &quot;Common vulnerability in web apps&quot;
+      impact: 80
+      impactComment: &quot;Can steal user sessions and data&quot;
+    tags:
+      - &quot;web&quot;
+      - &quot;injection&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80af-8134-de5e3ba0a8cd" class=""><strong>5. Mitigations</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80c0-ba3c-db972f337035" class="code code-wrap"><code class="language-YAML" style="white-space:pre-wrap;word-break:break-all">mitigations:
+  - name: &quot;Input Sanitization&quot;
+    id: &quot;mitigation-1&quot;
+    description: &quot;Sanitize all user inputs&quot;
+    riskReduction: 75
+    attributes:
+      standard: &quot;OWASP-ASVS&quot;
+      implementation: &quot;Content Security Policy&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80e7-8e01-c5453af2eb06" class=""><strong>6. Threat Instances</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8050-890e-c49d5f7da717" class="code code-wrap"><code class="language-YAML" style="white-space:pre-wrap;word-break:break-all">threats:
+  - threat: &quot;threat-xss-1&quot;
+    state: &quot;mitigated&quot;
+    mitigations:
+      - mitigation: &quot;mitigation-1&quot;
+        state: &quot;implemented&quot;
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-806d-ba12-e7b9e5a2f1da" class=""><strong>Creating OTM from Threat Model</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80ee-8f9c-ceae7d4f1eab" class=""><strong>Step 1: Define Project</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-808f-94dc-d73e8c8fffb7" class="code code-wrap"><code class="language-YAML" style="white-space:pre-wrap;word-break:break-all">otmVersion: &quot;0.2.0&quot;
+project:
+  name: &quot;Payment Processing System&quot;
+  id: &quot;payment-system-v2&quot;
+  description: &quot;Secure payment processing microservice&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80a3-bd66-f4a7479583ac" class=""><strong>Step 2: Define Assets</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80c7-82e0-f27601bef892" class="code code-wrap"><code class="language-YAML" style="white-space:pre-wrap;word-break:break-all">assets:
+  - name: &quot;Payment API&quot;
+    id: &quot;asset-payment-api&quot;
+    type: &quot;process&quot;
+    description: &quot;REST API for payment processing&quot;
+
+  - name: &quot;Payment Database&quot;
+    id: &quot;asset-payment-db&quot;
+    type: &quot;data-store&quot;
+    description: &quot;Stores payment transactions&quot;
+
+  - name: &quot;Payment Gateway&quot;
+    id: &quot;asset-gateway&quot;
+    type: &quot;external&quot;
+    description: &quot;External payment gateway service&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8025-a11b-e79b1e58092f" class=""><strong>Step 3: Define Threats</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-804b-aa85-fd8666bf521f" class="code code-wrap"><code class="language-YAML" style="white-space:pre-wrap;word-break:break-all">threats:
+  - name: &quot;Payment Amount Tampering&quot;
+    id: &quot;threat-tamper-1&quot;
+    description: &quot;Attacker modifies payment amount&quot;
+    categories:
+      - &quot;Tampering&quot;
+    cwes:
+      - &quot;CWE-345&quot;
+    risk:
+      likelihood: 50
+      impact: 100
+      impactComment: &quot;Financial loss and fraud&quot;
+
+  - name: &quot;Payment Data Theft&quot;
+    id: &quot;threat-theft-1&quot;
+    description: &quot;Attacker steals payment card data&quot;
+    categories:
+      - &quot;Information Disclosure&quot;
+    cwes:
+      - &quot;CWE-200&quot;
+    risk:
+      likelihood: 40
+      impact: 95
+      impactComment: &quot;PCI-DSS violation, customer trust loss&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8020-b59f-df71ea7109f7" class=""><strong>Step 4: Define Mitigations</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8074-a8eb-e7dd4089c393" class="code code-wrap"><code class="language-YAML" style="white-space:pre-wrap;word-break:break-all">mitigations:
+  - name: &quot;Input Validation&quot;
+    id: &quot;mitigation-validate-1&quot;
+    description: &quot;Validate payment amounts server-side&quot;
+    riskReduction: 80
+
+  - name: &quot;Encryption&quot;
+    id: &quot;mitigation-encrypt-1&quot;
+    description: &quot;Encrypt payment data at rest and in transit&quot;
+    riskReduction: 90
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80c9-a28b-ee37d39b3e41" class=""><strong>Step 5: Map Threats to Assets</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8058-bc41-e0b757233495" class="code code-wrap"><code class="language-YAML" style="white-space:pre-wrap;word-break:break-all"># In threat instance
+threats:
+  - threat: &quot;threat-tamper-1&quot;
+    state: &quot;mitigated&quot;
+    mitigations:
+      - mitigation: &quot;mitigation-validate-1&quot;
+        state: &quot;implemented&quot;
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8099-ade9-c37aa8c01646" class=""><strong>OTM Integration Examples</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-805a-88e7-de3f8a23482a" class=""><strong>1. CI/CD Integration</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80b7-8368-e34153abdd10" class="code code-wrap"><code class="language-YAML" style="white-space:pre-wrap;word-break:break-all"># .github/workflows/threat-model.yml
+name: Threat Model Validation
+on: [push, pull_request]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Validate OTM
+        run: |
+          otm-validator threat-model.otm.yaml
+      - name: Generate Report
+        run: |
+          otm-report threat-model.otm.yaml --format html
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-805d-a76b-dc00cd804a84" class=""><strong>2. SAST Integration</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80dc-b917-c768e49d1b0a" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Parse OTM and generate SAST rules
+import yaml
+
+with open(&#x27;threat-model.otm.yaml&#x27;) as f:
+    otm = yaml.safe_load(f)
+
+for threat in otm[&#x27;threats&#x27;]:
+    if &#x27;CWE-79&#x27; in threat.get(&#x27;cwes&#x27;, []):
+        # Generate XSS detection rule
+        generate_sast_rule(&#x27;xss&#x27;, threat)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-807d-85c9-e1254a7b273c" class=""><strong>3. Risk Dashboard</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8016-a02f-fed2a03d220f" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Calculate risk scores from OTM
+def calculate_risk(otm):
+    risks = []
+    for threat in otm[&#x27;threats&#x27;]:
+        risk = threat[&#x27;risk&#x27;]
+        score = (risk[&#x27;likelihood&#x27;] * risk[&#x27;impact&#x27;]) / 100
+
+        # Apply mitigations
+        for mitigation in threat.get(&#x27;mitigations&#x27;, []):
+            reduction = mitigation[&#x27;riskReduction&#x27;]
+            score *= (1 - reduction / 100)
+
+        risks.append({
+            &#x27;threat&#x27;: threat[&#x27;name&#x27;],
+            &#x27;risk_score&#x27;: score
+        })
+    return risks
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80dd-9d63-c4bb3ed7c873" class=""><strong>OTM Best Practices</strong></h3></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-8065-a767-ecc984238f2c" class="numbered-list" start="1"><li><strong>Version Control</strong>: Store OTM files in Git</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-80c5-aaff-e9eae8f0f363" class="numbered-list" start="2"><li><strong>Validation</strong>: Validate OTM structure before committing</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-80ef-8798-e1de371b7829" class="numbered-list" start="3"><li><strong>Automation</strong>: Integrate OTM into CI/CD pipelines</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-80b8-a6da-dadf2cf5c919" class="numbered-list" start="4"><li><strong>Documentation</strong>: Include detailed descriptions</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-80e3-94a3-e74773db405c" class="numbered-list" start="5"><li><strong>Regular Updates</strong>: Update OTM as system changes</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-8063-846e-eaa2e966f9d7" class="numbered-list" start="6"><li><strong>Tool Integration</strong>: Use OTM with threat modeling tools</li></ol></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-80dc-b44e-db48d50b65cc"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-8098-83f6-f0527e28ec2e" class=""><strong>Combining Frameworks and Approaches</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80c9-bed4-f19372587e8a" class=""><strong>Integrated Threat Modeling Process</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8068-9a05-d11e2cb8dc4e" class=""><strong>Step 1: Start with Design Approach</strong></p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-800c-a0df-d470b9bdd68d" class="">Choose primary approach based on system type:</p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-809e-baa0-da7a5b6462a9" class="bulleted-list"><li style="list-style-type:disc"><strong>Design by Action</strong>: For process-oriented systems</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-803c-8867-e621dfeb11d6" class="bulleted-list"><li style="list-style-type:disc"><strong>Design by Component</strong>: For architecture-oriented systems</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8023-b7a1-f4588ebf0c0e" class="bulleted-list"><li style="list-style-type:disc"><strong>Both</strong>: For comprehensive analysis</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-802e-9a71-f5ad3889ab66" class=""><strong>Step 2: Apply CIA Framework</strong></p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80f8-bd67-c638abf42680" class="">For each action/component, assess CIA requirements:</p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8050-a422-e7547e55788a" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Action: Payment Processing
+
+CIA Assessment:
+- Confidentiality: Payment data must be encrypted
+- Integrity: Transaction amounts cannot be modified
+- Availability: Payment service must be available 99.9%
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8094-9c48-c2a8e8c9082e" class=""><strong>Step 3: Apply AAA Framework</strong></p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80e4-a15e-f4a32d56b2d7" class="">For each action/component, assess AAA requirements:</p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-806c-b653-c331a1e2c09c" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Action: Payment Processing
+
+AAA Assessment:
+- Authentication: User must be authenticated
+- Authorization: User can only pay for own orders
+- Accounting: All payment attempts logged
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8096-b22d-f4e7ed20edba" class=""><strong>Step 4: Use STRIDE for Threat Identification</strong></p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80a4-82b8-cf1f7173c412" class="">Map STRIDE threats to CIA/AAA:</p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80ad-9845-c0ca8dd4ddf7" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Threat: Payment Amount Tampering
+
+STRIDE: Tampering
+CIA Impact: Integrity
+AAA Gap: Missing authorization check
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-808f-b9de-e87459b79577" class=""><strong>Step 5: Document in OTM Format</strong></p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80de-91b6-d8bc31f76b6f" class="">Structure findings in OTM:</p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80bb-875d-f5198056b809" class="code code-wrap"><code class="language-YAML" style="white-space:pre-wrap;word-break:break-all">threats:
+  - name: &quot;Payment Amount Tampering&quot;
+    categories: [&quot;Tampering&quot;]
+    risk:
+      likelihood: 50
+      impact: 100
+    # CIA/AAA mapping in attributes
+    attributes:
+      cia_impact: &quot;Integrity&quot;
+      aaa_gap: &quot;Authorization&quot;
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8001-b73d-d85acdc09324" class=""><strong>Comprehensive Example: E-commerce Platform</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80f9-9612-e5847cc19f89" class=""><strong>Design by Action + Design by Component + CIA + AAA + OTM</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8000-a421-e07e97fe9043" class="code code-wrap"><code class="language-YAML" style="white-space:pre-wrap;word-break:break-all"># OTM Document
+otmVersion: &quot;0.2.0&quot;
+project:
+  name: &quot;E-commerce Platform&quot;
+  id: &quot;ecommerce-v1&quot;
+
+# Components (Design by Component)
+assets:
+  - name: &quot;Payment Service&quot;
+    id: &quot;asset-payment-service&quot;
+    type: &quot;process&quot;
+
+  - name: &quot;Payment Database&quot;
+    id: &quot;asset-payment-db&quot;
+    type: &quot;data-store&quot;
+
+# Actions (Design by Action)
+# Represented as processes in OTM
+
+# Threats with CIA/AAA mapping
+threats:
+  - name: &quot;Payment Amount Tampering&quot;
+    id: &quot;threat-payment-tamper&quot;
+    categories: [&quot;Tampering&quot;]
+    risk:
+      likelihood: 50
+      impact: 100
+    attributes:
+      # CIA mapping
+      confidentiality_impact: &quot;None&quot;
+      integrity_impact: &quot;Critical&quot;
+      availability_impact: &quot;None&quot;
+      # AAA mapping
+      authentication_required: &quot;Yes&quot;
+      authorization_gap: &quot;Missing server-side validation&quot;
+      accounting_required: &quot;Yes&quot;
+    cwes:
+      - &quot;CWE-345&quot;
+
+  - name: &quot;Payment Data Theft&quot;
+    id: &quot;threat-payment-theft&quot;
+    categories: [&quot;Information Disclosure&quot;]
+    risk:
+      likelihood: 40
+      impact: 95
+    attributes:
+      confidentiality_impact: &quot;Critical&quot;
+      integrity_impact: &quot;None&quot;
+      availability_impact: &quot;None&quot;
+      authentication_required: &quot;Yes&quot;
+      authorization_gap: &quot;None&quot;
+      accounting_required: &quot;Yes&quot;
+    cwes:
+      - &quot;CWE-200&quot;
+
+# Mitigations
+mitigations:
+  - name: &quot;Input Validation&quot;
+    id: &quot;mitigation-validate&quot;
+    riskReduction: 80
+    attributes:
+      addresses_cia: &quot;Integrity&quot;
+      addresses_aaa: &quot;Authorization&quot;
+
+  - name: &quot;Encryption&quot;
+    id: &quot;mitigation-encrypt&quot;
+    riskReduction: 90
+    attributes:
+      addresses_cia: &quot;Confidentiality&quot;
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-80d1-a30f-f565f4e8e900"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-8022-94c6-c088c7594cb4" class=""><strong>Advanced Threat Modeling Techniques</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-804f-98e4-c1ee38f58691" class=""><strong>Threat Modeling for Microservices</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8045-9885-cd426e804eb5" class=""><strong>Challenges:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-805b-90fb-db28a9c85969" class="bulleted-list"><li style="list-style-type:disc">Multiple services and interactions</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-802d-bc1e-fe06b547fa7a" class="bulleted-list"><li style="list-style-type:disc">Service-to-service authentication</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8047-bf9a-d87c3e2fc257" class="bulleted-list"><li style="list-style-type:disc">Distributed data</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8001-b880-e020cf3b8d1f" class="bulleted-list"><li style="list-style-type:disc">Network communication</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80e4-bb1f-f15d1538125a" class=""><strong>Approach:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-80c2-88e1-e3de6ba5a87e" class="numbered-list" start="1"><li>Model each service as a component</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-80d5-b37d-f72223f51f22" class="numbered-list" start="2"><li>Map service interactions</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-80b1-9583-d5035a166a01" class="numbered-list" start="3"><li>Identify trust boundaries</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-8046-9eea-c340a3ea3fc5" class="numbered-list" start="4"><li>Assess CIA/AAA per service</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-806e-a340-cfeb7ce294e2" class="numbered-list" start="5"><li>Document in OTM format</li></ol></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80e4-b542-eaeeb56ea415" class=""><strong>Threat Modeling for APIs</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8014-be61-c0ec1efdf9f5" class=""><strong>Focus Areas:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8062-9c63-dcd1420f6b45" class="bulleted-list"><li style="list-style-type:disc">Authentication (OAuth, API keys)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-803a-9331-c9dd75b1365b" class="bulleted-list"><li style="list-style-type:disc">Authorization (Scopes, permissions)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8043-b719-e7fae98c71bb" class="bulleted-list"><li style="list-style-type:disc">Input validation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8008-a010-eee4e97fa935" class="bulleted-list"><li style="list-style-type:disc">Rate limiting</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-800c-836e-d10a24f3911a" class="bulleted-list"><li style="list-style-type:disc">Error handling</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-804f-bf7d-f7df3590e027" class=""><strong>Design by Action for APIs:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-808c-ac62-ca0933ee78d3" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Action: GET /api/users/{id}
+
+CIA:
+- Confidentiality: User data must be protected
+- Integrity: Response must be accurate
+- Availability: API must be accessible
+
+AAA:
+- Authentication: Valid API key/token
+- Authorization: User can only access own data
+- Accounting: All API calls logged
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8032-be66-dceb6f79aaed" class=""><strong>Threat Modeling for Cloud Services</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8016-97a4-c43abf3cecab" class=""><strong>Considerations:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80af-aa63-f694c8cd3d83" class="bulleted-list"><li style="list-style-type:disc">Shared responsibility model</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8024-8c97-fa85ba128e5b" class="bulleted-list"><li style="list-style-type:disc">Cloud provider security</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80cd-a67c-fc84fb4c891e" class="bulleted-list"><li style="list-style-type:disc">Configuration management</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-801c-beb2-f7ad7b5dd2d2" class="bulleted-list"><li style="list-style-type:disc">Identity and access management (IAM)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80d5-b26d-e69d71529165" class="bulleted-list"><li style="list-style-type:disc">Network security groups</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8048-b1db-cd481980e1f4" class=""><strong>Components to Model:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8057-8f0a-c727ed3a8476" class="bulleted-list"><li style="list-style-type:disc">Cloud resources (VMs, containers, serverless)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-808c-8388-dccb1bc5dcc7" class="bulleted-list"><li style="list-style-type:disc">Storage (S3, databases)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8077-8e24-d94508bcf5cf" class="bulleted-list"><li style="list-style-type:disc">Networking (VPC, load balancers)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80a1-81d3-d2288496e9bd" class="bulleted-list"><li style="list-style-type:disc">Identity (IAM, SSO)</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8003-8e24-cdd7bc75d209" class=""><strong>Threat Modeling for Mobile Applications</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80da-9e57-ca66b03e94b5" class=""><strong>Focus Areas:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8074-b993-f69a1c94b6d2" class="bulleted-list"><li style="list-style-type:disc">Device security</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-807e-a3e3-c77c3be7abbc" class="bulleted-list"><li style="list-style-type:disc">App store security</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ed-beac-fa99d592ead1" class="bulleted-list"><li style="list-style-type:disc">Data storage (local, cloud)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-809e-8975-ff9805f9345b" class="bulleted-list"><li style="list-style-type:disc">Network communication</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-808f-a558-f8072985d1c1" class="bulleted-list"><li style="list-style-type:disc">Authentication and authorization</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80b0-9cfe-dd5343077e35" class=""><strong>Design by Action:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8064-8676-c1b65f777393" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Action: Mobile App Login
+
+CIA:
+- Confidentiality: Credentials protected
+- Integrity: Authentication tokens valid
+- Availability: Login service accessible
+
+AAA:
+- Authentication: MFA support
+- Authorization: Role-based access
+- Accounting: Login attempts logged
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-804f-81a7-f8abb7548e47"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-801d-8a44-e14007b3fd62" class=""><strong>Real-World Case Studies</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-807d-b231-e814a0bf6b34" class=""><strong>Case Study 1: Payment Processing System</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-800f-8712-cb0e39d83a82" class=""><strong>Scenario:</strong> E-commerce platform processing credit card payments.</p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80c6-ae0e-e6c0396185bb" class=""><strong>Threat Modeling Approach:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8081-89d1-dc235f5c618f" class="bulleted-list"><li style="list-style-type:disc">Design by Action (Payment processing flow)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-808e-a5d1-c6f24ee69c11" class="bulleted-list"><li style="list-style-type:disc">CIA Framework (Confidentiality, Integrity critical)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80d5-b6f2-fa6800d8ce0b" class="bulleted-list"><li style="list-style-type:disc">AAA Framework (Strong authentication, authorization)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80c6-9313-f2c9078df674" class="bulleted-list"><li style="list-style-type:disc">OTM Documentation</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8059-b45c-e31970d1951b" class=""><strong>Key Findings:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-806c-bed8-ec9463f989ba" class="bulleted-list"><li style="list-style-type:disc">Payment amount tampering (Integrity threat)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80d1-adeb-e32c4d321774" class="bulleted-list"><li style="list-style-type:disc">Payment data theft (Confidentiality threat)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8027-8d44-e5c9af8fe3c0" class="bulleted-list"><li style="list-style-type:disc">Missing server-side validation (Authorization gap)</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-804b-847f-f51bad6f1be6" class=""><strong>Mitigations Implemented:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8052-a411-d3e2c96bbb3e" class="bulleted-list"><li style="list-style-type:disc">Input validation and sanitization</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80cc-8d00-e831a135bd22" class="bulleted-list"><li style="list-style-type:disc">Encryption (TLS 1.3, AES-256)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-802c-b09a-f9cff6d06386" class="bulleted-list"><li style="list-style-type:disc">Strong authentication (MFA)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ab-9847-cba9535198b6" class="bulleted-list"><li style="list-style-type:disc">Comprehensive logging</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8052-ab8a-c92dce3b9415" class=""><strong>Case Study 2: Microservices Architecture</strong></h3></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8013-a6e9-d0f35958f3c6" class=""><strong>Scenario:</strong> Distributed system with multiple microservices.</p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-804f-90cd-d3de31f91ca5" class=""><strong>Threat Modeling Approach:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80b1-a74f-e347969253ff" class="bulleted-list"><li style="list-style-type:disc">Design by Component (Each service as component)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80a7-a639-ef2d085e08db" class="bulleted-list"><li style="list-style-type:disc">CIA Framework (Per-service assessment)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8086-a715-d6b5901e6fb4" class="bulleted-list"><li style="list-style-type:disc">AAA Framework (Service-to-service authentication)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ce-98c0-cdccb1878920" class="bulleted-list"><li style="list-style-type:disc">OTM Documentation</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8010-86b7-ce2f0d42f80d" class=""><strong>Key Findings:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8079-a765-d6869eaddec4" class="bulleted-list"><li style="list-style-type:disc">Weak service-to-service authentication</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8040-94ad-dccdb559bbb1" class="bulleted-list"><li style="list-style-type:disc">Insufficient network segmentation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80d8-8558-e4e504f000fa" class="bulleted-list"><li style="list-style-type:disc">Missing authorization checks between services</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80a2-b7a0-d66eb18555d0" class=""><strong>Mitigations Implemented:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80e3-8707-c37112b7f450" class="bulleted-list"><li style="list-style-type:disc">mTLS for service-to-service communication</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80b3-b082-e554c00ddc68" class="bulleted-list"><li style="list-style-type:disc">Network policies and segmentation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-800a-af4f-d45746164b7c" class="bulleted-list"><li style="list-style-type:disc">Service mesh with authorization policies</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8096-a74e-f7fedc76a00a" class="bulleted-list"><li style="list-style-type:disc">Centralized logging and monitoring</li></ul></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-808d-9e32-f06e0f2980a0"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-804e-aa04-cbd3f8b16d06" class=""><strong>Best Practices and Recommendations</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8096-9450-f6c63e569118" class=""><strong>Threat Modeling Best Practices</strong></h3></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-803a-9c30-d42fac246f48" class="numbered-list" start="1"><li><strong>Start Early</strong>: Begin threat modeling in design phase</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-803f-b330-df660ed17bea" class="numbered-list" start="2"><li><strong>Iterate</strong>: Update threat model as system evolves</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-80fd-842d-c6deaa8268cc" class="numbered-list" start="3"><li><strong>Use Multiple Frameworks</strong>: Combine CIA, AAA, STRIDE</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-8071-a2d5-fc94b6d84aac" class="numbered-list" start="4"><li><strong>Document in OTM</strong>: Use standardized format</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-80f6-a763-e49bb32a739b" class="numbered-list" start="5"><li><strong>Involve Stakeholders</strong>: Include developers, architects, security</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-8079-9a6c-cb54f8e181bf" class="numbered-list" start="6"><li><strong>Prioritize</strong>: Focus on high-risk threats first</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-8013-9b13-dcb6983b922f" class="numbered-list" start="7"><li><strong>Validate</strong>: Test mitigations and verify effectiveness</li></ol></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80be-b94b-ff9c83005956" class=""><strong>Framework Selection Guide</strong></h3></div><div style="display:contents" dir="ltr"><table id="2d2562ad-76f0-80fa-ad4f-cae75303d9f4" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-8065-ac9d-d84f95d4ac67"><th id="f;uU" class="simple-table-header-color simple-table-header">Scenario</th><th id="A@ob" class="simple-table-header-color simple-table-header">Primary Framework</th><th id="vl^o" class="simple-table-header-color simple-table-header">Secondary Framework</th><th id="_Ho[" class="simple-table-header-color simple-table-header">Design Approach</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80d2-9e19-cf38dd6c5e90"><td id="f;uU" class="">Data Protection</td><td id="A@ob" class="">CIA</td><td id="vl^o" class="">AAA</td><td id="_Ho[" class="">Design by Component</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-8006-a270-fcb77c3a99f0"><td id="f;uU" class="">Access Control</td><td id="A@ob" class="">AAA</td><td id="vl^o" class="">CIA</td><td id="_Ho[" class="">Design by Action</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80a0-a53e-ea9268074cca"><td id="f;uU" class="">API Security</td><td id="A@ob" class="">AAA</td><td id="vl^o" class="">CIA</td><td id="_Ho[" class="">Design by Action</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80e2-b4d0-c7145a2d8947"><td id="f;uU" class="">Infrastructure</td><td id="A@ob" class="">CIA</td><td id="vl^o" class="">AAA</td><td id="_Ho[" class="">Design by Component</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-807f-984d-f13c6d1e3110"><td id="f;uU" class="">Business Process</td><td id="A@ob" class="">CIA + AAA</td><td id="vl^o" class="">STRIDE</td><td id="_Ho[" class="">Design by Action</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-8031-b1f1-d0e96aa35a7d"><td id="f;uU" class="">Architecture</td><td id="A@ob" class="">CIA + AAA</td><td id="vl^o" class="">STRIDE</td><td id="_Ho[" class="">Design by Component</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8043-b775-e1626d6e6573" class=""><strong>OTM Integration Strategy</strong></h3></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-80ed-959f-fce416e59f53" class="numbered-list" start="1"><li><strong>Version Control</strong>: Store OTM files in Git</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-8014-b3df-c0ccb98ae21a" class="numbered-list" start="2"><li><strong>CI/CD Integration</strong>: Validate OTM in pipelines</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-804e-9a10-f7f7290d60ab" class="numbered-list" start="3"><li><strong>Tool Integration</strong>: Connect to SAST/DAST tools</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-8040-b7fe-f412264bfe36" class="numbered-list" start="4"><li><strong>Reporting</strong>: Generate risk dashboards from OTM</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-8006-afaf-d0f868916a1f" class="numbered-list" start="5"><li><strong>Automation</strong>: Automate threat model updates</li></ol></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-808a-bf0e-d7b7320c6684"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-80b1-bdb4-ec158ca1d4e4" class=""><strong>Summary</strong></h2></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80d3-8527-cadfb21f37d4" class="">Advanced threat modeling combines multiple frameworks and approaches:</p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80e4-8585-c64989fd9c26" class="bulleted-list"><li style="list-style-type:disc"><strong>CIA Framework</strong>: Protects security properties (Confidentiality, Integrity, Availability)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8057-9107-ce9305532d4e" class="bulleted-list"><li style="list-style-type:disc"><strong>AAA Framework</strong>: Controls access (Authentication, Authorization, Accounting)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-808e-b1a6-d4693e6941dd" class="bulleted-list"><li style="list-style-type:disc"><strong>Design by Action</strong>: Analyzes business operations and workflows</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80c9-8e1d-fb91d0719fb6" class="bulleted-list"><li style="list-style-type:disc"><strong>Design by Component</strong>: Analyzes system architecture and components</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80aa-91d5-c73a0346bd6a" class="bulleted-list"><li style="list-style-type:disc"><strong>OTM Format</strong>: Standardizes threat model documentation</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80f9-a3dc-dfbd8a29fcb6" class=""><strong>Best Practice</strong>: Use all frameworks and approaches together for comprehensive security analysis!</p></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-8081-8202-eabf1cc6e06f"/></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80f8-85da-e6c7d10e1e61" class=""><strong>References:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80eb-bec3-d351d0c186a7" class="bulleted-list"><li style="list-style-type:disc"><a href="https://github.com/iriusrisk/OpenThreatModel">Open Threat Modeling Format (OTM)</a></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80a6-a320-dc294beb62e0" class="bulleted-list"><li style="list-style-type:disc"><a href="https://owasp.org/www-community/Threat_Modeling">OWASP Threat Modeling</a></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80af-acbb-efda00a21607" class="bulleted-list"><li style="list-style-type:disc"><a href="https://docs.microsoft.com/en-us/azure/security/develop/threat-modeling-tool">Microsoft Threat Modeling</a></li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8062-8f55-fe7caba4a402" class="">
+</p></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

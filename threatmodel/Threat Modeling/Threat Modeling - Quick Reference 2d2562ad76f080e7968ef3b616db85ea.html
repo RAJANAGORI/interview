@@ -1,0 +1,760 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Threat Modeling - Quick Reference</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2d2562ad-76f0-80e7-968e-f3b616db85ea" class="page mono"><header><h1 class="page-title" dir="auto"><strong>Threat Modeling - Quick Reference</strong></h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="ltr"><nav id="2d2562ad-76f0-803e-a405-f7c70662655d" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-8087-bc91-f6b7bd2c1ac2"><strong>CIA Framework Cheat Sheet</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8093-8a97-ddc05e38fa3b"><strong>Confidentiality</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8032-b8a5-e6d9e5fe0b4e"><strong>Integrity</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8074-b89c-f52a80731fe1"><strong>Availability</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-80d2-b6cf-d2545f0f170a"><strong>AAA Framework Cheat Sheet</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8037-b532-f69c1d54829a"><strong>Authentication</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-808b-986e-e26dcce14eba"><strong>Authorization</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8015-b5bf-d2e57561977b"><strong>Accounting</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-80eb-a1d4-c5e2d30ce098"><strong>Design Approach Decision Tree</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-80a4-98cc-eeea01665e14"><strong>Framework Selection Guide</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-80c4-ae9e-d924a7fed48f"><strong>OTM Structure Quick Reference</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-8020-91c1-c92a9797afd1"><strong>STRIDE to CIA Mapping</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-8013-b381-c8ec1e802f3a"><strong>Risk Calculation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-8067-9b32-cab18c150cad"><strong>Threat Modeling Checklist</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80f9-8874-d8f32a23a7fd"><strong>Design by Action</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-804c-997b-ef18b096c756"><strong>Design by Component</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-806a-8bb0-ffb6bb62835a"><strong>Common Threats by Category</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-804f-a58b-ef3d1bd50ed8"><strong>Confidentiality Threats</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8056-bb43-d00396d06819"><strong>Integrity Threats</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-805b-a54c-e8a8cccaedfe"><strong>Availability Threats</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8031-b0e9-ff3668095688"><strong>Authentication Threats</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-807f-aabc-f3bd674fb924"><strong>Authorization Threats</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8071-821c-f36f6e581673"><strong>Accounting Threats</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-8079-a5c5-f093b376e7c1"><strong>Mitigation Strategies</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-809d-91dd-c1ca607844fc"><strong>Confidentiality</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8022-8a4e-d96f6c235041"><strong>Integrity</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80a3-ab4c-d20d62f243e8"><strong>Availability</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80d3-a196-fbef7ebfb0fb"><strong>Authentication</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-804c-898f-c8f4b0755dbc"><strong>Authorization</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80ef-99cd-fe58f421572b"><strong>Accounting</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-80b7-95fb-f1d61d45bc84"><strong>OTM Integration Checklist</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-8053-b61e-e199622132cb"><strong>Quick Answers</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-805b-b158-d7d97736ff18"><strong>Risk Matrix</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-80ee-89a6-e0f98b89ebe8"><strong>Key Takeaways</strong></a></div></nav></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-8087-bc91-f6b7bd2c1ac2" class=""><strong>CIA Framework Cheat Sheet</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8093-8a97-ddc05e38fa3b" class=""><strong>Confidentiality</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8021-85d0-d7a478dadc10" class="bulleted-list"><li style="list-style-type:disc"><strong>Definition</strong>: Information accessible only to authorized parties</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8026-8bca-ff5a6f3e7c97" class="bulleted-list"><li style="list-style-type:disc"><strong>Threats</strong>: Unauthorized access, data interception, data leakage</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8005-93fa-cde6abee915d" class="bulleted-list"><li style="list-style-type:disc"><strong>Mitigations</strong>: Encryption, access control, data classification</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8078-bbf5-e529e3e86bba" class="bulleted-list"><li style="list-style-type:disc"><strong>Impact Levels</strong>: Public, Internal, Confidential, Restricted</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8032-b8a5-e6d9e5fe0b4e" class=""><strong>Integrity</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8058-9fb1-c882c03872de" class="bulleted-list"><li style="list-style-type:disc"><strong>Definition</strong>: Data and systems remain accurate and unmodified</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8020-8032-e1b673bdc38a" class="bulleted-list"><li style="list-style-type:disc"><strong>Threats</strong>: Data tampering, unauthorized modification, MitM</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80b7-a83a-f606bb56d3c3" class="bulleted-list"><li style="list-style-type:disc"><strong>Mitigations</strong>: Digital signatures, hash functions, access controls</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80d7-870a-de7412b5b780" class="bulleted-list"><li style="list-style-type:disc"><strong>Impact Levels</strong>: Low, Medium, High, Critical</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8074-b89c-f52a80731fe1" class=""><strong>Availability</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-808b-9e66-e67f4237b0c7" class="bulleted-list"><li style="list-style-type:disc"><strong>Definition</strong>: Systems and data accessible when needed</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80c1-879a-c62211e63786" class="bulleted-list"><li style="list-style-type:disc"><strong>Threats</strong>: DoS/DDoS, system failures, resource exhaustion</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8091-a887-d9f35bc4f35a" class="bulleted-list"><li style="list-style-type:disc"><strong>Mitigations</strong>: Redundancy, load balancing, DDoS protection</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80a9-9b38-cacb1394e006" class="bulleted-list"><li style="list-style-type:disc"><strong>Impact Levels</strong>: Standard, High, Critical</li></ul></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-809b-9537-e51f36084afa"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-80d2-b6cf-d2545f0f170a" class=""><strong>AAA Framework Cheat Sheet</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8037-b532-f69c1d54829a" class=""><strong>Authentication</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8091-84c7-ff2dd5a7e723" class="bulleted-list"><li style="list-style-type:disc"><strong>Definition</strong>: Verifying identity</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8057-8200-ebab22f273be" class="bulleted-list"><li style="list-style-type:disc"><strong>Methods</strong>: Password, MFA, Certificates, Biometrics</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-804c-85c5-c399969fdebf" class="bulleted-list"><li style="list-style-type:disc"><strong>Threats</strong>: Credential theft, weak passwords, session hijacking</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80b6-949d-dd19fa146dee" class="bulleted-list"><li style="list-style-type:disc"><strong>Mitigations</strong>: Strong passwords, MFA, secure sessions</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-808b-986e-e26dcce14eba" class=""><strong>Authorization</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ef-bc30-fdc5a5b2be43" class="bulleted-list"><li style="list-style-type:disc"><strong>Definition</strong>: Determining permissions</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-805c-a0ad-e6ac1f137f6d" class="bulleted-list"><li style="list-style-type:disc"><strong>Models</strong>: RBAC, ABAC, DAC, MAC</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-808c-bdab-cb3c80ef3f7c" class="bulleted-list"><li style="list-style-type:disc"><strong>Threats</strong>: Privilege escalation, IDOR, missing checks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-804d-86bd-ed843c28e8d6" class="bulleted-list"><li style="list-style-type:disc"><strong>Mitigations</strong>: Least privilege, access reviews, authorization middleware</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8015-b5bf-d2e57561977b" class=""><strong>Accounting</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-806d-88ea-c41a9e3133b4" class="bulleted-list"><li style="list-style-type:disc"><strong>Definition</strong>: Tracking and logging events</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80dd-9031-e9fe9a5b9847" class="bulleted-list"><li style="list-style-type:disc"><strong>Requirements</strong>: Completeness, integrity, retention, access control</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-806c-8222-da0eb69d0b3d" class="bulleted-list"><li style="list-style-type:disc"><strong>Threats</strong>: Log tampering, insufficient logging</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8084-8fda-e65cf0930482" class="bulleted-list"><li style="list-style-type:disc"><strong>Mitigations</strong>: Immutable logs, centralized logging, SIEM</li></ul></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-8082-b6e3-d1d070a54df5"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-80eb-a1d4-c5e2d30ce098" class=""><strong>Design Approach Decision Tree</strong></h2></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8015-83c9-caaff4a3c760" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Start
+  ↓
+Is system process-oriented?
+  ├─ Yes → Use Design by Action
+  │         (APIs, workflows, user journeys)
+  │
+  └─ No → Is system architecture-oriented?
+            ├─ Yes → Use Design by Component
+            │         (Microservices, infrastructure)
+            │
+            └─ Complex system?
+                └─ Yes → Use BOTH approaches
+                          (Comprehensive analysis)
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-804a-be2c-dd0fa20c40af"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-80a4-98cc-eeea01665e14" class=""><strong>Framework Selection Guide</strong></h2></div><div style="display:contents" dir="ltr"><table id="2d2562ad-76f0-80b4-8c17-c99667f3dc67" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80b2-93d8-ceff8684631c"><th id="@vbs" class="simple-table-header-color simple-table-header">Scenario</th><th id="VaJ@" class="simple-table-header-color simple-table-header">Primary Framework</th><th id="?uhy" class="simple-table-header-color simple-table-header">Design Approach</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-8093-bd00-d26018353200"><td id="@vbs" class="">Data Protection</td><td id="VaJ@" class="">CIA</td><td id="?uhy" class="">Design by Component</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-8051-865a-d5108d001eb5"><td id="@vbs" class="">Access Control</td><td id="VaJ@" class="">AAA</td><td id="?uhy" class="">Design by Action</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80c8-b74d-dacf0245c724"><td id="@vbs" class="">API Security</td><td id="VaJ@" class="">AAA + CIA</td><td id="?uhy" class="">Design by Action</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-803e-ac7d-fb9a6486ac26"><td id="@vbs" class="">Infrastructure</td><td id="VaJ@" class="">CIA</td><td id="?uhy" class="">Design by Component</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-8086-a15c-fa9e9cd6ba80"><td id="@vbs" class="">Business Process</td><td id="VaJ@" class="">CIA + AAA</td><td id="?uhy" class="">Design by Action</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-8029-8f0b-f4198c34e39e"><td id="@vbs" class="">Microservices</td><td id="VaJ@" class="">CIA + AAA</td><td id="?uhy" class="">Design by Component</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-8018-93a4-eebe24804243"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-80c4-ae9e-d924a7fed48f" class=""><strong>OTM Structure Quick Reference</strong></h2></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80a5-b371-f4a77a3636c3" class="code code-wrap"><code class="language-YAML" style="white-space:pre-wrap;word-break:break-all">otmVersion: &quot;0.2.0&quot;
+
+project:
+  name: &quot;Project Name&quot;
+  id: &quot;project-id&quot;
+
+assets:
+  - name: &quot;Asset Name&quot;
+    id: &quot;asset-id&quot;
+    type: &quot;process|data-store|external&quot;
+
+threats:
+  - name: &quot;Threat Name&quot;
+    id: &quot;threat-id&quot;
+    categories: [&quot;STRIDE categories&quot;]
+    risk:
+      likelihood: 0-100
+      impact: 0-100
+
+mitigations:
+  - name: &quot;Mitigation Name&quot;
+    id: &quot;mitigation-id&quot;
+    riskReduction: 0-100
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-8045-9e28-e68105e855f1"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-8020-91c1-c92a9797afd1" class=""><strong>STRIDE to CIA Mapping</strong></h2></div><div style="display:contents" dir="ltr"><table id="2d2562ad-76f0-80f1-85f7-ed78121b040d" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-8073-bdc9-ed4c85c7ac0b"><th id="h^yX" class="simple-table-header-color simple-table-header">STRIDE</th><th id="qeqP" class="simple-table-header-color simple-table-header">Primary CIA</th><th id="yOJD" class="simple-table-header-color simple-table-header">Secondary CIA</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-8050-a0e2-cbfb2cd549d1"><td id="h^yX" class="">Spoofing</td><td id="qeqP" class="">Confidentiality</td><td id="yOJD" class="">Integrity</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-802b-bc03-d5f41f07181a"><td id="h^yX" class="">Tampering</td><td id="qeqP" class="">Integrity</td><td id="yOJD" class="">Confidentiality</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-8064-b7a9-cd7245f29291"><td id="h^yX" class="">Repudiation</td><td id="qeqP" class="">Integrity</td><td id="yOJD" class="">Confidentiality</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-803a-86d3-f93f9bb6195c"><td id="h^yX" class="">Information Disclosure</td><td id="qeqP" class="">Confidentiality</td><td id="yOJD" class="">-</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80eb-bdb1-c0ede2969506"><td id="h^yX" class="">Denial of Service</td><td id="qeqP" class="">Availability</td><td id="yOJD" class="">-</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80f9-95ec-f33631b33c55"><td id="h^yX" class="">Elevation of Privilege</td><td id="qeqP" class="">Confidentiality, Integrity</td><td id="yOJD" class="">Availability</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-8023-84c1-e65d8ad56a10"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-8013-b381-c8ec1e802f3a" class=""><strong>Risk Calculation</strong></h2></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80aa-8d86-cafa2c1c72ce" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Risk Score = (Impact × Likelihood) / 100
+
+With Mitigation:
+Adjusted Risk = Risk Score × (1 - RiskReduction/100)
+
+Risk Levels:
+- 0-25: LOW
+- 26-50: MEDIUM
+- 51-75: HIGH
+- 76-100: CRITICAL
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-80fc-bd73-d57dd488db6e"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-8067-9b32-cab18c150cad" class=""><strong>Threat Modeling Checklist</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80f9-8874-d8f32a23a7fd" class=""><strong>Design by Action</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8001-a6d3-ebcd2b13d098" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Identify critical business actions</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-801f-9adc-dd1f3abd9816" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Map action flows</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80c7-9f86-ced4bea26fd3" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Identify threats per step</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8022-9ed3-e5fc63e97cdf" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Assess CIA requirements</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ca-93d9-e1589fcc4b09" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Assess AAA requirements</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-806b-9371-f3e9b3f954d8" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Design mitigations</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80a8-8ae2-cb1acf72105d" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Document in OTM</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-804c-997b-ef18b096c756" class=""><strong>Design by Component</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80d9-83d2-d55ae626a1a3" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Identify system components</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8024-aff6-d22016904349" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Map component interactions</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f3-b4d8-ded1392c70ca" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Identify trust boundaries</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80c3-a69e-d586a705afb2" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Assess threats per component</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80e4-b8cf-e0a5b5e4cf81" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Assess CIA requirements</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f8-9873-f28e33a54a4b" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Assess AAA requirements</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80a0-bece-e44ae2c53807" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Design mitigations</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8081-9154-e036f74cc6f4" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Document in OTM</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-80b8-9898-dc759695debc"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-806a-8bb0-ffb6bb62835a" class=""><strong>Common Threats by Category</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-804f-a58b-ef3d1bd50ed8" class=""><strong>Confidentiality Threats</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f4-941f-d3d062837d48" class="bulleted-list"><li style="list-style-type:disc">Unauthorized access</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80e6-a5b8-d047bdae58a1" class="bulleted-list"><li style="list-style-type:disc">Data interception</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80c9-b534-e35f3bf49694" class="bulleted-list"><li style="list-style-type:disc">Data leakage</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8026-a6f2-c4d7dfce5cc0" class="bulleted-list"><li style="list-style-type:disc">Insufficient encryption</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8065-a42f-c162c4a8ae22" class="bulleted-list"><li style="list-style-type:disc">Weak access controls</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8056-bb43-d00396d06819" class=""><strong>Integrity Threats</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80a6-b04f-e2129adda9a5" class="bulleted-list"><li style="list-style-type:disc">Data tampering</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ba-8aa7-fd5c78a3e34d" class="bulleted-list"><li style="list-style-type:disc">Unauthorized modification</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8029-b058-d53361720e6e" class="bulleted-list"><li style="list-style-type:disc">Man-in-the-middle</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8049-8326-eda72299b321" class="bulleted-list"><li style="list-style-type:disc">Configuration drift</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-809e-899d-c933b1227ba1" class="bulleted-list"><li style="list-style-type:disc">Transaction manipulation</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-805b-a54c-e8a8cccaedfe" class=""><strong>Availability Threats</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8042-9bb4-cf34f9b491ed" class="bulleted-list"><li style="list-style-type:disc">DoS/DDoS attacks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80bc-9c5b-c7323f0f347b" class="bulleted-list"><li style="list-style-type:disc">Resource exhaustion</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ca-a444-ed846a747b4e" class="bulleted-list"><li style="list-style-type:disc">System failures</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-804c-b6fa-f015c4a0db9b" class="bulleted-list"><li style="list-style-type:disc">Network outages</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f5-ac17-f4d455740a1b" class="bulleted-list"><li style="list-style-type:disc">Service unavailability</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8031-b0e9-ff3668095688" class=""><strong>Authentication Threats</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ea-8b3e-d938fe5e6125" class="bulleted-list"><li style="list-style-type:disc">Credential theft</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-809f-96be-d6fd97c97041" class="bulleted-list"><li style="list-style-type:disc">Weak passwords</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80b4-903b-e0b5fe6163cf" class="bulleted-list"><li style="list-style-type:disc">Session hijacking</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8030-bf45-c111c86822fe" class="bulleted-list"><li style="list-style-type:disc">Brute force attacks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8081-a66a-e37e27aedb76" class="bulleted-list"><li style="list-style-type:disc">MFA bypass</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-807f-aabc-f3bd674fb924" class=""><strong>Authorization Threats</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80e0-ae23-ff74cfc22803" class="bulleted-list"><li style="list-style-type:disc">Privilege escalation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ce-bddb-e4045b80cd13" class="bulleted-list"><li style="list-style-type:disc">IDOR vulnerabilities</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-807d-b713-fdeff46827a8" class="bulleted-list"><li style="list-style-type:disc">Missing authorization checks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80c0-aeeb-c1d42a8303e3" class="bulleted-list"><li style="list-style-type:disc">Overly permissive policies</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80d9-9719-f34e8c8eb200" class="bulleted-list"><li style="list-style-type:disc">Broken access control</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8071-821c-f36f6e581673" class=""><strong>Accounting Threats</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80d1-9a45-e36ec9ed676c" class="bulleted-list"><li style="list-style-type:disc">Log tampering</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-800e-8fdf-fb3e95398100" class="bulleted-list"><li style="list-style-type:disc">Insufficient logging</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-803b-b829-f713e81d1493" class="bulleted-list"><li style="list-style-type:disc">Unauthorized log access</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8014-af7f-fc5b083ebca8" class="bulleted-list"><li style="list-style-type:disc">Log deletion</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-805f-b32c-e430ac16f72d" class="bulleted-list"><li style="list-style-type:disc">Missing audit trails</li></ul></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-80a1-91ea-f37ea3480a0c"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-8079-a5c5-f093b376e7c1" class=""><strong>Mitigation Strategies</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-809d-91dd-c1ca607844fc" class=""><strong>Confidentiality</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-809c-bb9f-d1ec906a0986" class="bulleted-list"><li style="list-style-type:disc">Encryption (at rest, in transit)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80a5-810e-d6f0d19d0b1b" class="bulleted-list"><li style="list-style-type:disc">Access control (RBAC, ABAC)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8072-a501-f69bee24ed5b" class="bulleted-list"><li style="list-style-type:disc">Data classification</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8054-9a76-d28082dee66a" class="bulleted-list"><li style="list-style-type:disc">Secure communication (TLS/SSL)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8015-84d5-f70300b58d66" class="bulleted-list"><li style="list-style-type:disc">DLP (Data Loss Prevention)</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8022-8a4e-d96f6c235041" class=""><strong>Integrity</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80e4-9fe4-c6f7922506fc" class="bulleted-list"><li style="list-style-type:disc">Digital signatures</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80cc-b7be-ef85936f04ae" class="bulleted-list"><li style="list-style-type:disc">Hash functions</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80b3-85bb-f5a7f90595e6" class="bulleted-list"><li style="list-style-type:disc">Checksums</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-808e-a4e5-cb779c683e2d" class="bulleted-list"><li style="list-style-type:disc">Access controls</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8073-86d0-f63b5d0c009d" class="bulleted-list"><li style="list-style-type:disc">Audit trails</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80a3-ab4c-d20d62f243e8" class=""><strong>Availability</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80dd-8fc7-f9581591850a" class="bulleted-list"><li style="list-style-type:disc">Redundancy</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ae-9320-ef86c04c57f1" class="bulleted-list"><li style="list-style-type:disc">Load balancing</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8060-8d14-eb192c739813" class="bulleted-list"><li style="list-style-type:disc">Rate limiting</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8082-8a24-e14795d25a6a" class="bulleted-list"><li style="list-style-type:disc">DDoS protection</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8044-9946-f191d761437e" class="bulleted-list"><li style="list-style-type:disc">Backup and recovery</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80d3-a196-fbef7ebfb0fb" class=""><strong>Authentication</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8092-bce2-d41cbcb5de58" class="bulleted-list"><li style="list-style-type:disc">Strong passwords</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f3-8eb3-f4d0b0787403" class="bulleted-list"><li style="list-style-type:disc">MFA</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8019-bbf9-f08db22ba6f5" class="bulleted-list"><li style="list-style-type:disc">Secure sessions</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ca-866c-cc10af04b37c" class="bulleted-list"><li style="list-style-type:disc">Account lockout</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80a4-95e8-f8963f2f49f4" class="bulleted-list"><li style="list-style-type:disc">CAPTCHA</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-804c-898f-c8f4b0755dbc" class=""><strong>Authorization</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80a8-8697-eb72070dfdaf" class="bulleted-list"><li style="list-style-type:disc">Least privilege</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80a2-bd22-e86408e79268" class="bulleted-list"><li style="list-style-type:disc">Access reviews</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8054-8705-f9dc03a33051" class="bulleted-list"><li style="list-style-type:disc">Authorization checks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ee-b624-f472ac79a19e" class="bulleted-list"><li style="list-style-type:disc">Centralized authorization</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-807c-b859-d67b239cd019" class="bulleted-list"><li style="list-style-type:disc">Policy audits</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80ef-99cd-fe58f421572b" class=""><strong>Accounting</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8066-b015-cf10ebc79aa9" class="bulleted-list"><li style="list-style-type:disc">Comprehensive logging</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-800f-8a19-e234d367c836" class="bulleted-list"><li style="list-style-type:disc">Immutable logs</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-804d-999e-e4ead402420f" class="bulleted-list"><li style="list-style-type:disc">Centralized logging (SIEM)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80fc-84de-c5c2baa18441" class="bulleted-list"><li style="list-style-type:disc">Log integrity</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8052-913b-dfa45c20256d" class="bulleted-list"><li style="list-style-type:disc">Automated analysis</li></ul></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-801a-81b7-e4d1e576e30d"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-80b7-95fb-f1d61d45bc84" class=""><strong>OTM Integration Checklist</strong></h2></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80eb-a98e-d81b900cacb7" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Store OTM files in version control</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80b0-bc46-e7319e0b2d68" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Validate OTM structure</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8062-b5ff-e6f1a53f2cff" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Integrate into CI/CD pipeline</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8065-9d6c-f67c2c7dc5b3" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Connect to SAST/DAST tools</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8021-ad60-d78374f54cce" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Generate risk dashboards</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80bf-8b18-dbc9836b23d2" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Automate threat model updates</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8052-8249-e22c1e753b11" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Regular OTM reviews</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-8056-a174-d135f08b1f5e"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-8053-b61e-e199622132cb" class=""><strong>Quick Answers</strong></h2></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80b6-935f-e59683ce50a7" class=""><strong>Q: When to use CIA vs AAA?</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80d0-bd1a-de320a0b052b" class="bulleted-list"><li style="list-style-type:disc">CIA: What security properties to protect</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-800f-adaf-ea596423465c" class="bulleted-list"><li style="list-style-type:disc">AAA: How to control access</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-803a-abb4-c2b1d3c9ee0b" class="bulleted-list"><li style="list-style-type:disc">Use both together</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-808d-8045-d0b6737b20e0" class=""><strong>Q: Design by Action vs Component?</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80aa-845d-c1baa5dd8033" class="bulleted-list"><li style="list-style-type:disc">Action: Business processes, APIs, workflows</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8073-8084-c1cc5f976ba4" class="bulleted-list"><li style="list-style-type:disc">Component: Architecture, infrastructure, microservices</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80c8-a786-c68a710da5b6" class="bulleted-list"><li style="list-style-type:disc">Use both for comprehensive analysis</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-809e-856f-c2d29b72b4a2" class=""><strong>Q: Why OTM?</strong></p></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8055-9819-ff72de1a3d2c" class="bulleted-list"><li style="list-style-type:disc">Machine-readable format</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80de-a902-d8d22d08703e" class="bulleted-list"><li style="list-style-type:disc">Automation and integration</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ee-bbe3-d33f080d250c" class="bulleted-list"><li style="list-style-type:disc">Version control</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8070-b487-f93db1978a30" class="bulleted-list"><li style="list-style-type:disc">Standardization</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8033-a689-d49126f61d5a" class=""><strong>Q: How to combine frameworks?</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-809b-aaa7-e93d497060ed" class="numbered-list" start="1"><li>Choose design approach</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-80d7-8166-dcde1a054372" class="numbered-list" start="2"><li>Apply CIA framework</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-8083-b0b1-e9cd6dba7684" class="numbered-list" start="3"><li>Apply AAA framework</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-80be-8d08-c1fc9f4d4683" class="numbered-list" start="4"><li>Use STRIDE for threats</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-80f4-8088-f96771c1df3f" class="numbered-list" start="5"><li>Document in OTM</li></ol></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-808c-adfe-e319fa512d49"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-805b-b158-d7d97736ff18" class=""><strong>Risk Matrix</strong></h2></div><div style="display:contents" dir="ltr"><table id="2d2562ad-76f0-8012-b23d-c172c50892d2" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80da-8a6b-ec313a979215"><th id="EhzI" class="simple-table-header-color simple-table-header">Impact</th><th id="ZV{c" class="simple-table-header-color simple-table-header">Likelihood</th><th id="Us|K" class="simple-table-header-color simple-table-header">Risk Level</th><th id=";y{z" class="simple-table-header-color simple-table-header">Priority</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-803f-8d6b-d63339c68f47"><td id="EhzI" class="">Critical</td><td id="ZV{c" class="">High</td><td id="Us|K" class=""><strong>CRITICAL</strong></td><td id=";y{z" class="">Immediate</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-803f-a85e-e0478c4af1ad"><td id="EhzI" class="">High</td><td id="ZV{c" class="">High</td><td id="Us|K" class=""><strong>HIGH</strong></td><td id=";y{z" class="">High Priority</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-805c-a09d-c0b7543b40a2"><td id="EhzI" class="">Medium</td><td id="ZV{c" class="">High</td><td id="Us|K" class=""><strong>MEDIUM</strong></td><td id=";y{z" class="">Planned</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80a3-bceb-ee665bc12ce3"><td id="EhzI" class="">Low</td><td id="ZV{c" class="">Low</td><td id="Us|K" class=""><strong>LOW</strong></td><td id=";y{z" class="">Monitor</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-804f-8a7b-d93a0e831b37"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-80ee-89a6-e0f98b89ebe8" class=""><strong>Key Takeaways</strong></h2></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-8094-86f3-f3a2087e0c80" class="numbered-list" start="1"><li><strong>CIA and AAA are complementary</strong> - Use both</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-80ed-b2ff-d1725679db78" class="numbered-list" start="2"><li><strong>Design approaches can be combined</strong> - Use both for comprehensive analysis</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-8013-ab96-ee43de5ea67a" class="numbered-list" start="3"><li><strong>OTM enables automation</strong> - Use for integration and tooling</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-8001-b080-e937d9712b16" class="numbered-list" start="4"><li><strong>Risk assessment is critical</strong> - Prioritize based on risk</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-80f2-9964-e0a0fdbb630a" class="numbered-list" start="5"><li><strong>Iterate and update</strong> - Threat models should evolve with the system</li></ol></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-8014-a5cd-cbd9f226933f"/></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-80eb-ba73-ded50e63ac64" class=""><strong>Remember</strong>: The best threat model uses multiple frameworks and approaches together!</p></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-8099-b7e8-c57018592e50" class="">
+</p></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>
