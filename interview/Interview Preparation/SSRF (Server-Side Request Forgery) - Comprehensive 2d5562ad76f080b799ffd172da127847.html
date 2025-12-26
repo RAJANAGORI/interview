@@ -1,0 +1,906 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>SSRF (Server-Side Request Forgery) - Comprehensive Guide</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2d5562ad-76f0-80b7-99ff-d172da127847" class="page mono"><header><h1 class="page-title" dir="auto">SSRF (Server-Side Request Forgery) - Comprehensive Guide</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="ltr"><nav id="2d5562ad-76f0-80eb-8eec-d12c093e1bc9" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80ee-91bd-e71b2d436917"><strong>Introduction</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80e5-89a7-d3bd608c0280"><strong>What SSRF is Used For</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8047-862b-dd7404bb6809"><strong>Why SSRF is Dangerous</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8019-8c30-fddc47c2f0e7"><strong>What is SSRF</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-808d-a283-d19cd096587b"><strong>Basic Example</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80fd-ad7e-fbdcdab3a165"><strong>How SSRF Works</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80f5-acc9-e9b9bcfa7063"><strong>Attack Flow</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-805a-a3a3-d516820ccc37"><strong>Types of SSRF Attacks</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8040-957f-c113d69ef149"><strong>1. Internal SSRF</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80f0-b5a1-c340fa4897b3"><strong>2. External SSRF</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8066-9166-d835518c91e1"><strong>3. Blind SSRF</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8011-83d8-c256111f1642"><strong>Impact of SSRF</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80a1-847b-ff8476a0245a"><strong>1. Internal Network Access</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8002-acda-d55a5d9160a0"><strong>2. Cloud Metadata Access</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8080-b559-dc4673089b25"><strong>3. File System Access</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-801c-8e22-e50de27a4269"><strong>4. Port Scanning</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-805f-82e1-d5fee5e70374"><strong>Common Vulnerable Functions</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8037-bae0-db35719320fa"><strong>1. HTTP Client Libraries</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80c5-993b-c59c123cc293"><strong>2. Image Processing</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-806b-9f42-ca6ff5f7af8c"><strong>3. Webhooks and Callbacks</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-800b-bd52-c37a35f9af92"><strong>4. Import/Export Functions</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80d9-b772-d5822b08eddb"><strong>Mitigation Strategies</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-800f-9d37-ee36127bface"><strong>1. Whitelist Allowed URLs (Primary Defense)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-808e-954a-e0c54229d113"><strong>2. Block Private IP Ranges</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8012-a1ca-c98fa3fa6ad2"><strong>3. Use URL Parsing and Validation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8061-bf1e-d0c03ecc79d5"><strong>4. Network Segmentation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-805c-bc1a-f048847d50e2"><strong>5. Disable URL Schemes</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8025-abe2-f014b78750d4"><strong>Best Practices</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80d4-a293-c3ade3626a62"><strong>1. Always Use Whitelisting</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-809e-9427-e94f299dbbed"><strong>2. Validate and Resolve IPs</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-804f-a4aa-e064a5322420"><strong>3. Use Application-Level Firewalls</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80a1-a698-fcd1d0106b1d"><strong>4. Implement Request Timeouts</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80b0-b790-cff514e2311f"><strong>Advanced Exploitation Techniques</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8062-941f-fb2d1c6bdd58"><strong>1. IP Encoding Bypasses</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80cb-9094-e784d5871529"><strong>2. DNS Rebinding</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-806e-935f-d49c5923b0a1"><strong>3. URL Redirection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8017-bfaa-c6af3e43f544"><strong>4. Protocol Bypass</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-805b-a19f-c074b31d875e"><strong>Penetration Testing Methodology</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80c3-8187-d615f00d4c72"><strong>SSRF Testing Checklist</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8092-bbab-c0859381074f"><strong>Threat Modeling (STRIDE Framework)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8091-934b-ebdf1cd43faf"><strong>Spoofing</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80c5-9e65-e675379711b3"><strong>Tampering</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-802c-aaea-ff373ec37811"><strong>Repudiation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80a3-8e8b-c4b3fd6e65a6"><strong>Information Disclosure</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-807d-bf58-dc9b3d1cfd6b"><strong>Denial of Service</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80eb-83d5-f71e554ccaf3"><strong>Elevation of Privilege</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80d5-815d-cc61e2a4421c"><strong>Real-World Case Studies</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8053-b940-ce3953ffadaf"><strong>Case Study 1: Cloud Metadata Access</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-809c-8d92-f985c9ef27a5"><strong>Advanced Mitigations</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-806d-8dd3-d90bba0d35a4"><strong>Defense in Depth Strategy</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80cb-b22e-e206ed226c41"><strong>SAST/DAST Detection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80e3-98d8-efc5fe94c9ca"><strong>SAST (Static Application Security Testing)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8097-a6ee-e72626a27f0b"><strong>DAST (Dynamic Application Security Testing)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8054-9ede-dbf055502c32"><strong>Risk Assessment</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-807f-876c-ea16f5944455"><strong>Risk Matrix</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8056-9631-d2684e262987"><strong>Risk Calculation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80ac-9eef-d40ecdf76805"><strong>Summary</strong></a></div></nav></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80ee-91bd-e71b2d436917" class=""><strong>Introduction</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8060-be80-f89cc2c27e42" class="">SSRF (Server-Side Request Forgery) is a vulnerability that allows attackers to make unauthorized requests from a vulnerable server to other internal or external resources. It ranks #10 in OWASP Top 10 2021 and is a critical web application security risk.</p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80e5-89a7-d3bd608c0280" class=""><strong>What SSRF is Used For</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e2-9b72-ed1b23c7de3b" class="">Attackers use SSRF to:</p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e5-93f0-cee9061c4915" class="bulleted-list"><li style="list-style-type:disc"><strong>Access internal services</strong> not exposed to the internet</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-805f-87fd-d3cc82fde889" class="bulleted-list"><li style="list-style-type:disc"><strong>Read files</strong> from the server filesystem</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-804f-bd89-d630752912bb" class="bulleted-list"><li style="list-style-type:disc"><strong>Access cloud metadata</strong> APIs</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c9-b8e9-f1d5d837ae0c" class="bulleted-list"><li style="list-style-type:disc"><strong>Perform port scanning</strong> of internal networks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8075-ab0f-d0ec4b1188b2" class="bulleted-list"><li style="list-style-type:disc"><strong>Bypass network security controls</strong> (firewalls, WAFs)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e7-b4cc-f96e24e63d75" class="bulleted-list"><li style="list-style-type:disc"><strong>Exfiltrate data</strong> from internal systems</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8047-862b-dd7404bb6809" class=""><strong>Why SSRF is Dangerous</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80df-8489-fabd50742dac" class=""><strong>Severity:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8073-9f11-fad7db384a29" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Critical Impact</strong>: Can lead to internal network access</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8063-9f21-eefa565be714" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Bypasses Security</strong>: Request originates from trusted server</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e4-add8-ecc1943b2d0e" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Hard to Detect</strong>: Appears as legitimate server request</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8018-bee7-c6b278628d35" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Widespread Impact</strong>: Can access entire internal network</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8018-820e-d9f6546e38a8" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Complex Mitigation</strong>: Requires multiple layers of defense</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8026-9393-ea40b3efe159"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8019-8c30-fddc47c2f0e7" class=""><strong>What is SSRF</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b0-aba6-dd081ad71b07" class="">SSRF (Server-Side Request Forgery) occurs when an application makes network requests based on user-supplied input without proper validation, allowing attackers to make requests to arbitrary destinations from the server.</p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-808d-a283-d19cd096587b" class=""><strong>Basic Example</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-804b-9ae2-c252826ffac6" class=""><strong>Vulnerable Application:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8021-abb4-de7c2b205911" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">@app.route(&#x27;/fetch&#x27;)
+def fetch_url():
+    url = request.args.get(&#x27;url&#x27;)
+    response = requests.get(url)  # SSRF vulnerability!
+    return response.text
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80cd-a33b-fa9a095bc01d" class=""><strong>Attack:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8042-8b51-d7d7f18eb3f0" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">GET /fetch?url=http://169.254.169.254/latest/meta-data/
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-808c-86a6-db3668f88736" class=""><strong>Result:</strong> Server makes HTTP request to cloud metadata API (AWS instance metadata)</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8040-a9cc-d1a4f19d3ecd"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80fd-ad7e-fbdcdab3a165" class=""><strong>How SSRF Works</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80f5-acc9-e9b9bcfa7063" class=""><strong>Attack Flow</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8041-9dc0-fe08a211b7fe" class=""><strong>1. Attacker Identifies Vulnerable Function:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-807c-9d2b-d430974f5a7f" class="bulleted-list"><li style="list-style-type:disc">Finds endpoint that makes network requests</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ce-822e-efcf1174297b" class="bulleted-list"><li style="list-style-type:disc">Identifies user input controlling request destination</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8052-9091-ebae37039ef2" class=""><strong>2. Attacker Crafts Malicious Request:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-809d-9b5e-c1ec3b730cd9" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">GET /fetch?url=http://internal-server:8080/admin
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8053-a023-dc1f2c14682a" class=""><strong>3. Server Processes Request:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8054-a3be-efc2bc0b360d" class="bulleted-list"><li style="list-style-type:disc">Application receives user input</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ef-8e21-e8d2d9a577a7" class="bulleted-list"><li style="list-style-type:disc">Makes HTTP request to provided URL</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8082-94ef-f4c7fe17bff9" class="bulleted-list"><li style="list-style-type:disc">Request originates from server IP (not attacker IP)</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8082-a7dc-fca64f0aec69" class=""><strong>4. Target Resource Receives Request:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8090-ae6a-f4f581cb9231" class="bulleted-list"><li style="list-style-type:disc">Sees request from trusted server</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-807b-95cb-ca6ba1eb4ead" class="bulleted-list"><li style="list-style-type:disc">Grants access to internal resources</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802d-b10f-cf85af902fae" class="bulleted-list"><li style="list-style-type:disc">Returns sensitive data</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8019-b005-ebb3e94a3433" class=""><strong>5. Attacker Receives Response:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8019-9f5c-c6baab76d2bc" class="bulleted-list"><li style="list-style-type:disc">Server returns response to attacker</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8056-8b16-e4575919d499" class="bulleted-list"><li style="list-style-type:disc">Attacker extracts sensitive information</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80b4-8992-fcf8171aa185"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-805a-a3a3-d516820ccc37" class=""><strong>Types of SSRF Attacks</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8040-957f-c113d69ef149" class=""><strong>1. Internal SSRF</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d9-a200-f6ca6e479c89" class=""><strong>Description:</strong> Attacker targets resources accessible only from internal network.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80a7-a6ae-de3b567af1d3" class=""><strong>Targets:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a9-853a-e2687bfd7985" class="bulleted-list"><li style="list-style-type:disc">Internal APIs (<code>http://localhost:8080/admin</code>)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a8-b777-ce66c55ac992" class="bulleted-list"><li style="list-style-type:disc">Internal services (<code>http://192.168.1.1:3306</code>)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f5-941f-c907a5ab84c9" class="bulleted-list"><li style="list-style-type:disc">Cloud metadata APIs (<code>http://169.254.169.254</code>)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8094-bebd-e8697ec3ff69" class="bulleted-list"><li style="list-style-type:disc">Internal file system (<code>file:///etc/passwd</code>)</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8004-b7b2-c5e006f9d4fd" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8003-b584-d0dc038e847d" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Vulnerable code
+url = request.args.get(&#x27;url&#x27;)
+response = requests.get(url)
+
+# Attack
+# GET /fetch?url=http://169.254.169.254/latest/meta-data/
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8098-855a-f335dc0563b5"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80f0-b5a1-c340fa4897b3" class=""><strong>2. External SSRF</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8060-b712-c93f767e2ae7" class=""><strong>Description:</strong> Attacker targets external resources using server IP to bypass restrictions.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8024-99d4-faf52d502acb" class=""><strong>Use Cases:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8068-b4af-ebf04a722c51" class="bulleted-list"><li style="list-style-type:disc">Bypass IP-based whitelisting</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80bb-9eeb-d147e1201870" class="bulleted-list"><li style="list-style-type:disc">Access services restricted to specific IPs</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f6-b440-cb515b1a544a" class="bulleted-list"><li style="list-style-type:disc">Perform attacks with trusted server IP</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80bd-85e4-c3408cf1e2d6" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8015-bc54-cb1420bad53f" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Attack uses server IP to bypass restrictions
+url = &quot;http://external-api.com/admin&quot;
+# Request appears to come from trusted server IP
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8024-881f-ec01ef4f57d4"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8066-9166-d835518c91e1" class=""><strong>3. Blind SSRF</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-806e-aa47-c07e3af28c4d" class=""><strong>Description:</strong> Attacker cannot see response but can infer success from timing or behavior.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8093-bef6-c49a3a7f7f2a" class=""><strong>Detection Methods:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8013-911a-ce6750358ec5" class="bulleted-list"><li style="list-style-type:disc">Time delays</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8032-8470-d8acbd599d5f" class="bulleted-list"><li style="list-style-type:disc">DNS lookups</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8074-9d1e-f89c45003599" class="bulleted-list"><li style="list-style-type:disc">Error messages</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8075-8836-e9a338e8bf55" class="bulleted-list"><li style="list-style-type:disc">Out-of-band channels</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-802b-a8ae-cade2323ced1" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80c0-96ab-c9e6c40e9c1b" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Blind SSRF - no direct response
+url = &quot;http://internal-server:8080/admin&quot;
+response = requests.get(url, timeout=1)
+# Attacker monitors DNS lookups or timing to detect success
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8059-86ee-eae99dd3111b"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8011-83d8-c256111f1642" class=""><strong>Impact of SSRF</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80a1-847b-ff8476a0245a" class=""><strong>1. Internal Network Access</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80cd-b15e-c8274a3f26f6" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8039-8af8-e0efe3954d7c" class="bulleted-list"><li style="list-style-type:disc">Access to internal services</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801b-83b5-d4e7a224ba94" class="bulleted-list"><li style="list-style-type:disc">Bypass network segmentation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8079-8d76-f7155b249dfa" class="bulleted-list"><li style="list-style-type:disc">Access services not exposed to internet</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803a-8d06-c6d29f05f8e1" class=""><strong>Examples:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8045-aa6e-cc7e335d3835" class="bulleted-list"><li style="list-style-type:disc">Internal APIs</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8075-a795-c41989c6abcd" class="bulleted-list"><li style="list-style-type:disc">Database servers</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8018-a105-f4f9b896c164" class="bulleted-list"><li style="list-style-type:disc">Admin panels</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-806e-b48f-ece11e71aa88" class="bulleted-list"><li style="list-style-type:disc">Internal file shares</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-802e-8574-fc4ae3453d6f"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8002-acda-d55a5d9160a0" class=""><strong>2. Cloud Metadata Access</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b8-809b-d67e6a72815f" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8078-8263-f76a5bff516f" class="bulleted-list"><li style="list-style-type:disc">Access to cloud metadata APIs</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a4-b714-e11a3ad2fc82" class="bulleted-list"><li style="list-style-type:disc">Extract credentials, tokens, keys</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8040-bdc6-ccc04e0bed60" class="bulleted-list"><li style="list-style-type:disc">Access instance metadata</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ec-9965-f61e88b27ebc" class=""><strong>Examples:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8038-8d7e-f5c237fa9352" class="bulleted-list"><li style="list-style-type:disc">AWS: <code>169.254.169.254</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e0-bc4b-f22cb74dd860" class="bulleted-list"><li style="list-style-type:disc">Azure: <code>169.254.169.254</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ac-957b-fb9bae7e23dd" class="bulleted-list"><li style="list-style-type:disc">GCP: <code>169.254.169.254</code></li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8077-9483-e7419fcc49aa"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8080-b559-dc4673089b25" class=""><strong>3. File System Access</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c1-b3c3-d80ec5343f6b" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-800d-8776-d5900910cb1c" class="bulleted-list"><li style="list-style-type:disc">Read files from server filesystem</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-804e-a1f2-fbd29a7ec9b7" class="bulleted-list"><li style="list-style-type:disc">Access configuration files</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8044-8dfc-d3afca8ba1fb" class="bulleted-list"><li style="list-style-type:disc">Extract sensitive data</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c9-a4d0-e914c113b49f" class=""><strong>Examples:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802d-b930-f33e669fa432" class="bulleted-list"><li style="list-style-type:disc"><code>file:///etc/passwd</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ff-b5bf-f6bf5837c773" class="bulleted-list"><li style="list-style-type:disc"><code>file:///var/www/config.php</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8027-82e0-da2a0fe7a10c" class="bulleted-list"><li style="list-style-type:disc"><code>file:///proc/self/environ</code></li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-800a-a13d-c076957e2a2b"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-801c-8e22-e50de27a4269" class=""><strong>4. Port Scanning</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8039-a62b-f27eb8ba4675" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8014-b731-e4da145bfc23" class="bulleted-list"><li style="list-style-type:disc">Scan internal network ports</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-809f-bb63-e32dfb50e740" class="bulleted-list"><li style="list-style-type:disc">Identify internal services</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8026-ab45-c1f7eb4e15ce" class="bulleted-list"><li style="list-style-type:disc">Map internal network topology</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e8-8541-e093733ffb1d" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8011-b947-e37f971e6fee" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Port scanning via SSRF
+for port in range(1, 65536):
+    url = f&quot;http://127.0.0.1:{port}&quot;
+    # Test if port is open
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8005-8a16-eaa8df646db9"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-805f-82e1-d5fee5e70374" class=""><strong>Common Vulnerable Functions</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8037-bae0-db35719320fa" class=""><strong>1. HTTP Client Libraries</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80dc-a976-eb3d958adfe6" class=""><strong>Vulnerable:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-809d-89a6-de9b35d9760a" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Python requests
+response = requests.get(user_url)
+
+# Python urllib
+response = urllib.request.urlopen(user_url)
+
+# Node.js http
+http.get(user_url, callback)
+
+# PHP file_get_contents
+file_get_contents(user_url)
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8078-9bd8-fb28fb87fce2"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80c5-993b-c59c123cc293" class=""><strong>2. Image Processing</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8032-b8ba-f11742b96379" class=""><strong>Vulnerable:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-803c-8e1e-c8c4cf3309f6" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">@app.route(&#x27;/thumbnail&#x27;)
+def get_thumbnail():
+    image_url = request.args.get(&#x27;url&#x27;)
+    image_data = requests.get(image_url).content  # SSRF!
+    return generate_thumbnail(image_data)
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-809e-adca-ce9ff2268f7f"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-806b-9f42-ca6ff5f7af8c" class=""><strong>3. Webhooks and Callbacks</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8050-9776-ffc9c7540317" class=""><strong>Vulnerable:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-805e-b5df-c9c0a7fc6247" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">@app.route(&#x27;/webhook&#x27;)
+def handle_webhook():
+    callback_url = request.json.get(&#x27;callback_url&#x27;)
+    requests.post(callback_url, data=data)  # SSRF!
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8090-8a1b-e43b85252d1b"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-800b-bd52-c37a35f9af92" class=""><strong>4. Import/Export Functions</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8000-ad40-c11f352f7a58" class=""><strong>Vulnerable:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8040-aacb-c0b3cf00ca0e" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">@app.route(&#x27;/import&#x27;)
+def import_data():
+    source_url = request.args.get(&#x27;source&#x27;)
+    data = requests.get(source_url).json()  # SSRF!
+    import_data(data)
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-807a-87d0-e0a2920e376a"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80d9-b772-d5822b08eddb" class=""><strong>Mitigation Strategies</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-800f-9d37-ee36127bface" class=""><strong>1. Whitelist Allowed URLs (Primary Defense)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e5-8260-f76374ae079c" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8049-9290-d8945fd1fb93" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">ALLOWED_DOMAINS = [&#x27;api.example.com&#x27;, &#x27;cdn.example.com&#x27;]
+
+def validate_url(url):
+    parsed = urlparse(url)
+    if parsed.netloc not in ALLOWED_DOMAINS:
+        raise ValueError(&quot;Domain not allowed&quot;)
+    return url
+
+url = validate_url(user_url)
+response = requests.get(url)
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-806f-a468-d8b37a0c67a5"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-808e-954a-e0c54229d113" class=""><strong>2. Block Private IP Ranges</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80aa-a7ff-e6864ddacc64" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80cc-855a-e24a7c90a8bf" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import ipaddress
+
+PRIVATE_RANGES = [
+    ipaddress.ip_network(&#x27;10.0.0.0/8&#x27;),
+    ipaddress.ip_network(&#x27;172.16.0.0/12&#x27;),
+    ipaddress.ip_network(&#x27;192.168.0.0/16&#x27;),
+    ipaddress.ip_network(&#x27;127.0.0.0/8&#x27;),
+]
+
+def validate_url(url):
+    parsed = urlparse(url)
+    hostname = parsed.hostname
+
+    try:
+        ip = ipaddress.ip_address(hostname)
+        for private_range in PRIVATE_RANGES:
+            if ip in private_range:
+                raise ValueError(&quot;Private IP not allowed&quot;)
+    except ValueError:
+        # Hostname, resolve it
+        ip = socket.gethostbyname(hostname)
+        ip = ipaddress.ip_address(ip)
+        for private_range in PRIVATE_RANGES:
+            if ip in private_range:
+                raise ValueError(&quot;Private IP not allowed&quot;)
+
+    return url
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-807f-ae7b-cb6956b67267"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8012-a1ca-c98fa3fa6ad2" class=""><strong>3. Use URL Parsing and Validation</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-808e-bb2b-f08b42e01cec" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80a1-bc45-eb289c4d2320" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from urllib.parse import urlparse
+
+def validate_url(url):
+    parsed = urlparse(url)
+
+    # Block file:// protocol
+    if parsed.scheme not in [&#x27;http&#x27;, &#x27;https&#x27;]:
+        raise ValueError(&quot;Only HTTP/HTTPS allowed&quot;)
+
+    # Block localhost
+    if parsed.hostname in [&#x27;localhost&#x27;, &#x27;127.0.0.1&#x27;, &#x27;0.0.0.0&#x27;]:
+        raise ValueError(&quot;Localhost not allowed&quot;)
+
+    # Block private IPs (use function above)
+    # ...
+
+    return url
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80fe-822c-fefacccc634c"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8061-bf1e-d0c03ecc79d5" class=""><strong>4. Network Segmentation</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8065-935c-ffae36916e84" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ae-9e62-efe8e2c7294e" class="bulleted-list"><li style="list-style-type:disc">Isolate application servers from internal network</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ab-ae3d-cde4af790ec5" class="bulleted-list"><li style="list-style-type:disc">Use separate network for application servers</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d1-b032-cc2c8e159238" class="bulleted-list"><li style="list-style-type:disc">Restrict outbound connections</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e6-b056-f34aa9898cf9" class="bulleted-list"><li style="list-style-type:disc">Implement firewall rules</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80d9-b084-fe9a18e2b800"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-805c-bc1a-f048847d50e2" class=""><strong>5. Disable URL Schemes</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ae-ae7c-e1b9416ee8dd" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80f6-b613-d450faccd963" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Only allow http:// and https://
+ALLOWED_SCHEMES = [&#x27;http&#x27;, &#x27;https&#x27;]
+
+def validate_url(url):
+    parsed = urlparse(url)
+    if parsed.scheme not in ALLOWED_SCHEMES:
+        raise ValueError(&quot;Scheme not allowed&quot;)
+    return url
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-803a-b711-de61175d89ec"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8025-abe2-f014b78750d4" class=""><strong>Best Practices</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80d4-a293-c3ade3626a62" class=""><strong>1. Always Use Whitelisting</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8000-9bd1-c328b352e8b6" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-800b-9513-eb5c7cce3e46" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">ALLOWED_DOMAINS = [&#x27;api.example.com&#x27;]
+# Validate against whitelist
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80bd-905b-ca0b815e7c14" class=""><strong>❌ WRONG:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8052-b879-c4ea3fe7974e" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Blacklisting is easily bypassed
+BLOCKED_DOMAINS = [&#x27;localhost&#x27;, &#x27;127.0.0.1&#x27;]
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8003-9247-d6cdd77bbb1f"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-809e-9427-e94f299dbbed" class=""><strong>2. Validate and Resolve IPs</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ac-80d5-ceff108fc8cf" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8065-8108-f0a848489c5f" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">def validate_url(url):
+    parsed = urlparse(url)
+    hostname = parsed.hostname
+
+    # Resolve hostname to IP
+    ip = socket.gethostbyname(hostname)
+
+    # Check against private ranges
+    # Block private IPs
+
+    return url
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-800d-be9e-e010c529f728"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-804f-a4aa-e064a5322420" class=""><strong>3. Use Application-Level Firewalls</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80df-b52b-c2b49a3af182" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e4-947e-db1cb3a4e6e1" class="bulleted-list"><li style="list-style-type:disc">Network-level firewalls</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-808c-beb9-de374305e301" class="bulleted-list"><li style="list-style-type:disc">Application-level filtering</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80dc-ba54-e4b0c9d8ee3c" class="bulleted-list"><li style="list-style-type:disc">Request validation middleware</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80ee-af7b-cdb91e7974ac"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80a1-a698-fcd1d0106b1d" class=""><strong>4. Implement Request Timeouts</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-800c-ab71-e5ab8bd7b772" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8028-865d-c1e5a16399d6" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">response = requests.get(url, timeout=5)  # 5 second timeout
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8003-a2fb-f62ab6daccfe"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80b0-b790-cff514e2311f" class=""><strong>Advanced Exploitation Techniques</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8062-941f-fb2d1c6bdd58" class=""><strong>1. IP Encoding Bypasses</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-807e-9d40-eed49bd118d1" class=""><strong>Techniques:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80be-9298-d479b75ca583" class="bulleted-list"><li style="list-style-type:disc">Decimal encoding: <code>http://2130706433/</code> (127.0.0.1)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8063-87ab-fb1022562ca5" class="bulleted-list"><li style="list-style-type:disc">Hex encoding: <code>http://0x7f.0x00.0x00.0x01/</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8035-a8d6-d5667bd515fb" class="bulleted-list"><li style="list-style-type:disc">Octal encoding: <code>http://0177.0.0.1/</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-806a-88fa-d3441a0a2012" class="bulleted-list"><li style="list-style-type:disc">IPv6: <code>http://[::1]/</code> or <code>http://[::ffff:127.0.0.1]/</code></li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-806e-a50b-da03e0156fb0" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8018-a25f-f644ef5002f1" class="bulleted-list"><li style="list-style-type:disc">Always resolve hostnames and validate IPs</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8032-b1d3-fa92f40f74e9" class="bulleted-list"><li style="list-style-type:disc">Block all private IP ranges regardless of encoding</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80fb-839e-e54105245979"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80cb-9094-e784d5871529" class=""><strong>2. DNS Rebinding</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80dc-ab22-d3c6bee19db2" class=""><strong>Technique:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8099-a8aa-ca5621446085" class="bulleted-list"><li style="list-style-type:disc">Attacker controls DNS server</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8050-af7d-ee67b0a82431" class="bulleted-list"><li style="list-style-type:disc">First request resolves to allowed IP</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8090-a68c-c88fb742bce8" class="bulleted-list"><li style="list-style-type:disc">Subsequent requests resolve to private IP</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-805d-af44-f70c9a814c5b" class="bulleted-list"><li style="list-style-type:disc">Bypasses validation</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-807b-a662-fd07030d3c1c" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c6-9b6a-f461d52d77a2" class="bulleted-list"><li style="list-style-type:disc">Resolve hostname once and cache IP</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80be-9b5a-e938929f7182" class="bulleted-list"><li style="list-style-type:disc">Validate resolved IP, not hostname</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8050-9b8d-ca2656b53568"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-806e-935f-d49c5923b0a1" class=""><strong>3. URL Redirection</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80bd-9184-ea08eada42d0" class=""><strong>Technique:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802a-825b-f971729c505d" class="bulleted-list"><li style="list-style-type:disc">Provide URL that redirects to internal resource</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fd-85a8-cbe63a2031bc" class="bulleted-list"><li style="list-style-type:disc">First request validates external URL</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8096-8dc0-c9372026621d" class="bulleted-list"><li style="list-style-type:disc">Redirect points to internal resource</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d9-a114-cd28c370d9ee" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b2-8c57-ed65a7909945" class="bulleted-list"><li style="list-style-type:disc">Follow redirects and validate each hop</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801b-ae2d-df937e8f01b1" class="bulleted-list"><li style="list-style-type:disc">Block redirects to private IPs</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80a8-a2a4-f7d9bcd9e6bb"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8017-bfaa-c6af3e43f544" class=""><strong>4. Protocol Bypass</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8082-a965-ce1ee663020d" class=""><strong>Techniques:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a4-b32e-fa224bef0f97" class="bulleted-list"><li style="list-style-type:disc">Use alternative protocols (gopher://, dict://, ldap://)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ba-9736-d2bcd73aeb7d" class="bulleted-list"><li style="list-style-type:disc">Protocol-relative URLs</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8067-97f3-eaf31ad5ef85" class="bulleted-list"><li style="list-style-type:disc">URL encoding</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8038-9851-caa3534c9af9" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fc-a6d0-fe17fe7bb61e" class="bulleted-list"><li style="list-style-type:disc">Whitelist allowed protocols (http, https only)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8098-b809-c1cfd8d123b6" class="bulleted-list"><li style="list-style-type:disc">Strict URL parsing</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80d4-a751-e3850973eb88"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-805b-a19f-c074b31d875e" class=""><strong>Penetration Testing Methodology</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80c3-8187-d615f00d4c72" class=""><strong>SSRF Testing Checklist</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ff-8edb-fb9b3f69d980" class=""><strong>1. Identify Request Functions:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8063-acd3-f8593c173ccc" class="bulleted-list"><li style="list-style-type:disc">Find endpoints making network requests</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c3-9835-f01e8dbdf497" class="bulleted-list"><li style="list-style-type:disc">Identify user input controlling destination</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80de-8303-fa38c9e081f4" class="bulleted-list"><li style="list-style-type:disc">Map all input points</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8081-8d43-c1c7ea9b4c50" class=""><strong>2. Test Basic SSRF:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-800b-9e51-d780cd32c967" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Test internal IPs
+url = &quot;http://127.0.0.1:8080/admin&quot;
+url = &quot;http://localhost/admin&quot;
+
+# Test cloud metadata
+url = &quot;http://169.254.169.254/latest/meta-data/&quot;
+
+# Test private IPs
+url = &quot;http://192.168.1.1/admin&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80fd-9859-c4fd7f1d7be5" class=""><strong>3. Test Protocol Bypasses:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80b8-b597-d906a047eb7f" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># file:// protocol
+url = &quot;file:///etc/passwd&quot;
+
+# gopher:// protocol
+url = &quot;gopher://internal-server:8080/&quot;
+
+# dict:// protocol
+url = &quot;dict://internal-server:8080/&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ec-b6f1-d408a16689ec" class=""><strong>4. Test IP Encoding:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80b1-b70f-f9231354ed4b" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Decimal
+url = &quot;http://2130706433/&quot;
+
+# Hex
+url = &quot;http://0x7f.0x00.0x00.0x01/&quot;
+
+# Octal
+url = &quot;http://0177.0.0.1/&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80f3-8de1-fdea1087b782" class=""><strong>5. Test DNS Rebinding:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8098-9681-e97b1d1f28d9" class="bulleted-list"><li style="list-style-type:disc">Control DNS server</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fe-9ac6-df090bc5e485" class="bulleted-list"><li style="list-style-type:disc">First resolves to allowed IP</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a7-a2ba-e5e2b9a85eda" class="bulleted-list"><li style="list-style-type:disc">Subsequent resolves to private IP</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8044-b1da-f2f5d5db0f50" class=""><strong>6. Test Blind SSRF:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8076-a3c6-d4c9fef89486" class="bulleted-list"><li style="list-style-type:disc">Monitor DNS lookups</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8021-821c-d6320c9b7191" class="bulleted-list"><li style="list-style-type:disc">Use time delays</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8081-b206-f1c33ca31483" class="bulleted-list"><li style="list-style-type:disc">Use out-of-band channels</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-808b-9083-cc7ae6dd858b"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8092-bbab-c0859381074f" class=""><strong>Threat Modeling (STRIDE Framework)</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8091-934b-ebdf1cd43faf" class=""><strong>Spoofing</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8033-8344-d96ec86cfa3f" class=""><strong>Threat:</strong> Attacker spoofs internal network requests via SSRF.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ad-abd7-c11ed320ba94" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-805c-8384-d2ef13c486c0" class="bulleted-list"><li style="list-style-type:disc">Whitelist allowed URLs</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-808a-a890-dc5a35b26d36" class="bulleted-list"><li style="list-style-type:disc">Block private IP ranges</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fb-8253-c103034a8075" class="bulleted-list"><li style="list-style-type:disc">Network segmentation</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-808e-9bcf-c1f131ac1963" class=""><strong>Risk Rating:</strong> Critical</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8088-b29c-dc759350b497"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80c5-9e65-e675379711b3" class=""><strong>Tampering</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8098-b084-c282097d9dff" class=""><strong>Threat:</strong> Attacker modifies request destination via SSRF.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e9-bcb2-d1b4a092a830" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8047-bd4d-dd7f1710f993" class="bulleted-list"><li style="list-style-type:disc">Input validation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8091-96c4-c8163c6502b8" class="bulleted-list"><li style="list-style-type:disc">Whitelisting</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f6-9ef5-c49d014ea01d" class="bulleted-list"><li style="list-style-type:disc">URL parsing</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8059-a394-df22d5338f6a" class=""><strong>Risk Rating:</strong> High</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8006-838d-f4a3f26d184a"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-802c-aaea-ff373ec37811" class=""><strong>Repudiation</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803c-8b61-cc7145780c2f" class=""><strong>Threat:</strong> SSRF requests cannot be attributed to attacker.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8005-9a12-f99ecfb3a7ed" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801f-abd7-ca5d37a62921" class="bulleted-list"><li style="list-style-type:disc">Comprehensive logging</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b1-b134-df2275081877" class="bulleted-list"><li style="list-style-type:disc">Request correlation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ae-9a30-f46979d2a7fd" class="bulleted-list"><li style="list-style-type:disc">Audit trails</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8028-a453-f6467441b842" class=""><strong>Risk Rating:</strong> Medium</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-805d-a059-d892bb446c6b"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80a3-8e8b-c4b3fd6e65a6" class=""><strong>Information Disclosure</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803b-b1df-fb9467559714" class=""><strong>Threat:</strong> Attacker accesses internal resources via SSRF.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d9-b3d5-d853fd81c41e" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802f-b53b-f3cd0167d7f3" class="bulleted-list"><li style="list-style-type:disc">Block private IPs</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8058-853c-ff0b70eb4f09" class="bulleted-list"><li style="list-style-type:disc">Network segmentation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8052-9e5c-d5d567dbabb0" class="bulleted-list"><li style="list-style-type:disc">Whitelisting</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8005-a499-c647bda0c711" class=""><strong>Risk Rating:</strong> Critical</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80dc-9a43-ef11ee78e722"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-807d-bf58-dc9b3d1cfd6b" class=""><strong>Denial of Service</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8081-990d-dd58bfd7390d" class=""><strong>Threat:</strong> Attacker causes DoS via SSRF.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8035-ba51-e44d36971738" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8087-ba45-c88c49dbf6be" class="bulleted-list"><li style="list-style-type:disc">Request timeouts</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8081-926d-e424f3b979a8" class="bulleted-list"><li style="list-style-type:disc">Rate limiting</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8029-874e-ddb058159317" class="bulleted-list"><li style="list-style-type:disc">Resource limits</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8065-a2ae-eeaf3a341f00" class=""><strong>Risk Rating:</strong> High</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8092-aff7-df7c2a89748c"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80eb-83d5-f71e554ccaf3" class=""><strong>Elevation of Privilege</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8082-ace6-f446754d8a62" class=""><strong>Threat:</strong> Attacker gains access to internal resources via SSRF.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b7-a0b9-fb6584e01893" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c4-86a5-e0cfeddeecdc" class="bulleted-list"><li style="list-style-type:disc">Network segmentation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80df-9c61-c256eae2a48b" class="bulleted-list"><li style="list-style-type:disc">Least privilege</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e4-b82e-fa0be1dc2fad" class="bulleted-list"><li style="list-style-type:disc">Access controls</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80af-8159-e364350d5710" class=""><strong>Risk Rating:</strong> Critical</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-806b-a6fc-e3a423da5e9d"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80d5-815d-cc61e2a4421c" class=""><strong>Real-World Case Studies</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8053-b940-ce3953ffadaf" class=""><strong>Case Study 1: Cloud Metadata Access</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8072-8a4f-c14ee03ca9da" class=""><strong>Background:</strong> Penetration test discovered SSRF in image processing endpoint.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8035-99eb-f854f8f75ccb" class=""><strong>Vulnerable Code:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8025-b940-c3d4b0cd2710" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">@app.route(&#x27;/thumbnail&#x27;)
+def get_thumbnail():
+    image_url = request.args.get(&#x27;url&#x27;)
+    image_data = requests.get(image_url).content  # SSRF!
+    return generate_thumbnail(image_data)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b4-aa26-e621bd31b1a9" class=""><strong>Exploitation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-805d-bf4b-c272267dfd2a" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">GET /thumbnail?url=http://169.254.169.254/latest/meta-data/
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-805a-8128-cde379e5e47a" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8087-8685-c0ff1ec5d564" class="bulleted-list"><li style="list-style-type:disc"><strong>Confidentiality</strong>: Critical - Cloud credentials extracted</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-803e-b179-c863e0bc623c" class="bulleted-list"><li style="list-style-type:disc"><strong>Integrity</strong>: High - Could modify cloud resources</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8062-973f-d5a3ef32c00e" class="bulleted-list"><li style="list-style-type:disc"><strong>Business Impact</strong>: Critical - Complete cloud account compromise</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80f6-90b3-fad693644f90" class=""><strong>Remediation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80d9-ab72-e06b678f3ef9" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">ALLOWED_DOMAINS = [&#x27;cdn.example.com&#x27;, &#x27;images.example.com&#x27;]
+
+def validate_url(url):
+    parsed = urlparse(url)
+    if parsed.netloc not in ALLOWED_DOMAINS:
+        raise ValueError(&quot;Domain not allowed&quot;)
+
+    # Block private IPs
+    ip = socket.gethostbyname(parsed.hostname)
+    # Validate IP...
+
+    return url
+
+@app.route(&#x27;/thumbnail&#x27;)
+def get_thumbnail():
+    image_url = validate_url(request.args.get(&#x27;url&#x27;))
+    image_data = requests.get(image_url, timeout=5).content
+    return generate_thumbnail(image_data)
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80f6-a6b2-d249678205eb"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-809c-8d92-f985c9ef27a5" class=""><strong>Advanced Mitigations</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-806d-8dd3-d90bba0d35a4" class=""><strong>Defense in Depth Strategy</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e6-ae08-e920def590e3" class=""><strong>Layer 1: Whitelisting (Primary Defense)</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-801a-b5a8-d4b3671df62f" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">ALLOWED_DOMAINS = [&#x27;api.example.com&#x27;]
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8026-8c06-f94c07689db5" class=""><strong>Layer 2: IP Validation</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8063-8ce3-c5fa6ed03051" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Block private IP ranges
+# Validate resolved IPs
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8083-81ba-fd368796e902" class=""><strong>Layer 3: Network Segmentation</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8007-80da-c3cd32580919" class="bulleted-list"><li style="list-style-type:disc">Isolate application servers</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-808f-8ac9-d4debbe37ffb" class="bulleted-list"><li style="list-style-type:disc">Restrict outbound connections</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8042-8265-c07fd6acb7cf" class="bulleted-list"><li style="list-style-type:disc">Firewall rules</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-809c-9648-c5b43befa26f" class=""><strong>Layer 4: Request Filtering</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ee-bdcd-c800f9b8e814" class="bulleted-list"><li style="list-style-type:disc">Application-level firewalls</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-806a-aa1b-d4069121a9f0" class="bulleted-list"><li style="list-style-type:disc">Request validation middleware</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8003-a4eb-c326b50a427b" class="bulleted-list"><li style="list-style-type:disc">Timeout limits</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80a9-bc78-fa8a0bbafb9b"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80cb-b22e-e206ed226c41" class=""><strong>SAST/DAST Detection</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80e3-98d8-efc5fe94c9ca" class=""><strong>SAST (Static Application Security Testing)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b2-a455-d67d5282d176" class=""><strong>Vulnerable Code Patterns:</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8099-98be-f5fa6c807d34" class=""><strong>1. Unsafe HTTP Client:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80c5-bb51-c38afdf1936b" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># ❌ VULNERABLE
+url = request.args.get(&#x27;url&#x27;)
+response = requests.get(url)
+
+# SAST Detection:
+# - Pattern: User input in HTTP request
+# - Severity: Critical
+# - CWE: CWE-918 (Server-Side Request Forgery)
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80bf-b49f-c1443439491b"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8097-a6ee-e72626a27f0b" class=""><strong>DAST (Dynamic Application Security Testing)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8078-8b70-c9e3821316ec" class=""><strong>Testing Methodology:</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8021-9fbf-c856272e1051" class=""><strong>1. Identify Request Functions:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a8-a354-d18c4d3d4a3c" class="bulleted-list"><li style="list-style-type:disc">Find endpoints making network requests</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8053-88be-da5e0d6a984c" class="bulleted-list"><li style="list-style-type:disc">Test all user input points</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-809e-967f-ced3a6b316a4" class=""><strong>2. Submit SSRF Payloads:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-803e-9107-cb624ea875c2" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">test_payloads = [
+    &quot;http://127.0.0.1:8080/admin&quot;,
+    &quot;http://169.254.169.254/latest/meta-data/&quot;,
+    &quot;file:///etc/passwd&quot;,
+    &quot;http://192.168.1.1/admin&quot;
+]
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80fe-b732-e292099bacba" class=""><strong>3. Monitor Responses:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802c-8ddc-e33b0c1386f1" class="bulleted-list"><li style="list-style-type:disc">Check for internal data in responses</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-803d-974b-fc77d7cf2f95" class="bulleted-list"><li style="list-style-type:disc">Monitor DNS lookups</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-805b-8886-fd1053b09d1d" class="bulleted-list"><li style="list-style-type:disc">Check timing differences</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8046-ba1f-f559bff4b93e"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8054-9ede-dbf055502c32" class=""><strong>Risk Assessment</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-807f-876c-ea16f5944455" class=""><strong>Risk Matrix</strong></h3></div><div style="display:contents" dir="ltr"><table id="2d5562ad-76f0-8020-82c3-ed6343d1a596" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-8052-99d1-d5551b3c6dcd"><th id="QnaF" class="simple-table-header-color simple-table-header">Vulnerability</th><th id="E&gt;nh" class="simple-table-header-color simple-table-header">Likelihood</th><th id="CpKH" class="simple-table-header-color simple-table-header">Impact</th><th id="n@jg" class="simple-table-header-color simple-table-header">Risk Level</th><th id="\~F?" class="simple-table-header-color simple-table-header">Business Impact</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-80f8-b4e6-d143a38f830f"><td id="QnaF" class=""><strong>SSRF to Internal Network</strong></td><td id="E&gt;nh" class="">Medium</td><td id="CpKH" class="">Critical</td><td id="n@jg" class=""><strong>Critical</strong></td><td id="\~F?" class="">Internal network compromise</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-802d-8226-fed2f0be8420"><td id="QnaF" class=""><strong>SSRF to Cloud Metadata</strong></td><td id="E&gt;nh" class="">Medium</td><td id="CpKH" class="">Critical</td><td id="n@jg" class=""><strong>Critical</strong></td><td id="\~F?" class="">Cloud account compromise</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-804a-83b5-d1ba3f7fbdad"><td id="QnaF" class=""><strong>SSRF to File System</strong></td><td id="E&gt;nh" class="">Low</td><td id="CpKH" class="">High</td><td id="n@jg" class=""><strong>High</strong></td><td id="\~F?" class="">File system access</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-80c7-aca8-f62e8ddd966d"><td id="QnaF" class=""><strong>Blind SSRF</strong></td><td id="E&gt;nh" class="">Medium</td><td id="CpKH" class="">High</td><td id="n@jg" class=""><strong>High</strong></td><td id="\~F?" class="">Information disclosure</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8056-9631-d2684e262987" class=""><strong>Risk Calculation</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e2-8252-fd53d6fa92f8" class=""><strong>Example: SSRF in Image Processing</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-800a-a529-dc6e08fe5349" class=""><strong>Likelihood:</strong> Medium (0.6)</p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b8-8cf1-f1fca49a1b94" class="bulleted-list"><li style="list-style-type:disc">Requires network request functionality</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8014-9a9b-cd914e530c10" class="bulleted-list"><li style="list-style-type:disc">Common vulnerability pattern</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8023-9c06-c82af57da42f" class=""><strong>Impact:</strong> Critical (1.0)</p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80bb-974c-c8ce73c87d61" class="bulleted-list"><li style="list-style-type:disc">Internal network access</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802a-9b65-f97662d8c3cb" class="bulleted-list"><li style="list-style-type:disc">Cloud metadata access</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-803e-a6a1-db9959762291" class="bulleted-list"><li style="list-style-type:disc">Complete system compromise</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80f3-8ae4-dc88e152c7fb" class=""><strong>Risk Score:</strong> 0.6 × 1.0 = <strong>0.6 (Critical Risk)</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-807b-b8d2-fca35ddbde8f" class=""><strong>Business Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8089-b8b2-f5b0cf20d9de" class="bulleted-list"><li style="list-style-type:disc"><strong>Financial</strong>: Data breach, cloud resource abuse</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f9-b28f-d27bbd01b479" class="bulleted-list"><li style="list-style-type:disc"><strong>Reputation</strong>: Loss of customer trust</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f2-bdf1-faa406b08b6b" class="bulleted-list"><li style="list-style-type:disc"><strong>Legal</strong>: Regulatory violations, liability</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e2-a980-fcecf916f399" class="bulleted-list"><li style="list-style-type:disc"><strong>Operational</strong>: System compromise, data loss</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80de-bddd-f868638b0853"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80ac-9eef-d40ecdf76805" class=""><strong>Summary</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ca-b4b7-d679a3eae66f" class="">SSRF is a critical vulnerability allowing attackers to make requests from the server. Key points:</p></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80e8-b578-c16775fba6c2" class="numbered-list" start="1"><li><strong>Always use whitelisting</strong> - Primary defense against SSRF</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8071-99b8-dd7780d40423" class="numbered-list" start="2"><li><strong>Block private IP ranges</strong> - Prevent internal network access</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-807e-95b7-e02ae387d623" class="numbered-list" start="3"><li><strong>Validate and resolve IPs</strong> - Check resolved IPs, not hostnames</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80c7-96bb-fb01437343b0" class="numbered-list" start="4"><li><strong>Use network segmentation</strong> - Isolate application servers</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-804b-a45f-e74639eee412" class="numbered-list" start="5"><li><strong>Follow defense in depth</strong> - Multiple layers of protection</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80f8-94df-cbec6c84dda6" class="numbered-list" start="6"><li><strong>Test thoroughly</strong> - Code reviews, SAST/DAST scanning</li></ol></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-801c-a335-f2208a292a38" class="">Remember: <strong>SSRF is prevented by whitelisting allowed URLs and blocking private IP ranges, not by blacklisting or URL validation alone!</strong></p></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

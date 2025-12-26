@@ -1,0 +1,809 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Critical Clarification: CORS vs SOP</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2b4562ad-76f0-80b3-b472-fc369b4c9ffa" class="page mono"><header><h1 class="page-title" dir="auto"><strong>Critical Clarification: CORS vs SOP</strong></h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-80af-adc6-d6f7903a0cca" class=""><strong>⚠️ Common Misconceptions</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80bd-ad1b-ebbc39fb87ab" class=""><strong>Misconception 1: &quot;CORS is a security feature that protects my server&quot;</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8024-b3c4-ef46f7279bbf" class=""><strong>Reality:</strong> CORS is a <strong>relaxation</strong> of the Same-Origin Policy, not a security feature that protects your server. It allows controlled cross-origin access that would otherwise be blocked.</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-803e-ab9c-c638a1e3a079" class=""><strong>Key Points:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8070-988f-d5b39d287406" class="bulleted-list"><li style="list-style-type:disc">SOP <strong>restricts</strong> cross-origin access (security)</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80c5-8449-f99b1ee0a796" class="bulleted-list"><li style="list-style-type:disc">CORS <strong>allows</strong> cross-origin access (controlled relaxation)</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8061-abc2-d3918e1869ae" class="bulleted-list"><li style="list-style-type:disc">CORS is configured on the <strong>server</strong> to tell the <strong>browser</strong> what to allow</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80a2-84ff-e29b7ef119c2" class="bulleted-list"><li style="list-style-type:disc">CORS does NOT prevent direct server access (curl, Postman, etc.)</li></ul></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80aa-88eb-ef678f68c241" class=""><strong>Misconception 2: &quot;CORS protects against CSRF attacks&quot;</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80e5-83df-effafb346c57" class=""><strong>Reality:</strong> CORS does NOT protect against CSRF attacks. In fact, misconfigured CORS can make CSRF attacks easier.</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80b2-bbde-c4278b6b495c" class=""><strong>Why:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-800e-bb64-c248b080812f" class="bulleted-list"><li style="list-style-type:disc">CORS only affects browser-enforced restrictions</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8096-88c1-cfe8d6338a9d" class="bulleted-list"><li style="list-style-type:disc">CSRF attacks work by tricking the browser into making requests</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80f0-9a73-f2566a726b1e" class="bulleted-list"><li style="list-style-type:disc">If CORS allows the origin, the browser will send the request</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80e4-a349-cd29381c902f" class="bulleted-list"><li style="list-style-type:disc">CORS headers are sent by the server, not validated by the server for CSRF protection</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-808b-b3e2-e5d762432686" class=""><strong>What actually protects against CSRF:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8071-8784-f86adf79bd50" class="bulleted-list"><li style="list-style-type:disc">CSRF tokens</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8082-8686-ff0249f91ea7" class="bulleted-list"><li style="list-style-type:disc">SameSite cookie attribute</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80cf-9b02-fac9d830e42c" class="bulleted-list"><li style="list-style-type:disc">Custom headers (e.g., X-Requested-With)</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-804e-a458-dce98ec40dd7" class="bulleted-list"><li style="list-style-type:disc">Origin validation (but not CORS itself)</li></ul></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8055-8747-eef2f929d10a" class=""><strong>Misconception 3: &quot;Access-Control-Allow-Origin: * is safe for public APIs&quot;</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8027-9bff-f93748c5ca8e" class=""><strong>Reality:</strong> Using wildcard (<code>*</code>) with credentials is <strong>dangerous</strong> and violates the CORS specification.</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80dd-ab40-f60bb4fbb8d0" class=""><strong>The Problem:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80c8-afb1-d240cee55546" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Access-Control-Allow-Origin: *
+Access-Control-Allow-Credentials: true
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8083-9dff-f7dcef8c0920" class=""><strong>Why it&#x27;s dangerous:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80c3-aa57-c7e9c8708eb6" class="bulleted-list"><li style="list-style-type:disc">Browsers will <strong>reject</strong> this combination (spec violation)</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8078-b27c-fa93c0050691" class="bulleted-list"><li style="list-style-type:disc">But if misconfigured, it can expose sensitive data</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-807f-84cf-d88161e10ebd" class="bulleted-list"><li style="list-style-type:disc">Even without credentials, wildcard allows any origin to access resources</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80a5-9b3e-d70b57c35fbb" class=""><strong>Best Practice:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8062-8c82-c03e0ea61d40" class="bulleted-list"><li style="list-style-type:disc">Never use  with credentials</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8080-bd51-f161178f841b" class="bulleted-list"><li style="list-style-type:disc">Use specific origins even for public APIs</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8097-8370-ec2dcf3ce826" class="bulleted-list"><li style="list-style-type:disc">Consider using <code>Access-Control-Allow-Origin: *</code> only for truly public, non-sensitive resources</li></ul></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-8021-8b10-c4603af43bbb"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-8085-afa5-c93e9d1c8b24" class=""><strong>Understanding the Relationship: SOP vs CORS</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-807f-a8e1-fcad90ebf7c2" class=""><strong>Same-Origin Policy (SOP)</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8026-a472-d575540da463" class=""><strong>What it is:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80f0-9e01-e8bf9bd74dd9" class="bulleted-list"><li style="list-style-type:disc">A <strong>browser security mechanism</strong> that restricts how documents/scripts from one origin can interact with resources from another origin</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8041-8068-f5b750da5022" class="bulleted-list"><li style="list-style-type:disc"><strong>Enforced by the browser</strong>, not the server</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8089-a50b-ce5318d63d39" class="bulleted-list"><li style="list-style-type:disc"><strong>Default behavior</strong>: Block cross-origin requests</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80c5-9d1b-c90f9fe317f1" class=""><strong>What it protects:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8047-ad59-db6efa98c1f7" class="bulleted-list"><li style="list-style-type:disc">Prevents malicious websites from accessing your data</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8061-a480-fe48351aff3b" class="bulleted-list"><li style="list-style-type:disc">Prevents XSS attacks from stealing data from other origins</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80fb-ad3c-f19cf9440219" class="bulleted-list"><li style="list-style-type:disc">Protects user&#x27;s cookies and sensitive information</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8089-a500-fcc2f1916d17" class=""><strong>How it works:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80bd-b834-c44fc2eb8866" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Origin A (https://example.com) tries to access Origin B (https://api.example.com)
+
+Browser: &quot;Are these the same origin?&quot;
+- Protocol: https === https ✅
+- Domain: example.com !== api.example.com ❌
+- Port: 443 === 443 ✅
+
+Result: Different origins → Browser BLOCKS the request (SOP)
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8091-9122-c04a83180f8e" class=""><strong>Cross-Origin Resource Sharing (CORS)</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80b7-9fca-e1d3af984d14" class=""><strong>What it is:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80f6-a717-fd47452916bc" class="bulleted-list"><li style="list-style-type:disc">A <strong>mechanism</strong> that allows servers to specify which origins can access their resources</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-805e-93d7-c9a87261b439" class="bulleted-list"><li style="list-style-type:disc"><strong>Relaxes SOP</strong> in a controlled way</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8002-aebc-eafe6619e286" class="bulleted-list"><li style="list-style-type:disc"><strong>Configured on the server</strong>, enforced by the browser</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-807c-a6ad-eeb8ead15eaf" class=""><strong>What it enables:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80ef-9727-c90a3bda9d9c" class="bulleted-list"><li style="list-style-type:disc">Controlled cross-origin data sharing</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8033-b104-d1c801047714" class="bulleted-list"><li style="list-style-type:disc">API access from web applications</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-808b-bccb-cffce573caf9" class="bulleted-list"><li style="list-style-type:disc">Third-party integrations</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80a7-bef3-e98f965eddb3" class=""><strong>How it works:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8043-b62c-ea957f755b61" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Origin A (https://example.com) tries to access Origin B (https://api.example.com)
+
+Browser: &quot;SOP would block this, but let me check CORS headers&quot;
+
+Server responds with:
+Access-Control-Allow-Origin: https://example.com
+
+Browser: &quot;CORS allows this origin → Request proceeds ✅&quot;
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-8062-810e-e2cc66db3c89"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-80aa-80ec-e156792ca406" class=""><strong>Visual Comparison</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80e1-9140-fd7fcc8a909e" class=""><strong>Without CORS (SOP Blocks)</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8041-a8d6-dbfd244821fc" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">┌─────────────────┐
+│  Browser        │
+│  (example.com)  │
+└────────┬────────┘
+         │
+         │ 1. JavaScript tries to fetch
+         │    from api.example.com
+         ▼
+┌─────────────────┐
+│  SOP Check      │
+│  Different      │
+│  origins?       │
+└────────┬────────┘
+         │
+         │ 2. Yes → BLOCK
+         ▼
+┌─────────────────┐
+│  Request        │
+│  BLOCKED        │
+│  by browser     │
+└─────────────────┘
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-803f-a780-e2218eb94e54" class=""><strong>With CORS (SOP Relaxed)</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80e9-ad79-e8630343f566" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">┌─────────────────┐
+│  Browser        │
+│  (example.com)  │
+└────────┬────────┘
+         │
+         │ 1. JavaScript tries to fetch
+         │    from api.example.com
+         ▼
+┌─────────────────┐
+│  SOP Check      │
+│  Different      │
+│  origins?       │
+└────────┬────────┘
+         │
+         │ 2. Yes → Check CORS
+         ▼
+┌─────────────────┐
+│  Server         │
+│  (api.example)  │
+└────────┬────────┘
+         │
+         │ 3. Responds with CORS headers
+         │    Access-Control-Allow-Origin: https://example.com
+         ▼
+┌─────────────────┐
+│  Browser        │
+│  Checks CORS    │
+└────────┬────────┘
+         │
+         │ 4. Origin allowed → ALLOW
+         ▼
+┌─────────────────┐
+│  Request        │
+│  PROCEEDS       │
+└─────────────────┘
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-800a-9a69-ca8013d2fd22"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-807e-839b-e246b8a6bbcb" class=""><strong>Key Differences</strong></h2></div><div style="display:contents" dir="ltr"><table id="2b4562ad-76f0-80b9-9a3c-d2a07dee8f3d" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2b4562ad-76f0-80a5-b769-f7a3e1a33f3b"><th id="dAHt" class="simple-table-header-color simple-table-header">Aspect</th><th id="LykR" class="simple-table-header-color simple-table-header">Same-Origin Policy (SOP)</th><th id="H;Lo" class="simple-table-header-color simple-table-header">Cross-Origin Resource Sharing (CORS)</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2b4562ad-76f0-80fa-a490-ec35d0e9c680"><td id="dAHt" class=""><strong>Purpose</strong></td><td id="LykR" class="">Restrict cross-origin access</td><td id="H;Lo" class="">Allow controlled cross-origin access</td></tr></div><div style="display:contents" dir="ltr"><tr id="2b4562ad-76f0-80ef-99a7-e87f3690b61a"><td id="dAHt" class=""><strong>Enforced by</strong></td><td id="LykR" class="">Browser</td><td id="H;Lo" class="">Browser (based on server headers)</td></tr></div><div style="display:contents" dir="ltr"><tr id="2b4562ad-76f0-80d6-a03e-fac0f58a7494"><td id="dAHt" class=""><strong>Configured by</strong></td><td id="LykR" class="">Browser (built-in)</td><td id="H;Lo" class="">Server (HTTP headers)</td></tr></div><div style="display:contents" dir="ltr"><tr id="2b4562ad-76f0-80a2-ad86-c13565e3afb3"><td id="dAHt" class=""><strong>Default behavior</strong></td><td id="LykR" class="">Block cross-origin requests</td><td id="H;Lo" class="">Relaxes SOP restrictions</td></tr></div><div style="display:contents" dir="ltr"><tr id="2b4562ad-76f0-8041-b57b-c035256782c3"><td id="dAHt" class=""><strong>Security role</strong></td><td id="LykR" class="">Primary security mechanism</td><td id="H;Lo" class="">Controlled relaxation mechanism</td></tr></div><div style="display:contents" dir="ltr"><tr id="2b4562ad-76f0-800e-b964-ea92e25a057f"><td id="dAHt" class=""><strong>Protects against</strong></td><td id="LykR" class="">XSS, data theft, unauthorized access</td><td id="H;Lo" class="">N/A (it&#x27;s a relaxation, not protection)</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-80a9-884b-f9cc38f798bb"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-804b-a23d-e3272fe94ef3" class=""><strong>Important Clarifications</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80b9-9311-c684de01731b" class=""><strong>1. CORS Does NOT Protect Your Server</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8069-8037-e512796aff4d" class=""><strong>Common mistake:</strong> &quot;I&#x27;ve configured CORS, so my API is secure.&quot;</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-807e-b259-d2d35edc05e8" class=""><strong>Reality:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8040-b7fa-c0d3ce7cae3a" class="bulleted-list"><li style="list-style-type:disc">CORS is enforced by the <strong>browser</strong>, not the server</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8075-8cfe-dd07870f7250" class="bulleted-list"><li style="list-style-type:disc">Direct requests (curl, Postman, scripts) <strong>bypass CORS</strong></li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80d0-b151-f867cd5661a7" class="bulleted-list"><li style="list-style-type:disc">CORS only affects browser-based requests</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-806e-ac33-dd7eb088ca93" class="bulleted-list"><li style="list-style-type:disc">You still need authentication, authorization, and other security measures</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8001-9fec-fd6f908101cb" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80c6-ac45-f5abc3cde818" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all"># Browser request (subject to CORS)
+fetch(&#x27;https://api.example.com/data&#x27;)
+# Browser checks CORS headers# Direct request (bypasses CORS)
+curl https://api.example.com/data
+# No CORS check - request goes through</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8085-a962-c3ac2387a384" class=""><strong>2. CORS Headers Are Response Headers</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8041-a99c-c27464d8c3bc" class=""><strong>Common mistake:</strong> &quot;I&#x27;ll set CORS headers in my request.&quot;</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-803d-bf40-fd488533bbdb" class=""><strong>Reality:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80dd-88ac-f1d4a9853a86" class="bulleted-list"><li style="list-style-type:disc">CORS headers are <strong>response headers</strong> sent by the server</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8017-b316-e29028ae57f7" class="bulleted-list"><li style="list-style-type:disc">The browser reads these headers to decide whether to allow the request</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80b8-99cf-cb37b091a7df" class="bulleted-list"><li style="list-style-type:disc">You cannot set CORS headers from client-side JavaScript</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80d5-a6d1-f393bf8c9bb4" class=""><strong>Correct flow:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-806b-a68c-e9c44460fe8e" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">1. Browser sends request with Origin header
+2. Server processes request
+3. Server responds with CORS headers
+4. Browser reads CORS headers
+5. Browser allows/denies based on CORS headers
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8017-bb42-d614b7fb626a" class=""><strong>3. Preflight Requests Are Automatic</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8008-96de-edf6010ced1f" class=""><strong>Common mistake:</strong> &quot;I need to manually send OPTIONS requests.&quot;</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80f0-ba4f-e9923d7772cd" class=""><strong>Reality:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80b8-a439-e99e1f920c3e" class="bulleted-list"><li style="list-style-type:disc">Browsers <strong>automatically</strong> send preflight requests when needed</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80e8-a0b9-dfc1e3f1931f" class="bulleted-list"><li style="list-style-type:disc">You don&#x27;t need to handle OPTIONS requests manually in your JavaScript</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8080-a6ca-c4b90e3ebc1d" class="bulleted-list"><li style="list-style-type:disc">The browser handles the entire preflight flow</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8086-bab8-e49898633bf3" class=""><strong>What triggers preflight:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8039-b76a-f6969b8d1377" class="bulleted-list"><li style="list-style-type:disc">Custom headers (e.g., X-Custom-Header)</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8088-9082-d7d4af71e107" class="bulleted-list"><li style="list-style-type:disc">Non-simple methods (PUT, DELETE, PATCH)</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-804c-92e2-e5ed78fd730d" class="bulleted-list"><li style="list-style-type:disc">Content-Type other than simple types</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-805e-acb6-df99bc3493f4" class="bulleted-list"><li style="list-style-type:disc">Requests with credentials</li></ul></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80d9-aa3e-ce2114352705" class=""><strong>4. Origin Header Cannot Be Forged by JavaScript</strong></h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8082-be8b-caaf7585118a" class=""><strong>Common mistake:</strong> &quot;Attackers can fake the Origin header.&quot;</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8068-a3a5-dad3c92455f8" class=""><strong>Reality:</strong></p></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8098-8d8b-c7ff23a35e95" class="bulleted-list"><li style="list-style-type:disc">The <code>Origin</code> header is <strong>set by the browser</strong>, not JavaScript</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-802a-8ee8-e6b03b724de9" class="bulleted-list"><li style="list-style-type:disc">JavaScript <strong>cannot</strong> modify the Origin header</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8082-81a5-fce8fbc7425a" class="bulleted-list"><li style="list-style-type:disc">However, server must <strong>validate</strong> the Origin header</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80c8-98a6-f6336b75a67b" class="bulleted-list"><li style="list-style-type:disc">If server blindly reflects Origin, it&#x27;s vulnerable</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80f7-852b-eedc33b0c897" class=""><strong>Vulnerable code:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8097-8249-c61b8b433a53" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ❌ VULNERABLE - Blindly reflects Origin
+app.use((req, res) =&gt; {
+  res.setHeader(&#x27;Access-Control-Allow-Origin&#x27;, req.headers.origin);
+// Attacker can send any Origin header via curl/Postman// Server reflects it without validation
+});
+</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8099-9bff-ceda25c7dc2b" class=""><strong>Secure code:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80f7-ad35-f511d39b4589" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ✅ SECURE - Validates Originconst allowedOrigins = [&#x27;https://example.com&#x27;, &#x27;https://app.example.com&#x27;];
+
+app.use((req, res) =&gt; {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader(&#x27;Access-Control-Allow-Origin&#x27;, origin);
+  }
+});
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-8058-a084-eb7ef271c1bb"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-80ca-8c5a-d14ae6ccc328" class=""><strong>Summary</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8043-afc9-e0253b4f5167" class=""><strong>Key Takeaways</strong></h3></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-80e0-bf7f-c4f5c2cb2217" class="numbered-list" start="1"><li><strong>SOP restricts, CORS allows</strong><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8060-97ad-db0cd8570f57" class="bulleted-list"><li style="list-style-type:disc">SOP is the security mechanism</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-801f-aae7-d50222eb33a1" class="bulleted-list"><li style="list-style-type:disc">CORS is the controlled relaxation</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-80d8-8f13-c405fe745d23" class="numbered-list" start="2"><li><strong>CORS is browser-enforced, not server-protected</strong><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8044-932a-fae26901cc82" class="bulleted-list"><li style="list-style-type:disc">Direct requests bypass CORS</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8052-8d09-e3f914efbe76" class="bulleted-list"><li style="list-style-type:disc">CORS only affects browser requests</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-804b-9f53-c9f586297820" class="numbered-list" start="3"><li><strong>CORS does NOT protect against CSRF</strong><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8086-9e93-e0047e7fea68" class="bulleted-list"><li style="list-style-type:disc">Use CSRF tokens and SameSite cookies</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80af-86b4-e7772408d30d" class="bulleted-list"><li style="list-style-type:disc">CORS can actually make CSRF easier if misconfigured</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-80ef-9e25-d0e1a3535433" class="numbered-list" start="4"><li><strong>Always validate Origin header</strong><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-803a-afc7-ca8f00be670a" class="bulleted-list"><li style="list-style-type:disc">Don&#x27;t blindly reflect Origin</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-800a-b5a8-d15e357d3720" class="bulleted-list"><li style="list-style-type:disc">Use whitelist of allowed origins</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-80e1-9d48-da027b81bdc7" class="numbered-list" start="5"><li><strong>Never use wildcard with credentials</strong><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8003-b13f-ee9c2535e2e1" class="bulleted-list"><li style="list-style-type:disc"><code>Access-Control-Allow-Origin: *</code> + credentials = dangerous</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80ef-8e81-e5cae3aaf7f7" class="bulleted-list"><li style="list-style-type:disc">Browsers should reject this, but don&#x27;t rely on it</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80d2-af6b-d693f8df4ce1" class=""><strong>Remember</strong></h3></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80f0-9017-f58014a4a977" class="bulleted-list"><li style="list-style-type:disc"><strong>SOP</strong> = Browser security mechanism (restricts)</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80cc-bfc4-e20990313d87" class="bulleted-list"><li style="list-style-type:disc"><strong>CORS</strong> = Controlled relaxation of SOP (allows)</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-805e-8c9d-e46cddc5db47" class="bulleted-list"><li style="list-style-type:disc"><strong>CORS headers</strong> = Server tells browser what to allow</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80db-9b49-d3624823196b" class="bulleted-list"><li style="list-style-type:disc"><strong>Browser</strong> = Enforces CORS based on server headers</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8039-aa07-c46b4706beb0" class="bulleted-list"><li style="list-style-type:disc"><strong>Direct requests</strong> = Bypass CORS entirely</li></ul></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-80c5-975d-d41bd35ae293"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-80cf-b98f-cc8e07fe8091" class=""><strong>Common Interview Question</strong></h2></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-801a-aada-fbe014207fe2" class=""><strong>Q: &quot;Does CORS protect my server from attacks?&quot;</strong></p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80db-bb3f-c1cb5e4d3799" class=""><strong>A: &quot;No, CORS does not protect your server. CORS is a browser-enforced mechanism that controls which origins can make cross-origin requests from browsers. It does not prevent direct server access via tools like curl or Postman. CORS headers are response headers that tell the browser what to allow, but the server must still implement proper authentication, authorization, input validation, and other security measures. CORS is a relaxation of the Same-Origin Policy, not a security feature that protects the server.&quot;</strong></p></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-800d-93ca-fddb5fab2cea"/></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

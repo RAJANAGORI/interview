@@ -1,0 +1,907 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Digital Signatures</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2b4562ad-76f0-8028-b5a0-ef8be87eed9b" class="page mono"><header><h1 class="page-title" dir="auto">Digital Signatures</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="ltr"><nav id="2b4562ad-76f0-80e4-b8de-fd97b69e169d" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-80d2-aa39-cd404c0df8e6">Introduction</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80f6-9c81-e2585ff4499f">What is a Digital Signature?</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80db-92b0-f1187e38ac95">Why Digital Signatures Matter</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-808e-a863-fbcdb0bdc7fd">Key Properties</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-804a-acfe-e56028c544e5">What is a Digital Signature?</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80bb-ab80-e14ec7fb01bb">Definition</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80e7-af73-c0677f34275d">Components</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80e9-9ff4-ce262a11efe9">How It Differs from Electronic Signatures</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-80b2-9e58-fff46d9a1ddb">How Digital Signatures Work</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8083-9803-d7352959f508">Creation Process (Sender’s Side)</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8094-8366-c1038365b072">Verification Process (Receiver’s Side)</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80c3-9252-f1ddd8ec6385">Why This Process Works</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-80db-93a8-e10db5317d5a">Hash Functions</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8036-b333-c1560bfe80db">What is a Hash Function?</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-806d-aa81-f9651b50c58f">Properties of Good Hash Functions</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8033-8c89-e78daaa1147a">Common Hash Functions</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-809b-87b3-f7994dbbb827">Hash Function Example</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-808b-93f9-d8529cdb883c">Why Hash Before Signing?</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-80c2-9178-ec33200ef7ea">Public Key Cryptography</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8088-9e1f-ee990d2c76c3">What is Public Key Cryptography?</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8025-a3ef-f56e94ffaee0">Key Properties</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8074-ad40-f08848a13f0b">How It Works for Signing</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8025-bdbe-d5b2f7dc53e6">Mathematical Foundation</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-805c-ace7-c527c6440604">Digital Signature Algorithms</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8031-b99e-c3405fbfb16d">RSA (Rivest-Shamir-Adleman)</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-806b-86c8-f6ec5b962dae">DSA (Digital Signature Algorithm)</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80f4-9718-e134ca3ae2f2">ECDSA (Elliptic Curve Digital Signature Algorithm)</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8080-b271-d5a6e7df6b53">EdDSA (Edwards-Curve Digital Signature Algorithm)</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80f1-a957-f91d1fbee4c5">Algorithm Comparison</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-8092-a621-eb0686143276">Digital Certificates and PKI</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80e3-b3ba-d463936965f3">What is a Digital Certificate?</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80d3-a464-d739f75da42f">Certificate Contents</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-806c-830a-ecdf324a4a71">Public Key Infrastructure (PKI)</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8041-9683-e51572fbf3a0">Certificate Chain</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8014-b391-cae174ea586c">Why Certificates Are Needed</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-8085-ae0a-f7bdd4d30e1e">Creating Digital Signatures</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8028-b835-dd361eddc0c9">Step-by-Step Process</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80c8-8f81-ff0f0c1f8363">Using OpenSSL (Command Line)</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-80bc-b780-e47964e08d0c">Verifying Digital Signatures</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-805d-a4c7-de6b9e674d2f">Step-by-Step Process</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-8018-a4d1-db5d032a787c">Applications and Use Cases</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80bc-ae27-f9deb861edb8">1. Software Distribution</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8094-b2c5-e7ab2fb6f355">2. Email Security</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80c5-96c4-fb2b95613fc6">3. Financial Transactions</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-803c-b456-ec60b08f364c">4. Legal Documents</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80f6-9a03-d55d75d62d02">5. Code Signing</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80bb-9995-e71401eee01f">6. Document Management</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-8020-b63e-c42ffaf0e394">Security Considerations</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-809c-a8a6-dfda4c769f8d">1. Private Key Protection</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80ce-833b-e9df25177435">2. Hash Function Security</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80ed-9f60-f892675ae378">3. Algorithm Selection</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80de-b41f-e6cd39f7e47a">4. Certificate Management</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80a4-9653-c05d34815128">5. Timestamping</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-800a-9f66-de4c4f813906">6. Non-Repudiation</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-80a2-ac4b-ca3d20b56752">Implementation Examples</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8077-9ae5-f6c92b0f5286">Python (cryptography library)</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-806d-9913-da01366dec5e">Node.js (crypto module)</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80fb-8d7e-d2abb89a7134">Java (Java Cryptography)</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80af-a73c-c939e0d4c18b">OpenSSL (Command Line)</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2b4562ad-76f0-809a-a494-fd6330ff934a">Summary</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80b2-b564-ee7df9654aac">Key Takeaways</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-80df-b238-cb575e64c6a5">Best Practices</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2b4562ad-76f0-8073-bfac-e2f5f17051e2">Remember</a></div></nav></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-800b-be4c-c64e5047db59"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-80d2-aa39-cd404c0df8e6" class="">Introduction</h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80f6-9c81-e2585ff4499f" class="">What is a Digital Signature?</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-806a-b66d-c02a616f8e60" class="">A <strong>digital signature</strong> is a cryptographic technique that provides:<br/>- <strong>Authentication</strong>: Confirms who sent the message<br/>- <strong>Integrity</strong>: Confirms the message hasn’t been altered<br/>- <strong>Non-repudiation</strong>: Prevents the sender from denying they sent it</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80db-92b0-f1187e38ac95" class="">Why Digital Signatures Matter</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8099-9fc2-caad1043316d" class=""><strong>Problems They Solve:</strong><br/>1. <strong>Impersonation</strong>: How do you know who really sent the message?<br/>2. <strong>Tampering</strong>: How do you know the message wasn’t modified?<br/>3. <strong>Repudiation</strong>: How do you prove someone sent something?</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8042-9810-cecaa87b7b52" class=""><strong>Real-World Analogy:</strong><br/>- Like a handwritten signature on paper<br/>- But cryptographically secure<br/>- Cannot be forged (computationally infeasible)<br/>- Works for digital documents</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-808e-a863-fbcdb0bdc7fd" class="">Key Properties</h3></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-8067-9877-d26494f79af8" class="numbered-list" start="1"><li><strong>Authenticity</strong>: Verifies the identity of the signer</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-8006-bfa5-d65b497c27f8" class="numbered-list" start="2"><li><strong>Integrity</strong>: Detects any modification to the document</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-806f-828e-ecd5c5eda4b2" class="numbered-list" start="3"><li><strong>Non-repudiation</strong>: Sender cannot deny sending</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-80fd-8c9a-f2ba8fa905cd" class="numbered-list" start="4"><li><strong>Unforgeability</strong>: Cannot be created without private key</li></ol></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-801e-944d-c1f7a7b07ac5"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-804a-acfe-e56028c544e5" class="">What is a Digital Signature?</h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80bb-ab80-e14ec7fb01bb" class="">Definition</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-809c-b5fc-fc7bd8ec64c6" class="">A digital signature is a mathematical scheme for verifying the authenticity and integrity of digital messages or documents using public key cryptography.</p></div><div style="display:contents" dir="ltr"><figure id="2b4562ad-76f0-80c1-b848-e8a772ad36e4" class="image" style="text-align:left"><a href="Digital%20Signatures/IMG_20230629_132011.jpg"><img style="width:672px" src="Digital%20Signatures/IMG_20230629_132011.jpg"/></a></figure></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80e7-af73-c0677f34275d" class="">Components</h3></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-805c-b129-d540c68bba83" class="numbered-list" start="1"><li><strong>Message/Document</strong>: The content being signed</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-8034-88c6-e72a89b0d357" class="numbered-list" start="2"><li><strong>Hash Function</strong>: Creates a digest of the message</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-807c-bd4a-e30b0df2bfa3" class="numbered-list" start="3"><li><strong>Private Key</strong>: Used to sign the hash</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-8004-bd94-e91026d7dfa9" class="numbered-list" start="4"><li><strong>Public Key</strong>: Used to verify the signature</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-800f-aec5-f742ab6caee1" class="numbered-list" start="5"><li><strong>Digital Signature</strong>: The signed hash value</li></ol></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80e9-9ff4-ce262a11efe9" class="">How It Differs from Electronic Signatures</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80c3-969a-c916678d7768" class=""><strong>Electronic Signature:</strong><br/>- Broad term for any electronic method of signing<br/>- Can be as simple as typing your name<br/>- May not provide cryptographic security<br/>- Legal concept</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80af-a977-e8a8005de5e3" class=""><strong>Digital Signature:</strong><br/>- Specific cryptographic technique<br/>- Uses public key cryptography<br/>- Provides mathematical proof of authenticity<br/>- Technical implementation</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80cd-9064-d4a175e23ca7" class=""><strong>Relationship:</strong><br/>- Digital signatures are a type of electronic signature<br/>- Not all electronic signatures are digital signatures<br/>- Digital signatures provide stronger security guarantees</p></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-807e-b429-e7b3b2682d12"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-80b2-9e58-fff46d9a1ddb" class="">How Digital Signatures Work</h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8083-9803-d7352959f508" class="">Creation Process (Sender’s Side)</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-801c-af82-d2e3a5f1abb4" class=""><strong>Step 1: Hash the Document</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-803d-abc1-c1c7a978f37f" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Document → Hash Function → Hash Value (Digest)</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-809b-8df8-c9c0a3857a97" class=""><strong>Step 2: Sign the Hash</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8011-8e85-fd80c2b36d36" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Hash Value → Private Key → Digital Signature</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8072-b29d-c72de0cb1092" class=""><strong>Step 3: Attach Signature</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8093-8186-ddb9b5d0304e" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Document + Digital Signature → Send to Recipient</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80bb-b62f-e32bf48034e2" class=""><strong>Visual Flow:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8064-927e-fd3abae08091" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">┌─────────────┐
+│  Document   │
+│  &quot;Hello&quot;    │
+└──────┬──────┘
+       │
+       │ Hash Function (SHA-256)
+       ▼
+┌─────────────┐
+│  Hash:      │
+│  2cf24d...  │
+└──────┬──────┘
+       │
+       │ Private Key (Encrypt)
+       ▼
+┌─────────────┐
+│  Signature: │
+│  ABC123...  │
+└─────────────┘</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8094-8366-c1038365b072" class="">Verification Process (Receiver’s Side)</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8094-9473-e5c5f9218303" class=""><strong>Step 1: Receive Document and Signature</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8075-ba8e-fa015238442f" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Document + Digital Signature</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-809f-b9e7-ef2ae74ff781" class=""><strong>Step 2: Hash the Received Document</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80c9-8ab2-f1aa4712230a" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Document → Hash Function → Hash Value (Computed)</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80f2-bf59-d128cb2aef99" class=""><strong>Step 3: Decrypt the Signature</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-800c-908f-e7a261e9f793" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Digital Signature → Public Key → Hash Value (From Signature)</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-806a-bf64-d1f1e9719314" class=""><strong>Step 4: Compare Hashes</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8046-9ff1-eaf024110386" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">If Computed Hash == Hash From Signature:
+    ✅ Signature is VALID
+    ✅ Document is authentic and unmodified
+Else:
+    ❌ Signature is INVALID
+    ❌ Document may be tampered or signature forged</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80d4-b7f4-fa52f33a1af1" class=""><strong>Visual Flow:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8039-ae5b-e611615890b8" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">┌─────────────┐     ┌─────────────┐
+│  Document   │     │  Signature  │
+│  &quot;Hello&quot;    │     │  ABC123...  │
+└──────┬──────┘     └──────┬───────┘
+       │                   │
+       │ Hash Function     │ Public Key (Decrypt)
+       ▼                   ▼
+┌─────────────┐     ┌─────────────┐
+│  Hash:      │     │  Hash:      │
+│  2cf24d...  │     │  2cf24d...  │
+│  (Computed) │     │  (From Sig) │
+└──────┬──────┘     └──────┬───────┘
+       │                   │
+       └───────┬───────────┘
+               │
+               │ Compare
+               ▼
+         ┌──────────┐
+         │  Match?   │
+         └────┬─────┘
+              │
+    ┌─────────┴─────────┐
+    │                   │
+    ▼                   ▼
+  ✅ Valid            ❌ Invalid</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80c3-9252-f1ddd8ec6385" class="">Why This Process Works</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-808f-9621-cc6acfa9c561" class=""><strong>1. Hash Function Properties:</strong><br/>- <strong>Deterministic</strong>: Same input always produces same output<br/>- <strong>One-way</strong>: Cannot reverse to get original input<br/>- <strong>Avalanche effect</strong>: Small change produces completely different hash<br/>- <strong>Collision resistant</strong>: Different inputs produce different hashes</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8079-aeb3-dd18a4421783" class=""><strong>2. Public Key Cryptography:</strong><br/>- <strong>Asymmetric</strong>: Different keys for encryption/decryption<br/>- <strong>Mathematically related</strong>: Public and private keys are paired<br/>- <strong>One-way trapdoor</strong>: Easy to encrypt with public key, hard to decrypt without private key</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8085-91a9-f81cc0a09fae" class=""><strong>3. Security Guarantees:</strong><br/>- <strong>Authentication</strong>: Only someone with private key could create signature<br/>- <strong>Integrity</strong>: Any change to document changes hash, invalidating signature<br/>- <strong>Non-repudiation</strong>: Sender cannot deny creating signature (they have private key)</p></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-807a-8ec7-c349eb4317b7"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-80db-93a8-e10db5317d5a" class="">Hash Functions</h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8036-b333-c1560bfe80db" class="">What is a Hash Function?</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8076-9a9e-d3abff07c805" class="">A hash function is a mathematical algorithm that takes input of any size and produces a fixed-length output (hash value or digest).</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-806d-aa81-f9651b50c58f" class="">Properties of Good Hash Functions</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-800b-ae74-d1dcfe10485f" class=""><strong>1. Deterministic:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-805f-896c-ca6e58b33600" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Same input → Always same output
+&quot;Hello&quot; → Always produces same hash</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80d4-bafb-cb694e17fe1a" class=""><strong>2. One-Way (Pre-image Resistance):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80b5-b056-fd7bbf946aeb" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Hash → Cannot determine original input
+Cannot reverse: hash → &quot;Hello&quot;</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-804f-915d-dbf0d17ddf10" class=""><strong>3. Avalanche Effect:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8032-9ca3-f41edb962fdc" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Small change → Completely different hash
+&quot;Hello&quot; → Hash: ABC123...
+&quot;Hello!&quot; → Hash: XYZ789... (completely different)</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8014-94ef-fb0daa8cb5dc" class=""><strong>4. Collision Resistance:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-807c-8a79-deb8d534987f" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Different inputs → Different hashes
+&quot;Hello&quot; → Hash: ABC123...
+&quot;World&quot; → Hash: DEF456... (different)</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8061-b33e-cf884ea4f746" class=""><strong>5. Fast Computation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80f3-9543-fdc3074f2e00" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Hash computation is fast
+Even for large documents</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8033-8c89-e78daaa1147a" class="">Common Hash Functions</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-808e-b2bd-cdc783c27d78" class=""><strong>SHA-256 (Secure Hash Algorithm 256-bit):</strong><br/>- Output: 256 bits (32 bytes)<br/>- Widely used<br/>- Considered secure<br/>- Used in Bitcoin, TLS, etc.</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8084-99c6-dbd961353c26" class=""><strong>SHA-512:</strong><br/>- Output: 512 bits (64 bytes)<br/>- More secure than SHA-256<br/>- Slower computation<br/>- Used in high-security applications</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-806b-8779-fec58d1c2c67" class=""><strong>SHA-3:</strong><br/>- Latest SHA standard<br/>- Different design from SHA-2<br/>- Multiple output sizes (224, 256, 384, 512 bits)</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80f1-bc05-cb2001fb1f8a" class=""><strong>MD5 (Deprecated):</strong><br/>- Output: 128 bits<br/>- <strong>Not secure</strong> - vulnerable to collisions<br/>- <strong>Do not use</strong> for security applications</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80fb-919d-f9b93f645081" class=""><strong>SHA-1 (Deprecated):</strong><br/>- Output: 160 bits<br/>- <strong>Not secure</strong> - vulnerable to collisions<br/>- <strong>Do not use</strong> for new applications</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-809b-87b3-f7994dbbb827" class="">Hash Function Example</h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80de-af81-c77aa289729b" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import hashlib
+# SHA-256 hashmessage = &quot;Hello World&quot;hash_object = hashlib.sha256(message.encode())
+hash_hex = hash_object.hexdigest()
+print(f&quot;SHA-256: {hash_hex}&quot;)
+# Output: a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e# Small changemessage2 = &quot;Hello World!&quot;hash_object2 = hashlib.sha256(message2.encode())
+hash_hex2 = hash_object2.hexdigest()
+print(f&quot;SHA-256: {hash_hex2}&quot;)
+# Output: 7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069# Completely different!</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-808b-93f9-d8529cdb883c" class="">Why Hash Before Signing?</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8007-8bef-c3651111e555" class=""><strong>1. Efficiency:</strong><br/>- Signing large documents is slow<br/>- Hashing is fast<br/>- Sign hash instead of entire document</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8073-9f98-e7d9b121426b" class=""><strong>2. Security:</strong><br/>- Hash is fixed length (e.g., 256 bits)<br/>- Easier to sign fixed-length data<br/>- Same security guarantees</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80fc-b461-d6cab8a04f66" class=""><strong>3. Flexibility:</strong><br/>- Can sign documents of any size<br/>- Hash always same size<br/>- Algorithm works for any document</p></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-8005-a33a-f0943efdf4cc"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-80c2-9178-ec33200ef7ea" class="">Public Key Cryptography</h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8088-9e1f-ee990d2c76c3" class="">What is Public Key Cryptography?</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-809f-aeec-eb7c192b92f6" class="">Also known as <strong>asymmetric cryptography</strong>, it uses a pair of mathematically related keys:<br/>- <strong>Private Key</strong>: Kept secret, used to sign<br/>- <strong>Public Key</strong>: Shared publicly, used to verify</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8025-a3ef-f56e94ffaee0" class="">Key Properties</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80cc-9c39-f6b4b3a4d133" class=""><strong>1. Key Pair Generation:</strong><br/>- Keys are generated together<br/>- Mathematically related<br/>- Cannot derive private from public</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80fc-913c-fe2f13dbd9bd" class=""><strong>2. One-Way Function:</strong><br/>- Easy to compute in one direction<br/>- Hard to reverse without private key<br/>- Based on mathematical problems (factoring, discrete log)</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8057-b3d7-f4d4c7cbd6b0" class=""><strong>3. Security:</strong><br/>- Private key must be kept secret<br/>- Public key can be shared<br/>- Compromise of private key = all signatures invalid</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8074-ad40-f08848a13f0b" class="">How It Works for Signing</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80cc-946e-c35d8364d951" class=""><strong>Signing (Private Key):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-802a-bd72-d6ca793ecb6b" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Hash → Private Key → Signature</code></pre></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80a0-aa66-efab66e4ab7e" class="bulleted-list"><li style="list-style-type:disc">Only private key holder can create signature</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-809a-b12a-d0f63ec93ec1" class="bulleted-list"><li style="list-style-type:disc">Anyone can verify with public key</li></ul></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8056-9e11-e714830f57b4" class=""><strong>Verification (Public Key):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80c3-aeee-c9791203b59a" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Signature → Public Key → Hash</code></pre></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8096-879c-ec4d461aafa0" class="bulleted-list"><li style="list-style-type:disc">Anyone can verify</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80bd-95d7-e3a51c6d6507" class="bulleted-list"><li style="list-style-type:disc">Only private key could create signature</li></ul></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8025-bdbe-d5b2f7dc53e6" class="">Mathematical Foundation</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8074-9111-ddfff0c589be" class=""><strong>RSA Example:</strong><br/>- Based on factoring large numbers<br/>- Private key: (d, n)<br/>- Public key: (e, n)<br/>- Signature: hash^d mod n<br/>- Verification: signature^e mod n = hash</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-806a-a3f6-fb489ac64a9a" class=""><strong>ECDSA Example:</strong><br/>- Based on elliptic curve discrete logarithm<br/>- More efficient than RSA<br/>- Smaller key sizes for same security<br/>- Used in Bitcoin, Ethereum</p></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-80d8-8b7b-d63fd4858de0"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-805c-ace7-c527c6440604" class="">Digital Signature Algorithms</h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8031-b99e-c3405fbfb16d" class="">RSA (Rivest-Shamir-Adleman)</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-801a-8963-f946b4bd6af7" class=""><strong>Overview:</strong><br/>- One of first public-key cryptosystems<br/>- Widely used and well-understood<br/>- Based on factoring large numbers</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80b5-b697-c1c0c9124bd9" class=""><strong>Key Sizes:</strong><br/>- 2048 bits: Minimum recommended<br/>- 3072 bits: Recommended for long-term security<br/>- 4096 bits: High security</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-802d-826f-cbefaa67c55b" class=""><strong>Pros:</strong><br/>- Widely supported<br/>- Well-studied<br/>- Flexible (can encrypt and sign)</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8000-929c-eea7b9e3b918" class=""><strong>Cons:</strong><br/>- Larger key sizes needed<br/>- Slower than ECDSA<br/>- Older algorithm</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-806b-86c8-f6ec5b962dae" class="">DSA (Digital Signature Algorithm)</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8031-a283-c21466517cfd" class=""><strong>Overview:</strong><br/>- Federal Information Processing Standard<br/>- Based on discrete logarithm problem<br/>- Used in government applications</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8082-a5bd-f96503a0ef97" class=""><strong>Key Sizes:</strong><br/>- 1024 bits: Deprecated<br/>- 2048 bits: Minimum<br/>- 3072 bits: Recommended</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8040-afe9-ca08a6f51920" class=""><strong>Pros:</strong><br/>- Government standard<br/>- Secure when properly configured</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80e4-a79d-ddd235dee083" class=""><strong>Cons:</strong><br/>- Less flexible than RSA<br/>- Not as widely used<br/>- Requires random number generation</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80f4-9718-e134ca3ae2f2" class="">ECDSA (Elliptic Curve Digital Signature Algorithm)</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80db-9c3e-cf93fd605a94" class=""><strong>Overview:</strong><br/>- Based on elliptic curve cryptography<br/>- More efficient than RSA/DSA<br/>- Smaller key sizes for same security</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-807f-9d20-e46fd6a913f7" class=""><strong>Key Sizes:</strong><br/>- 256 bits: Equivalent to 3072-bit RSA<br/>- 384 bits: Equivalent to 7680-bit RSA<br/>- 521 bits: Very high security</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80b7-8263-f0b84bbdad37" class=""><strong>Pros:</strong><br/>- Smaller keys<br/>- Faster computation<br/>- Lower resource usage<br/>- Used in Bitcoin, Ethereum</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80ea-bd2e-db8304f80de3" class=""><strong>Cons:</strong><br/>- More complex implementation<br/>- Requires careful random number generation<br/>- Newer (less historical use)</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8080-b271-d5a6e7df6b53" class="">EdDSA (Edwards-Curve Digital Signature Algorithm)</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8069-9620-d1c6cf243146" class=""><strong>Overview:</strong><br/>- Modern elliptic curve algorithm<br/>- Based on twisted Edwards curves<br/>- Deterministic (no random number needed)</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80a9-9d6a-c9504672fa01" class=""><strong>Key Sizes:</strong><br/>- 256 bits: Ed25519<br/>- 448 bits: Ed448</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-802c-b2f9-d16a455bbfd5" class=""><strong>Pros:</strong><br/>- Deterministic (more secure)<br/>- Fast<br/>- Simple implementation<br/>- Used in modern applications</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-802f-a2a5-ea661542dbb9" class=""><strong>Cons:</strong><br/>- Newer algorithm<br/>- Less historical use</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80f1-a957-f91d1fbee4c5" class="">Algorithm Comparison</h3></div><div style="display:contents" dir="ltr"><table id="2b4562ad-76f0-8036-89ba-f71d90d4f23b" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2b4562ad-76f0-80fc-a750-e03a79c7b995"><th id="w]vu" class="simple-table-header-color simple-table-header">Algorithm</th><th id=";vEZ" class="simple-table-header-color simple-table-header">Key Size</th><th id="O{xt" class="simple-table-header-color simple-table-header">Speed</th><th id="]f{~" class="simple-table-header-color simple-table-header">Security</th><th id="guhj" class="simple-table-header-color simple-table-header">Use Case</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2b4562ad-76f0-8069-9465-dfbb4a8aa8fe"><td id="w]vu" class="">RSA-2048</td><td id=";vEZ" class="">2048 bits</td><td id="O{xt" class="">Medium</td><td id="]f{~" class="">Good</td><td id="guhj" class="">General purpose</td></tr></div><div style="display:contents" dir="ltr"><tr id="2b4562ad-76f0-80fc-8162-e1baa510b45e"><td id="w]vu" class="">RSA-3072</td><td id=";vEZ" class="">3072 bits</td><td id="O{xt" class="">Slow</td><td id="]f{~" class="">Better</td><td id="guhj" class="">Long-term security</td></tr></div><div style="display:contents" dir="ltr"><tr id="2b4562ad-76f0-8055-adbf-f5563478128f"><td id="w]vu" class="">ECDSA-256</td><td id=";vEZ" class="">256 bits</td><td id="O{xt" class="">Fast</td><td id="]f{~" class="">Good</td><td id="guhj" class="">Modern applications</td></tr></div><div style="display:contents" dir="ltr"><tr id="2b4562ad-76f0-8098-b1d8-e502823b8d5b"><td id="w]vu" class="">EdDSA-25519</td><td id=";vEZ" class="">256 bits</td><td id="O{xt" class="">Very Fast</td><td id="]f{~" class="">Good</td><td id="guhj" class="">Modern applications</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-80ac-964d-d85b53040a7a"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-8092-a621-eb0686143276" class="">Digital Certificates and PKI</h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80e3-b3ba-d463936965f3" class="">What is a Digital Certificate?</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80ec-9c76-f8788c01d389" class="">A digital certificate is an electronic document that binds a public key to an identity, verified by a Certificate Authority (CA).</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80d3-a464-d739f75da42f" class="">Certificate Contents</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-802f-9d13-c7ee59da23b2" class=""><strong>Standard Fields:</strong><br/>- <strong>Subject</strong>: Entity the certificate belongs to<br/>- <strong>Public Key</strong>: The public key being certified<br/>- <strong>Issuer</strong>: Certificate Authority that issued it<br/>- <strong>Validity Period</strong>: Start and end dates<br/>- <strong>Serial Number</strong>: Unique identifier<br/>- <strong>Signature</strong>: CA’s digital signature</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8011-8114-db07aefdbdd8" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8036-8914-c032576c6765" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Certificate:
+  Subject: CN=example.com
+  Public Key: RSA 2048-bit
+  Issuer: CN=VeriSign
+  Valid: 2024-01-01 to 2025-01-01
+  Serial: 1234567890
+  Signature: (signed by VeriSign)</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-806c-830a-ecdf324a4a71" class="">Public Key Infrastructure (PKI)</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-808e-b110-e8235ba34d68" class=""><strong>Components:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-80bd-aaf1-d1063d156e5e" class="numbered-list" start="1"><li><strong>Certificate Authority (CA):</strong><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80b2-988a-c0d49501aa77" class="bulleted-list"><li style="list-style-type:disc">Trusted third party</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-809d-a062-d32c2e703dd8" class="bulleted-list"><li style="list-style-type:disc">Issues certificates</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8027-8c04-fc276bc66a8d" class="bulleted-list"><li style="list-style-type:disc">Verifies identities</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80c6-bbf7-ff65d1bb941d" class="bulleted-list"><li style="list-style-type:disc">Signs certificates</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-804a-a99d-c97b80f6bdd4" class="numbered-list" start="2"><li><strong>Registration Authority (RA):</strong><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8087-b6d7-e5bde2ceb341" class="bulleted-list"><li style="list-style-type:disc">Verifies certificate requests</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80c2-b0f3-c85721ca2d5b" class="bulleted-list"><li style="list-style-type:disc">Validates identities</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-801a-b938-cc8221d47017" class="bulleted-list"><li style="list-style-type:disc">Submits to CA</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-8024-9756-e5d0fb275a59" class="numbered-list" start="3"><li><strong>Certificate Repository:</strong><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80ec-97b7-f9c9bd585a0a" class="bulleted-list"><li style="list-style-type:disc">Stores certificates</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-809a-b921-ca8d9431bc79" class="bulleted-list"><li style="list-style-type:disc">Makes them publicly available</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80dc-b6d3-d89fc124599b" class="bulleted-list"><li style="list-style-type:disc">LDAP, HTTP, etc.</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-8084-9391-cef9545b4014" class="numbered-list" start="4"><li><strong>Certificate Revocation:</strong><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80eb-a835-c0e615fe9796" class="bulleted-list"><li style="list-style-type:disc">CRL (Certificate Revocation List)</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-805f-b44c-ce737a71f5ce" class="bulleted-list"><li style="list-style-type:disc">OCSP (Online Certificate Status Protocol)</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-804d-b48a-f1281e9d6cba" class="bulleted-list"><li style="list-style-type:disc">Revokes compromised certificates</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8041-9683-e51572fbf3a0" class="">Certificate Chain</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-802d-949f-e1dc36daf7f1" class=""><strong>How It Works:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80e6-a20c-e327554971e0" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Root CA Certificate
+    ↓ (signed by)
+Intermediate CA Certificate
+    ↓ (signed by)
+End Entity Certificate (Your certificate)</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80b4-98d3-d20a01a5d14b" class=""><strong>Verification:</strong><br/>1. Verify end entity certificate with intermediate CA<br/>2. Verify intermediate CA with root CA<br/>3. Root CA is trusted (in browser/OS trust store)</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8014-b391-cae174ea586c" class="">Why Certificates Are Needed</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-805d-b479-dd935da0636f" class=""><strong>Without Certificate:</strong><br/>- Public key could be from anyone<br/>- Man-in-the-middle attack possible<br/>- No way to verify identity</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8027-af2a-daebfea3dd07" class=""><strong>With Certificate:</strong><br/>- CA vouches for identity<br/>- Public key is verified<br/>- Trust chain established<br/>- Prevents MITM attacks</p></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-8038-86ac-fe8799916bb1"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-8085-ae0a-f7bdd4d30e1e" class="">Creating Digital Signatures</h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8028-b835-dd361eddc0c9" class="">Step-by-Step Process</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-807e-9092-ed164c5d3da6" class=""><strong>1. Generate Key Pair:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-800d-b9fb-e84b426c9023" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+# Generate private keyprivate_key = rsa.generate_private_key(
+    public_exponent=65537,
+    key_size=2048)
+# Get public keypublic_key = private_key.public_key()</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8072-9f2c-fc59bb7598fb" class=""><strong>2. Hash the Document:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-807c-936c-ed0482e6bc19" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from cryptography.hazmat.primitives import hashes
+message = b&quot;Hello World&quot;hasher = hashes.Hash(hashes.SHA256())
+hasher.update(message)
+hash_value = hasher.finalize()</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-800d-96a4-d345c0b3de11" class=""><strong>3. Sign the Hash:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80ab-884a-e2cd58f21223" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from cryptography.hazmat.primitives.asymmetric import padding
+signature = private_key.sign(
+    message,
+    padding.PSS(
+        mgf=padding.MGF1(hashes.SHA256()),
+        salt_length=padding.PSS.MAX_LENGTH
+    ),
+    hashes.SHA256()
+)</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80fa-a8ca-c4bd1929f1a5" class=""><strong>Complete Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-803c-94a1-c4ede6c8ba94" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.backends import default_backend
+# 1. Generate key pairprivate_key = rsa.generate_private_key(
+    public_exponent=65537,
+    key_size=2048,
+    backend=default_backend()
+)
+public_key = private_key.public_key()
+# 2. Document to signdocument = b&quot;This is an important document&quot;# 3. Sign the documentsignature = private_key.sign(
+    document,
+    padding.PSS(
+        mgf=padding.MGF1(hashes.SHA256()),
+        salt_length=padding.PSS.MAX_LENGTH
+    ),
+    hashes.SHA256()
+)
+print(f&quot;Signature: {signature.hex()}&quot;)</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80c8-8f81-ff0f0c1f8363" class="">Using OpenSSL (Command Line)</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80ce-b813-ef6320635933" class=""><strong>Generate Key Pair:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80ac-be1b-ef12a97848ae" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all"># Generate private keyopenssl genrsa -out private_key.pem 2048
+# Extract public keyopenssl rsa -in private_key.pem -pubout -out public_key.pem</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80c4-b508-e55906b13399" class=""><strong>Sign Document:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8020-983e-dd32e586b832" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all"># Create documentecho &quot;Hello World&quot; &gt; document.txt
+# Sign documentopenssl dgst -sha256 -sign private_key.pem -out signature.bin document.txt</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8024-901f-ea4380ba27cf" class=""><strong>Verify Signature:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-804f-bdc2-ffec5ee8db8b" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all"># Verify signatureopenssl dgst -sha256 -verify public_key.pem -signature signature.bin document.txt</code></pre></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-80a3-a711-c9aba7d52a45"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-80bc-b780-e47964e08d0c" class="">Verifying Digital Signatures</h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-805d-a4c7-de6b9e674d2f" class="">Step-by-Step Process</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8023-ad42-ce9f406ca9b1" class=""><strong>1. Receive Document and Signature:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8027-a21a-d4f1f4961e5c" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">received_document = b&quot;Hello World&quot;received_signature = b&quot;...signature bytes...&quot;</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8091-acee-e6161bd574cd" class=""><strong>2. Hash the Received Document:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-800a-a99d-ec74e5ac71f6" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from cryptography.hazmat.primitives import hashes
+hasher = hashes.Hash(hashes.SHA256())
+hasher.update(received_document)
+computed_hash = hasher.finalize()</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8029-8f20-d6f2fa1df045" class=""><strong>3. Decrypt the Signature:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8099-b4e2-d7356c26a20c" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from cryptography.hazmat.primitives.asymmetric import padding
+try:
+    public_key.verify(
+        received_signature,
+        received_document,
+        padding.PSS(
+            mgf=padding.MGF1(hashes.SHA256()),
+            salt_length=padding.PSS.MAX_LENGTH
+        ),
+        hashes.SHA256()
+    )
+    print(&quot;Signature is VALID&quot;)
+except InvalidSignature:
+    print(&quot;Signature is INVALID&quot;)</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8075-bede-f0bf1c8d1cd4" class=""><strong>Complete Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-800c-8052-c6a729f8b90d" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives import hashes
+from cryptography.exceptions import InvalidSignature
+# Public key (received from sender or certificate)# public_key = ...# Received datadocument = b&quot;Hello World&quot;signature = b&quot;...signature bytes...&quot;# Verifytry:
+    public_key.verify(
+        signature,
+        document,
+        padding.PSS(
+            mgf=padding.MGF1(hashes.SHA256()),
+            salt_length=padding.PSS.MAX_LENGTH
+        ),
+        hashes.SHA256()
+    )
+    print(&quot;✅ Signature is VALID&quot;)
+    print(&quot;✅ Document is authentic and unmodified&quot;)
+except InvalidSignature:
+    print(&quot;❌ Signature is INVALID&quot;)
+    print(&quot;❌ Document may be tampered or signature forged&quot;)</code></pre></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-8066-be00-ccdf32f4b52b"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-8018-a4d1-db5d032a787c" class="">Applications and Use Cases</h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80bc-ae27-f9deb861edb8" class="">1. Software Distribution</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-809f-af39-c29fbc50e948" class=""><strong>Purpose:</strong><br/>- Verify software hasn’t been tampered<br/>- Confirm software is from trusted source<br/>- Prevent malware distribution</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8001-ab07-d15ae9815fee" class=""><strong>How It Works:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-800c-9673-d4aa06b2aa0b" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Software Package
+    ↓
+Hash → Private Key → Signature
+    ↓
+Package + Signature → Distribution
+    ↓
+User Downloads
+    ↓
+Verify Signature → If valid, install</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8041-94ec-cb8fcb498787" class=""><strong>Examples:</strong><br/>- Operating system updates<br/>- Application installers<br/>- Package managers (npm, pip, etc.)</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8094-b2c5-e7ab2fb6f355" class="">2. Email Security</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80ba-9070-d11211d198d8" class=""><strong>Purpose:</strong><br/>- Verify email sender<br/>- Detect email tampering<br/>- Prevent email spoofing</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80ae-a509-e750ac4d7025" class=""><strong>Standards:</strong><br/>- <strong>DKIM (DomainKeys Identified Mail)</strong>: Signs email headers<br/>- <strong>S/MIME</strong>: Encrypts and signs email content<br/>- <strong>PGP/GPG</strong>: End-to-end email encryption and signing</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8031-b090-cfc14bb78d85" class=""><strong>How It Works:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80e0-945d-e36f064833e1" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Email Message
+    ↓
+Hash → Private Key → Signature
+    ↓
+Email + Signature → Send
+    ↓
+Recipient Verifies → If valid, trust email</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80c5-96c4-fb2b95613fc6" class="">3. Financial Transactions</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8090-b71c-f396e64261ba" class=""><strong>Purpose:</strong><br/>- Authenticate parties<br/>- Prevent transaction tampering<br/>- Legal proof of transaction</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8073-bd3d-dbe104c966fa" class=""><strong>Applications:</strong><br/>- Online banking<br/>- Cryptocurrency transactions<br/>- Digital contracts<br/>- E-commerce</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-803c-b456-ec60b08f364c" class="">4. Legal Documents</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80fe-8a14-fe3e79d4b2f6" class=""><strong>Purpose:</strong><br/>- Legally binding signatures<br/>- Proof of agreement<br/>- Non-repudiation</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-808a-b634-df686ce85cde" class=""><strong>Applications:</strong><br/>- Contracts<br/>- Agreements<br/>- Legal filings<br/>- Compliance documents</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80f6-9a03-d55d75d62d02" class="">5. Code Signing</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80de-8fc1-e2081a89f30c" class=""><strong>Purpose:</strong><br/>- Verify code authenticity<br/>- Prevent code tampering<br/>- Trust in software</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8070-8278-e70debcc7a7b" class=""><strong>Applications:</strong><br/>- Mobile app signing (iOS, Android)<br/>- Browser extension signing<br/>- Driver signing<br/>- Firmware signing</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80bb-9995-e71401eee01f" class="">6. Document Management</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-800c-834a-fb44b75fc1c4" class=""><strong>Purpose:</strong><br/>- Verify document authenticity<br/>- Track document changes<br/>- Audit trail</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-809e-a816-fc7714323abf" class=""><strong>Applications:</strong><br/>- PDF signing<br/>- Document workflows<br/>- Record keeping<br/>- Compliance</p></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-80c5-b9df-ec597db0a112"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-8020-b63e-c42ffaf0e394" class="">Security Considerations</h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-809c-a8a6-dfda4c769f8d" class="">1. Private Key Protection</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80b2-915c-c2a216fdf24a" class=""><strong>Critical:</strong><br/>- Private key must be kept secret<br/>- If compromised, all signatures are invalid<br/>- Attacker can forge signatures</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80d6-87f4-f0a2d3cdf775" class=""><strong>Protection Methods:</strong><br/>- <strong>Hardware Security Modules (HSM)</strong>: Physical security<br/>- <strong>Key Management Systems</strong>: Centralized management<br/>- <strong>Encryption at Rest</strong>: Encrypt private keys<br/>- <strong>Access Controls</strong>: Limit who can use private key<br/>- <strong>Key Rotation</strong>: Regularly rotate keys</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80d6-b888-ff8ba4d39216" class=""><strong>Best Practices:</strong><br/>- Never share private key<br/>- Use strong passwords for key files<br/>- Store in secure location<br/>- Use hardware tokens when possible<br/>- Implement key rotation policies</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80ce-833b-e9df25177435" class="">2. Hash Function Security</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-808e-86f9-f11c04253c64" class=""><strong>Important:</strong><br/>- Use secure hash functions<br/>- SHA-256 minimum<br/>- Avoid MD5, SHA-1</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-803c-bbfd-da567f4a2a57" class=""><strong>Recommendations:</strong><br/>- <strong>SHA-256</strong>: Good for most applications<br/>- <strong>SHA-512</strong>: Higher security<br/>- <strong>SHA-3</strong>: Latest standard<br/>- <strong>Avoid</strong>: MD5, SHA-1 (deprecated)</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80ed-9f60-f892675ae378" class="">3. Algorithm Selection</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8063-bf80-c2334b17bc08" class=""><strong>Considerations:</strong><br/>- Security requirements<br/>- Performance needs<br/>- Compatibility<br/>- Key size</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80a7-b070-eec0155d034b" class=""><strong>Recommendations:</strong><br/>- <strong>RSA-2048</strong>: General purpose<br/>- <strong>RSA-3072</strong>: Long-term security<br/>- <strong>ECDSA-256</strong>: Modern applications<br/>- <strong>EdDSA-25519</strong>: Modern, fast</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80de-b41f-e6cd39f7e47a" class="">4. Certificate Management</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80c4-800b-cc6a51957b07" class=""><strong>Important:</strong><br/>- Verify certificate validity<br/>- Check certificate revocation<br/>- Validate certificate chain<br/>- Monitor expiration dates</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80cb-b997-f7423804bc34" class=""><strong>Best Practices:</strong><br/>- Use trusted CAs<br/>- Implement certificate pinning<br/>- Check revocation status (OCSP/CRL)<br/>- Monitor certificate expiration<br/>- Implement certificate rotation</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80a4-9653-c05d34815128" class="">5. Timestamping</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-806d-8e81-db39f4c938af" class=""><strong>Purpose:</strong><br/>- Prove when signature was created<br/>- Legal validity<br/>- Long-term verification</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8003-9fc4-f800b2271704" class=""><strong>How It Works:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80bf-9834-c3a945bb0b01" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Document → Hash → Private Key → Signature
+                              ↓
+                    Timestamp Authority
+                              ↓
+                    Timestamped Signature</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80ff-83a0-cb22c11503ff" class=""><strong>Benefits:</strong><br/>- Proof of signature time<br/>- Validates signature after key expiration<br/>- Legal compliance</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-800a-9f66-de4c4f813906" class="">6. Non-Repudiation</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80e3-8fc5-fed9f1c55f14" class=""><strong>Ensuring Non-Repudiation:</strong><br/>- Proper key management<br/>- Audit logs<br/>- Timestamping<br/>- Legal frameworks</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-801e-9b51-f0d9a5880694" class=""><strong>Challenges:</strong><br/>- Key compromise<br/>- Shared keys<br/>- Legal requirements vary by jurisdiction</p></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-80a0-b9a5-d03451ec6b61"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-80a2-ac4b-ca3d20b56752" class="">Implementation Examples</h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8077-9ae5-f6c92b0f5286" class="">Python (cryptography library)</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8024-9f3a-ffe583f8bb8a" class=""><strong>Complete Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80a7-a41b-c5c1d2e05536" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.backends import default_backend
+from cryptography.exceptions import InvalidSignature
+# 1. Generate key pairprivate_key = rsa.generate_private_key(
+    public_exponent=65537,
+    key_size=2048,
+    backend=default_backend()
+)
+public_key = private_key.public_key()
+# 2. Document to signdocument = b&quot;This is an important document that needs to be signed&quot;# 3. Signsignature = private_key.sign(
+    document,
+    padding.PSS(
+        mgf=padding.MGF1(hashes.SHA256()),
+        salt_length=padding.PSS.MAX_LENGTH
+    ),
+    hashes.SHA256()
+)
+print(f&quot;Signature: {signature.hex()}&quot;)
+# 4. Verifytry:
+    public_key.verify(
+        signature,
+        document,
+        padding.PSS(
+            mgf=padding.MGF1(hashes.SHA256()),
+            salt_length=padding.PSS.MAX_LENGTH
+        ),
+        hashes.SHA256()
+    )
+    print(&quot;✅ Signature is VALID&quot;)
+except InvalidSignature:
+    print(&quot;❌ Signature is INVALID&quot;)</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-806d-9913-da01366dec5e" class="">Node.js (crypto module)</h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8044-b87c-ff1fb3f49483" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">const crypto = require(&#x27;crypto&#x27;);// 1. Generate key pairconst { publicKey, privateKey } = crypto.generateKeyPairSync(&#x27;rsa&#x27;, {
+  modulusLength: 2048,  publicKeyEncoding: {
+    type: &#x27;spki&#x27;,    format: &#x27;pem&#x27;  },  privateKeyEncoding: {
+    type: &#x27;pkcs8&#x27;,    format: &#x27;pem&#x27;  }
+});// 2. Document to signconst document = &#x27;This is an important document&#x27;;// 3. Signconst sign = crypto.createSign(&#x27;SHA256&#x27;);sign.update(document);const signature = sign.sign(privateKey, &#x27;hex&#x27;);console.log(&#x27;Signature:&#x27;, signature);// 4. Verifyconst verify = crypto.createVerify(&#x27;SHA256&#x27;);verify.update(document);const isValid = verify.verify(publicKey, signature, &#x27;hex&#x27;);console.log(isValid ? &#x27;✅ Signature is VALID&#x27; : &#x27;❌ Signature is INVALID&#x27;);</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80fb-8d7e-d2abb89a7134" class="">Java (Java Cryptography)</h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80df-be58-e9a52371fd08" class="code code-wrap"><code class="language-Java" style="white-space:pre-wrap;word-break:break-all">import java.security.*;import java.security.spec.*;import javax.crypto.*;// 1. Generate key pairKeyPairGenerator keyGen = KeyPairGenerator.getInstance(&quot;RSA&quot;);keyGen.initialize(2048);KeyPair keyPair = keyGen.generateKeyPair();PrivateKey privateKey = keyPair.getPrivate();PublicKey publicKey = keyPair.getPublic();// 2. Document to signbyte[] document = &quot;This is an important document&quot;.getBytes();// 3. SignSignature signature = Signature.getInstance(&quot;SHA256withRSA&quot;);signature.initSign(privateKey);signature.update(document);byte[] signatureBytes = signature.sign();System.out.println(&quot;Signature: &quot; + java.util.Base64.getEncoder().encodeToString(signatureBytes));// 4. VerifySignature verifySignature = Signature.getInstance(&quot;SHA256withRSA&quot;);verifySignature.initVerify(publicKey);verifySignature.update(document);boolean isValid = verifySignature.verify(signatureBytes);System.out.println(isValid ? &quot;✅ Signature is VALID&quot; : &quot;❌ Signature is INVALID&quot;);</code></pre></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80af-a73c-c939e0d4c18b" class="">OpenSSL (Command Line)</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80f8-b5fc-f91a3f604fa2" class=""><strong>Generate Keys:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8021-a1e9-e89299664e59" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all"># Generate private keyopenssl genrsa -out private_key.pem 2048
+# Extract public keyopenssl rsa -in private_key.pem -pubout -out public_key.pem</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80af-b2ec-c0ea19165793" class=""><strong>Sign:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-8044-8b22-f9822c4dce9d" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all"># Create documentecho &quot;Hello World&quot; &gt; document.txt
+# Signopenssl dgst -sha256 -sign private_key.pem -out signature.bin document.txt</code></pre></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-8009-9ceb-c808d7d3a12d" class=""><strong>Verify:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2b4562ad-76f0-80d2-b153-c1c61c91d5ac" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all"># Verifyopenssl dgst -sha256 -verify public_key.pem -signature signature.bin document.txt</code></pre></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-8090-a15d-dd2060446a13"/></div><div style="display:contents" dir="auto"><h2 id="2b4562ad-76f0-809a-a494-fd6330ff934a" class="">Summary</h2></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80b2-b564-ee7df9654aac" class="">Key Takeaways</h3></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-80cc-a0d1-c2eb6cb61c0e" class="numbered-list" start="1"><li><strong>Digital signatures provide:</strong><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8003-acbc-cd37ab2acf7b" class="bulleted-list"><li style="list-style-type:disc">Authentication (who sent it)</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8056-ae6c-c3df568b837d" class="bulleted-list"><li style="list-style-type:disc">Integrity (not modified)</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80a9-9ada-f566675ea513" class="bulleted-list"><li style="list-style-type:disc">Non-repudiation (cannot deny)</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-80b4-9a61-fbb5d0d9e68a" class="numbered-list" start="2"><li><strong>Process:</strong><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80b9-b58f-e4ee485616fc" class="bulleted-list"><li style="list-style-type:disc">Hash document → Sign hash with private key → Attach signature</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8069-b880-fd2bd24e0974" class="bulleted-list"><li style="list-style-type:disc">Verify: Hash document → Decrypt signature → Compare hashes</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-80ff-a520-d25fc3ac551b" class="numbered-list" start="3"><li><strong>Security depends on:</strong><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8072-9952-e16de6343540" class="bulleted-list"><li style="list-style-type:disc">Private key protection</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80cf-98f0-e06b7b85bbfd" class="bulleted-list"><li style="list-style-type:disc">Secure hash functions</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80f8-822a-e0636b8d9150" class="bulleted-list"><li style="list-style-type:disc">Strong algorithms</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-804e-9830-fc764c6e71fb" class="bulleted-list"><li style="list-style-type:disc">Proper implementation</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2b4562ad-76f0-803f-a495-d0feaacedb94" class="numbered-list" start="4"><li><strong>Applications:</strong><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-807a-9bf5-d37313908f92" class="bulleted-list"><li style="list-style-type:disc">Software distribution</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8067-894f-ed7e5f2f269c" class="bulleted-list"><li style="list-style-type:disc">Email security</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8062-a7e0-f7ffb69dac60" class="bulleted-list"><li style="list-style-type:disc">Financial transactions</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8025-af03-cd8d9ec2c3ec" class="bulleted-list"><li style="list-style-type:disc">Legal documents</li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80bd-b2b2-dafa2328ef5c" class="bulleted-list"><li style="list-style-type:disc">Code signing</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-80df-b238-cb575e64c6a5" class="">Best Practices</h3></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-80bc-9351-e839b62a7174" class="">✅ <strong>Do:</strong><br/>- Use strong hash functions (SHA-256 minimum)<br/>- Protect private keys<br/>- Use appropriate key sizes<br/>- Implement proper key management<br/>- Verify certificates<br/>- Use timestamping for long-term validity</p></div><div style="display:contents" dir="auto"><p id="2b4562ad-76f0-809a-9bf0-de13b968fd1b" class="">❌ <strong>Don’t:</strong><br/>- Use weak hash functions (MD5, SHA-1)<br/>- Share private keys<br/>- Use small key sizes<br/>- Skip certificate validation<br/>- Ignore key expiration</p></div><div style="display:contents" dir="auto"><h3 id="2b4562ad-76f0-8073-bfac-e2f5f17051e2" class="">Remember</h3></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-803b-b4bb-db0b7161ba1b" class="bulleted-list"><li style="list-style-type:disc"><strong>Digital signature ≠ Encryption</strong></li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-8014-bb16-e9e7207706b7" class="bulleted-list"><li style="list-style-type:disc"><strong>Hash is a step, not the signature</strong></li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-80b0-babe-ff6fbcf4a7a3" class="bulleted-list"><li style="list-style-type:disc"><strong>Private key signs, public key verifies</strong></li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-809d-a6a3-f8dfa00fb5ba" class="bulleted-list"><li style="list-style-type:disc"><strong>Certificates bind public keys to identities</strong></li></ul></div><div style="display:contents" dir="auto"><ul id="2b4562ad-76f0-800e-9fe9-f2fedd92ed17" class="bulleted-list"><li style="list-style-type:disc"><strong>Security depends on private key protection</strong></li></ul></div><div style="display:contents" dir="auto"><hr id="2b4562ad-76f0-8062-8c2f-fa82c66b28bc"/></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

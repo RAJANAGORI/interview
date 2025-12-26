@@ -1,0 +1,948 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Parameterized Queries and Prepared Statements - Comprehensive Guide</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2d5562ad-76f0-8070-8d1f-e975504dc608" class="page mono"><header><h1 class="page-title" dir="auto">Parameterized Queries and Prepared Statements - Comprehensive Guide</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="ltr"><nav id="2d5562ad-76f0-8017-bf58-ef09707170e7" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8089-9b16-de87808edc5e"><strong>Introduction</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8031-89c4-cf849dd8172e"><strong>Why They Matter</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80e1-a9fb-cee640af70d6"><strong>What are Parameterized Queries</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-801c-b28d-f69489e81b25"><strong>Key Concept</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-806a-8ee3-c54f7c643147"><strong>Basic Example</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8055-a394-de930423abf6"><strong>How It Works</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8050-9fe9-c7b02dceccae"><strong>What are Prepared Statements</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-809f-b608-cff76821b13d"><strong>Key Concept</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8009-bd68-c0afb777e999"><strong>Basic Example</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-804c-b577-e931b0dbd70f"><strong>How It Works</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8023-8bfc-d2ad3cfe1edb"><strong>Differences and Similarities</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8003-90fb-c66662f5fe76"><strong>Parameterized Queries vs Prepared Statements</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8057-8728-dd0b0316929f"><strong>Relationship</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8050-bd7e-e36b99050f32"><strong>Implementation Differences</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8062-9eaf-dcae4dd6c89d"><strong>How They Prevent SQL Injection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-804a-8625-e599fcfbd965"><strong>SQL Injection Attack</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80fe-881a-f3cf482226bc"><strong>How Parameterized Queries Prevent It</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8021-8e66-f99f2c863e30"><strong>Why It Works</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8084-8f8d-f6664ef9ce9b"><strong>Implementation Examples</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80d4-9a8e-cee88bfa38e5"><strong>Python (SQLite)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80c7-b506-c756fa2771e3"><strong>Python (PostgreSQL - psycopg2)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-807c-a378-c8eba17ffcc8"><strong>Java (JDBC)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-807b-8a2d-d3b030ebbc0f"><strong>Node.js (mysql2)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8019-bbea-dc82fae5ba4a"><strong>PHP (PDO)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8037-81b9-ea1cae35608d"><strong>Best Practices</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8087-93da-f8b6a502133f"><strong>1. Always Use Parameterized Queries</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-804e-bbea-eb5b89f93d17"><strong>2. Use Prepared Statements for Repeated Queries</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8003-aca9-f23745bb6c96"><strong>3. Don&#x27;t Try to Parameterize Table/Column Names</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80eb-a534-c796a4f8954e"><strong>4. Use ORM When Possible</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80e4-b052-e83c0ed8d513"><strong>5. Validate Input Types</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8017-a656-ece9b4011390"><strong>Advanced Exploitation Prevention</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8055-bd12-e14e205dbe4a"><strong>Why Parameterized Queries Prevent Advanced Attacks</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-802d-a9f8-d30f3586be83"><strong>Why Escaping Is Not Enough</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-803e-8af6-c76c17e39a39"><strong>Penetration Testing Methodology</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-802e-8a82-cd6c30cd0fb6"><strong>Testing for SQL Injection Protection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8099-8c4c-cd3dfefca515"><strong>Threat Modeling (STRIDE Framework)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80a6-8d40-d36d18e0ff3a"><strong>Spoofing</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80da-99a6-d3e565758099"><strong>Tampering</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8045-a0dc-cede30cc9d1f"><strong>Repudiation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80e0-89e3-f6f4e4a68744"><strong>Information Disclosure</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-807d-98ff-c739ac2c9b9e"><strong>Denial of Service</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80f9-9ae5-e9de720d734c"><strong>Elevation of Privilege</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8007-a71d-caa698bcc876"><strong>Real-World Case Studies</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8049-8a08-cc87dd379602"><strong>Case Study 1: Authentication Bypass</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8032-92e0-d36380d947a2"><strong>Case Study 2: Data Extraction</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80c2-bbb2-e3474d530f51"><strong>Advanced Mitigations</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80b8-9a68-ff402aff41ad"><strong>Defense in Depth Strategy</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80dd-96cf-f0c619a47023"><strong>SAST/DAST Detection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80d3-b91a-f3311086cb47"><strong>SAST (Static Application Security Testing)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8031-a84c-cdd4047e4f09"><strong>DAST (Dynamic Application Security Testing)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8015-9182-eec22d6462b9"><strong>Risk Assessment</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8074-b2f8-defb3f9c0dd9"><strong>Risk Matrix</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80e7-b692-d56e649d7101"><strong>Risk Calculation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8019-b0ca-e607106be2a1"><strong>Summary</strong></a></div></nav></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8089-9b16-de87808edc5e" class=""><strong>Introduction</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-805b-9841-e95181b3e917" class="">Parameterized queries and prepared statements are the <strong>primary defense</strong> against SQL injection vulnerabilities. They separate SQL code from data, ensuring that user input is always treated as data, never as executable SQL code.</p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8031-89c4-cf849dd8172e" class=""><strong>Why They Matter</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803f-b774-e9d2d3846d64" class=""><strong>Security Benefits:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801e-a931-f07196a5d1b5" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Prevents SQL injection</strong> - Primary defense mechanism</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-805b-9480-e923c919ea9e" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Separates code from data</strong> - Database treats input as data</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8018-a961-c1617c5a0987" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Type safety</strong> - Database handles type conversion</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8007-8e91-fd893229434b" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>No manual escaping needed</strong> - Database handles encoding</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-807a-9229-dacf9e0c3b99" class=""><strong>Performance Benefits:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-804b-82c6-dff449ad84f4" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Query optimization</strong> - Database can cache execution plans</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-808a-8705-c73351c219a0" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Faster repeated queries</strong> - Parse once, execute many times</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e0-8961-e712146c4692" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Reduced overhead</strong> - Less parsing and compilation</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8094-87e4-d326581b5a62"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80e1-a9fb-cee640af70d6" class=""><strong>What are Parameterized Queries</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c7-b1c3-c80192fc0eac" class="">A <strong>parameterized query</strong> is a SQL query that uses placeholders (parameters) for values that will be provided at runtime, rather than embedding values directly in the SQL string.</p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-801c-b28d-f69489e81b25" class=""><strong>Key Concept</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8095-9d16-e8d9ce694fc1" class=""><strong>Separate SQL structure from data values:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b3-aeb0-fcb1acd0cc20" class="bulleted-list"><li style="list-style-type:disc">SQL structure: Defined at development time (safe, constant)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f1-bef5-e5f8cc83f25c" class="bulleted-list"><li style="list-style-type:disc">Data values: Provided at runtime (user input, treated as data)</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-806a-8ee3-c54f7c643147" class=""><strong>Basic Example</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-801a-97d0-ce6879ee967d" class=""><strong>❌ Vulnerable (String Concatenation):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80ab-a156-c671f7892737" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">username = request.form[&#x27;username&#x27;]
+query = f&quot;SELECT * FROM users WHERE username = &#x27;{username}&#x27;&quot;
+cursor.execute(query)  # SQL injection possible!
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8003-a3e0-d88ed207f76f" class=""><strong>✅ Secure (Parameterized Query):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8030-b7a8-c97bf154cd65" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">username = request.form[&#x27;username&#x27;]
+query = &quot;SELECT * FROM users WHERE username = ?&quot;  # Placeholder
+cursor.execute(query, (username,))  # Safe! Database treats username as data
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8055-a394-de930423abf6" class=""><strong>How It Works</strong></h3></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80f1-81b5-fcf809b565cb" class="numbered-list" start="1"><li><strong>Query Structure Defined:</strong><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80f2-88fd-ee58e9bb0965" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">SELECT * FROM users WHERE username = ?
+</code></pre></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8019-a9e4-d21d615fc825" class="bulleted-list"><li style="list-style-type:disc"><code>?</code> is a placeholder (parameter marker)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f7-892c-c7ff252ef85f" class="bulleted-list"><li style="list-style-type:disc">Query structure is constant (no user input)</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8065-81a5-d7fdd5a26519" class="numbered-list" start="2"><li><strong>Values Provided Separately:</strong><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80cc-8ee7-ee488ecc9c90" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">cursor.execute(query, (username,))
+</code></pre></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f2-806a-e1d63e3e9333" class="bulleted-list"><li style="list-style-type:disc">Values provided as separate parameter</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8084-bc80-ec15b66b0305" class="bulleted-list"><li style="list-style-type:disc">Database substitutes values into placeholders</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-806c-af47-c24162c8bb93" class="numbered-list" start="3"><li><strong>Database Processing:</strong><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80db-8268-f0c03f459586" class="bulleted-list"><li style="list-style-type:disc">Database parses query structure (safe, constant)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b8-992d-d449c749af7c" class="bulleted-list"><li style="list-style-type:disc">Database binds parameter values (treated as data, not code)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8044-88d2-f0dc3ffd7042" class="bulleted-list"><li style="list-style-type:disc">No possibility of SQL injection</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8098-8be9-fddbd9b8ebf8"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8050-9fe9-c7b02dceccae" class=""><strong>What are Prepared Statements</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8013-a3da-cc1f6247d949" class="">A <strong>prepared statement</strong> is a parameterized query that is <strong>pre-compiled</strong> by the database server for better performance.</p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-809f-b608-cff76821b13d" class=""><strong>Key Concept</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8092-afdf-cca8aedb27a7" class=""><strong>Pre-compilation + Parameter Binding:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8060-8431-e9269429fd9d" class="bulleted-list"><li style="list-style-type:disc">Query parsed and optimized <strong>once</strong> by database</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8038-a1b4-dc0f17816702" class="bulleted-list"><li style="list-style-type:disc">Execution plan cached for reuse</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ab-b6d9-efc278a34603" class="bulleted-list"><li style="list-style-type:disc">Only parameter values change between executions</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8009-bd68-c0afb777e999" class=""><strong>Basic Example</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e7-af2a-f5c9cef6f16c" class=""><strong>Python (sqlite3 - Prepared Statement):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-809e-9e39-c4536e7d0d08" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Prepare statement (parsed once)
+query = &quot;SELECT * FROM users WHERE username = ?&quot;
+cursor = connection.cursor()
+
+# Execute with different values (parsed once, executed many times)
+cursor.execute(query, (&#x27;alice&#x27;,))
+cursor.execute(query, (&#x27;bob&#x27;,))
+cursor.execute(query, (&#x27;charlie&#x27;,))
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c4-9519-c954522be342" class=""><strong>Java (JDBC - Prepared Statement):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80be-858d-d926a39e0bae" class="code code-wrap"><code class="language-Java" style="white-space:pre-wrap;word-break:break-all">// Prepare statement (sent to database, parsed once)
+String sql = &quot;SELECT * FROM users WHERE username = ?&quot;;
+PreparedStatement stmt = connection.prepareStatement(sql);
+
+// Execute with different values
+stmt.setString(1, &quot;alice&quot;);
+ResultSet rs = stmt.executeQuery();
+
+stmt.setString(1, &quot;bob&quot;);
+rs = stmt.executeQuery();
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-804c-b577-e931b0dbd70f" class=""><strong>How It Works</strong></h3></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80db-9a97-c8a10926de3e" class="numbered-list" start="1"><li><strong>Preparation Phase:</strong><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801a-aa31-c2da097ca076" class="bulleted-list"><li style="list-style-type:disc">Query sent to database server</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801c-a951-c0dbd5f2de8f" class="bulleted-list"><li style="list-style-type:disc">Database parses and validates query structure</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8059-b8dd-ed6ebce5cdc6" class="bulleted-list"><li style="list-style-type:disc">Database creates execution plan</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8065-8d56-d57d6d41132f" class="bulleted-list"><li style="list-style-type:disc">Execution plan cached</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80d1-a204-ed5470732d7e" class="numbered-list" start="2"><li><strong>Execution Phase:</strong><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c8-8315-e54d428923d5" class="bulleted-list"><li style="list-style-type:disc">Only parameter values sent to database</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d4-8ced-cb353aae9e82" class="bulleted-list"><li style="list-style-type:disc">Database uses cached execution plan</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802c-88b3-c366bb3967b9" class="bulleted-list"><li style="list-style-type:disc">Values bound to placeholders</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80bb-9a41-cd1a175560a1" class="bulleted-list"><li style="list-style-type:disc">Query executed</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80aa-b90f-d064e9c50ec4" class="numbered-list" start="3"><li><strong>Performance Benefit:</strong><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8000-9bb2-e33f609a45c8" class="bulleted-list"><li style="list-style-type:disc">Parse/optimize once, execute many times</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b5-a142-e9b379030937" class="bulleted-list"><li style="list-style-type:disc">Faster for repeated queries</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80c3-9ed2-dbe99ddd2ae9"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8023-8bfc-d2ad3cfe1edb" class=""><strong>Differences and Similarities</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8003-90fb-c66662f5fe76" class=""><strong>Parameterized Queries vs Prepared Statements</strong></h3></div><div style="display:contents" dir="ltr"><table id="2d5562ad-76f0-803e-862c-cdb0633d7b47" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-805a-8b01-fa2491f91cb2"><th id="oHsc" class="simple-table-header-color simple-table-header">Aspect</th><th id="hgiN" class="simple-table-header-color simple-table-header">Parameterized Queries</th><th id=":GuK" class="simple-table-header-color simple-table-header">Prepared Statements</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-8048-aaf8-dc78bdba6cd2"><td id="oHsc" class=""><strong>Definition</strong></td><td id="hgiN" class="">SQL with placeholders</td><td id=":GuK" class="">Pre-compiled parameterized query</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-8048-afe8-d2f440a120a4"><td id="oHsc" class=""><strong>Security</strong></td><td id="hgiN" class="">✅ Prevents SQL injection</td><td id=":GuK" class="">✅ Prevents SQL injection</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-80c1-89b5-e604b1f7ec79"><td id="oHsc" class=""><strong>Performance</strong></td><td id="hgiN" class="">⚠️ Parsed each time</td><td id=":GuK" class="">✅ Parsed once, cached</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-8081-94d2-cb3271c41301"><td id="oHsc" class=""><strong>Database Support</strong></td><td id="hgiN" class="">✅ All databases</td><td id=":GuK" class="">✅ Most databases</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-805a-96c4-d85ce355201c"><td id="oHsc" class=""><strong>Use Case</strong></td><td id="hgiN" class="">Single queries</td><td id=":GuK" class="">Repeated queries</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8057-8728-dd0b0316929f" class=""><strong>Relationship</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-800d-951f-eabf838dded1" class=""><strong>Prepared statements are a type of parameterized query:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8028-a70a-d8951d08bc36" class="bulleted-list"><li style="list-style-type:disc">All prepared statements use parameters</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8009-a506-c301a774c9b7" class="bulleted-list"><li style="list-style-type:disc">Not all parameterized queries are pre-compiled</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8075-b375-c584d561a4ef" class="bulleted-list"><li style="list-style-type:disc">Prepared statements add performance optimization</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8050-bd7e-e36b99050f32" class=""><strong>Implementation Differences</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c3-89a4-f6dc66e452ee" class=""><strong>Different Syntax for Placeholders:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ae-bd4f-f5fefef859c7" class="bulleted-list"><li style="list-style-type:disc"><strong>SQLite, MySQLi, ODBC</strong>: <code>?</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-804c-bc23-f373b2f81836" class="bulleted-list"><li style="list-style-type:disc"><strong>MySQL (Python), PostgreSQL</strong>: <code>%s</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8083-ba95-caa1a7127348" class="bulleted-list"><li style="list-style-type:disc"><strong>Oracle, .NET</strong>: <code>:name</code> (named parameters)</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8021-bdf2-c3865046b65e" class=""><strong>Example (Same Concept, Different Syntax):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80b3-84b8-d8652f464ea3" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># SQLite (uses ?)
+query = &quot;SELECT * FROM users WHERE username = ?&quot;
+cursor.execute(query, (username,))
+
+# PostgreSQL (uses %s)
+query = &quot;SELECT * FROM users WHERE username = %s&quot;
+cursor.execute(query, (username,))
+
+# Oracle (uses :name)
+query = &quot;SELECT * FROM users WHERE username = :username&quot;
+cursor.execute(query, {&#x27;username&#x27;: username})
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8065-84cd-edcf3376774a"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8062-9eaf-dcae4dd6c89d" class=""><strong>How They Prevent SQL Injection</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-804a-8625-e599fcfbd965" class=""><strong>SQL Injection Attack</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8050-bd7a-d8fa9c0204ab" class=""><strong>Vulnerable Code:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80b2-9f43-d9398878a4b3" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">username = request.form[&#x27;username&#x27;]
+query = f&quot;SELECT * FROM users WHERE username = &#x27;{username}&#x27;&quot;
+cursor.execute(query)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b2-8fd5-ff216a6a5d37" class=""><strong>Attack:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8059-b9ba-c5fead42977c" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Input: admin&#x27; OR &#x27;1&#x27;=&#x27;1
+Resulting Query: SELECT * FROM users WHERE username = &#x27;admin&#x27; OR &#x27;1&#x27;=&#x27;1&#x27;
+Result: Returns all users (authentication bypass!)
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80fe-881a-f3cf482226bc" class=""><strong>How Parameterized Queries Prevent It</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8080-b86e-c597fd723819" class=""><strong>Secure Code:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80d6-a5e2-e4986571064a" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">username = request.form[&#x27;username&#x27;]
+query = &quot;SELECT * FROM users WHERE username = ?&quot;
+cursor.execute(query, (username,))
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8014-92c1-cd3dbfe00e3a" class=""><strong>Attack Attempt:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80fa-a677-cc7ebe8caa0a" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Input: admin&#x27; OR &#x27;1&#x27;=&#x27;1
+Database Processing:
+  1. Query structure parsed: SELECT * FROM users WHERE username = ?
+  2. Parameter value bound: &#x27;admin\&#x27; OR \&#x27;1\&#x27;=\&#x27;1&#x27; (escaped as data)
+  3. Executed query: SELECT * FROM users WHERE username = &#x27;admin\&#x27; OR \&#x27;1\&#x27;=\&#x27;1&#x27;
+Result: No match found (safe!)
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8021-8e66-f99f2c863e30" class=""><strong>Why It Works</strong></h3></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-805f-b70b-cad0bc5bcb91" class="numbered-list" start="1"><li><strong>Query Structure is Constant:</strong><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8077-9c6f-dcd8305a7156" class="bulleted-list"><li style="list-style-type:disc">SQL structure defined at development time</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a0-95e8-d59d9c37cc1a" class="bulleted-list"><li style="list-style-type:disc">No user input in SQL structure</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801e-9f10-c6e063e1efdb" class="bulleted-list"><li style="list-style-type:disc">Cannot be manipulated</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8063-8ee6-ce3d23877c49" class="numbered-list" start="2"><li><strong>Parameters are Treated as Data:</strong><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f5-b98c-cd009abda006" class="bulleted-list"><li style="list-style-type:disc">Database escapes parameters automatically</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f5-b6ed-cfee5403d59c" class="bulleted-list"><li style="list-style-type:disc">Parameters cannot change query structure</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8087-b479-ca740051380e" class="bulleted-list"><li style="list-style-type:disc">SQL injection impossible</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-805f-bc04-d2667b5781d0" class="numbered-list" start="3"><li><strong>Type Safety:</strong><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80bf-8efc-dd3702ef1725" class="bulleted-list"><li style="list-style-type:disc">Database handles type conversion</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a9-a60d-fdb197186cb6" class="bulleted-list"><li style="list-style-type:disc">Prevents type confusion attacks</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80c4-8a0b-efc0776c30ad"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8084-8f8d-f6664ef9ce9b" class=""><strong>Implementation Examples</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80d4-9a8e-cee88bfa38e5" class=""><strong>Python (SQLite)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b8-9abc-d5425257a3cd" class=""><strong>Prepared Statement:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8024-a36a-eecf589be48f" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import sqlite3
+
+connection = sqlite3.connect(&#x27;database.db&#x27;)
+cursor = connection.cursor()
+
+# Prepared statement
+query = &quot;SELECT * FROM users WHERE username = ? AND password = ?&quot;
+cursor.execute(query, (username, password))
+result = cursor.fetchone()
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80c7-b506-c756fa2771e3" class=""><strong>Python (PostgreSQL - psycopg2)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80de-80de-c9d74999ee4f" class=""><strong>Parameterized Query:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-808c-847a-dc3c13e66beb" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import psycopg2
+
+connection = psycopg2.connect(database=&quot;mydb&quot;)
+cursor = connection.cursor()
+
+# Parameterized query (uses %s)
+query = &quot;SELECT * FROM users WHERE username = %s AND password = %s&quot;
+cursor.execute(query, (username, password))
+result = cursor.fetchone()
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-807c-a378-c8eba17ffcc8" class=""><strong>Java (JDBC)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c7-84b5-d34f6239af19" class=""><strong>Prepared Statement:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80df-a486-c83122f5f5fd" class="code code-wrap"><code class="language-Java" style="white-space:pre-wrap;word-break:break-all">String sql = &quot;SELECT * FROM users WHERE username = ? AND password = ?&quot;;
+PreparedStatement stmt = connection.prepareStatement(sql);
+stmt.setString(1, username);
+stmt.setString(2, password);
+ResultSet rs = stmt.executeQuery();
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-807b-8a2d-d3b030ebbc0f" class=""><strong>Node.js (mysql2)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ce-8e88-cccd58196e9e" class=""><strong>Prepared Statement:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-805f-93f4-c5385fff7ab3" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">const query = &quot;SELECT * FROM users WHERE username = ? AND password = ?&quot;;
+connection.execute(query, [username, password], (err, results) =&gt; {
+    // Handle results
+});
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8019-bbea-dc82fae5ba4a" class=""><strong>PHP (PDO)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80f2-ad47-d683ff9b1152" class=""><strong>Prepared Statement:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80df-a78a-e074a5fc5657" class="code code-wrap"><code class="language-PHP" style="white-space:pre-wrap;word-break:break-all">$query = &quot;SELECT * FROM users WHERE username = ? AND password = ?&quot;;
+$stmt = $pdo-&gt;prepare($query);
+$stmt-&gt;execute([$username, $password]);
+$result = $stmt-&gt;fetch();
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8099-9a66-f4e7d33ef164"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8037-81b9-ea1cae35608d" class=""><strong>Best Practices</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8087-93da-f8b6a502133f" class=""><strong>1. Always Use Parameterized Queries</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d4-85df-f15f41fcff7b" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80ba-ad1a-eb439333eb52" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">query = &quot;SELECT * FROM users WHERE username = ?&quot;
+cursor.execute(query, (username,))
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-807d-b99c-e66e3d1696e7" class=""><strong>❌ WRONG:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-809a-9b05-dcc13b693197" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">query = f&quot;SELECT * FROM users WHERE username = &#x27;{username}&#x27;&quot;
+cursor.execute(query)
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-804e-bbea-eb5b89f93d17" class=""><strong>2. Use Prepared Statements for Repeated Queries</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-800a-ae55-e5f56f90758f" class=""><strong>✅ CORRECT (Repeated Execution):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8003-b075-f629d7521b16" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">query = &quot;INSERT INTO logs (message, timestamp) VALUES (?, ?)&quot;
+cursor = connection.cursor()
+
+# Prepare once, execute many times
+for log_entry in log_entries:
+    cursor.execute(query, (log_entry.message, log_entry.timestamp))
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8003-aca9-f23745bb6c96" class=""><strong>3. Don&#x27;t Try to Parameterize Table/Column Names</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80fe-8fbb-c27b7aba2dc2" class=""><strong>❌ WRONG:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80d1-ad23-ebd5292c6edf" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Can&#x27;t parameterize table names
+table_name = request.args.get(&#x27;table&#x27;)
+query = f&quot;SELECT * FROM {table_name}&quot;  # Still vulnerable!
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-800a-b6fe-d00ef6781b75" class=""><strong>✅ CORRECT (Whitelist Approach):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8085-97ec-e88ed9936dc8" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">allowed_tables = [&#x27;users&#x27;, &#x27;products&#x27;, &#x27;orders&#x27;]
+table_name = request.args.get(&#x27;table&#x27;)
+if table_name not in allowed_tables:
+    raise ValueError(&quot;Invalid table&quot;)
+query = f&quot;SELECT * FROM {table_name}&quot;  # Safe with whitelist
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80eb-a534-c796a4f8954e" class=""><strong>4. Use ORM When Possible</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8013-aa78-e499a2d0fa08" class=""><strong>✅ CORRECT (ORM - Django):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-802b-8610-f7cc7d291237" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from django.db import models
+
+# ORM handles parameterization automatically
+User.objects.filter(username=username, password=password)
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80e4-b052-e83c0ed8d513" class=""><strong>5. Validate Input Types</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e6-92fa-dea99b6a802c" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-802f-80b0-c6c5e31f1f95" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Validate input type
+user_id = request.args.get(&#x27;id&#x27;)
+try:
+    user_id = int(user_id)  # Ensure it&#x27;s an integer
+except ValueError:
+    raise ValueError(&quot;Invalid user ID&quot;)
+
+query = &quot;SELECT * FROM users WHERE id = ?&quot;
+cursor.execute(query, (user_id,))
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80a0-8bb0-e1946fd13ea1"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8017-a656-ece9b4011390" class=""><strong>Advanced Exploitation Prevention</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8055-bd12-e14e205dbe4a" class=""><strong>Why Parameterized Queries Prevent Advanced Attacks</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b9-99c7-f712817175e9" class=""><strong>Advanced SQL Injection Techniques Prevented:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80c4-8335-c3163bf4ff3d" class="numbered-list" start="1"><li><strong>Union-Based Injection:</strong><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8097-aed5-f44dcde83a6d" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Attack attempt
+username = &quot;admin&#x27; UNION SELECT * FROM passwords--&quot;
+
+# With parameterized query
+query = &quot;SELECT * FROM users WHERE username = ?&quot;
+cursor.execute(query, (username,))
+# Result: Searches for literal username &quot;admin&#x27; UNION SELECT * FROM passwords--&quot;
+# No UNION executed!
+</code></pre></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80e1-ae35-f7b149e61384" class="numbered-list" start="2"><li><strong>Boolean-Based Blind Injection:</strong><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-800c-8dbd-fbf692252814" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Attack attempt
+username = &quot;admin&#x27; AND 1=1--&quot;
+
+# With parameterized query
+query = &quot;SELECT * FROM users WHERE username = ?&quot;
+cursor.execute(query, (username,))
+# Result: Searches for literal username &quot;admin&#x27; AND 1=1--&quot;
+# No boolean logic executed!
+</code></pre></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80c0-9367-f68ee093da0d" class="numbered-list" start="3"><li><strong>Time-Based Blind Injection:</strong><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-802c-b041-dd310347a350" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Attack attempt
+username = &quot;admin&#x27;; WAITFOR DELAY &#x27;00:00:05&#x27;--&quot;
+
+# With parameterized query
+query = &quot;SELECT * FROM users WHERE username = ?&quot;
+cursor.execute(query, (username,))
+# Result: Searches for literal username, no delay executed!
+</code></pre></div></li></ol></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-802d-a9f8-d30f3586be83" class=""><strong>Why Escaping Is Not Enough</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8072-b669-e93fd1f11f8d" class=""><strong>Manual Escaping (Vulnerable):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80d0-940e-f5db5c5a5a2f" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># ❌ WRONG: Manual escaping can fail
+def escape_sql(value):
+    return value.replace(&quot;&#x27;&quot;, &quot;&#x27;&#x27;&quot;)
+
+username = escape_sql(user_input)
+query = f&quot;SELECT * FROM users WHERE username = &#x27;{username}&#x27;&quot;
+# Still vulnerable to: admin&#x27; OR &#x27;1&#x27;=&#x27;1 (escaped incorrectly)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80bf-a9fd-f8dbf18d87da" class=""><strong>Parameterized Queries (Secure):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80ef-a089-eb3c4a8771c6" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># ✅ CORRECT: Database handles escaping correctly
+query = &quot;SELECT * FROM users WHERE username = ?&quot;
+cursor.execute(query, (username,))
+# Always safe!
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-800c-bffe-f8c75c73ff19"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-803e-8af6-c76c17e39a39" class=""><strong>Penetration Testing Methodology</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-802e-8a82-cd6c30cd0fb6" class=""><strong>Testing for SQL Injection Protection</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8050-b73c-f5676f1d26bd" class=""><strong>1. Identify Database Queries:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a1-90a3-d3760adb7569" class="bulleted-list"><li style="list-style-type:disc">Find all database interactions</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80de-91ba-d0a15d365ffa" class="bulleted-list"><li style="list-style-type:disc">Identify user input points</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8033-9d8e-d707d9669479" class="bulleted-list"><li style="list-style-type:disc">Map input to SQL queries</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8023-afe7-fc8670753188" class=""><strong>2. Test for Parameterized Queries:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80db-889f-ee0ed8e807e0" class="bulleted-list"><li style="list-style-type:disc">Check if queries use placeholders</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e7-acab-c43c5878e4b5" class="bulleted-list"><li style="list-style-type:disc">Verify parameters bound correctly</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d2-9396-f0bad3beb0b9" class="bulleted-list"><li style="list-style-type:disc">Test with SQL injection payloads</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-800f-8f11-e8636fe27ae5" class=""><strong>3. Verify Protection:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80fa-94a8-d36e012016ec" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Test payloads that should be blocked
+test_payloads = [
+    &quot;admin&#x27; OR &#x27;1&#x27;=&#x27;1&quot;,
+    &quot;admin&#x27; UNION SELECT * FROM users--&quot;,
+    &quot;admin&#x27;; DROP TABLE users--&quot;,
+    &quot;admin&#x27; AND 1=1--&quot;,
+    &quot;admin&#x27; AND SLEEP(5)--&quot;
+]
+
+# All should be treated as literal values, not SQL code
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d9-9f3b-ea888ea04dbb" class=""><strong>4. Check Code Patterns:</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80a9-8355-ca2f4c11eacf" class=""><strong>Vulnerable Patterns:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8066-9447-d4348ce37615" class="bulleted-list"><li style="list-style-type:disc">String concatenation: <code>f&quot;SELECT * FROM users WHERE username = &#x27;{username}&#x27;&quot;</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8090-aeb9-cea806c81853" class="bulleted-list"><li style="list-style-type:disc">String formatting: <code>&quot;SELECT * FROM users WHERE username = &#x27;%s&#x27;&quot; % username</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801d-8555-d816c72f8f68" class="bulleted-list"><li style="list-style-type:disc">String replacement: <code>query.replace(&#x27;{username}&#x27;, username)</code></li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8002-a451-facabfb6ef26" class=""><strong>Secure Patterns:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80bb-a824-ff55b7c14b56" class="bulleted-list"><li style="list-style-type:disc">Placeholders: <code>&quot;SELECT * FROM users WHERE username = ?&quot;</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-808f-a375-dd1da17d2704" class="bulleted-list"><li style="list-style-type:disc">Parameter binding: <code>cursor.execute(query, (username,))</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80cb-8691-fc00e00e47b4" class="bulleted-list"><li style="list-style-type:disc">ORM usage: <code>User.objects.filter(username=username)</code></li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8070-9632-fc629a433175"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8099-8c4c-cd3dfefca515" class=""><strong>Threat Modeling (STRIDE Framework)</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80a6-8d40-d36d18e0ff3a" class=""><strong>Spoofing</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-802b-a974-eedb2d81b210" class=""><strong>Threat:</strong> Attacker spoofs legitimate user via SQL injection.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8054-a5ea-cd4e15a28927" class=""><strong>Attack Vectors:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8098-969a-e5e01c8ea4c4" class="bulleted-list"><li style="list-style-type:disc">Authentication bypass via SQL injection</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801a-bfa1-f416342de46d" class="bulleted-list"><li style="list-style-type:disc">Impersonation through manipulated queries</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8025-9336-db42f246c1b0" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b1-9ab1-cff570f94885" class="bulleted-list"><li style="list-style-type:disc">✅ Parameterized queries prevent SQL injection</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8005-b43a-c51683b11621" class="bulleted-list"><li style="list-style-type:disc">✅ Proper authentication mechanisms</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8085-8290-fb6a23e4a664" class="bulleted-list"><li style="list-style-type:disc">✅ Input validation (additional layer)</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80bd-a52f-f56ff7b048c4" class=""><strong>Risk Rating:</strong> High</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-808a-8bd3-d0f7f0fe80f4"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80da-99a6-d3e565758099" class=""><strong>Tampering</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8023-91ae-c5aefa1e54a7" class=""><strong>Threat:</strong> Attacker modifies data via SQL injection.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-805d-8d6f-c7e92a442756" class=""><strong>Attack Vectors:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8079-8ea8-d67d525ed58b" class="bulleted-list"><li style="list-style-type:disc">UPDATE/DELETE statements via SQL injection</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-804a-9db1-cc77c348b2e8" class="bulleted-list"><li style="list-style-type:disc">Data manipulation through injected queries</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8087-b6af-fe060acd2175" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-808c-b187-f541766ee349" class="bulleted-list"><li style="list-style-type:disc">✅ Parameterized queries prevent SQL injection</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8073-8759-ca877f48b056" class="bulleted-list"><li style="list-style-type:disc">✅ Principle of least privilege</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8057-a9a2-c7cd334e7901" class="bulleted-list"><li style="list-style-type:disc">✅ Input validation</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80a8-b7b6-f5ae71a49103" class=""><strong>Risk Rating:</strong> Critical</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-800a-ae6a-d69f239e5997"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8045-a0dc-cede30cc9d1f" class=""><strong>Repudiation</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8021-988f-f1444e920f2d" class=""><strong>Threat:</strong> Actions via SQL injection cannot be attributed.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8092-8654-d908504b6246" class=""><strong>Attack Vectors:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8064-a8a3-c90b0701cd58" class="bulleted-list"><li style="list-style-type:disc">Malicious queries appear as legitimate</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8036-80e0-e9d7322455bb" class="bulleted-list"><li style="list-style-type:disc">No audit trail for injected queries</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8019-b926-f894a03aca66" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8013-801a-c6865c0b77df" class="bulleted-list"><li style="list-style-type:disc">✅ Parameterized queries prevent SQL injection</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8010-a0ac-eb74372d3940" class="bulleted-list"><li style="list-style-type:disc">✅ Comprehensive logging</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8082-aed4-d78595e9d5ce" class="bulleted-list"><li style="list-style-type:disc">✅ Audit trails</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8013-92d3-d2d95930e069" class=""><strong>Risk Rating:</strong> Medium</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8078-9c78-d9efd14240a7"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80e0-89e3-f6f4e4a68744" class=""><strong>Information Disclosure</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8087-a280-e0db95fec6b2" class=""><strong>Threat:</strong> Attacker accesses sensitive data via SQL injection.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8078-af8e-f2f0c85475b9" class=""><strong>Attack Vectors:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8072-8bb2-fb1030e60a38" class="bulleted-list"><li style="list-style-type:disc">SELECT statements via SQL injection</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8024-ad2d-e0f17b5b9b5a" class="bulleted-list"><li style="list-style-type:disc">Data extraction through injected queries</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8079-b767-efa7c57f053f" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8099-90ef-c1140fac96c5" class="bulleted-list"><li style="list-style-type:disc">✅ Parameterized queries prevent SQL injection</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ad-b4b5-f9f5a4960138" class="bulleted-list"><li style="list-style-type:disc">✅ Principle of least privilege</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b9-8448-c54c562dcf4b" class="bulleted-list"><li style="list-style-type:disc">✅ Data encryption</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-807c-9a6f-ee9215959e25" class=""><strong>Risk Rating:</strong> Critical</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-806d-8859-fd84f0863af5"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-807d-98ff-c739ac2c9b9e" class=""><strong>Denial of Service</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80a4-8039-e241ccb82654" class=""><strong>Threat:</strong> Attacker causes DoS via SQL injection.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8017-a8a2-d8083ae4ffc1" class=""><strong>Attack Vectors:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8035-9f22-ca39d27a869e" class="bulleted-list"><li style="list-style-type:disc">Resource exhaustion via complex queries</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8029-9565-c4503724b9e9" class="bulleted-list"><li style="list-style-type:disc">Database overload through injected queries</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e2-9f83-f32b925ac423" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8035-88f2-c70d2886856a" class="bulleted-list"><li style="list-style-type:disc">✅ Parameterized queries prevent SQL injection</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8051-a63a-e4faf03e5057" class="bulleted-list"><li style="list-style-type:disc">✅ Query timeout limits</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8087-8331-d10ff86f5c47" class="bulleted-list"><li style="list-style-type:disc">✅ Resource limits</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8074-ba2c-eaad406ac41f" class=""><strong>Risk Rating:</strong> High</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80fe-903a-d2ab882237f7"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80f9-9ae5-e9de720d734c" class=""><strong>Elevation of Privilege</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-807d-88ba-ff6bfd2a9904" class=""><strong>Threat:</strong> Attacker gains elevated privileges via SQL injection.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-804b-9474-cb2cf9d7698b" class=""><strong>Attack Vectors:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8063-aec3-cdd816b4cd27" class="bulleted-list"><li style="list-style-type:disc">Privilege escalation through injected queries</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fd-9309-da56d62530c6" class="bulleted-list"><li style="list-style-type:disc">Administrative access via SQL injection</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ae-8090-c3b88fb8cf95" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8091-84cb-c68a83af3197" class="bulleted-list"><li style="list-style-type:disc">✅ Parameterized queries prevent SQL injection</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-803a-9254-ff5f8cce1447" class="bulleted-list"><li style="list-style-type:disc">✅ Principle of least privilege</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8055-9de8-ef8c5e595ee7" class="bulleted-list"><li style="list-style-type:disc">✅ Proper access controls</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80f0-ba6b-ffb19aa8be11" class=""><strong>Risk Rating:</strong> Critical</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8069-ba92-c208448f990e"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8007-a71d-caa698bcc876" class=""><strong>Real-World Case Studies</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8049-8a08-cc87dd379602" class=""><strong>Case Study 1: Authentication Bypass</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-800e-977c-f33a8547ac23" class=""><strong>Background:</strong> During penetration test, discovered SQL injection in login functionality.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ff-bd7b-fdefec4921dd" class=""><strong>Vulnerable Code:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80a3-98c4-e948f67c7014" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">username = request.form[&#x27;username&#x27;]
+password = request.form[&#x27;password&#x27;]
+query = f&quot;SELECT * FROM users WHERE username = &#x27;{username}&#x27; AND password = &#x27;{password}&#x27;&quot;
+cursor.execute(query)
+result = cursor.fetchone()
+if result:
+    return &quot;Login successful&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80cc-b39d-edb8ecb1afea" class=""><strong>Exploitation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8065-91ad-d542818fbed6" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Username: admin&#x27; OR &#x27;1&#x27;=&#x27;1
+Password: anything
+Resulting Query: SELECT * FROM users WHERE username = &#x27;admin&#x27; OR &#x27;1&#x27;=&#x27;1&#x27; AND password = &#x27;anything&#x27;
+Result: Returns first user (authentication bypass!)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8048-b915-cb9149cce6f2" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8017-af1f-ed12d050ebeb" class="bulleted-list"><li style="list-style-type:disc"><strong>Confidentiality</strong>: Critical - Unauthorized access</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ad-b386-fb0a4b6eb181" class="bulleted-list"><li style="list-style-type:disc"><strong>Integrity</strong>: High - Could modify data</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8025-bb16-e6d425d16672" class="bulleted-list"><li style="list-style-type:disc"><strong>Business Impact</strong>: Critical - Complete authentication bypass</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-807f-894e-c4540241ca16" class=""><strong>Remediation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8097-88fc-e61a53ada238" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">username = request.form[&#x27;username&#x27;]
+password = request.form[&#x27;password&#x27;]
+query = &quot;SELECT * FROM users WHERE username = ? AND password = ?&quot;
+cursor.execute(query, (username, password))
+result = cursor.fetchone()
+if result:
+    return &quot;Login successful&quot;
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80a1-bbf2-f5e12df40af7"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8032-92e0-d36380d947a2" class=""><strong>Case Study 2: Data Extraction</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8052-a015-f1db5929fe5f" class=""><strong>Background:</strong> Security assessment revealed SQL injection in search functionality.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8009-9ead-e0bf5c23dc36" class=""><strong>Vulnerable Code:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80df-832e-d45118a6ec5b" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">search_term = request.args.get(&#x27;q&#x27;)
+query = f&quot;SELECT * FROM products WHERE name LIKE &#x27;%{search_term}%&#x27;&quot;
+cursor.execute(query)
+results = cursor.fetchall()
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b6-a1ba-dbf10a341dbf" class=""><strong>Exploitation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-802d-96c0-c2d83df539be" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Search: &#x27; UNION SELECT username, password FROM users--
+Resulting Query: SELECT * FROM products WHERE name LIKE &#x27;%&#x27; UNION SELECT username, password FROM users--%&#x27;
+Result: Extracts all usernames and passwords!
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-807d-b686-cf83bb1ae5b0" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80eb-a644-d97927fdbb3a" class="bulleted-list"><li style="list-style-type:disc"><strong>Confidentiality</strong>: Critical - Data breach</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f2-b472-fccd30623536" class="bulleted-list"><li style="list-style-type:disc"><strong>Integrity</strong>: High - Could modify data</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8012-8248-cac361e938f9" class="bulleted-list"><li style="list-style-type:disc"><strong>Business Impact</strong>: Critical - Complete data compromise</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8042-b87d-dd2829d90824" class=""><strong>Remediation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80c4-9dd1-d44fe83112c4" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">search_term = request.args.get(&#x27;q&#x27;)
+query = &quot;SELECT * FROM products WHERE name LIKE ?&quot;
+search_pattern = f&quot;%{search_term}%&quot;
+cursor.execute(query, (search_pattern,))
+results = cursor.fetchall()
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8092-80d5-ef535683e4c8"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80c2-bbb2-e3474d530f51" class=""><strong>Advanced Mitigations</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80b8-9a68-ff402aff41ad" class=""><strong>Defense in Depth Strategy</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-809e-9431-d45f56a0a3be" class=""><strong>Layer 1: Parameterized Queries (Primary Defense)</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8079-88c3-c0883bf0a0df" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">query = &quot;SELECT * FROM users WHERE username = ?&quot;
+cursor.execute(query, (username,))
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d4-bf89-ee1439a0dacd" class=""><strong>Layer 2: Input Validation (Additional Layer)</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-803d-abe1-d6c53c261321" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">def validate_username(username):
+    if not re.match(r&#x27;^[a-zA-Z0-9_]+$&#x27;, username):
+        raise ValueError(&quot;Invalid username&quot;)
+    if len(username) &gt; 50:
+        raise ValueError(&quot;Username too long&quot;)
+    return username
+
+username = validate_username(request.form[&#x27;username&#x27;])
+query = &quot;SELECT * FROM users WHERE username = ?&quot;
+cursor.execute(query, (username,))
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8073-aeef-c7ca8eaa3f79" class=""><strong>Layer 3: Principle of Least Privilege</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-808c-a15e-f32336bd288c" class="code code-wrap"><code class="language-SQL" style="white-space:pre-wrap;word-break:break-all">-- Database user has minimal privileges
+GRANT SELECT ON users TO app_user;
+-- Cannot execute DROP, DELETE, etc.
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c3-8e4e-fb001aac8cf0" class=""><strong>Layer 4: ORM Usage (When Possible)</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8020-a1f8-c9e5fe184bba" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># ORM automatically uses parameterized queries
+User.objects.filter(username=username)
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8043-9bdd-d9d206118b57"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80dd-96cf-f0c619a47023" class=""><strong>SAST/DAST Detection</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80d3-b91a-f3311086cb47" class=""><strong>SAST (Static Application Security Testing)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b1-b963-fd85aae27204" class=""><strong>Vulnerable Code Patterns:</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-805e-94c5-e704bf72398f" class=""><strong>1. String Concatenation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-809b-a267-cfb1cb907b5e" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># ❌ VULNERABLE
+query = f&quot;SELECT * FROM users WHERE username = &#x27;{username}&#x27;&quot;
+
+# SAST Detection:
+# - Pattern: String concatenation in SQL query
+# - Severity: Critical
+# - CWE: CWE-89 (SQL Injection)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ac-bb23-d238df701381" class=""><strong>2. String Formatting:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8031-a28e-f0161cfb5fd3" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># ❌ VULNERABLE
+query = &quot;SELECT * FROM users WHERE username = &#x27;%s&#x27;&quot; % username
+
+# SAST Detection:
+# - Pattern: String formatting in SQL query
+# - Severity: Critical
+# - CWE: CWE-89
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8082-b096-e7d1043029fc" class=""><strong>3. Missing Parameter Binding:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8080-9b85-e23a9a6ceb7e" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># ❌ VULNERABLE
+query = &quot;SELECT * FROM users WHERE username = ?&quot;
+cursor.execute(query)  # Missing parameter!
+
+# SAST Detection:
+# - Pattern: Placeholder without parameter binding
+# - Severity: High
+# - CWE: CWE-89
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8073-8b5d-fec871fd50b1"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8031-a84c-cdd4047e4f09" class=""><strong>DAST (Dynamic Application Security Testing)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-801a-b7b5-f2aaaad623a4" class=""><strong>Testing Methodology:</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8077-b077-ea05b1829645" class=""><strong>1. Identify Input Points:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e1-9e28-fe6287a5f686" class="bulleted-list"><li style="list-style-type:disc">Test all form inputs</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e0-b6fd-f8767c264f68" class="bulleted-list"><li style="list-style-type:disc">Test URL parameters</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d1-8d98-d384ad65d236" class="bulleted-list"><li style="list-style-type:disc">Test headers and cookies</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8082-98e7-e673e574ac74" class=""><strong>2. Submit SQL Injection Payloads:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-808d-bdc2-df5361919a05" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">test_payloads = [
+    &quot;admin&#x27; OR &#x27;1&#x27;=&#x27;1&quot;,
+    &quot;admin&#x27; UNION SELECT * FROM users--&quot;,
+    &quot;admin&#x27;; DROP TABLE users--&quot;,
+    &quot;admin&#x27; AND 1=1--&quot;,
+    &quot;admin&#x27; AND SLEEP(5)--&quot;
+]
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e5-8b8a-c6ce8ac718ac" class=""><strong>3. Analyze Responses:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-808e-aeef-fc8152079f26" class="bulleted-list"><li style="list-style-type:disc">Check for SQL errors</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-803f-bd90-f115e4899d73" class="bulleted-list"><li style="list-style-type:disc">Check for unexpected behavior</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801d-aaa5-fc0f63b6059c" class="bulleted-list"><li style="list-style-type:disc">Check for data extraction</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8019-baac-d2a47543a7e8" class=""><strong>4. Verify Protection:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d4-9c64-d05235496c42" class="bulleted-list"><li style="list-style-type:disc">Payloads should be treated as literal values</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b4-a18b-d3253bc10eee" class="bulleted-list"><li style="list-style-type:disc">No SQL errors should occur</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8063-b905-cb88658b8512" class="bulleted-list"><li style="list-style-type:disc">No data should be extracted</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80c6-8f5a-c724aef7ae3c"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8015-9182-eec22d6462b9" class=""><strong>Risk Assessment</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8074-b2f8-defb3f9c0dd9" class=""><strong>Risk Matrix</strong></h3></div><div style="display:contents" dir="ltr"><table id="2d5562ad-76f0-802f-9fe0-f23df629e618" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-8008-aa17-d156f527d99f"><th id="&lt;CZJ" class="simple-table-header-color simple-table-header">Vulnerability</th><th id="jjBG" class="simple-table-header-color simple-table-header">Likelihood</th><th id="}kfO" class="simple-table-header-color simple-table-header">Impact</th><th id="Lsh}" class="simple-table-header-color simple-table-header">Risk Level</th><th id="~yW\" class="simple-table-header-color simple-table-header">Business Impact</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-802b-bade-ea0961a43e8f"><td id="&lt;CZJ" class=""><strong>SQL Injection (No Protection)</strong></td><td id="jjBG" class="">High</td><td id="}kfO" class="">Critical</td><td id="Lsh}" class=""><strong>Critical</strong></td><td id="~yW\" class="">Complete system compromise</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-8017-b0d1-e7ca61288475"><td id="&lt;CZJ" class=""><strong>Weak Parameterization</strong></td><td id="jjBG" class="">Medium</td><td id="}kfO" class="">High</td><td id="Lsh}" class=""><strong>High</strong></td><td id="~yW\" class="">Partial data access</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-80ca-ae0a-febf9a5204aa"><td id="&lt;CZJ" class=""><strong>Missing Input Validation</strong></td><td id="jjBG" class="">High</td><td id="}kfO" class="">Medium</td><td id="Lsh}" class=""><strong>High</strong></td><td id="~yW\" class="">Data integrity issues</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-80eb-b48f-fc28460b47f1"><td id="&lt;CZJ" class=""><strong>No Prepared Statements</strong></td><td id="jjBG" class="">Medium</td><td id="}kfO" class="">Medium</td><td id="Lsh}" class=""><strong>Medium</strong></td><td id="~yW\" class="">Performance degradation</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80e7-b692-d56e649d7101" class=""><strong>Risk Calculation</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80db-8969-d7bfac2182a9" class=""><strong>Example: SQL Injection in Authentication</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8059-827f-c0199726a005" class=""><strong>Likelihood:</strong> High (0.9)</p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8088-93c7-c74ce9038793" class="bulleted-list"><li style="list-style-type:disc">Common vulnerability</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-809d-952d-f3ecf78c40c6" class="bulleted-list"><li style="list-style-type:disc">Easy to exploit</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-809f-b551-f170792d452c" class="bulleted-list"><li style="list-style-type:disc">Widespread impact</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8013-b8c9-e3957b8e8699" class=""><strong>Impact:</strong> Critical (1.0)</p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-803c-b0ee-eb003be4ed99" class="bulleted-list"><li style="list-style-type:disc">Complete authentication bypass</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8093-bb0d-df0a1beaa5ed" class="bulleted-list"><li style="list-style-type:disc">Unauthorized access</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fa-9c43-e0943f344976" class="bulleted-list"><li style="list-style-type:disc">Data breach potential</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80a0-946c-e0a182cfc99a" class=""><strong>Risk Score:</strong> 0.9 × 1.0 = <strong>0.9 (Critical Risk)</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803c-8cac-f257b954f49d" class=""><strong>Business Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e1-80fa-e9b63fa0bd94" class="bulleted-list"><li style="list-style-type:disc"><strong>Financial</strong>: Unauthorized access, fraud</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8014-ba33-dc6939ac351f" class="bulleted-list"><li style="list-style-type:disc"><strong>Reputation</strong>: Loss of customer trust</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801e-b400-cf21cc507eb8" class="bulleted-list"><li style="list-style-type:disc"><strong>Legal</strong>: Data breach notifications, liability</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f3-a1cf-f416eaa418b6" class="bulleted-list"><li style="list-style-type:disc"><strong>Operational</strong>: System compromise, downtime</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80e1-835d-d5bb82176e59"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8019-b0ca-e607106be2a1" class=""><strong>Summary</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b2-97c3-f7e8416803f0" class="">Parameterized queries and prepared statements are the <strong>primary defense</strong> against SQL injection. Key points:</p></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8015-a077-fc32acda3fd3" class="numbered-list" start="1"><li><strong>Always use parameterized queries</strong> - Primary defense against SQL injection</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8010-8d05-e0288a12519b" class="numbered-list" start="2"><li><strong>Use prepared statements for repeated queries</strong> - Performance + security</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80c7-b929-cc06853db4eb" class="numbered-list" start="3"><li><strong>Don&#x27;t parameterize table/column names</strong> - Use whitelisting instead</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-800f-a6b6-c7da769a5b9e" class="numbered-list" start="4"><li><strong>Use ORM when possible</strong> - Automatic parameterization</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-801d-82b3-f0beae618563" class="numbered-list" start="5"><li><strong>Validate input types</strong> - Additional layer of defense</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80f2-8bfc-c54c23794d96" class="numbered-list" start="6"><li><strong>Follow defense in depth</strong> - Multiple layers of protection</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8060-a932-dd3d855b7fb9" class="numbered-list" start="7"><li><strong>Test thoroughly</strong> - Code reviews, SAST/DAST scanning</li></ol></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b9-8bed-f3eee8d2f07f" class="">Remember: <strong>Parameterized queries (prepared statements) are the primary defense against SQL injection, not input validation or escaping alone!</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8078-ade9-db674c015db6" class="">
+</p></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

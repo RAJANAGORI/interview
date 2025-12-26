@@ -1,0 +1,769 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Session Fixation and Session Hijacking - Quick Reference Guide</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2cf562ad-76f0-808f-ae5b-c4ca772f1b4e" class="page mono"><header><h1 class="page-title" dir="auto">Session Fixation and Session Hijacking - Quick Reference Guide</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="ltr"><nav id="2cf562ad-76f0-805c-8878-e461067256d5" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-805f-a854-ea6985816a97"><strong>⚠️ Critical Clarification</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-8008-af2c-efa6babe421a"><strong>Quick Comparison</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-803b-a510-c60022a0d9bd"><strong>Attack Vectors</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80f0-8efe-dd67dc4be8ce"><strong>Session Hijacking</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8026-8187-fde695c07e2c"><strong>Session Fixation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-8033-8aff-d4da3b6daf9e"><strong>Complete Mitigation Checklist</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8084-a1c7-f2336fbb0af8"><strong>For Session Hijacking:</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8094-98ea-d8d85af6111c"><strong>For Session Fixation:</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80a5-96ca-e1470badedcc"><strong>Secure Session Configuration</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8062-8612-c9268f14fe18"><strong>Node.js/Express</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8097-b8e9-c282d119116a"><strong>Session ID Regeneration</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80ad-81e7-c18c10f603e4"><strong>Common Mistakes</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80bd-8ed6-ec214b8c3adb"><strong>❌ Wrong: No Session ID Regeneration</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8043-bda1-c9682dc81a21"><strong>✅ Correct: Regenerate After Login</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8031-8206-ee2d9f240f34"><strong>❌ Wrong: Accepting Session ID from URL</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-800d-bf86-c776b0774173"><strong>✅ Correct: Only Use Cookies</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80df-9d7b-ff4dcdb0e6dc"><strong>❌ Wrong: No HttpOnly Flag</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8029-8f67-eb7cf3ab86f0"><strong>✅ Correct: HttpOnly Cookies</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80e1-bb07-d2a7c7cbae8f"><strong>Decision Tree</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-801f-af22-e7a3a95a83fa"><strong>Key Takeaways</strong></a></div></nav></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-805f-a854-ea6985816a97" class=""><strong>⚠️ Critical Clarification</strong></h2></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8046-ad4b-e4257945e2dd" class=""><strong>Session Fixation and Session Hijacking are NOT the same!</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-800e-a9ed-c824539df8ab" class="bulleted-list"><li style="list-style-type:disc">✅ Session Hijacking = Stealing existing active session</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8013-b708-e8edc7c0e955" class="bulleted-list"><li style="list-style-type:disc">✅ Session Fixation = Forcing user to use predetermined session ID</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-803f-967f-de90b22f9d57" class="bulleted-list"><li style="list-style-type:disc">✅ Different attacks require different mitigations</li></ul></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-8005-9b62-f7bb03ba389f"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-8008-af2c-efa6babe421a" class=""><strong>Quick Comparison</strong></h2></div><div style="display:contents" dir="ltr"><table id="2cf562ad-76f0-808b-8156-c0479d897f1e" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80e1-8062-d33ad9b5ca18"><th id="pPZW" class="simple-table-header-color simple-table-header">Aspect</th><th id="fuuB" class="simple-table-header-color simple-table-header">Session Hijacking</th><th id="AQRJ" class="simple-table-header-color simple-table-header">Session Fixation</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80ca-9dc5-fd026b8d7cf2"><td id="pPZW" class=""><strong>Timing</strong></td><td id="fuuB" class="">After user logs in</td><td id="AQRJ" class="">Before/during login</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-8051-973b-cbfa18ea79f0"><td id="pPZW" class=""><strong>Method</strong></td><td id="fuuB" class="">Steal existing session ID</td><td id="AQRJ" class="">Force user to use predetermined ID</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-8026-b77c-cd70db873ca0"><td id="pPZW" class=""><strong>Attack Vector</strong></td><td id="fuuB" class="">XSS, sniffing, prediction</td><td id="AQRJ" class="">Social engineering, URL manipulation</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-8069-858d-e7bf0753c83d"><td id="pPZW" class=""><strong>Session State</strong></td><td id="fuuB" class="">Session already authenticated</td><td id="AQRJ" class="">Session becomes authenticated</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80bf-8810-fe45c5126e2a"><td id="pPZW" class=""><strong>Mitigation</strong></td><td id="fuuB" class="">HttpOnly, HTTPS, strong IDs</td><td id="AQRJ" class="">Session ID regeneration</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-8003-b6ec-f07954be90c4"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-803b-a510-c60022a0d9bd" class=""><strong>Attack Vectors</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80f0-8efe-dd67dc4be8ce" class=""><strong>Session Hijacking</strong></h3></div><div style="display:contents" dir="ltr"><table id="2cf562ad-76f0-8088-ab6a-d044e28e0bad" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-8077-ac35-d342ac165351"><th id="^XZ~" class="simple-table-header-color simple-table-header">Vector</th><th id="HNZ;" class="simple-table-header-color simple-table-header">Method</th><th id="Ns~[" class="simple-table-header-color simple-table-header">Mitigation</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-801f-b0e7-c96d14a57da6"><td id="^XZ~" class=""><strong>Network Sniffing</strong></td><td id="HNZ;" class="">Intercept HTTP traffic</td><td id="Ns~[" class="">HTTPS</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-801a-ba43-fb9f32b1b783"><td id="^XZ~" class=""><strong>XSS</strong></td><td id="HNZ;" class="">Steal cookies via JavaScript</td><td id="Ns~[" class="">HttpOnly cookies</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-804b-826f-de01d3eaef42"><td id="^XZ~" class=""><strong>Session Prediction</strong></td><td id="HNZ;" class="">Guess/brute-force IDs</td><td id="Ns~[" class="">Strong, random IDs</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-808e-bd23-ebc334c23f08"><td id="^XZ~" class=""><strong>MitM</strong></td><td id="HNZ;" class="">Intercept HTTPS</td><td id="Ns~[" class="">Certificate validation</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8026-8187-fde695c07e2c" class=""><strong>Session Fixation</strong></h3></div><div style="display:contents" dir="ltr"><table id="2cf562ad-76f0-80f8-959d-eb08d7b0f44b" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80d6-8136-d76180e7d10f"><th id="gsud" class="simple-table-header-color simple-table-header">Vector</th><th id="{JEN" class="simple-table-header-color simple-table-header">Method</th><th id="VL^[" class="simple-table-header-color simple-table-header">Mitigation</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-806b-bec0-f79d2e567727"><td id="gsud" class=""><strong>URL-based</strong></td><td id="{JEN" class="">Session ID in URL</td><td id="VL^[" class="">Don&#x27;t use URL-based IDs</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80b5-89e2-e2c61e81c72c"><td id="gsud" class=""><strong>Cookie-based</strong></td><td id="{JEN" class="">Set cookie via XSS</td><td id="VL^[" class="">HttpOnly, regeneration</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-801b-a47f-f4551ddf7804"><td id="gsud" class=""><strong>Social Engineering</strong></td><td id="{JEN" class="">Phishing with session ID</td><td id="VL^[" class="">Session ID regeneration</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-80fd-a811-eb00058feb24"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-8033-8aff-d4da3b6daf9e" class=""><strong>Complete Mitigation Checklist</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8084-a1c7-f2336fbb0af8" class=""><strong>For Session Hijacking:</strong></h3></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8023-86d1-c1ebfdf947b1" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Use HTTPS for all communication</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ac-b4ed-de4348ed99c9" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">HttpOnly cookies (prevents XSS)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80bb-bddd-d0bfa97c6b0a" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Secure cookies (HTTPS only)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a3-89b5-c87dbf7d69b2" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">SameSite attribute (CSRF protection)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-801b-a7ce-cbb95fa3cbf4" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Strong, random session IDs</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8076-8b03-c640c7eb509f" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Short session expiration</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-801c-8648-f2974410d897" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Inactivity timeout</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80eb-93e4-fb7b9b817faf" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">IP address validation (optional)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8097-9945-ca5254bb5f66" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Input validation (prevents XSS)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8094-98ea-d8d85af6111c" class=""><strong>For Session Fixation:</strong></h3></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80df-a068-f8e4986e215c" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Regenerate session ID after login (CRITICAL)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8029-ae33-ef6833961cc0" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Regenerate after password change</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-802c-8ab6-c1c05103be3d" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Regenerate after privilege escalation</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80c4-925a-efc60dd020d0" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Don&#x27;t accept session IDs from URL</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-809d-ac85-cfc9f5bcb61d" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Don&#x27;t allow users to set session IDs</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-801b-8a1a-d53a483b3610" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Validate session creation</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-80ef-ba48-dcec496c871d"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80a5-96ca-e1470badedcc" class=""><strong>Secure Session Configuration</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8062-8612-c9268f14fe18" class=""><strong>Node.js/Express</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-807c-8eea-eb85275e0e67" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">app.use(session({
+  name: &#x27;sessionId&#x27;,
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,      // Prevents XSS
+    secure: true,        // HTTPS only
+    sameSite: &#x27;strict&#x27;,  // CSRF protection
+    maxAge: 15 * 60 * 1000  // 15 minutes
+  },
+  genid: () =&gt; {
+    return crypto.randomBytes(32).toString(&#x27;hex&#x27;);  // Strong ID
+  }
+}));
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8097-b8e9-c282d119116a" class=""><strong>Session ID Regeneration</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8051-97fb-e5c9caea9e35" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// After login (CRITICAL for session fixation)
+app.post(&#x27;/login&#x27;, (req, res) =&gt; {
+  authenticateUser(req.body);
+
+  req.session.regenerate((err) =&gt; {
+    req.session.userId = user.id;
+    res.json({ message: &#x27;Login successful&#x27; });
+  });
+});
+
+// After password change
+app.post(&#x27;/change-password&#x27;, (req, res) =&gt; {
+  changePassword(req.body);
+  req.session.regenerate((err) =&gt; {
+    res.json({ message: &#x27;Password changed&#x27; });
+  });
+});
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-8024-926d-ff0b9691a5bc"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80ad-81e7-c18c10f603e4" class=""><strong>Common Mistakes</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80bd-8ed6-ec214b8c3adb" class=""><strong>❌ Wrong: No Session ID Regeneration</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8091-a498-ccc0176f371e" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ❌ Vulnerable to session fixation
+app.post(&#x27;/login&#x27;, (req, res) =&gt; {
+  authenticateUser(req.body);
+  req.session.userId = user.id;
+  // No regeneration - attacker&#x27;s session ID still works!
+});
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8043-bda1-c9682dc81a21" class=""><strong>✅ Correct: Regenerate After Login</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-807e-b918-d3d5dbbb2055" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ✅ Protected from session fixation
+app.post(&#x27;/login&#x27;, (req, res) =&gt; {
+  authenticateUser(req.body);
+  req.session.regenerate((err) =&gt; {
+    req.session.userId = user.id;
+  });
+});
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8031-8206-ee2d9f240f34" class=""><strong>❌ Wrong: Accepting Session ID from URL</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8044-8b94-e183b3572b66" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ❌ Vulnerable to session fixation
+const sessionId = req.query.sessionid;  // Dangerous!
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-800d-bf86-c776b0774173" class=""><strong>✅ Correct: Only Use Cookies</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-800e-9935-ceb01b62dcae" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ✅ Secure
+const sessionId = req.cookies.sessionid;  // Only from cookies
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80df-9d7b-ff4dcdb0e6dc" class=""><strong>❌ Wrong: No HttpOnly Flag</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80a2-a233-f3658a763758" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ❌ Vulnerable to XSS
+Set-Cookie: sessionid=abc123
+// JavaScript can access: document.cookie
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8029-8f67-eb7cf3ab86f0" class=""><strong>✅ Correct: HttpOnly Cookies</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8015-91ec-fb9fa27f7789" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ✅ Protected from XSS
+Set-Cookie: sessionid=abc123; HttpOnly; Secure
+// JavaScript cannot access
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-80f5-8d01-debe448922b7"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80e1-bb07-d2a7c7cbae8f" class=""><strong>Decision Tree</strong></h2></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80d1-8f15-f2f3a54c029c" class=""><strong>Preventing Session Hijacking?</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8047-aedd-c19ac09d87a2" class="bulleted-list"><li style="list-style-type:disc">Use HTTPS</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-804d-9c1a-f0522dedd105" class="bulleted-list"><li style="list-style-type:disc">HttpOnly cookies</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80e3-bfaf-e000aa8bb5aa" class="bulleted-list"><li style="list-style-type:disc">Secure cookies</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-800e-888a-d3192b0ae23a" class="bulleted-list"><li style="list-style-type:disc">Strong session IDs</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-808e-8403-ffb0c050dbb3" class="bulleted-list"><li style="list-style-type:disc">Short expiration</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-802c-9b2e-f456fb2725bb" class=""><strong>Preventing Session Fixation?</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8094-af88-c2c695e76c1d" class="bulleted-list"><li style="list-style-type:disc">Regenerate session ID after login</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a8-87d0-ee5ab6977d41" class="bulleted-list"><li style="list-style-type:disc">Don&#x27;t accept session IDs from URL</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8055-8f3c-f3dae3d50372" class="bulleted-list"><li style="list-style-type:disc">Regenerate after security events</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80b3-95ec-f447d711cd0e" class=""><strong>Complete Protection?</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-809e-8a8d-ea3c1f1fac4a" class="bulleted-list"><li style="list-style-type:disc">All of the above</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8003-b7f8-dd4c17fdba1a" class="bulleted-list"><li style="list-style-type:disc">Defense-in-depth approach</li></ul></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-8005-8dc9-f98a7ec44c90"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-801f-af22-e7a3a95a83fa" class=""><strong>Key Takeaways</strong></h2></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8000-b2ec-ec8020c40153" class="numbered-list" start="1"><li><strong>Session Hijacking</strong> = Stealing existing active session</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-802e-bf0f-d397c732c591" class="numbered-list" start="2"><li><strong>Session Fixation</strong> = Forcing user to use predetermined session ID</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8069-a106-f5f2680650b2" class="numbered-list" start="3"><li><strong>HTTPS alone is not enough</strong> - need multiple layers</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80ca-9900-f060581c5795" class="numbered-list" start="4"><li><strong>Regenerate session ID</strong> after login (critical for fixation)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80f1-89ef-c7291e197b55" class="numbered-list" start="5"><li><strong>HttpOnly cookies</strong> prevent XSS-based hijacking</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80ca-9bc7-c2b21efa6621" class="numbered-list" start="6"><li><strong>Strong session IDs</strong> prevent prediction attacks</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-808d-9cac-dbf34d7473fd" class="numbered-list" start="7"><li><strong>Short expiration</strong> reduces attack window</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8080-bae3-d3e5d8c01524" class="numbered-list" start="8"><li><strong>Defense-in-depth</strong> approach is essential</li></ol></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-80df-8b04-ee7bd78d5d7f"/></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80ca-8135-df88af11bc2d" class=""><strong>Remember: Session security requires multiple layers of protection. No single mitigation is sufficient!</strong></p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8068-850c-c4d8b1a9bb7b" class="">
+</p></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

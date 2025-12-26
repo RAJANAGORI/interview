@@ -1,0 +1,740 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>MITM (Man-in-the-Middle) Attack - Comprehensive Guide</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2d5562ad-76f0-8000-8659-f61fabf23b7c" class="page mono"><header><h1 class="page-title" dir="auto"><strong>MITM (Man-in-the-Middle) Attack - Comprehensive Guide</strong></h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="ltr"><nav id="2d5562ad-76f0-8026-ac49-c89b2e81f251" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80c5-8e0a-f7b10071aa58"><strong>Introduction</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8075-a316-e13016e8fbde"><strong>What MITM Attacks are Used For</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8080-af13-c71bd1936ca8"><strong>What is MITM Attack</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-805e-a74a-f1029b1122e9"><strong>Basic Example</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-803d-b917-c2f8c552bf67"><strong>How MITM Attacks Work</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-801c-908f-ec1fda02b084"><strong>Attack Flow</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80a5-96a2-dc87b45c3e8f"><strong>Types of MITM Attacks</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-808c-b9f9-f8b815c5fcb9"><strong>1. Network-Level MITM</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8044-9a2d-c867aeb892f4"><strong>2. Application-Level MITM</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80a1-b06a-dd4d29f89b76"><strong>3. Browser-Level MITM (Man-in-the-Browser)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-809e-b4f9-c5848b1295dd"><strong>Attack Techniques</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80cd-91dd-dcb618c2a766"><strong>1. ARP Spoofing</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-807c-9469-d6961330693d"><strong>2. DNS Spoofing</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8059-afc4-e6fd5f267aca"><strong>3. SSL/TLS Stripping</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80fe-849a-c3cac5b944eb"><strong>4. Certificate Spoofing</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8060-b1e4-f6374077e70d"><strong>5. Rogue Access Points</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80d4-a438-d23bddef0a76"><strong>Impact of MITM Attacks</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8004-b334-c85c81bed4ae"><strong>1. Credential Theft</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8065-9f81-f07ff313dca9"><strong>2. Data Interception</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-804f-aaf3-c525ad8e3c9c"><strong>3. Session Hijacking</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80a7-8619-cbf836b4285e"><strong>4. Data Manipulation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8071-aac1-ce743c313809"><strong>Mitigation Strategies</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80ed-a714-f51bd6384829"><strong>1. HTTPS/TLS (Primary Defense)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-805d-b5db-d704ee40ed0c"><strong>2. Certificate Pinning</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8080-9220-f5353aa70e10"><strong>3. HSTS (HTTP Strict Transport Security)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8032-9e5d-f914b7b8db63"><strong>4. DNSSEC</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80dc-82f8-f6bc78739110"><strong>5. VPN Usage</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8045-ad5d-d35df0a260ad"><strong>Best Practices</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-804f-b461-e25a6edf048d"><strong>1. Always Use HTTPS</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80bd-93f6-f72a8d46d089"><strong>2. Implement Certificate Pinning</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-805d-93eb-ec92e0deef9e"><strong>3. Educate Users</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-802c-9e2a-db5a45d54841"><strong>4. Network Security</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8046-b940-d3182ad7328d"><strong>Advanced Exploitation Techniques</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-805e-b4f5-fb74562d1dea"><strong>1. BGP Hijacking</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8053-a673-f425b97559f3"><strong>2. IMSI Catchers (Stingrays)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8029-a479-df5d724fe016"><strong>3. SSL/TLS Protocol Vulnerabilities</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8050-97bd-dd75f22054a2"><strong>Penetration Testing Methodology</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8033-9da7-ee6469dc30f5"><strong>MITM Testing Checklist</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8041-956c-c187aa92172d"><strong>Threat Modeling (STRIDE Framework)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8035-aee1-d8e679725b4e"><strong>Spoofing</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8066-a09c-f2a80d7e63b1"><strong>Tampering</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8091-971f-f9a305274d56"><strong>Information Disclosure</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80eb-82fd-c28c5c8a69ee"><strong>Real-World Case Studies</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-805d-be67-cd6b186f6848"><strong>Case Study 1: Public Wi-Fi MITM</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8075-91b0-f1a0d9c278a3"><strong>Advanced Mitigations</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80aa-ae3b-fb5e5c3bc44c"><strong>Defense in Depth Strategy</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-809f-a315-de20773f740c"><strong>SAST/DAST Detection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8046-bda6-f5d020835c95"><strong>SAST (Static Application Security Testing)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-802c-9bba-ddab8cfe4341"><strong>DAST (Dynamic Application Security Testing)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8095-bccc-c667e096daea"><strong>Risk Assessment</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8095-9246-ecbe1f4e1825"><strong>Risk Matrix</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8038-9628-d8b4488cf0c6"><strong>Summary</strong></a></div></nav></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-802e-bc6b-f27f066116b6"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80c5-8e0a-f7b10071aa58" class=""><strong>Introduction</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-801f-bec9-df5046c43674" class="">MITM (Man-in-the-Middle) attack occurs when an attacker secretly intercepts, relays, or alters communication between two parties without their knowledge. It&#x27;s a critical security threat affecting network communications.</p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8075-a316-e13016e8fbde" class=""><strong>What MITM Attacks are Used For</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80bd-a682-ed64e74ebc8f" class="">Attackers use MITM to:</p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8054-b3ac-ffbeaa454abe" class="bulleted-list"><li style="list-style-type:disc"><strong>Steal credentials</strong> (usernames, passwords)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a1-8f9a-d206a7df5a6c" class="bulleted-list"><li style="list-style-type:disc"><strong>Intercept sensitive data</strong> (credit cards, personal information)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8092-87c2-f5a98f79c1c3" class="bulleted-list"><li style="list-style-type:disc"><strong>Modify communications</strong> (alter messages, inject content)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c8-b00d-c9c4dcb7df04" class="bulleted-list"><li style="list-style-type:disc"><strong>Session hijacking</strong> (steal session tokens)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-806f-a9b0-f0a5ddf3940f" class="bulleted-list"><li style="list-style-type:disc"><strong>Eavesdrop</strong> on private conversations</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80db-91bb-feaef1f0517f" class="bulleted-list"><li style="list-style-type:disc"><strong>Perform phishing</strong> attacks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fb-9692-f3c34d78f52a" class="bulleted-list"><li style="list-style-type:disc"><strong>Bypass authentication</strong> mechanisms</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-803e-93ac-dd31c2994206"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8080-af13-c71bd1936ca8" class=""><strong>What is MITM Attack</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80a5-b4a5-c08d8b17ddf4" class="">MITM (Man-in-the-Middle) attack is when an attacker positions themselves between two communicating parties and intercepts, relays, or alters their communication without either party knowing.</p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-805e-a74a-f1029b1122e9" class=""><strong>Basic Example</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803f-88f8-ff3f001b3333" class=""><strong>Normal Communication:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8079-8003-c77638d0d5b4" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">User &lt;---&gt; Server
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d3-b75e-d8c56a21f05e" class=""><strong>MITM Attack:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80c8-ac75-eff1418c3b7f" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">User &lt;---&gt; Attacker &lt;---&gt; Server
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8009-9e43-d6ca9e04846d" class=""><strong>How It Works:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8028-b3c9-c0bc3ccaedfa" class="numbered-list" start="1"><li>Attacker intercepts communication</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8082-890b-cc9973402643" class="numbered-list" start="2"><li>Attacker relays messages between parties</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-803c-a09f-e76dbb723f5a" class="numbered-list" start="3"><li>Attacker can read, modify, or inject data</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8094-9e0b-c4c190c51b84" class="numbered-list" start="4"><li>Neither party detects the attacker</li></ol></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80f1-aaf5-f73cc14a50ed"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-803d-b917-c2f8c552bf67" class=""><strong>How MITM Attacks Work</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-801c-908f-ec1fda02b084" class=""><strong>Attack Flow</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c2-bd7b-f8e0084934ba" class=""><strong>1. Interception:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-808c-a38c-faed94ccd160" class="bulleted-list"><li style="list-style-type:disc">Attacker positions themselves between client and server</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801c-a1e2-fef2f8423bb2" class="bulleted-list"><li style="list-style-type:disc">Intercepts all communication</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8071-9e20-c6ff3a037993" class=""><strong>2. Relay:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b8-87b5-df7725667816" class="bulleted-list"><li style="list-style-type:disc">Attacker forwards messages between parties</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8074-b164-ec1754afeaeb" class="bulleted-list"><li style="list-style-type:disc">Appears as normal communication</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-800f-a0c1-f24816d10e61" class=""><strong>3. Manipulation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8099-827c-d321d6ea8511" class="bulleted-list"><li style="list-style-type:disc">Attacker can read all data</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8052-860c-c6dd557e433c" class="bulleted-list"><li style="list-style-type:disc">Attacker can modify messages</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8029-b9ec-d31bb01791a5" class="bulleted-list"><li style="list-style-type:disc">Attacker can inject content</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c4-b485-e16e55050b33" class=""><strong>4. Detection Avoidance:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-809a-a5c1-c95d0ccce501" class="bulleted-list"><li style="list-style-type:disc">Attack is transparent to both parties</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8033-bd10-e64cad8dd0c8" class="bulleted-list"><li style="list-style-type:disc">Communication appears normal</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8014-9041-c75c186139e1"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80a5-96a2-dc87b45c3e8f" class=""><strong>Types of MITM Attacks</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-808c-b9f9-f8b815c5fcb9" class=""><strong>1. Network-Level MITM</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80f5-8dee-dd1264bfb7f1" class=""><strong>Description:</strong> Attacker intercepts traffic at network layer (routing, switching).</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d7-a681-d3634f7754fc" class=""><strong>Techniques:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8043-88a7-c3e70924f884" class="bulleted-list"><li style="list-style-type:disc">ARP spoofing</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-800d-8180-d10819ae4363" class="bulleted-list"><li style="list-style-type:disc">DNS spoofing</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f9-ac59-f4cae63151a9" class="bulleted-list"><li style="list-style-type:disc">BGP hijacking</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-800e-bf13-d706679c2803" class="bulleted-list"><li style="list-style-type:disc">Rogue access points</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80ee-90d6-deafd2d0d8e5"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8044-9a2d-c867aeb892f4" class=""><strong>2. Application-Level MITM</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8047-8f06-ffc2e8940518" class=""><strong>Description:</strong> Attacker intercepts traffic at application layer.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ae-b340-fdba8eaabf50" class=""><strong>Techniques:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8029-9b98-c3f2d822ce1a" class="bulleted-list"><li style="list-style-type:disc">HTTPS interception with fake certificates</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8035-b7ac-e6d8fd61b456" class="bulleted-list"><li style="list-style-type:disc">Proxy attacks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-803c-971f-dc44b98627ef" class="bulleted-list"><li style="list-style-type:disc">SSL/TLS stripping</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80bc-b87a-f8284540e197"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80a1-b06a-dd4d29f89b76" class=""><strong>3. Browser-Level MITM (Man-in-the-Browser)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c7-bf0d-c4a3a2d2d549" class=""><strong>Description:</strong> Malware in browser intercepts traffic before encryption.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80a9-9aba-cf6aa322e26f" class=""><strong>Techniques:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802a-8188-f23734cf72e1" class="bulleted-list"><li style="list-style-type:disc">Browser extensions</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-807d-abb3-e32fbe4d22b3" class="bulleted-list"><li style="list-style-type:disc">Malicious plugins</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a8-a2b6-f5a83c88be41" class="bulleted-list"><li style="list-style-type:disc">Keyloggers</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8098-aa24-e364222e9f50" class="bulleted-list"><li style="list-style-type:disc">Session hijackers</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8082-acf7-fbb7fb839410"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-809e-b4f9-c5848b1295dd" class=""><strong>Attack Techniques</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80cd-91dd-dcb618c2a766" class=""><strong>1. ARP Spoofing</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8043-af9a-f7fe355f255d" class=""><strong>Technique:</strong> Attacker sends fake ARP messages associating their MAC address with target&#x27;s IP.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-809c-a877-d73a2bef4c62" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80eb-85cc-cfffc721a4a8" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all"># Attacker sends ARP response
+&quot;I am 192.168.1.1, my MAC is AA:BB:CC:DD:EE:FF&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8010-b572-f0ed46760e91" class=""><strong>Result:</strong> Traffic to gateway routed through attacker</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80c1-bb76-dd1e4109bbdd"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-807c-9469-d6961330693d" class=""><strong>2. DNS Spoofing</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b4-8ecc-db070cda88c1" class=""><strong>Technique:</strong> Attacker provides false DNS responses redirecting users to malicious servers.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-802d-97d6-fd174b9ae832" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8060-b658-ee474377a36e" class="code code-wrap"><code class="language-Bash" style="white-space:pre-wrap;word-break:break-all"># Legitimate DNS response
+bank.com -&gt; 192.168.1.100
+
+# Spoofed DNS response
+bank.com -&gt; 192.168.1.200 (attacker&#x27;s server)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-806f-84cf-f59481c44ab8" class=""><strong>Result:</strong> Users redirected to attacker&#x27;s server</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8035-a7b6-cf5746c962af"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8059-afc4-e6fd5f267aca" class=""><strong>3. SSL/TLS Stripping</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80dc-8e9f-f54b0209f736" class=""><strong>Technique:</strong> Attacker downgrades HTTPS to HTTP.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e8-ad05-c3fdd6bf6fe1" class=""><strong>How It Works:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-807c-9639-ea19bb870d49" class="numbered-list" start="1"><li>Attacker intercepts HTTPS request</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80f2-9986-c120315506ca" class="numbered-list" start="2"><li>Attacker makes HTTP request to server</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80e3-8292-dd5c007f125c" class="numbered-list" start="3"><li>Attacker forwards response as HTTP</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8056-9e1e-e4b3f61563b9" class="numbered-list" start="4"><li>User thinks they&#x27;re using HTTPS but traffic is unencrypted</li></ol></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8032-a6e6-cd08c91f384d"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80fe-849a-c3cac5b944eb" class=""><strong>4. Certificate Spoofing</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-807d-90e0-d1d3f61cf529" class=""><strong>Technique:</strong> Attacker creates fake SSL/TLS certificate.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8037-8dbe-ed6a6168ef36" class=""><strong>How It Works:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8023-b670-e0088c620b59" class="numbered-list" start="1"><li>Attacker generates self-signed certificate</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80e9-b8c3-ff50fb54c71b" class="numbered-list" start="2"><li>User accepts certificate warning</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-805c-952e-ea9cadb133dc" class="numbered-list" start="3"><li>Attacker can decrypt HTTPS traffic</li></ol></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8037-ad64-fb2044e95acc"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8060-b1e4-f6374077e70d" class=""><strong>5. Rogue Access Points</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-807d-abb8-e31022e7f4a8" class=""><strong>Technique:</strong> Attacker creates fake Wi-Fi access point.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8091-90ea-c0663a847bd1" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801f-933c-eb97b4b06b7e" class="bulleted-list"><li style="list-style-type:disc">Legitimate: &quot;CoffeeShop-WiFi&quot;</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-809d-be94-c18321dd44d7" class="bulleted-list"><li style="list-style-type:disc">Rogue: &quot;CoffeeShop-WiFi-Free&quot;</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8067-96c4-cf99dac911b8" class=""><strong>Result:</strong> Users connect to attacker&#x27;s network</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8093-9e14-f3312e1a7cc2"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80d4-a438-d23bddef0a76" class=""><strong>Impact of MITM Attacks</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8004-b334-c85c81bed4ae" class=""><strong>1. Credential Theft</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8074-8771-daea18b56297" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d5-9bf4-cf6c6ed2f07d" class="bulleted-list"><li style="list-style-type:disc">Username/password theft</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80cd-b11d-e00e06dedc4d" class="bulleted-list"><li style="list-style-type:disc">Session token theft</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ee-8647-c53e78684ebe" class="bulleted-list"><li style="list-style-type:disc">Authentication bypass</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8005-a57a-eb196397e0b4" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8092-97db-f3a623aab9ea" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Attacker intercepts login request
+POST /login
+username=admin&amp;password=secret123
+
+# Attacker steals credentials
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80c4-9369-c5fef51ed9f5"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8065-9f81-f07ff313dca9" class=""><strong>2. Data Interception</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80cf-a712-e217cdb8f436" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8093-bb35-f8dffb7d6bd6" class="bulleted-list"><li style="list-style-type:disc">Sensitive data exposure</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8083-9bbb-d263ee46e9a0" class="bulleted-list"><li style="list-style-type:disc">Personal information theft</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802d-8ea2-cfd1baafe404" class="bulleted-list"><li style="list-style-type:disc">Financial data compromise</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8023-9973-cc097e3342a8"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-804f-aaf3-c525ad8e3c9c" class=""><strong>3. Session Hijacking</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8059-a6e5-f435bb00b11f" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-800e-af0e-f96cbb784c5b" class="bulleted-list"><li style="list-style-type:disc">Unauthorized access to user sessions</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-800f-a0e8-e9af68ff16ba" class="bulleted-list"><li style="list-style-type:disc">Impersonation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8074-910e-c3bdfe98165b" class="bulleted-list"><li style="list-style-type:disc">Privilege escalation</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8019-ad12-c2b66b0a223a"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80a7-8619-cbf836b4285e" class=""><strong>4. Data Manipulation</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-805b-ab9a-c27dbf862e28" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80eb-a93c-ee3e0fa3ab4d" class="bulleted-list"><li style="list-style-type:disc">Modified communications</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ef-9e71-e582edbe00c3" class="bulleted-list"><li style="list-style-type:disc">Injected malicious content</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a9-8710-d9230cedf5b5" class="bulleted-list"><li style="list-style-type:disc">Altered transactions</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80fc-bb19-dbf604d0a9f7"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8071-aac1-ce743c313809" class=""><strong>Mitigation Strategies</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80ed-a714-f51bd6384829" class=""><strong>1. HTTPS/TLS (Primary Defense)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8085-bfad-eece7430cd41" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8045-a326-c3048cae1d94" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Use HTTPS for all communications
+https://example.com/api
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8081-a3d5-e780d51b3a71" class=""><strong>Benefits:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8039-b10d-da30c3033d11" class="bulleted-list"><li style="list-style-type:disc">Encrypts traffic</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8007-ae91-d72dc8827966" class="bulleted-list"><li style="list-style-type:disc">Prevents passive interception</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8056-9bbf-efaa15031ce7" class="bulleted-list"><li style="list-style-type:disc">Certificate validation</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8025-baac-e68683e75cf2" class=""><strong>Limitations:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fd-9a41-e52450be020f" class="bulleted-list"><li style="list-style-type:disc">Doesn&#x27;t prevent certificate spoofing</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-806e-89d6-c971a204b113" class="bulleted-list"><li style="list-style-type:disc">Doesn&#x27;t prevent MITB attacks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8050-ab91-d9b74a2216e4" class="bulleted-list"><li style="list-style-type:disc">Requires proper certificate validation</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-805d-bafa-d801980dc2ee"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-805d-b5db-d704ee40ed0c" class=""><strong>2. Certificate Pinning</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80f8-bdec-c93b56e83a1e" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80ee-bc05-feac62a8c2be" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># Pin certificate in application
+certificate_pin = &quot;sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80db-b95c-c35e8be56f03" class=""><strong>Benefits:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a1-9c63-de8b8201cc65" class="bulleted-list"><li style="list-style-type:disc">Prevents certificate spoofing</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8002-86d7-d87ba84a0250" class="bulleted-list"><li style="list-style-type:disc">Only trusts specific certificate</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-805a-9795-f721ad4cd451" class="bulleted-list"><li style="list-style-type:disc">Hard to bypass</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80ff-8f17-c59dacb31daa"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8080-9220-f5353aa70e10" class=""><strong>3. HSTS (HTTP Strict Transport Security)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80fa-992e-de586837e30e" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8089-ae9a-d30b16a40ac8" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Strict-Transport-Security: max-age=31536000; includeSubDomains
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-809f-a799-e91dbb54ef4f" class=""><strong>Benefits:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8033-a95f-c47e646ed082" class="bulleted-list"><li style="list-style-type:disc">Forces HTTPS connections</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b1-a977-c8a595009727" class="bulleted-list"><li style="list-style-type:disc">Prevents SSL/TLS stripping</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8005-947f-df52c0e1f702" class="bulleted-list"><li style="list-style-type:disc">Protects against downgrade attacks</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80d9-8947-d1abc6c1c7d1"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8032-9e5d-f914b7b8db63" class=""><strong>4. DNSSEC</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-802a-84fe-d3848daf1cf2" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8006-b97d-c5a2e3b217ef" class="bulleted-list"><li style="list-style-type:disc">Validates DNS responses</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e9-a663-c087afc6ba3a" class="bulleted-list"><li style="list-style-type:disc">Prevents DNS spoofing</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-806f-9940-e2b58da4070a" class="bulleted-list"><li style="list-style-type:disc">Ensures DNS integrity</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-801d-95da-de4cd3441718"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80dc-82f8-f6bc78739110" class=""><strong>5. VPN Usage</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-801c-b947-dbf4dead2492" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b8-b514-f9d855c3d2cb" class="bulleted-list"><li style="list-style-type:disc">Encrypts all traffic</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8003-9e94-cca6333409a8" class="bulleted-list"><li style="list-style-type:disc">Protects against local MITM</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fc-9365-c155ece648e7" class="bulleted-list"><li style="list-style-type:disc">Hides traffic from ISP</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-802f-b2bf-db04cc0dae7d" class=""><strong>Limitations:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-806c-8e7b-cfd12db21fb1" class="bulleted-list"><li style="list-style-type:disc">Doesn&#x27;t prevent MITB attacks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-807b-bf73-eb955e493e2f" class="bulleted-list"><li style="list-style-type:disc">VPN provider could perform MITM</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802d-8a76-d5bca308ee99" class="bulleted-list"><li style="list-style-type:disc">Connection itself can be attacked</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80d9-b5ec-c9e61ff270e5"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8045-ad5d-d35df0a260ad" class=""><strong>Best Practices</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-804f-b461-e25a6edf048d" class=""><strong>1. Always Use HTTPS</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80a3-bb61-da50c3586b3e" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b5-90b0-d63724faa68a" class="bulleted-list"><li style="list-style-type:disc">Use HTTPS for all communications</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8064-9339-d001018d64df" class="bulleted-list"><li style="list-style-type:disc">Validate certificates</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8087-8996-c91b9b637d4a" class="bulleted-list"><li style="list-style-type:disc">Use HSTS</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80eb-acb5-daa571ad590a"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80bd-93f6-f72a8d46d089" class=""><strong>2. Implement Certificate Pinning</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8042-a9ae-d4cc2c5b72e0" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8092-ab39-efc36f25bd84" class="bulleted-list"><li style="list-style-type:disc">Pin certificates in applications</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-803f-8149-f113e491cb65" class="bulleted-list"><li style="list-style-type:disc">Validate certificate chains</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f1-a761-c2c831950038" class="bulleted-list"><li style="list-style-type:disc">Monitor certificate changes</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8066-967b-db69c372d304"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-805d-93eb-ec92e0deef9e" class=""><strong>3. Educate Users</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-801c-abf4-e156bc2eb285" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ac-b95e-eb281b97bde1" class="bulleted-list"><li style="list-style-type:disc">Teach users about certificate warnings</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8061-afd8-e3231c163568" class="bulleted-list"><li style="list-style-type:disc">Explain MITM risks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-807d-b930-fa3567c73df1" class="bulleted-list"><li style="list-style-type:disc">Provide security guidelines</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-807c-b1dd-c7ef41bd7eaa"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-802c-9e2a-db5a45d54841" class=""><strong>4. Network Security</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-801d-a9c5-e4f0779aa2bf" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8011-bb2f-e071f5d27149" class="bulleted-list"><li style="list-style-type:disc">Use secure networks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801b-843a-d395d630e6bc" class="bulleted-list"><li style="list-style-type:disc">Avoid public Wi-Fi for sensitive operations</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-809c-918f-cb4598ad3b91" class="bulleted-list"><li style="list-style-type:disc">Use VPNs on untrusted networks</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8088-9396-f9518679091d"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8046-b940-d3182ad7328d" class=""><strong>Advanced Exploitation Techniques</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-805e-b4f5-fb74562d1dea" class=""><strong>1. BGP Hijacking</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80db-b222-d45743cb1b24" class=""><strong>Technique:</strong> Attacker announces false BGP routes redirecting traffic.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8011-93dd-e2a1c0a3cec8" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e7-bf8f-fd510b97bf19" class="bulleted-list"><li style="list-style-type:disc">Internet-wide traffic redirection</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8001-85a5-f3c775c5f976" class="bulleted-list"><li style="list-style-type:disc">Large-scale MITM attacks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8017-a21c-f1a99360cfc0" class="bulleted-list"><li style="list-style-type:disc">Difficult to detect</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8047-b30d-c2ed11578780"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8053-a673-f425b97559f3" class=""><strong>2. IMSI Catchers (Stingrays)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80bc-a80f-e9e54aacc5cb" class=""><strong>Technique:</strong> Attacker uses fake cell tower to intercept mobile communications.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-801b-a2f2-e9d1e28d7d72" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e8-a0c0-c2fb4dbe6b46" class="bulleted-list"><li style="list-style-type:disc">Intercept phone calls</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-803a-b26c-c27cbb0a5714" class="bulleted-list"><li style="list-style-type:disc">Intercept SMS messages</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d9-9f92-edf05147d16e" class="bulleted-list"><li style="list-style-type:disc">Location tracking</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80c0-a09d-f4b67f18318f"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8029-a479-df5d724fe016" class=""><strong>3. SSL/TLS Protocol Vulnerabilities</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-808e-9f17-ee1981349546" class=""><strong>Techniques:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-800b-86d1-e4d4557df77a" class="bulleted-list"><li style="list-style-type:disc">Exploit SSL/TLS implementation bugs</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-808e-aff5-d63c8c06adc4" class="bulleted-list"><li style="list-style-type:disc">Use vulnerable cipher suites</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80bd-b152-ead45a4a125a" class="bulleted-list"><li style="list-style-type:disc">Downgrade attacks</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8094-a77b-e46fa89362c3"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8050-97bd-dd75f22054a2" class=""><strong>Penetration Testing Methodology</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8033-9da7-ee6469dc30f5" class=""><strong>MITM Testing Checklist</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-807f-82f0-dd778e3a94a5" class=""><strong>1. Network Analysis:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8035-b363-c63331f446ca" class="bulleted-list"><li style="list-style-type:disc">Identify network topology</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ce-8965-fde51bb86745" class="bulleted-list"><li style="list-style-type:disc">Map communication paths</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8058-b9c0-d773f814ff6e" class="bulleted-list"><li style="list-style-type:disc">Identify vulnerable protocols</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8017-a638-eb2bd0584586" class=""><strong>2. Test Interception:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80bf-98b8-c978aa59375b" class="bulleted-list"><li style="list-style-type:disc">ARP spoofing tests</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e0-acd1-eba7aed4790e" class="bulleted-list"><li style="list-style-type:disc">DNS spoofing tests</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8004-bb06-d400a6df655a" class="bulleted-list"><li style="list-style-type:disc">SSL/TLS stripping tests</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-800b-84af-da30b882a213" class=""><strong>3. Certificate Validation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-809f-9b33-db7a4a28f4e8" class="bulleted-list"><li style="list-style-type:disc">Test certificate validation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8053-9180-d3056aaec84e" class="bulleted-list"><li style="list-style-type:disc">Test certificate pinning</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8056-b1cf-db21b6fc239a" class="bulleted-list"><li style="list-style-type:disc">Test HSTS implementation</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8014-a0c0-d419a113ba50" class=""><strong>4. Traffic Analysis:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d2-a899-c844ce302a0c" class="bulleted-list"><li style="list-style-type:disc">Monitor network traffic</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8077-9607-d68ffb951dea" class="bulleted-list"><li style="list-style-type:disc">Analyze encryption</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e2-8ed8-e05a6836f9e1" class="bulleted-list"><li style="list-style-type:disc">Check for plaintext data</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80f3-ad73-e438f3251793"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8041-956c-c187aa92172d" class=""><strong>Threat Modeling (STRIDE Framework)</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8035-aee1-d8e679725b4e" class=""><strong>Spoofing</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-808d-ad15-f1658ce6687b" class=""><strong>Threat:</strong> Attacker spoofs legitimate server via MITM.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8096-a5b6-fe9b887b735e" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8038-bebf-e0cdc354cd1a" class="bulleted-list"><li style="list-style-type:disc">Certificate validation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-804f-bcbc-c72fa38aa43a" class="bulleted-list"><li style="list-style-type:disc">Certificate pinning</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8095-b456-e2dcf0ed8a5b" class="bulleted-list"><li style="list-style-type:disc">DNSSEC</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ca-94ee-f575df80779b" class=""><strong>Risk Rating:</strong> Critical</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8090-9a1d-f5454c4bea00"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8066-a09c-f2a80d7e63b1" class=""><strong>Tampering</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-800f-a478-e04e82e87de6" class=""><strong>Threat:</strong> Attacker modifies communications via MITM.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8050-9f98-d645ea950f59" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-800e-a565-f168288d51f1" class="bulleted-list"><li style="list-style-type:disc">HTTPS/TLS encryption</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ed-928c-ff89948199bf" class="bulleted-list"><li style="list-style-type:disc">Message authentication</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a0-a41c-f5bb7ef56a9a" class="bulleted-list"><li style="list-style-type:disc">Integrity checks</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8055-8f02-e1a6dc5d8133" class=""><strong>Risk Rating:</strong> Critical</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8097-a6a0-f93106b9b97c"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8091-971f-f9a305274d56" class=""><strong>Information Disclosure</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8086-b2a7-d22a578ed9a3" class=""><strong>Threat:</strong> Attacker intercepts sensitive data via MITM.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ec-91ab-f8fd871730e8" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d4-95f1-d67099c43567" class="bulleted-list"><li style="list-style-type:disc">Encryption (HTTPS/TLS)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8095-bd20-c232d5e16f2a" class="bulleted-list"><li style="list-style-type:disc">Certificate validation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fa-a545-d24af2f2dac0" class="bulleted-list"><li style="list-style-type:disc">Secure channels</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8046-8eab-f8b8c4422431" class=""><strong>Risk Rating:</strong> Critical</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8074-ba94-dd502315e184"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80eb-82fd-c28c5c8a69ee" class=""><strong>Real-World Case Studies</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-805d-be67-cd6b186f6848" class=""><strong>Case Study 1: Public Wi-Fi MITM</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-809b-b5e8-e1a493e409ad" class=""><strong>Background:</strong> Attacker set up rogue access point in coffee shop.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-801e-a7d2-e904f1663e2e" class=""><strong>Attack:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-807a-8501-cb69fdf285d2" class="numbered-list" start="1"><li>Attacker creates &quot;FreeWiFi&quot; access point</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80b3-9af9-dc878a9cae8e" class="numbered-list" start="2"><li>Users connect to rogue AP</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80b8-b70d-c31ad6fac476" class="numbered-list" start="3"><li>Attacker intercepts all traffic</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-802d-849b-d73577f10de1" class="numbered-list" start="4"><li>Attacker steals credentials</li></ol></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-807a-a264-e7a1444a9be7" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e1-864b-f65e29a7261c" class="bulleted-list"><li style="list-style-type:disc">Multiple user accounts compromised</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802f-a3da-e4e76328a1e8" class="bulleted-list"><li style="list-style-type:disc">Sensitive data exposed</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fb-af01-f403ed1527de" class="bulleted-list"><li style="list-style-type:disc">Financial loss</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-805f-8391-db6b23d175f4" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b4-bd05-cb50dba354dd" class="bulleted-list"><li style="list-style-type:disc">Use VPN on public Wi-Fi</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8067-9652-c0720e9f96f4" class="bulleted-list"><li style="list-style-type:disc">Use HTTPS for all communications</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-807e-86f5-cec7b2ab8b72" class="bulleted-list"><li style="list-style-type:disc">Avoid sensitive operations on public networks</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-802f-b381-c7bd0ca726b4"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8075-91b0-f1a0d9c278a3" class=""><strong>Advanced Mitigations</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80aa-ae3b-fb5e5c3bc44c" class=""><strong>Defense in Depth Strategy</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-805d-9721-f7e8e5fef363" class=""><strong>Layer 1: HTTPS/TLS</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e2-88de-c4d7daecb30d" class="bulleted-list"><li style="list-style-type:disc">Encrypt all communications</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80cd-a9ed-ff2dbc334046" class="bulleted-list"><li style="list-style-type:disc">Validate certificates</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c9-8c8a-eb495500484c" class=""><strong>Layer 2: Certificate Pinning</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8047-8226-dfff14f2ab19" class="bulleted-list"><li style="list-style-type:disc">Pin certificates in applications</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b3-a347-fafd8e9365f3" class="bulleted-list"><li style="list-style-type:disc">Prevent certificate spoofing</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-804b-bb3c-d50b3747a258" class=""><strong>Layer 3: HSTS</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8001-99f9-d8533cf572eb" class="bulleted-list"><li style="list-style-type:disc">Force HTTPS connections</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-800e-99c7-f256d0fbec92" class="bulleted-list"><li style="list-style-type:disc">Prevent downgrade attacks</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ea-848e-e526f62df74f" class=""><strong>Layer 4: Network Security</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8008-8582-ee0ed193baed" class="bulleted-list"><li style="list-style-type:disc">Use secure networks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8045-ade4-f05836806c18" class="bulleted-list"><li style="list-style-type:disc">VPN usage</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b2-84e0-e61891ccf773" class="bulleted-list"><li style="list-style-type:disc">Network monitoring</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8019-a70b-c8ba429ff066"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-809f-a315-de20773f740c" class=""><strong>SAST/DAST Detection</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8046-bda6-f5d020835c95" class=""><strong>SAST (Static Application Security Testing)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-807b-b378-ff9fd5282061" class=""><strong>Vulnerable Code Patterns:</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8023-ba96-ca5fc5006621" class=""><strong>1. Insecure HTTP Usage:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8022-af8a-e7a175e3cbe7" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># ❌ VULNERABLE
+import urllib.request
+response = urllib.request.urlopen(&#x27;http://example.com/api&#x27;)  # HTTP, not HTTPS
+
+# SAST Detection:
+# - Pattern: HTTP URL without HTTPS
+# - Severity: High
+# - CWE: CWE-319 (Cleartext Transmission of Sensitive Information)
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-808c-9b40-c8c910b97c2e"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-802c-9bba-ddab8cfe4341" class=""><strong>DAST (Dynamic Application Security Testing)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8064-958a-d1f48106b64d" class=""><strong>Testing Methodology:</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8028-b499-e900abb68cd0" class=""><strong>1. Network Traffic Analysis:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8055-9558-ff748dc5d4b7" class="bulleted-list"><li style="list-style-type:disc">Monitor network traffic</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802a-918f-df6767b64c79" class="bulleted-list"><li style="list-style-type:disc">Check for plaintext data</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a8-8b7a-c3d831015d94" class="bulleted-list"><li style="list-style-type:disc">Verify encryption usage</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8073-9fdc-e09a4b07730e" class=""><strong>2. Certificate Validation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8066-9e90-db2791208887" class="bulleted-list"><li style="list-style-type:disc">Test certificate validation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-809f-8dd2-d242c2eea17f" class="bulleted-list"><li style="list-style-type:disc">Test certificate pinning</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-807d-b5ed-e3af437544b9" class="bulleted-list"><li style="list-style-type:disc">Test HSTS implementation</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8055-996c-d2a152e0ee56"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8095-bccc-c667e096daea" class=""><strong>Risk Assessment</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8095-9246-ecbe1f4e1825" class=""><strong>Risk Matrix</strong></h3></div><div style="display:contents" dir="ltr"><table id="2d5562ad-76f0-801d-bf31-faf915169434" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-8091-b640-f35ec7862976"><th id="|ZrO" class="simple-table-header-color simple-table-header">Vulnerability</th><th id="yoCE" class="simple-table-header-color simple-table-header">Likelihood</th><th id="N`so" class="simple-table-header-color simple-table-header">Impact</th><th id="z{qg" class="simple-table-header-color simple-table-header">Risk Level</th><th id="m~v\" class="simple-table-header-color simple-table-header">Business Impact</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-809b-a3fe-e2ae24558798"><td id="|ZrO" class=""><strong>MITM on Public Wi-Fi</strong></td><td id="yoCE" class="">High</td><td id="N`so" class="">Critical</td><td id="z{qg" class=""><strong>Critical</strong></td><td id="m~v\" class="">Complete credential compromise</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-804e-ae86-cd64b8956ad6"><td id="|ZrO" class=""><strong>MITM with Certificate Spoofing</strong></td><td id="yoCE" class="">Medium</td><td id="N`so" class="">Critical</td><td id="z{qg" class=""><strong>Critical</strong></td><td id="m~v\" class="">Encrypted traffic compromise</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-80ee-ad26-fa510b3bee1c"><td id="|ZrO" class=""><strong>MITB Attack</strong></td><td id="yoCE" class="">Medium</td><td id="N`so" class="">High</td><td id="z{qg" class=""><strong>High</strong></td><td id="m~v\" class="">Browser-level compromise</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-8093-b1db-f3a1a7930cf7"><td id="|ZrO" class=""><strong>DNS Spoofing</strong></td><td id="yoCE" class="">Medium</td><td id="N`so" class="">High</td><td id="z{qg" class=""><strong>High</strong></td><td id="m~v\" class="">Traffic redirection</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80e0-a0b0-d8fe5028d1d5"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8038-9628-d8b4488cf0c6" class=""><strong>Summary</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8088-976e-c3a1fd13c8b0" class="">MITM attacks are critical security threats. Key points:</p></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8040-8531-d061a4489541" class="numbered-list" start="1"><li><strong>Always use HTTPS/TLS</strong> - Primary defense</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80b0-901e-d576ec50935b" class="numbered-list" start="2"><li><strong>Implement certificate pinning</strong> - Prevent certificate spoofing</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80b3-96d5-cb11603388bd" class="numbered-list" start="3"><li><strong>Use HSTS</strong> - Force HTTPS, prevent downgrades</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80b2-85de-cd808cfeecb9" class="numbered-list" start="4"><li><strong>Validate certificates</strong> - Don&#x27;t accept invalid certificates</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80c9-95fd-dee10add1098" class="numbered-list" start="5"><li><strong>Use secure networks</strong> - VPN on untrusted networks</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8097-96b6-d33af959afd4" class="numbered-list" start="6"><li><strong>Follow defense in depth</strong> - Multiple layers of protection</li></ol></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8049-8f81-c54bcd4d3210" class="">Remember: <strong>MITM attacks can occur on any network. Use HTTPS, certificate validation, and network security measures for defense in depth!</strong></p></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

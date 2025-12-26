@@ -1,0 +1,847 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Critical Clarification: Encryption vs Hashing Misconceptions</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2cf562ad-76f0-80d6-99d3-ec1e3d55c5a7" class="page mono"><header><h1 class="page-title" dir="auto">Critical Clarification: Encryption vs Hashing Misconceptions</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="ltr"><nav id="2cf562ad-76f0-8055-8952-e8a352689d74" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80d4-8b21-c828f1b73d95"><strong>⚠️ Common Misconceptions</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8048-8ce8-d14ae91dab75"><strong>Misconception 1: &quot;Hashing is a form of encryption&quot;</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80fc-9dac-f0c3c1e1e90d"><strong>Misconception 2: &quot;Encrypted passwords are secure&quot;</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80be-a272-c6dcc5540f16"><strong>Misconception 3: &quot;Hashing can be used to protect data confidentiality&quot;</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-80db-9c46-cd6b4b2ad97b"><strong>Misconception 4: &quot;You can decrypt a hash if you have the right key&quot;</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8045-91de-daa99143a9bf"><strong>Misconception 5: &quot;MD5 and SHA-1 are secure for password hashing&quot;</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-804e-8236-deffd483e58b"><strong>Misconception 6: &quot;Encryption and hashing are interchangeable&quot;</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-804e-8ea0-d558426ee017"><strong>Misconception 7: &quot;Salted hashes can be decrypted&quot;</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80f1-b43d-cb5d36a85b95"><strong>Key Takeaways</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8044-aa47-d683c2a7e3b8"><strong>✅ Understanding:</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2cf562ad-76f0-8069-8af9-d51a91fda581"><strong>❌ Common Mistakes:</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2cf562ad-76f0-80c8-afc3-c1ce331d4a80"><strong>Summary Table</strong></a></div></nav></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80d4-8b21-c828f1b73d95" class=""><strong>⚠️ Common Misconceptions</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8048-8ce8-d14ae91dab75" class=""><strong>Misconception 1: &quot;Hashing is a form of encryption&quot;</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80ad-8d62-eaa72f3d5680" class=""><strong>Truth:</strong> Hashing and encryption are <strong>completely different</strong> cryptographic techniques that serve different purposes.</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8044-9dd3-e6358ea4f2ad" class=""><strong>What they are:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8068-90b4-edda42134da1" class="bulleted-list"><li style="list-style-type:disc"><strong>Encryption</strong>: Reversible transformation (can decrypt back to original)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8008-913c-da672238ba43" class="bulleted-list"><li style="list-style-type:disc"><strong>Hashing</strong>: One-way transformation (cannot reverse to original)</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80cd-bac5-fea6a71bd743" class=""><strong>Key Distinction:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-800f-ae37-e529f3f185a6" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Encryption: Plaintext → Ciphertext → Plaintext (reversible)
+Hashing: Input → Hash → ??? (irreversible)
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-808c-b897-d94db53d80f2" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80af-921b-e06f9ae2787e" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Encryption (reversible)
+const plaintext = &quot;Hello World&quot;;
+const ciphertext = encrypt(plaintext, key);  // &quot;xK9mP2qR...&quot;
+const decrypted = decrypt(ciphertext, key);   // &quot;Hello World&quot; ✅
+
+// Hashing (irreversible)
+const input = &quot;Hello World&quot;;
+const hash = hashFunction(input);  // &quot;b10a8db164e0754105b7a99be72e3fe5&quot;
+const original = reverseHash(hash);  // ❌ IMPOSSIBLE - cannot reverse!
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8045-b3e1-eba908b40428" class=""><strong>Why this matters:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-805b-912c-e1de01f72264" class="bulleted-list"><li style="list-style-type:disc">❌ <strong>Never use encryption for password storage</strong> (can be decrypted)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8033-ad42-ca8883ab7206" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Always use hashing for password storage</strong> (one-way, cannot reverse)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ab-b42b-e0cd9c4f9163" class="bulleted-list"><li style="list-style-type:disc">❌ <strong>Never use hashing when you need to retrieve original data</strong> (irreversible)</li></ul></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-80fc-b93f-d87165b99eeb"/></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80fc-9dac-f0c3c1e1e90d" class=""><strong>Misconception 2: &quot;Encrypted passwords are secure&quot;</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8040-9666-c13949676daa" class=""><strong>Truth:</strong> <strong>Encrypted passwords are NOT secure for password storage</strong> because encryption is reversible. If the key is compromised, all passwords can be decrypted.</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80ab-8ac7-ecb8284f1895" class=""><strong>The Problem:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80de-b4a3-df4aa1687ce3" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ❌ WRONG: Encrypting passwords
+const password = &quot;mypassword123&quot;;
+const encrypted = encrypt(password, key);  // Can be decrypted!
+
+// If attacker gets the key:
+const decrypted = decrypt(encrypted, key);  // &quot;mypassword123&quot; ✅
+// All passwords exposed!
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80fb-8049-c472d267c4c7" class=""><strong>The Solution:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80f4-8b89-c98d04d63abe" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ✅ CORRECT: Hashing passwords
+const password = &quot;mypassword123&quot;;
+const hashed = hash(password);  // &quot;5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8&quot;
+
+// Even if attacker gets the hash:
+const original = reverseHash(hashed);  // ❌ IMPOSSIBLE
+// Cannot get original password!
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80be-8ca8-ed71affe43af" class=""><strong>Why Hashing is Better for Passwords:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8006-a679-db6457d5b856" class="bulleted-list"><li style="list-style-type:disc">✅ One-way function (cannot reverse)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-802f-8748-d4202c4ef988" class="bulleted-list"><li style="list-style-type:disc">✅ Even with hash, cannot get original password</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8075-adb2-cb5b7f64b061" class="bulleted-list"><li style="list-style-type:disc">✅ Can only verify by hashing input and comparing</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80fd-b86c-f51810d61987" class="bulleted-list"><li style="list-style-type:disc">✅ Key compromise doesn&#x27;t expose passwords (no key needed)</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8098-8c97-e9e80beaa133" class=""><strong>When to Use Encryption for Passwords:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a6-a538-e0476fd876cf" class="bulleted-list"><li style="list-style-type:disc">❌ <strong>Never</strong> for password storage</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80b4-a53a-ee9e8db1b1af" class="bulleted-list"><li style="list-style-type:disc">✅ Only for password transmission (HTTPS/TLS)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80c5-b429-d95080469d31" class="bulleted-list"><li style="list-style-type:disc">✅ Only for temporary password storage (in-memory, short-lived)</li></ul></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-8051-88bf-df8dfded16d2"/></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80be-a272-c6dcc5540f16" class=""><strong>Misconception 3: &quot;Hashing can be used to protect data confidentiality&quot;</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8089-9e09-cd880dbdf5f7" class=""><strong>Truth:</strong> Hashing <strong>does NOT protect confidentiality</strong>. It&#x27;s designed for <strong>data integrity</strong>, not secrecy.</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-803d-b997-cbb229528f8d" class=""><strong>What Hashing Does:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ae-b33a-eaeb8282b533" class="bulleted-list"><li style="list-style-type:disc">✅ Verifies data hasn&#x27;t changed (integrity)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a5-9c9b-cf2aa63bfe32" class="bulleted-list"><li style="list-style-type:disc">✅ Creates unique fingerprint of data</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80fe-8d5b-c22edbe90e53" class="bulleted-list"><li style="list-style-type:disc">❌ Does NOT hide data (anyone can see the input)</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8028-bd6a-d3e8eb4c3767" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80bc-97f1-d4771ce7db5c" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Hashing does NOT hide data
+const message = &quot;Secret: 12345&quot;;
+const hash = sha256(message);  // &quot;a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3&quot;
+
+// Anyone can see the original message!
+console.log(message);  // &quot;Secret: 12345&quot; - still visible!
+
+// Hash only verifies integrity
+if (sha256(message) === hash) {
+  // Message hasn&#x27;t changed
+}
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80b3-9c66-e21230530c95" class=""><strong>For Confidentiality, Use Encryption:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80be-a788-fd5dee598b4e" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Encryption hides data
+const message = &quot;Secret: 12345&quot;;
+const encrypted = encrypt(message, key);  // &quot;xK9mP2qR...&quot; - unreadable!
+
+// Cannot see original without key
+console.log(encrypted);  // &quot;xK9mP2qR...&quot; - cannot read!
+
+// Decrypt to get original
+const decrypted = decrypt(encrypted, key);  // &quot;Secret: 12345&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80eb-a81e-c0cb25534737" class=""><strong>Key Point:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80e3-a422-d066785a7597" class="bulleted-list"><li style="list-style-type:disc"><strong>Hashing</strong> = Data integrity (verification)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8062-bcfd-fbdfef98db8a" class="bulleted-list"><li style="list-style-type:disc"><strong>Encryption</strong> = Data confidentiality (secrecy)</li></ul></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-80e7-9ae3-e9b2249ab4b9"/></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-80db-9c46-cd6b4b2ad97b" class=""><strong>Misconception 4: &quot;You can decrypt a hash if you have the right key&quot;</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8043-a78c-c0ecba2084e2" class=""><strong>Truth:</strong> <strong>Hashing does NOT use keys</strong> (in traditional sense) and <strong>cannot be reversed</strong>, even with a key.</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8077-89e4-ff95f8e14678" class=""><strong>How Hashing Works:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-803c-b91a-cdf9c6f2f978" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Hashing: Input → Hash (one-way)
+const hash = sha256(&quot;password123&quot;);
+// Result: &quot;ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f&quot;
+
+// Cannot reverse this, even with a &quot;key&quot;
+// There is no key in traditional hashing!
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8084-87d5-cdde836eb53c" class=""><strong>How Encryption Works:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80e6-9797-c9b971378e12" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Encryption: Plaintext + Key → Ciphertext (reversible)
+const ciphertext = encrypt(&quot;password123&quot;, key);
+// Result: &quot;xK9mP2qR...&quot;
+
+// Can reverse with key
+const plaintext = decrypt(ciphertext, key);  // &quot;password123&quot; ✅
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8033-8f46-f64811229c9f" class=""><strong>HMAC (Hash-based Message Authentication Code):</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80e3-8615-e1baef5783f6" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// HMAC uses a key, but it&#x27;s still one-way
+const hmac = hmac_sha256(&quot;message&quot;, secretKey);
+// Result: &quot;a1b2c3d4...&quot;
+
+// Cannot reverse HMAC to get original message
+// Key is used for authentication, not decryption
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-801e-b818-d84c6d229c30" class=""><strong>Key Difference:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ff-a0b2-ea5aaf03697d" class="bulleted-list"><li style="list-style-type:disc"><strong>Encryption key</strong>: Used to encrypt AND decrypt (reversible)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8086-8715-db520a2ca014" class="bulleted-list"><li style="list-style-type:disc"><strong>Hashing</strong>: No key (or key used for authentication, not decryption)</li></ul></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-8090-a276-f765c1c88cfa"/></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8045-91de-daa99143a9bf" class=""><strong>Misconception 5: &quot;MD5 and SHA-1 are secure for password hashing&quot;</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-804b-bf42-c96781898373" class=""><strong>Truth:</strong> MD5 and SHA-1 are <strong>NOT secure</strong> for password hashing. They&#x27;re fast hash functions designed for data integrity, not password security.</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8068-a5d6-d25b746cdadb" class=""><strong>Problems with MD5/SHA-1 for Passwords:</strong></p></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80e8-9d65-e8c5348e13ff" class="numbered-list" start="1"><li><strong>Too Fast:</strong><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a4-8edd-c7af762558b2" class="bulleted-list"><li style="list-style-type:disc">Designed for speed (data integrity checks)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8030-96a0-c1abb796c7fe" class="bulleted-list"><li style="list-style-type:disc">Easy to brute-force</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8053-8277-cd807866802f" class="bulleted-list"><li style="list-style-type:disc">Can compute billions of hashes per second</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80db-9a31-e3a08e82304b" class="numbered-list" start="2"><li><strong>Vulnerable to Attacks:</strong><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80ea-a162-d0cb18ff64df" class="bulleted-list"><li style="list-style-type:disc">MD5: Completely broken (collision attacks)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8091-a984-fa2bd6c7f3dc" class="bulleted-list"><li style="list-style-type:disc">SHA-1: Deprecated (collision attacks found)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80b2-8ecb-ca55ad5f086c" class="bulleted-list"><li style="list-style-type:disc">Rainbow tables available</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8016-812f-fd2cfe3ea3dd" class="numbered-list" start="3"><li><strong>No Salt Support:</strong><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8093-b124-ccd4011206ad" class="bulleted-list"><li style="list-style-type:disc">Same password = same hash</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-806a-b46b-c39b3165f872" class="bulleted-list"><li style="list-style-type:disc">Vulnerable to rainbow table attacks</li></ul></div></li></ol></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8045-af75-df4aecdc1330" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-808f-bf6e-f35c3e214484" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ❌ WRONG: Using MD5 for passwords
+const password = &quot;password123&quot;;
+const hash = md5(password);  // &quot;482c811da5d5b4bc6d497ffa98491e38&quot;
+
+// Attacker can:
+// 1. Use rainbow table (precomputed hashes)
+// 2. Brute force (MD5 is very fast)
+// 3. Find collision attacks
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8055-8e9f-eff11d786cc7" class=""><strong>Correct Approach:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-801b-b1db-e12d83e75f8e" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ✅ CORRECT: Use password hashing algorithms
+const password = &quot;password123&quot;;
+const salt = generateSalt();
+const hash = bcrypt(password, salt, 10);  // Slow, designed for passwords
+
+// Or use Argon2 (modern standard)
+const hash = argon2.hash(password, {
+  type: argon2.argon2id,
+  memoryCost: 65536,
+  timeCost: 3,
+  parallelism: 4
+});
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8051-aca6-caf620d92c54" class=""><strong>Secure Password Hashing Algorithms:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80a2-9cb7-f9638d2e8e45" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>bcrypt</strong> - Widely used, battle-tested</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80b3-a970-fb6dfff1a5f1" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>Argon2</strong> - Modern standard (winner of Password Hashing Competition)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-809e-87a6-d83ccd7fd7bf" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>scrypt</strong> - Memory-hard function</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80de-b55f-f3d9562688b6" class="bulleted-list"><li style="list-style-type:disc">✅ <strong>PBKDF2</strong> - Key derivation function</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8007-b4da-e3cf2b8dd599" class="bulleted-list"><li style="list-style-type:disc">❌ <strong>MD5</strong> - Never use for passwords</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80fc-98aa-e340632684f4" class="bulleted-list"><li style="list-style-type:disc">❌ <strong>SHA-1</strong> - Never use for passwords</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-803a-8ce2-c953b8ba4991" class="bulleted-list"><li style="list-style-type:disc">❌ <strong>SHA-256</strong> - Too fast, use with salt and iterations (PBKDF2)</li></ul></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-8077-ac8f-e646022ac40b"/></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-804e-8236-deffd483e58b" class=""><strong>Misconception 6: &quot;Encryption and hashing are interchangeable&quot;</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-802d-b679-f5558295db07" class=""><strong>Truth:</strong> Encryption and hashing are <strong>NOT interchangeable</strong>. They solve different problems and have different use cases.</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-800f-b6d9-ebab530c19ae" class=""><strong>When to Use Encryption:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8031-a84c-c24a8de63c80" class="bulleted-list"><li style="list-style-type:disc">✅ Protect data confidentiality (secrets, PII, credit cards)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8002-ad42-ed3db836d976" class="bulleted-list"><li style="list-style-type:disc">✅ Need to retrieve original data</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8056-bdde-f696d792fc17" class="bulleted-list"><li style="list-style-type:disc">✅ Data transmission (HTTPS/TLS)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80f6-bcac-e2a081d996ff" class="bulleted-list"><li style="list-style-type:disc">✅ Data at rest (encrypted databases)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-809a-8acf-c5dc2096a273" class="bulleted-list"><li style="list-style-type:disc">✅ Temporary data protection</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80fd-a7c4-c852c189e320" class=""><strong>When to Use Hashing:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80dc-b78b-c3cf160b3070" class="bulleted-list"><li style="list-style-type:disc">✅ Password storage (one-way, cannot reverse)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80f7-8a9a-c1fc091a5259" class="bulleted-list"><li style="list-style-type:disc">✅ Data integrity verification (file checksums)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80f8-96b1-fb410f8cf8bb" class="bulleted-list"><li style="list-style-type:disc">✅ Digital signatures (hash then sign)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80da-a6b1-f16ce59c4fea" class="bulleted-list"><li style="list-style-type:disc">✅ Deduplication (same content = same hash)</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-805d-ba18-d9c13d63c33c" class="bulleted-list"><li style="list-style-type:disc">✅ Fast data comparison</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8032-8d25-f5fc712de2c8" class=""><strong>Example Scenarios:</strong></p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-808d-ac66-c71825a5b052" class=""><strong>Scenario 1: Storing Credit Card Numbers</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-80df-bf8a-e99c824c9689" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ❌ WRONG: Hashing credit cards
+const cardNumber = &quot;1234-5678-9012-3456&quot;;
+const hash = sha256(cardNumber);
+// Cannot retrieve card number later (needed for processing)!
+
+// ✅ CORRECT: Encrypt credit cards
+const cardNumber = &quot;1234-5678-9012-3456&quot;;
+const encrypted = encrypt(cardNumber, key);
+// Can decrypt when needed for processing
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8095-aec5-d0722414071a" class=""><strong>Scenario 2: Storing Passwords</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8063-9295-f1802943aaa0" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// ❌ WRONG: Encrypting passwords
+const password = &quot;mypassword123&quot;;
+const encrypted = encrypt(password, key);
+// If key compromised, all passwords exposed!
+
+// ✅ CORRECT: Hashing passwords
+const password = &quot;mypassword123&quot;;
+const hashed = bcrypt(password);
+// Cannot reverse, even if database compromised
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-807a-8e7a-f479412cbf0a"/></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-804e-8ea0-d558426ee017" class=""><strong>Misconception 7: &quot;Salted hashes can be decrypted&quot;</strong></h3></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80e0-ae7d-fc40936439ac" class=""><strong>Truth:</strong> <strong>Salted hashes still cannot be decrypted</strong>. Salt makes hashing more secure, but it doesn&#x27;t make it reversible.</p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8005-b608-f581bd030a8b" class=""><strong>What Salt Does:</strong></p></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8016-88ff-dfaa05e10a01" class="bulleted-list"><li style="list-style-type:disc">✅ Prevents rainbow table attacks</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-8019-baa3-f62922a5d33a" class="bulleted-list"><li style="list-style-type:disc">✅ Makes same password produce different hashes</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80bf-9a90-ebb9aa13117c" class="bulleted-list"><li style="list-style-type:disc">✅ Adds randomness to hashing process</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80aa-95f2-c4d3fb441b5f" class="bulleted-list"><li style="list-style-type:disc">❌ Does NOT make hashing reversible</li></ul></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80f0-86bd-c31bbb6876c0" class=""><strong>Example:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-8041-9369-c5aa02bf9fd7" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Without salt (vulnerable)
+const password = &quot;password123&quot;;
+const hash1 = sha256(password);  // &quot;ef92b778...&quot;
+const hash2 = sha256(password);  // &quot;ef92b778...&quot; (same!)
+
+// With salt (secure)
+const password = &quot;password123&quot;;
+const salt1 = generateSalt();
+const salt2 = generateSalt();
+const hash1 = sha256(password + salt1);  // &quot;a1b2c3d4...&quot;
+const hash2 = sha256(password + salt2);  // &quot;x9y8z7w6...&quot; (different!)
+
+// Still cannot reverse either hash!
+const original = reverseHash(hash1);  // ❌ IMPOSSIBLE
+</code></pre></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-8013-9e6c-c2bf2465abb4" class=""><strong>How Salt Works:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cf562ad-76f0-807a-8560-cd192b6db95f" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Password storage with salt
+const password = &quot;mypassword123&quot;;
+const salt = generateRandomSalt();  // &quot;a1b2c3d4&quot;
+const hash = bcrypt(password, salt);
+
+// Store: hash + salt
+// {
+//   hash: &quot;5e884898...&quot;,
+//   salt: &quot;a1b2c3d4&quot;
+// }
+
+// Verification
+function verifyPassword(inputPassword, storedHash, storedSalt) {
+  const computedHash = bcrypt(inputPassword, storedSalt);
+  return computedHash === storedHash;  // Compare hashes
+}
+
+// Cannot decrypt - can only verify!
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-80e5-9a07-d9f445116734"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80f1-b43d-cb5d36a85b95" class=""><strong>Key Takeaways</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8044-aa47-d683c2a7e3b8" class=""><strong>✅ Understanding:</strong></h3></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80b4-b30e-cb6f2c7a3e4b" class="numbered-list" start="1"><li><strong>Encryption = Reversible</strong> (can decrypt back to original)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-809d-b3b9-ca90827f3bb0" class="numbered-list" start="2"><li><strong>Hashing = Irreversible</strong> (cannot get original back)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8057-8bf3-c40bbe3d3c83" class="numbered-list" start="3"><li><strong>Encryption = Confidentiality</strong> (hides data)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-809d-878f-ea69a051cf08" class="numbered-list" start="4"><li><strong>Hashing = Integrity</strong> (verifies data hasn&#x27;t changed)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-80a0-a5bb-d51063d971c0" class="numbered-list" start="5"><li><strong>Passwords = Always hash</strong> (never encrypt)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8013-ae20-c6ce9a029176" class="numbered-list" start="6"><li><strong>Sensitive data = Encrypt</strong> (when you need to retrieve it)</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2cf562ad-76f0-8072-ac54-e7966c5bf65e" class="numbered-list" start="7"><li><strong>Use proper algorithms</strong> (bcrypt/Argon2 for passwords, AES for encryption)</li></ol></div><div style="display:contents" dir="auto"><h3 id="2cf562ad-76f0-8069-8af9-d51a91fda581" class=""><strong>❌ Common Mistakes:</strong></h3></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80b0-b550-d00c29bd2f82" class="bulleted-list"><li style="list-style-type:disc">❌ Using encryption for password storage</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-800d-b4a5-de897a5ba216" class="bulleted-list"><li style="list-style-type:disc">❌ Using hashing for data confidentiality</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-808c-8429-f460cf9724cb" class="bulleted-list"><li style="list-style-type:disc">❌ Using MD5/SHA-1 for password hashing</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-801d-b135-d07ce4e52185" class="bulleted-list"><li style="list-style-type:disc">❌ Thinking hashing can be reversed with a key</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-809d-8b46-cf8106714a5a" class="bulleted-list"><li style="list-style-type:disc">❌ Thinking salted hashes can be decrypted</li></ul></div><div style="display:contents" dir="auto"><ul id="2cf562ad-76f0-80d4-9538-eeecc972c0dc" class="bulleted-list"><li style="list-style-type:disc">❌ Using encryption and hashing interchangeably</li></ul></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-80d0-9050-c742a7742afd"/></div><div style="display:contents" dir="auto"><h2 id="2cf562ad-76f0-80c8-afc3-c1ce331d4a80" class=""><strong>Summary Table</strong></h2></div><div style="display:contents" dir="ltr"><table id="2cf562ad-76f0-8031-82c1-c0fe65e2e314" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-8013-9fe2-ead78b23d11f"><th id="tRj]" class="simple-table-header-color simple-table-header">Aspect</th><th id="@re[" class="simple-table-header-color simple-table-header">Encryption</th><th id="J@cF" class="simple-table-header-color simple-table-header">Hashing</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-8007-b971-c01194e0f0a4"><td id="tRj]" class=""><strong>Purpose</strong></td><td id="@re[" class="">Confidentiality (hide data)</td><td id="J@cF" class="">Integrity (verify data)</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80a9-8bbc-c274668d057e"><td id="tRj]" class=""><strong>Reversible?</strong></td><td id="@re[" class="">✅ Yes (with key)</td><td id="J@cF" class="">❌ No (one-way)</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80af-8891-f0ac4f9f76f9"><td id="tRj]" class=""><strong>Uses Key?</strong></td><td id="@re[" class="">✅ Yes (required)</td><td id="J@cF" class="">⚠️ Optional (HMAC)</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-8048-8a9b-cfa513bfe488"><td id="tRj]" class=""><strong>Password Storage</strong></td><td id="@re[" class="">❌ Never</td><td id="J@cF" class="">✅ Always</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-802a-9b6b-dd1eb035c803"><td id="tRj]" class=""><strong>Data Retrieval</strong></td><td id="@re[" class="">✅ Can decrypt</td><td id="J@cF" class="">❌ Cannot reverse</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-80ec-87f8-cd0b41721639"><td id="tRj]" class=""><strong>Speed</strong></td><td id="@re[" class="">⚠️ Slower</td><td id="J@cF" class="">✅ Faster</td></tr></div><div style="display:contents" dir="ltr"><tr id="2cf562ad-76f0-800b-bdfc-d97c04c9f8e8"><td id="tRj]" class=""><strong>Use Cases</strong></td><td id="@re[" class="">Secrets, PII, transmission</td><td id="J@cF" class="">Passwords, integrity, signatures</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><hr id="2cf562ad-76f0-8010-8e33-f2305c2cb558"/></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80b6-bb58-ea2aec1dfa2c" class="">Remember: <strong>Encryption protects confidentiality (secrecy), Hashing protects integrity (verification). They&#x27;re complementary, not interchangeable!</strong></p></div><div style="display:contents" dir="auto"><p id="2cf562ad-76f0-80b4-b07e-e22b9f215cf5" class="">
+</p></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

