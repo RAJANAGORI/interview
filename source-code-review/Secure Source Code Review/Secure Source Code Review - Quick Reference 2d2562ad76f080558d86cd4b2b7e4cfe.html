@@ -1,0 +1,794 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Secure Source Code Review - Quick Reference</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2d2562ad-76f0-8055-8d86-cd4b2b7e4cfe" class="page mono"><header><h1 class="page-title" dir="auto"><strong>Secure Source Code Review - Quick Reference</strong></h1><p class="page-description" dir="auto"></p></header><div class="page-body"><div style="display:contents" dir="ltr"><nav id="2d2562ad-76f0-8024-9eb2-e0fc766ec085" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-8037-894e-da1eb37eed5f"><strong>Authentication Review Checklist</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80eb-b83a-fb88c04a0588"><strong>Authentication Flows</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80c8-a7b8-c2811fd87cc4"><strong>Password Security</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80fb-a193-d4e47bd79176"><strong>Security Controls</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-802c-9ca0-c5e8bb173848"><strong>Session Management</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-801b-8646-d9882ef5b4d4"><strong>Service-to-Service Auth</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-803e-bd2d-d697987b7e25"><strong>Authorization Review Checklist</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8090-9336-e59cb733dd33"><strong>Access Control</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8005-a3fb-c79ebfba6344"><strong>IDOR (Insecure Direct Object Reference)</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-809d-a702-fc8beeacd010"><strong>Authorization Implementation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8005-a9e0-ec1e96fff986"><strong>Critical Operations</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-8010-bd7d-dd707701214a"><strong>Input Validation Checklist</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8068-8266-d09014e3973e"><strong>Comprehensive Validation</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80b0-8a8a-d724b29921c8"><strong>Client vs. Server</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-800a-9629-c2ff45d57a69"><strong>Regular Expressions</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-803e-b99e-d5eb3d770cb1"><strong>HTTP Headers</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-80ce-b984-c2f4ebc56b0f"><strong>Output Encoding Checklist</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80ba-9ca6-e3bfc87c417d"><strong>Database Queries</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-802a-a36d-f173a1e9d943"><strong>Context-Specific Encoding</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80c1-be89-df784e041ace"><strong>Encoding Libraries</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-8048-9f1f-cd32d6be85cd"><strong>Injection Vulnerability Checklist</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80c5-984a-cac07076d528"><strong>SQL Injection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-803e-b2ce-cef31195f642"><strong>NoSQL Injection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-800d-a7f6-e03cf8cb5c0e"><strong>Other Injections</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-8036-9011-f70b1a71ade6"><strong>Memory Best Practices Checklist</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80ba-8b94-fa409645691c"><strong>Buffer Overflow Prevention</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80d2-85a2-ea1b094f0f58"><strong>Buffer Size Management</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80d8-8fb9-c03fafdc9a59"><strong>Off-by-One Errors</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8056-b943-f29b57113ec9"><strong>Format String Injection</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-8076-9ea9-f4ce1b33d3e8"><strong>File Handling Checklist</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-803a-bf79-c67e7567e782"><strong>File Upload Security</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-803f-82b4-c0b132245212"><strong>Path Traversal Prevention</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80e1-a322-d7b9b4886927"><strong>LFI/RFI Prevention</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-8012-941d-ef3fa5cacc6b"><strong>Auditing and Logging Checklist</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80fa-a265-e8368275cae8"><strong>Exception Handling</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8053-97b1-e59e2dd6bbb6"><strong>Logging Security</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80ce-939a-d1a1bc1b9c65"><strong>Logging Configuration</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-8017-ab09-cdce9e25e371"><strong>Configuration Review Checklist</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80c4-99ca-ee9dd0ef9b1d"><strong>Configuration Files</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8081-b2ad-fc1d0067b6c8"><strong>Framework Configuration</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8077-99ce-fc5b03b55b9a"><strong>Version and Dependencies</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8046-b8b1-ee8b7fe22b19"><strong>Security Headers</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-8040-a896-e3d7081d6df5"><strong>Cryptographic Review Checklist</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80ed-b946-c49f7bfeb8d7"><strong>Password Hashing</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80aa-97b2-cc58c0d1026e"><strong>Encryption</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80bd-9fec-d1928e0d6b78"><strong>Key Management</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8082-9bf0-cf94e0c36673"><strong>SSL/TLS</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8011-9202-c00990152359"><strong>Cipher Strength</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-8013-aeb9-cd2f98ea2b08"><strong>Code Patterns to Search For</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-803c-ac51-f8b99447f016"><strong>Input Validation Patterns</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80ce-a7a7-e5d917284ca9"><strong>SQL Injection Patterns</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80fa-b9f3-f6c54204a76d"><strong>Command Injection Patterns</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80f8-a131-ec7833aab84a"><strong>Memory Safety Patterns</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8050-9af8-dc54aba7beab"><strong>XSS Prevention Patterns</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80ba-830d-e6023c4b231f"><strong>Password Storage Patterns</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-807c-b1fa-f0b5ff2faa30"><strong>Indirect Object Reference Patterns</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-8019-8e4e-e73de54cbc52"><strong>IDOR Patterns</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80e6-b61a-df4daadfdf7c"><strong>Timing Attack Patterns</strong></a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2d2562ad-76f0-80e7-bd74-c8221bcfb419"><strong>Hardcoded Secrets</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-8034-9ff7-e98d359fd770"><strong>Common Vulnerabilities Summary</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-807b-8313-c0d588186b3a"><strong>Review Methodology</strong></a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2d2562ad-76f0-809e-873d-deec4dc73383"><strong>SAST Tools</strong></a></div></nav></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-8037-894e-da1eb37eed5f" class=""><strong>Authentication Review Checklist</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80eb-b83a-fb88c04a0588" class=""><strong>Authentication Flows</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8043-96fd-db4afdac3cf9" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">User login flow security</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8011-bc1d-e186cf2faaab" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">User registration security</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-801c-85f0-e949ccbf0ce3" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Password reset/forgot password flow</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f4-aeeb-e8505d5b8a8b" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Two-factor authentication (2FA) implementation</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80c8-a7b8-c2811fd87cc4" class=""><strong>Password Security</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8006-ae1a-f5b4ba4cff77" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Strong password policy (12+ chars, complexity)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8070-8b24-ddb08d4672a6" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Password hashing: bcrypt/Argon2/PBKDF2/scrypt</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8037-887d-daa308b12b09" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Unique salt per password</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-802d-ae3d-ccd98695f5d6" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Sufficient rounds (bcrypt: 12+, PBKDF2: 100k+)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80e8-9167-e54315e428ff" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">NOT using MD5/SHA1/SHA256 alone</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80a9-aa48-f11af96c80d6" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Constant-time password comparison</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80fb-a193-d4e47bd79176" class=""><strong>Security Controls</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f7-94cf-faa6eafdb2ac" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Brute force protection (rate limiting, lockout)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8040-a9f2-dc22b36febc0" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">User enumeration prevention</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8045-b344-cd33d5aad1be" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Timing attack prevention</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ba-9e0f-c71b7f20a877" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">HTTPS/TLS for credential transmission</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-802c-9ca0-c5e8bb173848" class=""><strong>Session Management</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80b3-b9d4-c5207b1e814f" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Session ID cryptographically random (128+ bits)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8045-b8e8-d50f16215db7" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Session fixation prevention (regenerate after login)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80df-a884-f4a67b5b8e1e" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Session timeout (absolute and idle)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8002-b824-ffcce2dfee91" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Secure cookies (Secure, HttpOnly, SameSite)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-801c-932a-c94c3e470a6d" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Server-side session storage (preferred)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-801b-8646-d9882ef5b4d4" class=""><strong>Service-to-Service Auth</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-804b-ac8b-c76efd15fb2c" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Strong authentication (mTLS, JWT, secure API keys)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80b3-ac59-d1fe857b72a2" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Constant-time HMAC/token comparison</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8080-b906-f7ab63e914b9" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">SHA256+ for HMAC (not SHA1/MD5)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8030-8d01-f6a105285a0d" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">SSL/TLS with certificate verification</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8080-8b76-e4624fd7ed2c" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Reasonable TTL (1 hour or less)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80fe-b13f-c5d043fb5e65" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Time skew accounted for</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8013-8c74-d930a7f54d4a" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Secrets in vault (not hardcoded)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-8081-b3a5-c6cf54df1722"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-803e-bd2d-d697987b7e25" class=""><strong>Authorization Review Checklist</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8090-9336-e59cb733dd33" class=""><strong>Access Control</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80bf-8c5d-fd6ea81bad9d" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">All roles identified</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80e1-8339-c205953869dc" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Sensitive/privileged endpoints identified</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8005-9a67-ee6c94b44d86" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Authorization checks on all sensitive operations</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-809f-b141-c502f274693a" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Horizontal privilege escalation prevented</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-803e-8e05-cbba407286ac" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Vertical privilege escalation prevented</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8005-a3fb-c79ebfba6344" class=""><strong>IDOR (Insecure Direct Object Reference)</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8001-9c32-d07a5a0fa25c" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Object ownership verified</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80c7-af39-d635de4a39db" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Authorization check before object access</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8060-9416-f2f428d21d56" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Patterns to check: <code>find_by(id)</code>, <code>find(id)</code>, <code>findOne(id)</code></span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8073-8607-f055061c2129" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Indirect object references where appropriate</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-809d-a702-fc8beeacd010" class=""><strong>Authorization Implementation</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8016-9c7c-db775a5facc1" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Centralized authorization logic</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8067-a479-dfe028f7c75d" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Authorization before business logic</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8023-84fa-e247090c8320" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Function-level access control</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80fd-b4a4-ff951ed32fca" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Business logic authorization verified</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8054-b935-f0fbca116f99" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">CSRF protection on state-changing operations</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8005-a9e0-ec1e96fff986" class=""><strong>Critical Operations</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8060-b197-fd768ae07ab4" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Re-authentication for password changes</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8030-a79c-f7b0c74c7c27" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Re-authentication for account deletion</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80a9-a024-ea40a21601f9" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">2FA or re-auth for financial transactions</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8053-8b4f-ec7d29194247" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Re-auth for high-privilege actions</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-805d-a205-f570778030be"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-8010-bd7d-dd707701214a" class=""><strong>Input Validation Checklist</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8068-8266-d09014e3973e" class=""><strong>Comprehensive Validation</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-801c-aaa8-c3c104d3912c" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">All input validated (forms, URLs, headers, cookies, files, APIs)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8002-88a1-c605f9db62b2" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Whitelist validation (preferred)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80e6-b41a-efd97de35d2d" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Type validation (integer, date, email)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8035-b151-f5e5531dbc38" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Format validation</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ad-817e-c2d3012bde3f" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Length validation (min/max)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80b0-8a8a-d724b29921c8" class=""><strong>Client vs. Server</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80b8-ad28-d546574fb20e" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Server-side validation present (security)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80e6-985e-eb2a8dca4030" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Client-side validation for UX only</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8088-8df8-c5a989fad952" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Client and server validations consistent</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-800a-9629-c2ff45d57a69" class=""><strong>Regular Expressions</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80c4-84c4-d4c0c27d67c6" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Whitelist patterns preferred</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80c1-953e-edd9567666d4" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">No ReDoS vulnerabilities (avoid nested quantifiers)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8030-adfd-dfb612cc040e" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Patterns tested for bypasses</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-803e-b99e-d5eb3d770cb1" class=""><strong>HTTP Headers</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-804b-8fe5-d2386edf18f1" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">User-Agent validated (if used for logic)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8090-85c2-cd5bffb50ba9" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Referer validated (if used for security)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80aa-b389-d14552185778" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Origin validated (for CORS)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8020-8760-ee5f36c87aec" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Custom headers validated</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-8072-9098-ee6d898a609e"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-80ce-b984-c2f4ebc56b0f" class=""><strong>Output Encoding Checklist</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80ba-9ca6-e3bfc87c417d" class=""><strong>Database Queries</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-802d-b3b0-c132df30ce70" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Parameterized queries used (all SQL)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-808a-93da-d053c2c7dff1" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">No string concatenation in SQL</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8051-bacc-ca6d2ed71222" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">ORM used correctly (no <code>.raw()</code> with user input)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-802a-a36d-f173a1e9d943" class=""><strong>Context-Specific Encoding</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-806b-a0b3-e27ac5b03498" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">HTML context: HTML entity encoding</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80cc-b85f-d492651c6670" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">JavaScript context: JavaScript encoding</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80fc-be2d-fcbe2c0a273b" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">URL context: URL encoding</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80e8-8b68-ceb9e388e58e" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">CSS context: CSS encoding</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8079-93db-c395b3c5d3b1" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">XML context: XML encoding</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80c1-be89-df784e041ace" class=""><strong>Encoding Libraries</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80d7-bb6f-cd9e6919f018" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Libraries up-to-date</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80c1-86e6-f8d082d985c2" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Proper encoding for each context</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ac-bf52-e7a8b9bac9ed" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Framework encoding used when available</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-8044-a0be-d54fa6c355fa"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-8048-9f1f-cd32d6be85cd" class=""><strong>Injection Vulnerability Checklist</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80c5-984a-cac07076d528" class=""><strong>SQL Injection</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80cd-a3a0-f360a5b4a86e" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">All queries parameterized</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80d5-9b50-ef3ee4e235f8" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">No string concatenation: <code>+</code>, <code>&amp;</code>, <code>.format()</code>, <code>%</code>, f-strings</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-808a-b246-eaad2dcc0c0d" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">ORM used correctly</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80e2-a436-e508baa52c21" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Dynamic SQL sanitized (if used)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-803e-b2ce-cef31195f642" class=""><strong>NoSQL Injection</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80d1-87d5-e2c90aa641de" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Type validation on input</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8056-86a6-e4d29234633b" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Operator injection prevented (<code>$ne</code>, <code>$gt</code>, etc.)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8026-8bda-e473d67a0900" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">JavaScript injection prevented (MongoDB)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80d9-9689-c6fa76252a37" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Key-value store manipulation prevented</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-800d-a7f6-e03cf8cb5c0e" class=""><strong>Other Injections</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8083-8315-da890d3c1fa9" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">LDAP injection prevented (parameterized)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-807f-b04f-d299d60aee3b" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">XML injection/XXE prevented (external entities disabled)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-806e-96fb-fc013d37c0b4" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Command injection prevented (no shell with user input)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80e6-8eb1-d51bc2a1cdb0" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Template injection prevented (input escaped)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-8031-8e74-f75f35040bed"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-8036-9011-f70b1a71ade6" class=""><strong>Memory Best Practices Checklist</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80ba-8b94-fa409645691c" class=""><strong>Buffer Overflow Prevention</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8004-8c6c-e0ef1f7f3f99" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Safe functions used (fgets, strncpy, snprintf)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80b8-96b1-eaaeb3d47049" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Unsafe functions avoided (gets, strcpy, sprintf)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80d2-8c54-d004662c9ec5" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Buffer size validation</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80c5-ac4c-f04af022f307" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Input size validation</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8056-96eb-d4e0988ccdf7" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Constants for buffer sizes</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8007-bf6a-f78dfd426934" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Buffer size consistency</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80d2-85a2-ea1b094f0f58" class=""><strong>Buffer Size Management</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8014-8357-cc20bf07f8bd" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Buffer size matches read size</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8072-9a56-f6942fc0db38" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">No buffer size mismatches</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-805f-91dc-ebc2dd2a2759" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Null terminator space accounted for</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80d8-8fb9-c03fafdc9a59" class=""><strong>Off-by-One Errors</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8035-8545-c781ca8ef01d" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Correct comparison operators (&lt; vs &lt;=)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8000-801b-fb5cc264b03b" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Null terminator space considered</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-806f-bba9-f44dbc41dea6" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Array bounds checking correct</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8056-b943-f29b57113ec9" class=""><strong>Format String Injection</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8097-8a8c-db724d02dab0" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">No user input in format strings</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-801f-a59b-def06e2f6ec7" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Format specifiers used correctly</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80bb-b9cc-dadd5db2f9f6" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Generic error messages</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-8065-9c70-f3e048c12484"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-8076-9ea9-f4ce1b33d3e8" class=""><strong>File Handling Checklist</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-803a-bf79-c67e7567e782" class=""><strong>File Upload Security</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8040-823b-f6870e27c32b" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">File type validation (whitelist preferred)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80c8-8711-fecdca094740" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">File size restrictions</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8051-8722-e359520ace42" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Filename sanitization</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80c0-aed8-dc4999278367" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Files stored outside web root</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8048-acec-ec0536535a65" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Access control on file retrieval</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-804f-8ff7-e91e556132a7" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Antivirus scanning (if applicable)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-803f-82b4-c0b132245212" class=""><strong>Path Traversal Prevention</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f8-ad5c-eab4a111a24e" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">User input not used directly in file paths</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-806a-b63d-ebc4fbf3dde3" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Path traversal prevented (<code>../</code>, <code>..\\</code>, etc.)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f5-b900-ddd8a63e9bbd" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Absolute paths prevented</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80fb-8668-cdfd4b7ff9b0" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Path normalization and validation</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80e1-a322-d7b9b4886927" class=""><strong>LFI/RFI Prevention</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-804c-b73f-ffdacdfbccfb" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">No file inclusion with user input</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8060-97d6-d928b3f6685b" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Whitelist for file inclusion (if needed)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ad-8c14-d8422fc6d727" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Remote file inclusion disabled</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-80d7-95a9-e71edc026465"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-8012-941d-ef3fa5cacc6b" class=""><strong>Auditing and Logging Checklist</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80fa-a265-e8368275cae8" class=""><strong>Exception Handling</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80bd-9c9e-c841a2de770c" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Fail-secure on exceptions</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80c0-b20a-f3e400cc1ff5" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Resources released on exception</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-802f-baf6-c05d55b0ba3b" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Transactions rolled back on exception</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-807a-8454-da16427d1c48" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Generic error messages to users</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8056-af20-cf4bd4508682" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Detailed errors logged (not displayed)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8053-97b1-e59e2dd6bbb6" class=""><strong>Logging Security</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80db-9e05-e867c943291f" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Sensitive data not logged (CC#, SSN, passwords, keys, PII)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80fc-9c19-fa60d1c2cf3b" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">User actions logged (user ID, timestamp, action)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ca-a34d-ddc3cc3bb2a4" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Security events logged (failed logins, unauthorized access)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8033-8920-df7379339910" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Log injection prevented (input sanitized)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80e0-a69a-e8ea2aada082" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Logs sufficient for audit reconstruction</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80ce-939a-d1a1bc1b9c65" class=""><strong>Logging Configuration</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8071-9504-e649eb00c861" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Configuration in files (not hardcoded)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ab-94ae-c9b312174e4b" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Log levels configurable</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8018-a116-ff1aedfee020" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Log rotation configured</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80eb-ab0a-c477d079b640" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Log retention policies</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-809b-a3d0-e3899ebe4499"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-8017-ab09-cdce9e25e371" class=""><strong>Configuration Review Checklist</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80c4-99ca-ee9dd0ef9b1d" class=""><strong>Configuration Files</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8006-927a-efa4ce2568be" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">No secrets in configuration files</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-804c-9502-d2286a6538f0" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Secrets in environment variables or vault</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8033-a33e-da53134d3aab" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Configuration files not in version control</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ad-b721-eb85c2219d57" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Different configs for dev/staging/prod</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8081-b2ad-fc1d0067b6c8" class=""><strong>Framework Configuration</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8063-8aad-e3fcff00d02f" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Framework security features enabled</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8003-9dd5-ef4d22b6d488" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">CSRF protection enabled</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-809b-94a5-d51026226862" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">XSS protection enabled</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8098-b928-c0750d106bb0" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Security headers configured</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ca-857d-e03703323f10" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Session security configured</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8077-99ce-fc5b03b55b9a" class=""><strong>Version and Dependencies</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-803b-92eb-db2626056fa7" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Language version up-to-date (no known CVEs)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80b0-beca-c869884de83c" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Framework version up-to-date (no known CVEs)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8095-a73e-e1d2aa5be4c4" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Dependencies up-to-date (no known CVEs)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8046-b8b1-ee8b7fe22b19" class=""><strong>Security Headers</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8017-8b10-fd857202ad87" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Content-Security-Policy (CSP)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ee-b275-d8d5cfeed0eb" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">X-Frame-Options</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80fc-a3b7-f7a84a522f3b" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">X-Content-Type-Options: nosniff</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f1-ac85-dcd8f5749a1c" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Strict-Transport-Security (HSTS)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8011-a16b-cd00b55e71d2" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Referrer-Policy</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8026-8f25-ce9ea25228c6" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Permissions-Policy</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-80f0-8398-d15cbcc21626"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-8040-a896-e3d7081d6df5" class=""><strong>Cryptographic Review Checklist</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80ed-b946-c49f7bfeb8d7" class=""><strong>Password Hashing</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8063-95cb-de2df447b8d0" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">bcrypt (12+ rounds), Argon2, PBKDF2 (100k+), or scrypt</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8067-acc6-f3e8e24960c8" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">NOT MD5, SHA1, SHA256 alone</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-804e-b239-c105cdf3d8bb" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Unique salt per password</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-802f-9093-debc42843428" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Sufficient iterations/rounds</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80aa-97b2-cc58c0d1026e" class=""><strong>Encryption</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f9-9821-d922aecaf6c2" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">AES-256 or ChaCha20-Poly1305</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f2-a0ca-d24b333a0014" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">GCM mode (authenticated encryption)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8013-b7d8-df176d0380b1" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Random, unique IVs/nonces</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80a7-93ed-da39f301ec90" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">NOT RC4, DES, 3DES</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-803c-8ed7-d08d9ef439c4" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">NOT AES-128 for new systems</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80bd-9fec-d1928e0d6b78" class=""><strong>Key Management</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80d7-a81b-eb46229a49d2" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Keys in vault (not hardcoded)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8031-981b-d79f005d09de" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Keys not in configuration files</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80d4-bfa0-e9c9f21a1ef0" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Keys rotated regularly</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ab-8c6e-c66b6f213ae9" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Key access logged</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8082-9bf0-cf94e0c36673" class=""><strong>SSL/TLS</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8031-91bc-dc4f37d597b1" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">TLS 1.2+ required (TLS 1.3 preferred)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-806d-b945-e24f3a0f7ca9" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">TLS 1.0 and 1.1 disabled</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8036-b9f1-df9eee3a9fd7" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Strong cipher suites only</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80d3-bf52-e707c8184de3" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Certificate validation enabled</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8011-9202-c00990152359" class=""><strong>Cipher Strength</strong></h3></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8042-a3b3-cced71759cfa" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Minimum 256-bit encryption (symmetric)</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8084-9f2f-c4958be87a53" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Minimum 2048-bit RSA keys</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80ec-ab57-d6ad611d9c90" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">Minimum 256-bit ECC keys</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8091-b2b9-d9bf0ad324af" class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">No certificates with &lt; 2048-bit keys</span><div class="indented"></div></li></ul></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-807d-b53b-eb726680b863"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-8013-aeb9-cd2f98ea2b08" class=""><strong>Code Patterns to Search For</strong></h2></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-803c-ac51-f8b99447f016" class=""><strong>Input Validation Patterns</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-804c-b9b3-d17583c646cf" class="code code-wrap"><code class="language-Java" style="white-space:pre-wrap;word-break:break-all">// BAD: Blacklist validation
+if(input.indexOf(&quot;;&quot;) == -1 &amp;&amp; input.indexOf(&quot;&amp;&quot;) == -1)
+
+// GOOD: Whitelist validation
+if(ValidationUtils.isAlphanumericOrAllowed(input, &#x27;-&#x27;, &#x27;_&#x27;, &#x27;.&#x27;))
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80ce-a7a7-e5d917284ca9" class=""><strong>SQL Injection Patterns</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-808f-855c-d47a2617fee1" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># BAD: String concatenation
+f&quot;SELECT * FROM users WHERE id = {user_id}&quot;
+&quot;SELECT * FROM users WHERE id = &quot; + user_id
+&quot;SELECT * FROM users WHERE id = %s&quot; % user_id
+
+# GOOD: Parameterized
+cursor.execute(&quot;SELECT * FROM users WHERE id = %s&quot;, (user_id,))
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80fa-b9f3-f6c54204a76d" class=""><strong>Command Injection Patterns</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80a4-be5c-c0369a9450ea" class="code code-wrap"><code class="language-Java" style="white-space:pre-wrap;word-break:break-all">// BAD: String concatenation
+String command = &quot;ping &quot; + userInput;
+Runtime.getRuntime().exec(command);
+
+// GOOD: Parameterized
+List&lt;String&gt; args = Arrays.asList(&quot;ping&quot;, userInput);
+ProcessBuilder pb = new ProcessBuilder(args);
+pb.start();
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80f8-a131-ec7833aab84a" class=""><strong>Memory Safety Patterns</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80b8-a5f5-fc042d542931" class="code code-wrap"><code class="language-C" style="white-space:pre-wrap;word-break:break-all">// BAD: Unsafe function
+gets(buffer);  // No size limit
+
+// GOOD: Safe function with size
+fgets(buffer, BUFFER_SIZE, stdin);
+
+// BAD: Buffer size mismatch
+char buf[5];
+fgets(buf, 9, stdin);  // Overflow
+
+// GOOD: Consistent buffer size
+#define BUFFER_SIZE 9
+char buf[BUFFER_SIZE];
+fgets(buf, BUFFER_SIZE, stdin);
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8050-9af8-dc54aba7beab" class=""><strong>XSS Prevention Patterns</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8077-a819-e32b2ef8435d" class="code code-wrap"><code class="language-HTML" style="white-space:pre-wrap;word-break:break-all">&lt;!-- BAD: No encoding --&gt;
+&lt;%= request.getParameter(&quot;input&quot;) %&gt;
+
+&lt;!-- GOOD: HTML encoding --&gt;
+&lt;%= StringEscapeUtils.escapeHtml4(request.getParameter(&quot;input&quot;)) %&gt;
+
+&lt;!-- BAD: innerHTML --&gt;
+element.innerHTML = userInput;
+
+&lt;!-- GOOD: textContent --&gt;
+element.textContent = userInput;
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80ba-830d-e6023c4b231f" class=""><strong>Password Storage Patterns</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8018-9eb1-dce881ea9010" class="code code-wrap"><code class="language-Java" style="white-space:pre-wrap;word-break:break-all">// BAD: Plaintext or weak
+if(user.getPassword().equals(inputPassword))
+
+// GOOD: Salted hash with KDF
+String hash = PBKDF2(inputPassword, user.getSalt(), iterations);
+if(user.getPasswordHash().equals(hash))
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-807c-b1fa-f0b5ff2faa30" class=""><strong>Indirect Object Reference Patterns</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80bf-a249-f17b0ffaae09" class="code code-wrap"><code class="language-Java" style="white-space:pre-wrap;word-break:break-all">// BAD: Direct path from user input
+String file = &quot;public/&quot; + request.getParameter(&quot;file&quot;);
+
+// GOOD: Indirect reference
+int fileId = Integer.parseInt(request.getParameter(&quot;fileId&quot;));
+String file = &quot;public/&quot; + allowedFiles[fileId];
+
+// BAD: Direct redirect URL
+response.sendRedirect(request.getParameter(&quot;url&quot;));
+
+// GOOD: Indirect redirect or allow list
+String redirectId = request.getParameter(&quot;redirectId&quot;);
+response.sendRedirect(allowedRedirects.get(redirectId));
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-8019-8e4e-e73de54cbc52" class=""><strong>IDOR Patterns</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-80d2-bbe8-d431698229f7" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># BAD: No authorization check
+user = User.find_by(id=user_id)
+
+# GOOD: Authorization check
+if current_user.id != user_id and not current_user.is_admin:
+    return error()
+user = User.find_by(id=user_id)
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80e6-b61a-df4daadfdf7c" class=""><strong>Timing Attack Patterns</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8020-b1fa-e3736bdde2ed" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># BAD: Timing attack
+if stored_hash == provided_hash:
+
+# GOOD: Constant-time
+if secrets.compare_digest(stored_hash, provided_hash):
+</code></pre></div><div style="display:contents" dir="auto"><h3 id="2d2562ad-76f0-80e7-bd74-c8221bcfb419" class=""><strong>Hardcoded Secrets</strong></h3></div><div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2d2562ad-76f0-8041-b1da-ef88865edb0c" class="code code-wrap"><code class="language-Python" style="white-space:pre-wrap;word-break:break-all"># BAD: Hardcoded
+API_KEY = &quot;sk_live_abc123&quot;
+
+# GOOD: From vault
+API_KEY = get_secret(&#x27;api-key&#x27;)
+</code></pre></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-8063-9de8-fb7460ab1772"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-8034-9ff7-e98d359fd770" class=""><strong>Common Vulnerabilities Summary</strong></h2></div><div style="display:contents" dir="ltr"><table id="2d2562ad-76f0-8062-b9c8-d55bf8bea9a0" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80d3-b7a8-db066cd53a49"><th id="KaVj" class="simple-table-header-color simple-table-header">Vulnerability</th><th id="\Onj" class="simple-table-header-color simple-table-header">Prevention</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80ac-ab54-c70cb6f63d4e"><td id="KaVj" class=""><strong>SQL Injection</strong></td><td id="\Onj" class="">Parameterized queries</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80a1-87d0-d88c4ce497fd"><td id="KaVj" class=""><strong>Command Injection</strong></td><td id="\Onj" class="">Parameterized command arguments</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80e3-a4d9-dde59f7593f1"><td id="KaVj" class=""><strong>XSS</strong></td><td id="\Onj" class="">Context-specific output encoding</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80c1-a469-eebd2efbc709"><td id="KaVj" class=""><strong>CSRF</strong></td><td id="\Onj" class="">CSRF tokens, SameSite cookies</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-8020-bedb-d3cbac52486e"><td id="KaVj" class=""><strong>IDOR</strong></td><td id="\Onj" class="">Authorization checks</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-801f-940f-c991e1d36003"><td id="KaVj" class=""><strong>Path Traversal</strong></td><td id="\Onj" class="">Indirect object references, path validation</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80b8-95c3-c7531c321bc9"><td id="KaVj" class=""><strong>Open Redirect</strong></td><td id="\Onj" class="">Indirect redirects, allow list validation</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80e2-aedf-ebb8f417566d"><td id="KaVj" class=""><strong>Authentication Bypass</strong></td><td id="\Onj" class="">Strong authentication, session security</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-8042-bb03-ddad4000c46d"><td id="KaVj" class=""><strong>Timing Attacks</strong></td><td id="\Onj" class="">Constant-time comparison</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-8086-af13-ea6cffc8f312"><td id="KaVj" class=""><strong>Buffer Overflow</strong></td><td id="\Onj" class="">Safe functions, buffer size validation</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80fb-b9f4-e12dfb220ed8"><td id="KaVj" class=""><strong>Format String Injection</strong></td><td id="\Onj" class="">Avoid user input in format strings</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-8038-87c3-ff4342268dfc"><td id="KaVj" class=""><strong>Hardcoded Secrets</strong></td><td id="\Onj" class="">Secret management (vault)</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80ac-901c-c606e1df2af8"><td id="KaVj" class=""><strong>Weak Crypto</strong></td><td id="\Onj" class="">Strong algorithms, proper implementation</td></tr></div><div style="display:contents" dir="ltr"><tr id="2d2562ad-76f0-80e5-98ca-d04474a05703"><td id="KaVj" class=""><strong>Mass Assignment</strong></td><td id="\Onj" class="">Explicit field assignment</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-8064-a673-c04e5986c547"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-807b-8313-c0d588186b3a" class=""><strong>Review Methodology</strong></h2></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-8022-8f1b-e51eaa3a89c8" class="numbered-list" start="1"><li><strong>Preparation</strong>: Understand architecture, identify critical components</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-8087-a1da-f84bd26e8fad" class="numbered-list" start="2"><li><strong>Authentication</strong>: Review auth flows, password security, sessions</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-808b-a097-ff7bad823653" class="numbered-list" start="3"><li><strong>Authorization</strong>: Review access control, IDOR, privilege escalation</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-80e1-8da4-db29579c453d" class="numbered-list" start="4"><li><strong>Input Validation</strong>: Review all input points, validation approaches</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-80ce-936b-ed200c0182f3" class="numbered-list" start="5"><li><strong>Output Encoding</strong>: Review encoding, parameterized queries</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-80c4-bd67-d202dbeeba4a" class="numbered-list" start="6"><li><strong>Security Features</strong>: Review crypto, configuration, file handling</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2d2562ad-76f0-8059-b1be-fe0ded6d724a" class="numbered-list" start="7"><li><strong>Documentation</strong>: Document findings, prioritize, provide remediation</li></ol></div><div style="display:contents" dir="auto"><hr id="2d2562ad-76f0-80fa-9175-c852ba289be4"/></div><div style="display:contents" dir="auto"><h2 id="2d2562ad-76f0-809e-873d-deec4dc73383" class=""><strong>SAST Tools</strong></h2></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80f9-adc9-ff520e477eac" class="bulleted-list"><li style="list-style-type:disc">SonarQube</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80be-b11b-ce1d34e07fe9" class="bulleted-list"><li style="list-style-type:disc">Checkmarx</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80bd-aab1-daa9120fe40d" class="bulleted-list"><li style="list-style-type:disc">Veracode</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80cf-83ae-f5d8425798b7" class="bulleted-list"><li style="list-style-type:disc">Semgrep</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-80e8-be40-f276e7907f50" class="bulleted-list"><li style="list-style-type:disc">CodeQL</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8016-8819-dcb074bd3bf4" class="bulleted-list"><li style="list-style-type:disc">Bandit (Python)</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-807d-a00f-d43079b8b15e" class="bulleted-list"><li style="list-style-type:disc">ESLint security plugins</li></ul></div><div style="display:contents" dir="auto"><ul id="2d2562ad-76f0-8084-9b1a-e49e77f3cf45" class="bulleted-list"><li style="list-style-type:disc">Brakeman (Ruby)</li></ul></div><div style="display:contents" dir="auto"><p id="2d2562ad-76f0-809c-b6f9-deb7cd851818" class=""><strong>Remember</strong>: Automated tools + Manual review = Comprehensive coverage</p></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>
