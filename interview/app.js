@@ -6,6 +6,12 @@ const state = {
   view: "topics",
 };
 
+const CHART = {
+  track: "#181818",
+  fill: "#ff8c00",
+  label: "rgba(242, 240, 236, 0.68)",
+};
+
 const els = {
   search: document.getElementById("searchInput"),
   category: document.getElementById("categoryFilter"),
@@ -31,6 +37,42 @@ const els = {
 };
 
 const STORAGE_KEY = "interview_prep_progress_v1";
+
+const mqMobile = window.matchMedia("(max-width: 900px)");
+
+function isMobileLayout() {
+  return mqMobile.matches;
+}
+
+function scrollPanelIntoView(el) {
+  if (!el || !isMobileLayout()) return;
+  requestAnimationFrame(() => {
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+}
+
+function debounce(fn, ms) {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), ms);
+  };
+}
+
+/** Logical-pixel canvas setup; drawing uses CSS pixel coordinates after setTransform(dpr). */
+function prepareCanvas2D(canvas, logicalHeight) {
+  const parent = canvas.closest(".card") || canvas.parentElement;
+  const w = Math.max(200, Math.floor(parent?.clientWidth || canvas.clientWidth || 320));
+  const h = Math.max(80, logicalHeight);
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.floor(w * dpr);
+  canvas.height = Math.floor(h * dpr);
+  canvas.style.width = `${w}px`;
+  canvas.style.height = `${h}px`;
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w, h };
+}
 
 function basePrefix() {
   const path = window.location.pathname;
@@ -186,6 +228,7 @@ function selectTopic(topic) {
   els.topicTitle.textContent = topic.name;
   setContentTypes(topic);
   renderTopicList();
+  scrollPanelIntoView(els.topicsView);
 }
 
 els.fileTypeSelector.addEventListener("change", (event) => {
@@ -193,7 +236,11 @@ els.fileTypeSelector.addEventListener("change", (event) => {
   if (!key || !state.selectedTopic?.files?.[key]) return;
   state.selectedFileKey = key;
   syncCompletionCheckbox();
-  loadMarkdown(state.selectedTopic.files[key]);
+  loadMarkdown(state.selectedTopic.files[key]).then(() => {
+    if (isMobileLayout()) {
+      els.markdownContent.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  });
 });
 
 els.completionCheckbox.addEventListener("change", (event) => {
@@ -213,57 +260,54 @@ function setView(view) {
   const isTopics = view === "topics";
   els.topicsView.classList.toggle("hidden", !isTopics);
   els.dashboardView.classList.toggle("hidden", isTopics);
-  if (!isTopics) renderDashboard();
-}
-
-function clearCanvas(canvas) {
-  const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  return ctx;
+  if (!isTopics) {
+    renderDashboard();
+    scrollPanelIntoView(els.dashboardView);
+  } else {
+    scrollPanelIntoView(els.topicsView);
+  }
 }
 
 function drawProgressBar(canvas, pct) {
-  const ctx = clearCanvas(canvas);
-  const w = canvas.width;
-  const h = canvas.height;
   const pad = 14;
   const barH = 18;
+  const logicalH = 160;
+  const { ctx, w, h } = prepareCanvas2D(canvas, logicalH);
   const y = Math.round(h / 2 - barH / 2);
   const radius = 10;
 
-  function roundRect(x, y, w, h, r) {
-    const rr = Math.min(r, w / 2, h / 2);
+  function roundRect(x, y0, rw, rh, r) {
+    const rr = Math.min(r, rw / 2, rh / 2);
     ctx.beginPath();
-    ctx.moveTo(x + rr, y);
-    ctx.arcTo(x + w, y, x + w, y + h, rr);
-    ctx.arcTo(x + w, y + h, x, y + h, rr);
-    ctx.arcTo(x, y + h, x, y, rr);
-    ctx.arcTo(x, y, x + w, y, rr);
+    ctx.moveTo(x + rr, y0);
+    ctx.arcTo(x + rw, y0, x + rw, y0 + rh, rr);
+    ctx.arcTo(x + rw, y0 + rh, x, y0 + rh, rr);
+    ctx.arcTo(x, y0 + rh, x, y0, rr);
+    ctx.arcTo(x, y0, x + rw, y0, rr);
     ctx.closePath();
   }
 
-  ctx.fillStyle = "#0b1220";
+  ctx.fillStyle = CHART.track;
   roundRect(pad, y, w - pad * 2, barH, radius);
   ctx.fill();
 
   const fillW = Math.round(((w - pad * 2) * Math.max(0, Math.min(100, pct))) / 100);
-  ctx.fillStyle = "#22d3ee";
+  ctx.fillStyle = CHART.fill;
   roundRect(pad, y, fillW, barH, radius);
   ctx.fill();
 }
 
 function drawCategoryBars(canvas, byCategory) {
-  const ctx = clearCanvas(canvas);
   const entries = Object.entries(byCategory);
-  const w = canvas.width;
-  const h = canvas.height;
   const pad = 14;
-  const gap = 12;
   const barH = 18;
   const rowH = barH + 22;
+  const logicalH = Math.max(120, pad * 2 + Math.max(1, entries.length) * rowH);
 
-  ctx.font = "12px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
-  ctx.fillStyle = "#9ca3af";
+  const { ctx, w, h } = prepareCanvas2D(canvas, logicalH);
+
+  ctx.font = "12px system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+  ctx.fillStyle = CHART.label;
 
   entries.forEach(([cat, v], idx) => {
     const y = pad + idx * rowH;
@@ -272,17 +316,16 @@ function drawCategoryBars(canvas, byCategory) {
 
     ctx.fillText(`${label.toUpperCase()}  ${pct}%`, pad, y + 12);
 
-    const x = pad;
     const barY = y + 18;
     const barW = w - pad * 2;
 
-    ctx.fillStyle = "#0b1220";
-    ctx.fillRect(x, barY, barW, barH);
+    ctx.fillStyle = CHART.track;
+    ctx.fillRect(pad, barY, barW, barH);
 
-    ctx.fillStyle = "#22d3ee";
-    ctx.fillRect(x, barY, Math.round((barW * pct) / 100), barH);
+    ctx.fillStyle = CHART.fill;
+    ctx.fillRect(pad, barY, Math.round((barW * pct) / 100), barH);
 
-    ctx.fillStyle = "#9ca3af";
+    ctx.fillStyle = CHART.label;
     ctx.fillText(`${v.done}/${v.total}`, w - pad - 44, y + 12);
   });
 }
@@ -317,6 +360,17 @@ function renderDashboard() {
     `;
     els.topicProgressTable.appendChild(div);
   }
+}
+
+const onResizeCharts = debounce(() => {
+  if (state.view === "dashboard") renderDashboard();
+}, 150);
+
+window.addEventListener("resize", onResizeCharts);
+if (typeof mqMobile.addEventListener === "function") {
+  mqMobile.addEventListener("change", onResizeCharts);
+} else if (typeof mqMobile.addListener === "function") {
+  mqMobile.addListener(onResizeCharts);
 }
 
 els.navTopics.addEventListener("click", () => setView("topics"));
