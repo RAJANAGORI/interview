@@ -55,3 +55,13 @@ Good programs have:
 - counting scans, not risk reduction
 - focusing on closure rate and ignoring tier-0
 - dashboards with too much detail and no decisions
+
+---
+
+## Validated prioritization signals (beyond CVSS)
+
+- **EPSS** (Exploit Prediction Scoring System): maintained by **FIRST**, estimates **probability of exploitation** in the wild—useful alongside severity for **triage** ([FIRST EPSS](https://www.first.org/epss/)).
+- **SSVC** (Stakeholder-Specific Vulnerability Categorization): **CISA** promotes **SSVC** as a **decision-oriented** alternative to severity-only prioritization for coordinated vulnerability management ([CISA SSVC](https://www.cisa.gov/ssvc)).
+- **KEV** (Known Exploited Vulnerabilities): **CISA KEV** catalog highlights **actively exploited** CVEs—often used as a **mandatory fast-track** list in regulated environments ([CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog)).
+
+Interview tip: “We use CVSS for **what broke**, EPSS/KEV for **what attackers are actually using**, and asset tier for **what matters to the business**.”
