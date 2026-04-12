@@ -10,94 +10,132 @@
 
 ---
 
+## Fundamentals and threat model
 
-## Frameworks
+### 1) Why is CI/CD described as a “control plane,” and what fails if you only run SAST in the pipeline?
 
-### 1) What is the OWASP CI/CD Top 10?
+CI/CD decides **what code runs**, **with which credentials**, and **what ships to production**. Static analysis does not stop an attacker who can **merge a malicious workflow**, **steal OIDC-exchanged cloud roles**, or **replace an unsigned artifact** in a registry. You need **flow control** (who can change pipelines and protected branches), **identity and secret hygiene**, **artifact integrity**, and **isolation** for untrusted contributions—not only scanners.
 
-It is a prioritized list of **CI/CD security risks** with definitions, impacts, and recommendations—[OWASP Top 10 CI/CD Security Risks](https://owasp.org/www-project-top-10-ci-cd-security-risks/) (v1.0, **October 2022**). It was motivated by incidents such as **SolarWinds**, **Codecov**, **dependency confusion**, and **compromised OSS packages** (per the project’s introduction).
+### 2) How does OWASP CI/CD Top 10 help in an interview answer without sounding like a checklist?
 
-### 2) Name three risks and a control for each.
-
-Examples aligned to OWASP:
-
-- **CICD-SEC-4 Poisoned Pipeline Execution (PPE)** → protect pipeline definitions, restrict who can edit workflows, review **untrusted PR** automation carefully.
-- **CICD-SEC-6 Insufficient Credential Hygiene** → **OIDC** to cloud, short-lived tokens, no shared mega-keys, secret scanning.
-- **CICD-SEC-9 Improper Artifact Integrity Validation** → **sign** artifacts, **verify** at deploy, **digest** pinning.
+Use it as **shared vocabulary** mapped to **your** controls: for example **CICD-SEC-4** (poisoned pipeline execution) tied to **CODEOWNERS on workflow files**, **CICD-SEC-6** (credential hygiene) tied to **OIDC instead of static AWS keys**, **CICD-SEC-9** (artifact integrity) tied to **Cosign verification at deploy**. Name **two or three** risks and **one concrete mitigation** each rather than reciting all ten.
 
 ---
 
-## GitHub Actions / GitLab / CI patterns
+## Pipeline secrets
 
-### 3) How would you harden GitHub Actions for a high-risk product?
+### 3) What are the main ways secrets leak from CI besides committing them to Git?
 
-Combine **branch protection**, **required reviewers**, **CODEOWNERS**, **environment protection rules**, **OIDC** for AWS/GCP/Azure, **scoped** tokens, **pinned actions** (commit SHA), **least-privilege** `GITHUB_TOKEN`, separate **secrets per environment**, and **audit** for workflow changes. Map explicitly to **SEC-1/4/5/6** from OWASP.
+Secrets appear in **build logs** (verbose scripts, test failures), **cached layers** or runner workspaces reused across jobs, **artifact attachments** (reports, dumps), **fork workflows** misconfigured to receive repository secrets, and **overly broad** tokens (org-level PATs) stolen once and reused everywhere. Mitigations include **environment-scoped** secrets, **log redaction**, **ephemeral** runners, **no secrets on untrusted PR jobs**, and **short-lived** federation instead of long-lived keys.
 
-### 4) What is PBAC in CI/CD?
+### 4) How should production deploy credentials differ from credentials used on feature branches?
 
-**Pipeline-based access controls**—permissions granted to **pipeline jobs** and runners (often overly broad). **CICD-SEC-5** covers insufficient PBAC ([OWASP](https://owasp.org/www-project-top-10-ci-cd-security-risks/CICD-SEC-05-Insufficient-PBAC)). Answer: scope **runner identities**, **cloud roles**, and **secret access** per repo/environment.
-
-### 5) Why prefer OIDC over static cloud keys in CI?
-
-OIDC federation provides **short-lived**, **audience-scoped** credentials tied to **workflow identity**, reducing long-lived secret theft and rotation burden—aligns with **credential hygiene** (**CICD-SEC-6**). Cite your cloud’s **official OIDC** docs in implementation interviews.
+Production credentials should be bound to **protected branches or tags**, **deployment environments** with **required reviewers**, and **narrow IAM roles** (OIDC subjects including environment or ref). Feature-branch jobs should use **read-only** or sandbox roles, **no** production kubeconfig, and **separate** registries or namespaces. The goal is **blast-radius reduction**: compromising a dev branch workflow should not imply **production** write access.
 
 ---
 
-## Supply chain inside CI
+## OIDC to cloud
 
-### 6) How do third-party actions relate to risk?
+### 5) Explain OIDC from CI to AWS (or another cloud) at a level you could whiteboard.
 
-They are **supply chain** dependencies; **CICD-SEC-8** addresses ungoverned third-party services ([OWASP](https://owasp.org/www-project-top-10-ci-cd-security-risks/CICD-SEC-08-Ungoverned-Usage-of-3rd-Party-Services)). Mitigate with **pinning**, **allowlists**, **forking** critical actions, and **review** of updates.
+The CI platform issues a **signed JWT** (OIDC token) to the job. The job presents it to **AWS STS** `AssumeRoleWithWebIdentity` (or the cloud’s equivalent). **IAM trust policy** on the role allows only that **issuer**, expected **audience**, and a **subject** matching the repository and usually branch, tag, or environment. STS returns **temporary** credentials. Those credentials are **short-lived** and **not stored** as a long-term secret in the repo, which addresses **CICD-SEC-6** and shrinks theft value.
 
-### 7) What is dependency chain abuse in CI?
+In **GitHub Actions**, the job uses `id-token: write` permission so the runner can request the JWT; in **Google Cloud**, **Workload Identity Federation** binds the external identity to a **service account**; in **Azure**, **federated credentials** on an app registration play the same role. Interviewers often probe **confused deputy**: the cloud must validate **audience** so one OIDC client cannot trick another service into accepting a token meant for a different integration.
 
-Malicious or vulnerable packages executed during **install/build**—**CICD-SEC-3** ([OWASP](https://owasp.org/www-project-top-10-ci-cd-security-risks/CICD-SEC-03-Dependency-Chain-Abuse)). Mitigate with **lockfiles**, **private registries**, **SCA**, and **hermetic** builds where possible.
+### 6) What goes wrong if the OIDC trust policy is too broad?
 
----
-
-## Operations and governance
-
-### 8) How do you balance speed vs security gates?
-
-**Risk-tiered** pipelines: heavier checks on **release** branches and **protected** environments; fast feedback on feature branches; **exceptions** with **expiry** and **compensating controls**; track **false-positive budgets** so teams do not bypass.
-
-### 9) What metrics matter?
-
-- **Gate bypass rate** and **exception aging**  
-- **% deploys** with **signed + verified** artifacts  
-- **Secret exposure** events (commits, logs)  
-- **CI IAM** privilege reduction over time  
-- **MTTR** for broken pipeline security controls  
-
-### 10) What logging is critical?
-
-**Pipeline definition changes**, **workflow runs** with secrets, **deployment** events, **runner registration**, and **failed policy checks**—supports **CICD-SEC-10** ([OWASP](https://owasp.org/www-project-top-10-ci-cd-security-risks/CICD-SEC-10-Insufficient-Logging-And-Visibility)).
+A role that trusts `repo:myorg/*` or any ref on a repo lets **more workflows than intended** assume the same **production** role. An attacker who can run workflows in **any** included repository—or who confuses **audience** or **subject** validation—may obtain **cloud access** from a lower-trust context. Correct designs use **repository-specific** subjects, **environment** claims where available, and **separate roles per environment** and account.
 
 ---
 
-## Curveballs
+## Branch protections and governance
 
-### 11) How does CI/CD security relate to SLSA?
+### 7) Which files should be treated as security-sensitive alongside application auth code?
 
-[SLSA](https://slsa.dev/) defines **integrity** expectations for artifacts; **CI/CD** implements **build** and **provenance**. You implement **controls** in pipeline; **consumers** verify **provenance** at deploy (**CICD-SEC-9**).
+**Pipeline definitions** (`.github/workflows/*.yml`, `.gitlab-ci.yml`, Jenkinsfile, Argo CD apps), **IaC** roots, **dependency lock** and **package** manifests when they trigger **install scripts**, and **CODEOWNERS** itself. A change to a workflow can **exfiltrate secrets** or **disable checks** without touching Java or Go code, so **CICD-SEC-1** (flow control) and **CICD-SEC-4** (PPE) demand **required reviews** from security or platform owners on those paths.
 
-### 12) What is insufficient flow control?
+### 8) What is the difference between “required status checks” and a merge queue for security?
 
-**CICD-SEC-1: Insufficient Flow Control Mechanisms**—lack of approvals/reviews so **untrusted changes** can flow to production ([OWASP](https://owasp.org/www-project-top-10-ci-cd-security-risks/CICD-SEC-01-Insufficient-Flow-Control-Mechanisms)). Fix with **branch protection**, **required reviewers**, **CODEOWNERS**, and **release gates**.
+**Required checks** ensure specific jobs passed before merge. A **merge queue** (or equivalent) rechecks against the **latest** base after other merges land, reducing **race conditions** where two PRs are green alone but broken together—useful when checks enforce **policy-as-code** or **signing** steps. For security, both matter: checks enforce **gates**, queues enforce **consistency** under parallel development.
 
 ---
 
-## Depth: Interview follow-ups — Secure CI/CD
+## Signing artifacts and integrity
 
-**Authoritative references:** [SLSA](https://slsa.dev/) (Supply-chain Levels for Software Artifacts); [NIST SP 800-218](https://csrc.nist.gov/publications/detail/sp/800-218/final) (SSDF); [GitHub security hardening](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions) (if GitHub Actions).
+### 9) Why pin container deployments by digest and still sign the image?
 
-**Follow-ups:**
-- **OIDC from CI to cloud** — short-lived tokens vs static cloud keys.
-- **Protected branches, required reviewers, signing commits/tags.**
-- **Poisoned pipeline PR** — untrusted forks.
+**Tags** can move; **digest** identifies an immutable manifest. **Signing** proves **provenance** or publisher identity for that digest. Deploy-time policy should verify **signature matches digest** (and optionally **SLSA provenance**) so a registry compromise or mistaken tag promotion does not silently change what runs. This is the operational side of **CICD-SEC-9**.
 
-**Production verification:** Workflow permissions scoped; secrets not in logs; artifact signing and verification.
+### 10) Where should signature verification happen—CI, CD, or runtime?
 
-**Cross-read:** Software Supply Chain, IaC Security, Secrets Management.
+**Signing** happens at the end of **trusted build** (CI or release pipeline). **Verification** belongs at **deploy** (admission controller, deploy service, or infrastructure apply) and can be **reinforced at runtime** (e.g., Kubernetes policy). Verifying only in CI is insufficient if **another path** can deploy or if **mutable tags** are used downstream.
+
+**Cosign** with **keyless** signing ties signatures to **OIDC identity** of the build; **KMS-backed** keys suit stricter custody models. Policy engines (for example **Kyverno** or **OPA Gatekeeper** rules) can require a matching **signature** and **digest** before a **Pod** schedules. The staff-level point is **defense in depth**: build proves origin, deploy enforces it, runtime catches **drift** or **bypass** paths.
+
+---
+
+## SBOM
+
+### 11) Where in the pipeline should you generate an SBOM, and what do you do with it?
+
+Generate after **dependencies are resolved** and the **deliverable** (image or package) is known—typically on merge to the release line or on **version tags**. Store the SBOM **next to the artifact** (same version or digest), in **SPDX or CycloneDX**, and feed it to **vulnerability** processes: diff between releases, query during **incidents**, and block promotion if **critical** policy violations appear. Avoid generating SBOMs only on forks with access to **internal** tool credentials.
+
+### 12) What mistake makes SBOMs misleading for container images?
+
+Generating SBOMs **only** from application `package.json` or `go.mod` while ignoring **base image OS packages** and **transitive** layers misses most **CVE** exposure in many stacks. Prefer tooling that inspects the **final filesystem** or image SBOM standards so operational responses match **what is actually shipped**.
+
+---
+
+## Poisoned PRs and PPE
+
+### 13) What is poisoned pipeline execution (PPE), and give one example?
+
+PPE is when an attacker causes **trusted CI** to run **malicious** steps—often by changing **workflow YAML**, **build scripts**, or **hooked** install logic. Example: a PR adds a step that **base64-encodes** secrets and posts them to an external host, or a **`postinstall`** script runs only in CI to **harvest** environment variables. **CICD-SEC-4** covers this risk class.
+
+### 14) On GitHub Actions, why is `pull_request_target` discussed as high risk?
+
+`pull_request_target` runs in the **base** repository context and may access **secrets** and **write** `GITHUB_TOKEN` while **checking out** attacker-controlled code if misconfigured. That combination is **dangerous**: it was intended for labeling or commenting but has been involved in **real** secret exfiltration when workflows also build or execute untrusted code. Safer patterns use **limited** workflows for forks, **approval** gates, or **`pull_request`** with **no secrets** for untrusted code.
+
+If you must touch secrets for fork automation, keep the workflow **minimal**: comment-only bots, no **build** of PR head on the same job that holds secrets, or use **maintainer-triggered** `workflow_run` after merge to a **trusted** branch. **CODEOWNERS** on `.github/workflows` reduces the chance a poisoned workflow ever lands without review.
+
+### 15) How do you safely run integration tests for external contributors’ forks?
+
+Use **low-privilege** pipelines without production secrets; optionally require **maintainer approval** or a **label** before running full suites on trusted runners. Never mount **production** credentials on jobs triggered by **untrusted** ref content. Some teams use **manual** dispatch or **merge to a staging branch** first so **trusted** context runs sensitive jobs.
+
+---
+
+## Runner isolation
+
+### 16) What is the main security downside of self-hosted runners compared to hosted ephemeral runners?
+
+Self-hosted runners are **long-lived**: malicious jobs can **persist** backdoors, steal **registration tokens**, poison **global caches**, or access **local** secrets left on disk. Hosted runners are often **ephemeral per job**, reducing **cross-job** contamination though not **in-job** exfiltration. Mitigations: **ephemeral** VMs per job, **separate pools** for untrusted work, **network egress** controls, and **minimal** persistent state.
+
+### 17) Why does mounting the Docker socket into a CI job matter for security?
+
+The Docker socket grants **effective root** on the host and the ability to **start privileged containers**, read **host filesystems**, and **escape** isolation assumptions. It should be **avoided** unless strictly necessary and then wrapped with **strict** policy; prefer **rootless** builders or remote **build services** with audited APIs.
+
+---
+
+## Operations and depth
+
+### 18) What metrics show CI/CD security is improving, not just “more tools”?
+
+Examples: **percentage** of production deploys using **signed artifacts verified** at deploy; **percentage** of cloud access via **OIDC** versus static keys; **count** of repos with **branch protection** and **CODEOWNERS** on workflows; **mean time** to contain a **simulated** secret leak; **open exceptions** with owners and **expiry**; reduction in workflows with **high-risk** patterns (e.g., dangerous triggers). Tie metrics to **CICD-SEC** outcomes.
+
+### 19) How does SLSA relate to your CI/CD story in one minute?
+
+**SLSA** describes **levels** of **integrity** controls around builds and **provenance**. CI/CD implements **hermetic** or **audited** builds, **signed** artifacts, and **immutable** references; **consumers** (deploy systems) **verify** provenance before promotion. Connect it to **CICD-SEC-9** and to **organizational** policy: what **level** you target per **risk tier**.
+
+### 20) You discover a leaked repository secret that had broad cloud access. What do you do first in the pipeline context?
+
+**Revoke and rotate** the credential immediately; **audit** workflow runs and **logs** for misuse; **narrow** replacement credentials using **OIDC** and **smaller roles**; **scan** for **fork** or **`workflow_dispatch`** abuse; add **temporary** blocks on deploy if integrity is uncertain. Follow with **post-incident** hardening: environment-scoped secrets, **required** reviews on workflow paths, and **detection** for anomalous **STS** or cloud API usage from CI egress IPs.
+
+Communicate clearly with **engineering leadership**: pipeline incidents are **identity** incidents—check **CloudTrail**, **GCP audit logs**, or **Azure Activity Log** for **CreateUser**, **AssumeRole**, **key creation**, or **S3 exfiltration** patterns tied to the exposure window. Document **lessons** as **control gaps** (over-broad IAM, missing branch protection, shared runner pools) rather than only as “someone leaked a key.”
+
+---
+
+## Cross-read
+
+**Comprehensive Guide** (this topic), **Secrets Management**, **IAM and Least Privilege**, **Software Supply Chain / SLSA**, **Security Observability**.
 
 <!-- verified-depth-merged:v1 ids=secure-ci-cd-pipeline-security -->

@@ -1,7 +1,11 @@
 # Session Fixation and Session Hijacking
 
-[**Session Fixation and Session Hijacking - Comprehensive Guide**](Session Fixation and Session Hijacking - Comprehen.md)
+[**Session Fixation and Session Hijacking - Comprehensive Guide**](Session%20Fixation%20and%20Session%20Hijacking%20-%20Comprehen.md)
 
-[**Critical Clarification: Session Fixation and Session Hijacking Security Misconceptions**](Critical Clarification Session Fixation vs Session.md)
+[**Session Fixation and Session Hijacking - Interview Questions & Answers**](Session%20Fixation%20and%20Session%20Hijacking%20-%20Interview.md)
 
-[**Session Fixation and Session Hijacking - Quick Reference Guide**](Session Fixation and Session Hijacking - Quick Ref.md)
+[**Critical Clarification: Session Fixation vs Session Hijacking Misconceptions**](Critical%20Clarification%20Session%20Fixation%20vs%20Session.md)
+
+[**Session Fixation and Session Hijacking - Quick Reference**](Session%20Fixation%20and%20Session%20Hijacking%20-%20Quick%20Ref.md)
+
+[**Session Fixation and Session Hijacking - VAPT Methodology**](Session%20Fixation%20and%20Session%20Hijacking%20-%20VAPT%20Methodology.md)

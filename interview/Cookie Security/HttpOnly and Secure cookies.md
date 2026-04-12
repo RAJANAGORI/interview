@@ -38,7 +38,7 @@ The `HttpOnly` attribute prevents client-side JavaScript from accessing the cook
 
 These are two completely different attack vectors. See `CRITICAL_CLARIFICATION` below for detailed explanation.
 
-[**Critical Clarification: HttpOnly vs CSRF Protection**](HttpOnly%20and%20Secure%20cookies/Critical%20Clarification%20HttpOnly%20vs%20CSRF%20Protection%202b2562ad76f0805394d7c9672a5e1525.md)
+[**Critical Clarification: HttpOnly vs CSRF Protection**](Critical%20Clarification%20HttpOnly%20vs%20CSRF%20Protection.md)
 
 ### How It Works
 

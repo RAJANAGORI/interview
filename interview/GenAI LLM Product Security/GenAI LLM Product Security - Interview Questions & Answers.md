@@ -1,119 +1,135 @@
-# GenAI LLM Product Security - Interview Questions & Answers
+# GenAI LLM Product Security — Interview Questions & Answers
 
 <!-- interview-module:v1 -->
 
-> **How to use this interview module**
+> **How to use this module**
 >
-> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab (a tool you secured, a RAG ACL bug you found, or a red-team finding).
 >
-> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** notes for this topic in the same folder.
+
+**References:** [OWASP LLM Top 10 (2025)](https://genai.owasp.org/llm-top-10/); [NIST AI Risk Management Framework](https://www.nist.gov/itl/ai-risk-management-framework) for program-level framing; your org’s privacy and vendor risk processes for deployment detail.
 
 ---
 
+## 1) Why is an LLM feature a different kind of product security problem than a typical REST API?
 
-References: [OWASP LLM Top 10 (2025)](https://genai.owasp.org/llm-top-10/), [OWASP Top 10 CI/CD Security Risks](https://owasp.org/www-project-top-10-ci-cd-security-risks/) (for pipeline/supply issues touching ML systems).
-
----
-
-## Frameworks and vocabulary
-
-### 1) What is the OWASP LLM Top 10 (2025) and why should a product security team care?
-
-It is the OWASP GenAI project’s prioritized list of risks for **LLM applications**—including prompt injection, disclosure, supply chain, poisoning, improper output handling, excessive agency, system prompt leakage, vector/RAG weaknesses, misinformation, and unbounded consumption ([overview](https://genai.owasp.org/llm-top-10/)). Product security uses it to align **threat modeling**, **requirements**, and **release gates** across eng/ML/design—not as a substitute for your own abuse cases.
-
-### 2) How does the 2025 list differ from “v1.1” on the legacy OWASP page?
-
-The **canonical current edition** for interviews should be the **GenAI site’s 2025 Top 10** ([LLM Top 10](https://genai.owasp.org/llm-top-10/)). Older **v1.1** text may still appear on legacy pages—if you cite items, **name the year** and prefer the GenAI resource PDF linked from that page.
+A REST API has **structured inputs**, predictable parsing, and clear **authZ** hooks. An LLM path accepts **free text and documents** that become **one narrative context** for the model. Attackers (or innocently poisoned content) can blend **instructions and data**, so you cannot rely on the model to honor a “system prompt” as a security boundary. Security has to live in **tool authorization**, **retrieval entitlements**, **output validation**, and **UX** that limits irreversible actions—mapped to OWASP items such as **LLM01**, **LLM05**, **LLM06**, and **LLM08**.
 
 ---
 
-## Prompting and untrusted content
+## 2) What is prompt injection, and how does indirect injection differ from direct injection?
 
-### 3) What is prompt injection vs indirect injection?
-
-**Direct injection**: user text attempts to override system instructions. **Indirect injection**: untrusted content (web page, ticket, doc) is retrieved or pasted and steers the model/tool chain ([LLM01](https://genai.owasp.org/llmrisk/llm01-prompt-injection/)). Mitigations combine **channel separation**, **tool authZ**, **retrieval sandboxing**, and **downstream validation**—not “better prompts” alone.
-
-### 4) Can we eliminate prompt injection?
-
-**No complete elimination** in general-purpose chat—treat it as **managed risk**. Reduce impact with **least-privilege tools**, **human confirmation** for dangerous actions, and **output/input validation** for machine-consumed paths ([LLM05](https://genai.owasp.org/llmrisk/llm052025-improper-output-handling/), [LLM06](https://genai.owasp.org/llmrisk/llm062025-excessive-agency/)).
+**Direct injection** is the user typing attempts to override developer intent (“disregard prior rules”). **Indirect injection** is when **untrusted content** enters context—malicious text in a PDF, a web page fetched by an agent, a support ticket, or a retrieved chunk—and steers the model or tool chain without the end user typing an attack string. The same retrieved paragraph can simultaneously be **data the user asked about** and **instructions the model obeys**, which is why delimiter tricks alone fail at scale. Mitigations are **not** limited to better prompts: you need **least-privilege tools**, **server-side authZ**, **safe retrieval**, and **validation** of anything the model outputs to other systems (**LLM01** plus **LLM05**/**LLM06**).
 
 ---
 
-## Tools, agents, and authorization
+## 3) Can we eliminate prompt injection entirely?
 
-### 5) What is “excessive agency”?
-
-Granting an LLM or agent **broad autonomy** to act (API calls, writes, integrations) without tight **authorization**, **scope**, and **confirmation**—[LLM06](https://genai.owasp.org/llmrisk/llm062025-excessive-agency/). Staff answer: **authorize tool calls with application identity**, not model intent; **allowlist**; **rate limit**; **break-glass** patterns.
-
-### 6) How do you secure function-calling or plugins?
-
-Assume **hostile inputs** to plugins. Use **server-side** checks: caller identity, tenant, OAuth scopes, **idempotency**, **read-only vs write** separation, and **audit** ([LLM05](https://genai.owasp.org/llmrisk/llm052025-improper-output-handling/)). Never trust the model to decide privilege.
+**No** for general-purpose assistants that accept arbitrary text. You **manage** risk: narrow **tool** surfaces, **confirm** high-impact actions, **validate** machine-consumed outputs, **monitor** abuse, and **assume** context can be hostile. The goal is **contained impact**, not perfect separation of instructions and data inside the model (**LLM01**, **LLM06**).
 
 ---
 
-## Data, RAG, and vectors
+## 4) What data leakage risks are most common in shipped LLM products?
 
-### 7) What risks are specific to RAG?
-
-Retrieval can **exfiltrate** data across tenants if ACLs are wrong; embeddings and chunking can be **poisoned** or manipulated; low-quality retrieval fuels **misinformation** ([LLM08](https://genai.owasp.org/llmrisk/llm082025-vector-and-embedding-weaknesses/), [LLM04](https://genai.owasp.org/llmrisk/llm042025-data-and-model-poisoning/), [LLM09](https://genai.owasp.org/llmrisk/llm092025-misinformation/)). Answer with **collection-level authZ**, **grounding/citations**, **evals after corpus changes**, and **safe failure** when confidence is low.
-
-### 8) How do you reduce sensitive information disclosure?
-
-Minimize fields in prompts, **redact/classify** upstream, tighten **logging**, review **vendor data handling**, and validate **output** before showing to users or other systems ([LLM02](https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/)).
+**Leaking secrets or PII** in completions after they appeared in context; **logging** full prompts and responses into SIEM or support tools; **cross-tenant RAG** returning another customer’s chunks; **over-retention** of chat in analytics; **client-side** thread storage without encryption; and **vendor** subprocessors or regions that do not match customer contracts. **Export**, **share link**, and **copilot-in-email** features often widen blast radius because users treat the assistant as a **notepad**. Controls: **minimize** fields in prompts, **redact**, **query-time ACLs** on retrieval, **short retention** and **access-controlled** logs, **review** sharing UX, and **contract** alignment (**LLM02**, **LLM03**, **LLM08**).
 
 ---
 
-## Supply chain and operations
+## 5) How should we handle PII in prompts and logs?
 
-### 9) What is in the “LLM supply chain”?
-
-Models, weights, **datasets**, eval tooling, inference runtimes, containers, and third-party APIs—integrity, provenance, and update discipline matter ([LLM03](https://genai.owasp.org/llmrisk/llm032025-supply-chain/)). Tie to your **dependency**, **build**, and **model release** processes.
-
-### 10) What is unbounded consumption?
-
-Abuse or bugs causing **runaway tokens**, tool loops, or **cost/DoS**—[LLM10](https://genai.owasp.org/llmrisk/llm102025-unbounded-consumption/). Mitigate with **quotas**, **concurrency caps**, **circuit breakers**, and **monitoring** on token/tool use.
+**Minimize** before model calls: drop or mask columns, aggregate where possible, and block categories that violate policy. Use **deterministic redaction** plus classifiers where needed. For **logs**, prefer **structured** events (which tool, which tenant, outcome) over **verbatim** prompts; if full prompts are stored for debugging, enforce **strict** RBAC, **encryption**, and **retention** limits. Tell users not to paste **regulated** data when the product cannot guarantee handling (**LLM02**).
 
 ---
 
-## Governance and metrics
+## 6) What risks are specific to RAG, beyond “the model hallucinates”?
 
-### 11) How do you test LLM features for security?
-
-Blend **offline evals** (regression sets, injection suites), **red teaming**, **canary** releases, and **production signals** (blocked tool calls, policy violations, cross-tenant access attempts). Track **drift** when models or corpora change ([LLM04](https://genai.owasp.org/llmrisk/llm042025-data-and-model-poisoning/)).
-
-### 12) How do you partner with ML and product?
-
-Translate OWASP items into **requirements** (“tool calls require OAuth scopes X/Y”, “retrieval must enforce tenant ACLs”), **paved-road libraries**, and **launch reviews**—same as any high-risk feature, with extra **eval** discipline.
-
-### 13) What is system prompt leakage?
-
-Exposure of **system/developer instructions** via model behavior, errors, or logs—[LLM07](https://genai.owasp.org/llmrisk/llm072025-system-prompt-leakage/). Mitigate with **minimal prompts**, **safe logging**, and **rate limiting** probing.
+**Authorization failures** on chunks (wrong tenant or overshared workspace). **Poisoning** of the corpus or crawled web content so malicious passages rank highly. **Stale or wrong** documents producing **confident** wrong answers (**LLM09**). **Embedding** or **chunk-boundary** tricks that hide hostile instructions. Mitigations: **query-time filters** tied to source-system ACLs, **ingestion** integrity and **ACL reconciliation**, **citations**, **golden** regression tests after corpus changes, and **monitoring** of retrieval health (**LLM04**, **LLM08**).
 
 ---
 
-## Curveballs
+## 7) How do you enforce tenant isolation in a vector database?
 
-### 14) Are content filters enough?
-
-Filters help for **safety/abuse** but are not a full security strategy. You still need **authZ**, **output validation**, and **safe tool design** ([LLM05](https://genai.owasp.org/llmrisk/llm052025-improper-output-handling/), [LLM06](https://genai.owasp.org/llmrisk/llm062025-excessive-agency/)).
-
-### 15) Who owns “LLM security”?
-
-**Shared**: AppSec owns **tooling and threat models**, ML owns **data and evals**, platform owns **infra and quotas**, privacy/legal own **commitments**. Product security often **orchestrates** requirements and metrics.
+Treat vectors like **any other datastore**: every upsert carries **stable metadata** (tenant ID, resource ID, labels) from the **authoritative** identity and document store. At query time, the application **must** apply **mandatory** filters; **fail closed** if metadata is missing. **Reindex** or **patch** when source ACLs change. **Test** negative cases in CI: two tenants, overlapping vocabulary, prove **no** cross-leak. **Audit** admin APIs that can search across tenants (**LLM08**, **LLM02**).
 
 ---
 
-## Depth: Interview follow-ups — GenAI / LLM Product Security
+## 8) What does “excessive agency” mean, and how do you design against it?
 
-**Authoritative references:** [OWASP LLM Top 10](https://owasp.org/www-project-top-10-for-large-language-model-applications/) (model-specific risks); [NIST AI RMF](https://www.nist.gov/itl/ai-risk-management-framework) (risk management framing—high level).
+**Excessive agency** is when the assistant can **act** (API calls, writes, integrations) with **too much** power or **too few** checks relative to the risk (**LLM06**). Design **narrow** tools (specific operations, not “run arbitrary SQL”), **per-user** delegated credentials, **allowlists** for destinations, **rate limits**, **idempotency** for writes, and **human confirmation** for irreversible actions. **Never** substitute a clever prompt for **OAuth scopes** and **server-side** policy checks.
 
-**Follow-ups:**
-- **Prompt injection** vs traditional injection—trust boundaries for tools/plugins.
-- **Data leakage** — training data, RAG corpora, cross-tenant retrieval.
-- **Human-in-the-loop** for high-impact actions (payments, deletes).
+---
 
-**Production verification:** Content filters where appropriate; logging without PII spillage; abuse monitoring on API quotas.
+## 9) How do you secure function calling or plugins end to end?
 
-**Cross-read:** Third-Party Integration, Business Logic Abuse, Privacy themes.
+Assume **hostile** arguments and **hostile** sequencing. The **runtime**, not the model, enforces **who** is calling (identity, tenant), **what** tool is allowed for that persona, and **whether** parameters are valid. Use **schemas**, **type checks**, **reference** lookups (“does this ID belong to this user?”), **idempotency** keys, and **audit** trails. Block **open** URL fetchers or **generic** code execution unless heavily sandboxed and justified (**LLM05**, **LLM06**, **LLM10**).
+
+---
+
+## 10) What is improper output handling in LLM systems?
+
+Treating model output as **safe** for **HTML**, **SQL**, **shell**, or **downstream** JSON without the same defenses you use for untrusted user input—leading to **XSS**, **injection**, or **unsafe** tool payloads (**LLM05**). **Mitigate** with encoding, **CSP**, **parameterized** queries, **schema validation** for structured outputs, and **no** “paste assistant output into admin console” shortcuts.
+
+---
+
+## 11) How do you test LLM features for security before and after launch?
+
+Combine **offline** suites (injection strings, indirect injection fixtures, privilege escalation attempts), **RAG** regression tests after **corpus** or **embedder** changes, **red-team** exercises with documented scope, and **production** signals (tool **denials**, policy blocks, anomaly detection on **tokens** and **cost**). **Canary** new models or prompts and compare **security** metrics, not only **quality** scores (**LLM04**, **LLM10**).
+
+---
+
+## 12) What belongs in a red-team engagement against an agent?
+
+Realistic **goals** (exfiltrate another tenant’s doc, send email externally, escalate IAM, burn budget). **Indirect** vectors (poisoned attachment, malicious page). **Tool-chaining** abuse and **retry** loops. **Safe** execution rules (no production customer data without approval). Deliver **severity-rated** findings tied to **controls** (authZ gap vs model weakness) and **retest** criteria.
+
+---
+
+## 13) What is the “LLM supply chain,” and what do you actually review?
+
+Models, **fine-tunes**, **datasets**, **evaluation** harnesses, inference **libraries**, **containers**, **GPU** stacks, and third-party **APIs**—plus the **CI** that builds and deploys them (**LLM03**). Review **version pinning**, **artifact integrity**, **licenses**, **subprocessors** and **regions**, **secret** scanning in repos, and **change control** when swapping weights or default **temperature** and **policy** prompts.
+
+---
+
+## 14) How does governance differ for GenAI versus traditional features?
+
+Same **ownership** lines in principle—AppSec for **threat models** and **patterns**, ML for **data and evals**, platform for **infra and quotas**, legal/privacy for **commitments**—but GenAI adds **non-determinism**, **vendor** dependence, and **data paths** that are easy to **misconfigure** (RAG ACLs, logging). You need **DPIAs**, **model/corpus** inventory, **incident** runbooks for **data spill** and **model degradation**, and **launch** reviews that include **offline** security evals.
+
+---
+
+## 15) What are safe UX patterns for high-risk answers and actions?
+
+Show **citations** and **sources** for grounded answers; surface **uncertainty** instead of false precision. Use **explicit confirmations** with an **immutable** summary for email, payments, deletes, and IAM changes. **Progressive** permission: default **narrow** tools, **step-up** for broader scope. Render assistant output as **untrusted** HTML with **sanitization** and **CSP**. Provide a clear **human escalation** path and **feedback** tied to **trace IDs** (**LLM05**, **LLM06**, **LLM09**).
+
+---
+
+## 16) What is system prompt leakage, and how do you reduce it?
+
+**System prompt leakage** is when **developer** or **system** instructions are exposed through model replies, verbose errors, **debug** endpoints, or **logs** (**LLM07**). Reduce by **minimizing** secret sauce in prompts (policy belongs in **code** where possible), **rate limiting** probing, **safe error** messages, and **log** redaction. Treat leaked instructions as a **defense-in-depth** issue: impact should stay low if **tools** are properly **authorized**.
+
+---
+
+## 17) What is unbounded consumption, and what mitigations matter at scale?
+
+**Unbounded consumption** is runaway **tokens**, **tool loops**, parallel **sessions**, or abuse that drives **cost** and **availability** harm (**LLM10**). Mitigate with **per-user** and **per-tenant** budgets, **concurrency** caps, **timeouts**, **circuit breakers**, **detection** of anomalous **spend**, and **backpressure** on queues. Product and **finance** should align on **alerts** and **throttling** behavior.
+
+---
+
+## 18) Are content safety filters enough for “LLM security”?
+
+**No.** Filters address **abuse** and some **safety** categories but do not replace **authorization**, **tenant isolation**, **output validation**, or **safe tool** design. A polite model can still **call** a tool if the **backend** allows it; a filtered answer can still be **wrong** or **grounded** on **poisoned** docs. Interview answer: **layer** policy—filters plus **authZ** plus **architecture** (**LLM05**, **LLM06**).
+
+---
+
+## 19) A customer asks whether their prompts are used to train your foundation model. What do you verify before answering?
+
+Confirm the **exact SKU** or contract line: **enterprise** vs **consumer**, **zero-retention** claims, **fine-tuning** that uses customer data, and **evaluation** or **human review** programs that might copy transcripts. Read **DPA**, **AI addendum**, **subprocessor** list, and **region** commitments. If marketing says “we don’t train,” ensure that covers **your** integration path (batch vs streaming, attachments, **logging** to third-party observability). Answer customers with **precise** scope: what is **excluded**, what is **logged**, retention, and **who** can access logs (**LLM02**, **LLM03**).
+
+---
+
+## 20) After a red-team, how do you decide whether to fix the model, the prompt, or the application?
+
+**Default bias toward application and tool fixes** when the issue is **privilege**, **data access**, or **unsafe execution**—those should not depend on model niceness. **Prompt and model** changes help with **behavioral** refusals and **quality** but are **brittle** under attack. Prioritize **deterministic** controls: **authZ** bugs first, then **retrieval** ACLs, then **output** validation, then **prompt** hardening, then **model** swaps or **fine-tunes**. Track **regression tests** so “fixes” do not reopen prior **injection** or **leakage** paths (**LLM01**, **LLM06**).
+
+---
 
 <!-- verified-depth-merged:v1 ids=genai-llm-product-security -->

@@ -11,7 +11,6 @@ A comprehensive, open-source interview preparation repository covering all major
 - [Product Security Topics](#product-security-topics)
 - [Special Topics](#special-topics)
 - [Configuration & Scripts](#configuration--scripts)
-- [Documentation](#documentation)
 - [Practice & Exercises](#practice--exercises)
 - [Resources](#resources)
 
@@ -28,11 +27,10 @@ This repository is designed to help security professionals prepare for technical
 
 ### Key Features
 
-- ✅ **60+ indexed topic entries** (core, product, special) — see `Config/topics.json` and the [Topic Syllabus Index](Interview%20Preparation/Topic%20Syllabus%20Index.md) (includes former “recommended additional” Tier A topics such as GraphQL, gRPC, SAML, DDoS, rate limiting, metrics/OKRs, vuln management)
+- ✅ **65+ indexed topic entries** (core, product, special) — see `Config/topics.json` and the [Topic Syllabus Index](Interview%20Preparation/Topic%20Syllabus%20Index.md)
 - ✅ **Structured Content** - Organized by category (Core, Product, Special)
 - ✅ **Real-World Scenarios** - Practical examples and use cases
 - ✅ **Interview-Focused** - Tailored for 6.5+ years experienced professionals
-- ✅ **GitHub Integration** - Automated milestone and issue creation for tracking progress
 
 ---
 
@@ -43,7 +41,7 @@ This repository is designed to help security professionals prepare for technical
 - **[Content Mastery Framework](Interview%20Preparation/Content%20Mastery%20Framework.md)** — How topics are structured (literacy → mechanics → judgment → interview performance).
 - **[Topic Syllabus Index](Interview%20Preparation/Topic%20Syllabus%20Index.md)** — All indexed topics with tiers, prerequisites, and time budgets.
 - **[Role-Based Study Paths](Interview%20Preparation/Role-Based%20Study%20Paths.md)** — Curricula for Product Security, AppSec, Staff+, and a 21-day sprint.
-- **[Recommended Additional Topics](Interview%20Preparation/Recommended%20Additional%20Topics.md)** — Suggested new folders (GraphQL security, gRPC, SAML, DDoS, rate limiting, etc.) and merge guidance.
+- **[Recommended Additional Topics](Interview%20Preparation/Recommended%20Additional%20Topics.md)** — Suggested new folders and merge guidance.
 
 ### Quick Start
 
@@ -55,22 +53,17 @@ This repository is designed to help security professionals prepare for technical
 2. **Main Index**
    - [Interview Preparation.md](Interview%20Preparation.md) - Complete topic index and navigation
 
-3. **GitHub Integration** (Optional)
-   - Use the [GitHub Prep Manager Script](Scripts/github_prep_manager.py) to create milestones and issues
-   - See [README_GITHUB_PREP.md](Scripts/README_GITHUB_PREP.md) for details
-
 ---
 
 ## 📁 Project Structure
 
 ```
-my-interview-preparation/
-├── 📚 Topic Folders/          # 65+ indexed security topic entries
-├── ⚙️ Config/                  # Configuration files
-├── 🔧 Scripts/                # Automation scripts
-├── 📖 Documentation/           # Project documentation
-├── 🎯 Practice & Exercises/    # Practice materials
-├── 📝 Interview Preparation/  # General guides and resources
+interview/
+├── 📚 Topic Folders/          # 65+ security topic directories
+├── ⚙️ Config/                  # Configuration files (topics.json, depth data)
+├── 🔧 Scripts/                # Python automation scripts
+├── 🎯 Practice & Exercises/   # Practice materials
+├── 📝 Interview Preparation/  # General guides, study plans, and resources
 └── 📄 Interview Preparation.md # Main index file
 ```
 
@@ -84,6 +77,7 @@ my-interview-preparation/
 - **[OAuth](OAuth/)** - OAuth 2.0 framework, flows, and security considerations
 - **[JWT vs OAuth](JWT%20vs%20OAuth/)** - Comparison and when to use each
 - **[Authorization and Authentication](Authorization%20and%20Authentication/)** - Core concepts, differences, and implementation
+- **[SAML and Enterprise Federation](SAML%20and%20Enterprise%20Federation/)** - SAML 2.0, SSO, IdP/SP trust, and enterprise B2B patterns
 
 ### Session & Cookie Security
 
@@ -104,9 +98,10 @@ my-interview-preparation/
 ### Security Fundamentals
 
 - **[Encryption vs Hashing](Encryption%20vs%20Hashing/)** - Cryptographic concepts and use cases
-- **[Digital Signatures](Digital Signatures/)** - Digital signature algorithms and verification
+- **[Digital Signatures](Digital%20Signatures/)** - Digital signature algorithms and verification
 - **[Parameterized and Prepared Statement](Parameterized%20and%20Prepared%20Statement/)** - SQL injection prevention
 - **[CORS and SOP](CORS%20and%20SOP/)** - Cross-Origin Resource Sharing and Same-Origin Policy
+- **[OSI Layer](OSI%20Layer/)** - The seven-layer reference model and security at each layer
 
 ### Network & Protocol Security
 
@@ -135,12 +130,14 @@ my-interview-preparation/
 - **[Cross-Origin Authentication](Cross-Origin%20Authentication/)** - Cross-origin authentication strategies
 - **[Third-Party Integration Security](Third-Party%20Integration%20Security/)** - Third-party API security
 - **[System vs Personal API Tokens](System%20vs%20Personal%20API%20Tokens/)** - API token management
+- **[GraphQL and API Security](GraphQL%20and%20API%20Security/)** - GraphQL-specific attack surfaces, introspection, query complexity
+- **[gRPC and Protobuf Security](gRPC%20and%20Protobuf%20Security/)** - gRPC security patterns and protobuf hardening
 
 ### Security Assessment & Testing
 
 - **[Penetration Testing and Security Assessment](Penetration%20Testing%20and%20Security%20Assessment/)** - Penetration testing methodologies
 - **[Proactive Security Assessment](Proactive%20Security%20Assessment/)** - Proactive security measures
-- **[Product Security Assessment Design](Product Security%20Assessment%20Design/)** - Security assessment frameworks
+- **[Product Security Assessment Design](Product%20Security%20Assessment%20Design/)** - Security assessment frameworks
 
 ### Incident Response
 
@@ -153,10 +150,13 @@ my-interview-preparation/
 - **[Security-Development Collaboration](Security-Development%20Collaboration/)** - DevSecOps practices
 - **[Agile Security Compliance](Agile%20Security%20Compliance/)** - Security in agile development
 - **[Web Application Security Vulnerabilities](Web%20Application%20Security%20Vulnerabilities/)** - OWASP Top 10 and beyond
+- **[Security Metrics and OKRs](Security%20Metrics%20and%20OKRs/)** - Measuring security program effectiveness
+- **[Vulnerability Management Lifecycle](Vulnerability%20Management%20Lifecycle/)** - End-to-end vulnerability handling
 
 ### Real-World Scenarios
 
 - **[Product Security Real-World Scenarios](Product%20Security%20Real-World%20Scenarios/)** - Beginner to advanced scenario-based questions with detailed answers and DFDs
+- **[Microsoft Product Security Engineer II Interview Prep](Microsoft%20Product%20Security%20Engineer%20II%20Interview%20Prep/)** - Role-specific preparation with mastery track
 
 ### Senior/Staff Expansion Topics
 
@@ -170,6 +170,8 @@ my-interview-preparation/
 - **[Business Logic Abuse and Fraud Threats](Business%20Logic%20Abuse%20and%20Fraud%20Threats/)** - Abuse-resistant product workflows and fraud prevention
 - **[Browser and Frontend Runtime Security Deep Dive](Browser%20and%20Frontend%20Runtime%20Security%20Deep%20Dive/)** - Browser-side controls, CSP, Trusted Types, and runtime hardening
 - **[Risk Prioritization and Security Metrics](Risk%20Prioritization%20and%20Security%20Metrics/)** - Staff-level risk decisioning and program metrics
+- **[DDoS and Resilience](DDoS%20and%20Resilience/)** - Volumetric, protocol, and application-layer attack defense and resilience patterns
+- **[Rate Limiting and Abuse Prevention](Rate%20Limiting%20and%20Abuse%20Prevention/)** - Rate-limit algorithms, abuse detection, and progressive response
 
 ---
 
@@ -177,7 +179,7 @@ my-interview-preparation/
 
 ### Threat Modeling & Code Review
 
-- **[Threat Modeling](Threat Modeling/)** - STRIDE, DREAD, threat modeling methodologies
+- **[Threat Modeling](Threat%20Modeling/)** - STRIDE, DREAD, threat modeling methodologies
 - **[Secure Source Code Review](Secure%20Source%20Code%20Review/)** - Code review techniques and security patterns
 
 ---
@@ -188,30 +190,16 @@ my-interview-preparation/
 
 - **[Config/](Config/)** - Configuration files
   - `topics.json` - Complete topic index with file mappings and metadata
-  - `topic_interview_depth.json` - Per-topic **verified** interview depth (references + follow-ups); rebuilt from `Scripts/depth_data_*.py` via `build_topic_interview_depth.py`; applied with `apply_verified_topic_depth.py`
+  - `topic_interview_depth.json` - Per-topic **verified** interview depth (references + follow-ups)
 
 ### Scripts
 
 - **[Scripts/](Scripts/)** - Automation and utility scripts
-  - `github_prep_manager.py` - Automated GitHub milestone and issue creation for tracking preparation progress
-  - `generate-topics.js` - Generate topics.json from file structure
-  - `rename-files.js` - File renaming utility
-  - `organize_interview_prep.py` - Organize files into topic folders
-  - `README_GITHUB_PREP.md` - GitHub integration documentation
-  - `QUICK_START.md` - Quick start guide for scripts
-
----
-
-## 📖 Documentation
-
-- **[Documentation/](Documentation/)** - Project documentation
-  - `README.md` - Project overview and setup
-  - `FILE_INDEX.md` - Complete file index and organization
-  - `QUICK_REFERENCE.md` - Quick reference for project structure
-  - `REORGANIZATION_SUMMARY.md` - File reorganization history
-  - `BUGFIXES.md` - Bug fixes and updates
-  - `SECURITY.md` - Security guidelines
-  - `RENAMING_COMPLETE.md` - File renaming documentation
+  - `build_topic_interview_depth.py` - Build topic depth data from depth_data modules
+  - `apply_verified_topic_depth.py` - Apply verified depth data to topic files
+  - `append_interview_depth_section.py` - Append interview depth sections
+  - `refine_interview_modules.py` - Refine and update interview modules
+  - `depth_data_*.py` - Source data for per-topic interview depth
 
 ---
 
@@ -238,7 +226,7 @@ my-interview-preparation/
 
 ## 📊 Statistics
 
-- **Total Topics**: 65 indexed entries (see `Config/topics.json`)
+- **Total Topics**: 65+ indexed entries (see `Config/topics.json`)
 - **Categories**: Core Security, Product Security, Special Topics
 - **Content Types**: Comprehensive Guides, Interview Questions, Critical Clarifications, Quick References
 - **Target Audience**: 6.5+ years experienced security professionals
@@ -253,15 +241,6 @@ my-interview-preparation/
 2. Follow the [Quick Start Guide](Interview%20Preparation/Quick%20Start%20Guide.md)
 3. Use the [Progress Tracker](Interview%20Preparation/%F0%9F%93%8A%20Interview%20Preparation%20Progress%20Tracker.md) to track your progress
 4. Review topics based on your interview requirements
-
-### For GitHub Integration
-
-1. Set up your GitHub Personal Access Token
-2. Run `python3 Scripts/github_prep_manager.py`
-3. The script will create milestones and issues for each topic
-4. Track your preparation progress through GitHub issues
-
-See [Scripts/README_GITHUB_PREP.md](Scripts/README_GITHUB_PREP.md) for detailed instructions.
 
 ---
 
@@ -303,7 +282,6 @@ This is an open-source project. Contributions, improvements, and feedback are we
 - [Study Plan](Interview%20Preparation/Study%20Plan.md)
 - [Quick Start Guide](Interview%20Preparation/Quick%20Start%20Guide.md)
 - [Progress Tracker](Interview%20Preparation/%F0%9F%93%8A%20Interview%20Preparation%20Progress%20Tracker.md)
-- [GitHub Prep Manager](Scripts/github_prep_manager.py)
 
 ---
 

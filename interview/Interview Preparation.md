@@ -18,13 +18,13 @@ A few pieces of advice, always remember:
 
 ---
 
-Note 🗒️ - You can check the below docs on how to prepare for the interview step by step. Remember, memorizing everything at once is like a Detonator.
+Note 🗒️ - You can check the below docs on how to prepare for the interview step by step. Remember, memorizing everything at once is like a Detonator.
 
-[Study Plan](Interview%20Preparation/Study%20Plan%202da562ad76f080a280b0cda2f889560e.md)
+[Study Plan](Interview%20Preparation/Study%20Plan.md)
 
-[**Quick Start Guide**](Interview%20Preparation/Quick%20Start%20Guide%202da562ad76f080b8a0a3f539bc4d8ac6.md)
+[**Quick Start Guide**](Interview%20Preparation/Quick%20Start%20Guide.md)
 
-[**📊 Interview Preparation Progress Tracker**](Interview%20Preparation/%F0%9F%93%8A%20Interview%20Preparation%20Progress%20Tracker%202da562ad76f080c39969cd212b4baae3.md)
+[**📊 Interview Preparation Progress Tracker**](Interview%20Preparation/%F0%9F%93%8A%20Interview%20Preparation%20Progress%20Tracker.md)
 
 ---
 
@@ -38,7 +38,7 @@ I will cover this preparation guide in different sections
 
 ---
 
-🗒️ The term `origin` refers to a combination of the protocol, domain, and port number that uniquely identifies a web resource.
+🗒️ The term `origin` refers to a combination of the protocol, domain, and port number that uniquely identifies a web resource.
 
 ---
 
@@ -46,310 +46,570 @@ I will cover this preparation guide in different sections
 
 ### Security Headers
 
-[Security Headers](Interview%20Preparation/Security%20Headers%202ad562ad76f080babeece233b3670872.md)
+[Security Headers - Interview Questions (Beginner to Advanced)](Security%20Headers/Security%20Headers%20Interview%20Questions%20Beginner%20to%20A.md)
 
-[**Security Headers Interview Questions Beginner to Advanced**](Interview%20Preparation/Security%20Headers%20Interview%20Questions%20Beginner%20to%20A%202ad562ad76f080b3b4e0fc60aec452b6.md)
+[**Security Headers - Quick Reference Guide**](Security%20Headers/Security%20Headers%20-%20Quick%20Reference.md)
 
-### HttpOnly and Secure cookies
+[**Security Headers - VAPT Methodology**](Security%20Headers/Security%20Headers%20-%20VAPT%20Methodology.md)
 
-[HttpOnly and Secure cookies](Interview%20Preparation/HttpOnly%20and%20Secure%20cookies%202b2562ad76f080d29c29e802f3c8e1c9.md)
+### HttpOnly and Secure Cookies
 
-[HttpOnly and Secure Cookies Interview Questions  & Answers](Interview%20Preparation/HttpOnly%20and%20Secure%20Cookies%20Interview%20Questions%20&%20%202b2562ad76f0804591cee3d02e2f4720.md)
+[HttpOnly and Secure Cookies](Cookie%20Security/HttpOnly%20and%20Secure%20cookies.md)
 
-[Critical Clarification: HttpOnly vs CSRF Protection](Interview%20Preparation/Critical%20Clarification%20HttpOnly%20vs%20CSRF%20Protection%202b4562ad76f080459f8ec00a8306e350.md)
+[HttpOnly and Secure Cookies Interview Questions & Answers](Cookie%20Security/HttpOnly%20and%20Secure%20Cookies%20Interview%20Questions%20&.md)
 
-[Cookie Security - Quick Reference Guide](Interview%20Preparation/Cookie%20Security%20-%20Quick%20Reference%20Guide%202cf562ad76f08033975cd56422a3f88e.md)
+[Critical Clarification: HttpOnly vs CSRF Protection](Cookie%20Security/Critical%20Clarification%20HttpOnly%20vs%20CSRF%20Protection.md)
+
+[Cookie Security - Quick Reference Guide](Cookie%20Security/Cookie%20Security%20-%20Quick%20Reference%20Guide.md)
 
 ### HTTP Refresh, verbs and status codes
 
-[HTTP Refresh, verbs and status codes](Interview%20Preparation/HTTP%20Refresh,%20verbs%20and%20status%20codes%202b2562ad76f080fca2d4ea70f8cebe15.md)
+[HTTP Refresh, verbs and status codes](HTTP%20Refresh%20verbs%20and%20status%20codes/HTTP%20Refresh,%20verbs%20and%20status%20codes.md)
+
+[**HTTP Refresh, verbs and status codes — Comprehensive Guide**](HTTP%20Refresh%20verbs%20and%20status%20codes/HTTP%20Refresh%2C%20verbs%20and%20status%20codes%20-%20Comprehensive%20Guide.md)
+
+[HTTP - Interview Questions & Answers](HTTP%20Refresh%20verbs%20and%20status%20codes/HTTP%20-%20Interview%20Questions%20&%20Answers.md)
 
 ### CORS and SOP
 
-[**CORS and Same-Origin Policy**](Interview%20Preparation/CORS%20and%20Same-Origin%20Policy%202b4562ad76f080f8ad78f18ee1bc5c7d.md)
+[**CORS and Same-Origin Policy**](CORS%20and%20SOP/CORS%20and%20Same-Origin%20Policy.md)
 
-[**CORS and Same-Origin Policy Interview Questions & Answers**](Interview%20Preparation/CORS%20and%20Same-Origin%20Policy%20Interview%20Questions%20&%20%202b4562ad76f0809189a0c8f99a19ba99.md)
+[**CORS and Same-Origin Policy Interview Questions & Answers**](CORS%20and%20SOP/CORS%20and%20Same-Origin%20Policy%20Interview%20Questions%20&.md)
 
-[**Critical Clarification: CORS vs SOP**](Interview%20Preparation/Critical%20Clarification%20CORS%20vs%20SOP%202b4562ad76f080b3b472fc369b4c9ffa.md)
+[**Critical Clarification: CORS vs SOP**](CORS%20and%20SOP/Critical%20Clarification%20CORS%20vs%20SOP.md)
 
-[**CORS and Same-Origin Policy - Quick Reference Guide**](Interview%20Preparation/CORS%20and%20Same-Origin%20Policy%20-%20Quick%20Reference%20Guid%202cf562ad76f080eca899fbc870951cca.md)
+[**CORS and Same-Origin Policy - Quick Reference Guide**](CORS%20and%20SOP/CORS%20and%20Same-Origin%20Policy%20-%20Quick%20Reference%20Guid.md)
 
 ### Digital Signatures
 
-[Digital Signatures](Interview%20Preparation/Digital%20Signatures%202b4562ad76f08028b5a0ef8be87eed9b.md)
+[Digital Signatures](Digital%20Signatures/Digital%20Signatures.md)
 
-[**Digital Signatures Interview Questions & Answers**](Interview%20Preparation/Digital%20Signatures%20Interview%20Questions%20&%20Answers%202b4562ad76f08028ae6ad8e3e82503d6.md)
+[**Digital Signatures Interview Questions & Answers**](Digital%20Signatures/Digital%20Signatures%20Interview%20Questions%20&%20Answers.md)
 
-[**Digital Signature - Quick Reference Guide**](Interview%20Preparation/Digital%20Signature%20-%20Quick%20Reference%20Guide%202b4562ad76f0804682a2dd86d4af2607.md)
+[**Digital Signature - Quick Reference Guide**](Digital%20Signatures/Digital%20Signature%20-%20Quick%20Reference%20Guide.md)
 
-[**Critical Clarification: Digital Signatures**](Interview%20Preparation/Critical%20Clarification%20Digital%20Signatures%202b4562ad76f080418729ddf91397a418.md)
+[**Critical Clarification: Digital Signatures**](Digital%20Signatures/Critical%20Clarification%20Digital%20Signatures.md)
 
-### TLS Hypothesis
+### TLS (Transport Layer Security)
 
-[**TLS (Transport Layer Security) - Comprehensive Guide**](Interview%20Preparation/TLS%20(Transport%20Layer%20Security)%20-%20Comprehensive%20Gui%202cf562ad76f08058909ad3f84b6fa485.md)
+[**TLS (Transport Layer Security) - Comprehensive Guide**](TLS/TLS%20(Transport%20Layer%20Security)%20-%20Comprehensive%20Gui.md)
+
+[**TLS - Interview Questions & Answers**](TLS/TLS%20-%20Interview%20Questions%20&%20Answers.md)
 
 ### TCP vs UDP
 
-[**TCP vs UDP**](Interview%20Preparation/TCP%20vs%20UDP%202cf562ad76f080a48f63f6ca288ec022.md)
+[**TCP vs UDP**](TCP%20vs%20UDP/TCP%20vs%20UDP.md)
+
+[**TCP vs UDP - Comprehensive Guide**](TCP%20vs%20UDP/TCP%20vs%20UDP%20-%20Comprehensive%20Guide.md)
+
+[**TCP vs UDP - Interview Questions & Answers**](TCP%20vs%20UDP/TCP%20vs%20UDP%20-%20Interview%20Questions%20&%20Answers.md)
+
+### OSI Layer
+
+[**OSI Layer - Comprehensive Guide**](OSI%20Layer/OSI%20Layer%20-%20Comprehensive%20Guide.md)
+
+[**OSI Layer - Interview Questions & Answers**](OSI%20Layer/OSI%20Layer%20-%20Interview%20Questions%20&%20Answers.md)
+
+[**OSI Layer - Quick Reference**](OSI%20Layer/OSI%20Layer%20-%20Quick%20Reference.md)
 
 ### JWT - JSON WEB TOKEN
 
-[JSON Web Token (JWT) - Comprehensive Guide](Interview%20Preparation/JSON%20Web%20Token%20(JWT)%20-%20Comprehensive%20Guide%202cf562ad76f080a69d72e3897314c582.md)
+[JSON Web Token (JWT) - Comprehensive Guide](JWT%20(JSON%20Web%20Token)/JSON%20Web%20Token%20(JWT)%20-%20Comprehensive%20Guide.md)
 
-[JSON Web Token (JWT) - Interview Questions & Answers](Interview%20Preparation/JSON%20Web%20Token%20(JWT)%20-%20Interview%20Questions%20&%20Answe%202cf562ad76f080f2a821cc52ab361197.md)
+[JSON Web Token (JWT) - Interview Questions & Answers](JWT%20(JSON%20Web%20Token)/JSON%20Web%20Token%20(JWT)%20-%20Interview%20Questions%20&%20Answe.md)
 
-[**Critical Clarification: JWT Security Misconceptions**](Interview%20Preparation/Critical%20Clarification%20JWT%20Security%20Misconceptions%202cf562ad76f080f694f4e6814aabd271.md)
+[**Critical Clarification: JWT Security Misconceptions**](JWT%20(JSON%20Web%20Token)/Critical%20Clarification%20JWT%20Security%20Misconceptions.md)
 
-[**JSON Web Token (JWT) - Quick Reference Guide**](Interview%20Preparation/JSON%20Web%20Token%20(JWT)%20-%20Quick%20Reference%20Guide%202cf562ad76f080fca27fe60a687fa935.md)
+[**JSON Web Token (JWT) - Quick Reference Guide**](JWT%20(JSON%20Web%20Token)/JSON%20Web%20Token%20(JWT)%20-%20Quick%20Reference%20Guide.md)
 
 ### OAuth
 
-[OAuth 2.0 - Comprehensive Guide](Interview%20Preparation/OAuth%202%200%20-%20Comprehensive%20Guide%202cf562ad76f080f2b8e9cb70a4a9b485.md)
+[OAuth 2.0 - Comprehensive Guide](OAuth/OAuth%202%200%20-%20Comprehensive%20Guide.md)
 
-[OAuth 2.0 - Interview Questions & Answers](Interview%20Preparation/OAuth%202%200%20-%20Interview%20Questions%20&%20Answers%202cf562ad76f0809d8222d10a1b2de934.md)
+[OAuth 2.0 - Interview Questions & Answers](OAuth/OAuth%202%200%20-%20Interview%20Questions%20&%20Answers.md)
 
-[Critical Clarification: OAuth 2.0 Security Misconceptions](Interview%20Preparation/Critical%20Clarification%20OAuth%202%200%20Security%20Misconce%202cf562ad76f08086b3b7eee8e5d9ed99.md)
+[Critical Clarification: OAuth 2.0 Security Misconceptions](OAuth/Critical%20Clarification%20OAuth%202%200%20Security%20Misconce.md)
 
-[OAuth 2.0 - Quick Reference Guide](Interview%20Preparation/OAuth%202%200%20-%20Quick%20Reference%20Guide%202cf562ad76f0800d919ac4e9d9de5800.md)
+[OAuth 2.0 - Quick Reference Guide](OAuth/OAuth%202%200%20-%20Quick%20Reference%20Guide.md)
 
 ### JWT vs OAuth
 
-[JWT vs OAuth 2.0 - Comprehensive Guide](Interview%20Preparation/JWT%20vs%20OAuth%202%200%20-%20Comprehensive%20Guide%202cf562ad76f08004bbc7f9fabc6738b7.md)
+[JWT vs OAuth 2.0 - Comprehensive Guide](JWT%20vs%20OAuth/JWT%20vs%20OAuth%202%200%20-%20Comprehensive%20Guide.md)
 
-[JWT vs OAuth 2.0 - Interview Questions & Answers](Interview%20Preparation/JWT%20vs%20OAuth%202%200%20-%20Interview%20Questions%20&%20Answers%202cf562ad76f080d29715dfba9d0ea20c.md)
+[JWT vs OAuth 2.0 - Interview Questions & Answers](JWT%20vs%20OAuth/JWT%20vs%20OAuth%202%200%20-%20Interview%20Questions%20&%20Answers.md)
 
-[Critical Clarification: JWT vs OAuth 2.0 Misconceptions](Interview%20Preparation/Critical%20Clarification%20JWT%20vs%20OAuth%202%200%20Misconcept%202cf562ad76f080158078cd095296ad1d.md)
+[Critical Clarification: JWT vs OAuth 2.0 Misconceptions](JWT%20vs%20OAuth/Critical%20Clarification%20JWT%20vs%20OAuth%202%200%20Misconcept.md)
 
-[JWT vs OAuth 2.0 - Quick Reference Guide](Interview%20Preparation/JWT%20vs%20OAuth%202%200%20-%20Quick%20Reference%20Guide%202cf562ad76f080788c5bc8fb11a6624d.md)
+[JWT vs OAuth 2.0 - Quick Reference Guide](JWT%20vs%20OAuth/JWT%20vs%20OAuth%202%200%20-%20Quick%20Reference%20Guide.md)
 
 ### Encryption vs Hashing
 
-[**Encryption vs Hashing - Comprehensive Guide**](Interview%20Preparation/Encryption%20vs%20Hashing%20-%20Comprehensive%20Guide%202cf562ad76f080fdb0e4d3676c07720c.md)
+[**Encryption vs Hashing - Comprehensive Guide**](Encryption%20vs%20Hashing/Encryption%20vs%20Hashing%20-%20Comprehensive%20Guide.md)
 
-[Encryption vs Hashing - Interview Questions & Answers](Interview%20Preparation/Encryption%20vs%20Hashing%20-%20Interview%20Questions%20&%20Answ%202cf562ad76f0802d91d6db7c22d96eb3.md)
+[Encryption vs Hashing - Interview Questions & Answers](Encryption%20vs%20Hashing/Encryption%20vs%20Hashing%20-%20Interview%20Questions%20&%20Answ.md)
 
-[Critical Clarification: Encryption vs Hashing Misconceptions](Interview%20Preparation/Critical%20Clarification%20Encryption%20vs%20Hashing%20Misco%202cf562ad76f080d699d3ec1e3d55c5a7.md)
+[Critical Clarification: Encryption vs Hashing Misconceptions](Encryption%20vs%20Hashing/Critical%20Clarification%20Encryption%20vs%20Hashing%20Misco.md)
 
-[Encryption vs Hashing - Quick Reference Guide](Interview%20Preparation/Encryption%20vs%20Hashing%20-%20Quick%20Reference%20Guide%202cf562ad76f080088467cbc6ef917b53.md)
+[Encryption vs Hashing - Quick Reference Guide](Encryption%20vs%20Hashing/Encryption%20vs%20Hashing%20-%20Quick%20Reference%20Guide.md)
 
 ### Session Fixation and Session Hijacking
 
-[Session Fixation and Session Hijacking **- Comprehensive Guide**](Interview%20Preparation/Session%20Fixation%20and%20Session%20Hijacking%20-%20Comprehen%202cf562ad76f0803a9c21fe8cbcf4c8e8.md)
+[Session Fixation and Session Hijacking - Comprehensive Guide](Session%20Fixation%20and%20Session%20Hijacking/Session%20Fixation%20and%20Session%20Hijacking%20-%20Comprehen.md)
 
-[Session Fixation and Session Hijacking - Interview Questions & Answers](Interview%20Preparation/Session%20Fixation%20and%20Session%20Hijacking%20-%20Interview%202cf562ad76f08032925fce3c3a5f5c73.md)
+[Session Fixation and Session Hijacking - Interview Questions & Answers](Session%20Fixation%20and%20Session%20Hijacking/Session%20Fixation%20and%20Session%20Hijacking%20-%20Interview.md)
 
-[Critical Clarification: Session Fixation vs Session Hijacking Misconceptions](Interview%20Preparation/Critical%20Clarification%20Session%20Fixation%20vs%20Session%202cf562ad76f08058b9c9ffe9f25ef3e9.md)
+[Critical Clarification: Session Fixation vs Session Hijacking Misconceptions](Session%20Fixation%20and%20Session%20Hijacking/Critical%20Clarification%20Session%20Fixation%20vs%20Session.md)
 
-[Session Fixation and Session Hijacking - Quick Reference Guide](Interview%20Preparation/Session%20Fixation%20and%20Session%20Hijacking%20-%20Quick%20Ref%202cf562ad76f0808fae5bc4ca772f1b4e.md)
+[Session Fixation and Session Hijacking - Quick Reference Guide](Session%20Fixation%20and%20Session%20Hijacking/Session%20Fixation%20and%20Session%20Hijacking%20-%20Quick%20Ref.md)
 
 ### SQL Injection
 
-[Critical Clarification: SQL Injection Misconceptions](Interview%20Preparation/Critical%20Clarification%20SQL%20Injection%20Misconception%202d5562ad76f0802aa77debc7518e2da6.md)
+[SQL Injection - Comprehensive Guide](SQL%20Injection/SQL%20Injection%20-%20Comprehensive%20Guide.md)
 
-[SQL Injection - Comprehensive Guide](Interview%20Preparation/SQL%20Injection%20-%20Comprehensive%20Guide%202d5562ad76f080a3b8e7c6dc32fa88cf.md)
+[**SQL Injection - Interview Questions & Answers**](SQL%20Injection/SQL%20Injection%20-%20Interview%20Questions%20&%20Answers.md)
 
-[**SQL Injection - Interview Questions & Answers**](Interview%20Preparation/SQL%20Injection%20-%20Interview%20Questions%20&%20Answers%202d5562ad76f08038a99bc094caa42cc9.md)
+[Critical Clarification: SQL Injection Misconceptions](SQL%20Injection/Critical%20Clarification%20SQL%20Injection%20Misconception.md)
 
-[**SQL Injection - Quick Reference**](Interview%20Preparation/SQL%20Injection%20-%20Quick%20Reference%202d5562ad76f080cd9b5bd40705f7216b.md)
+[**SQL Injection - Quick Reference**](SQL%20Injection/SQL%20Injection%20-%20Quick%20Reference.md)
 
 ### Parameterized Queries vs Prepared Statements
 
-[**Critical Clarification: Parameterized Queries vs Prepared Statements**](Interview%20Preparation/Critical%20Clarification%20Parameterized%20Queries%20vs%20Pr%202d5562ad76f080f09e33e0f2f0b58b66.md)
+[Parameterized Queries and Prepared Statements - Comprehensive Guide](Parameterized%20and%20Prepared%20Statement/Parameterized%20Queries%20and%20Prepared%20Statements%20-%20Co.md)
 
-[Parameterized Queries and Prepared Statements - Comprehensive Guide](Interview%20Preparation/Parameterized%20Queries%20and%20Prepared%20Statements%20-%20Co%202d5562ad76f080708d1fe975504dc608.md)
+[Parameterized Queries and Prepared Statements - Interview Questions & Answers](Parameterized%20and%20Prepared%20Statement/Parameterized%20Queries%20and%20Prepared%20Statements%20-%20In.md)
 
-[Parameterized Queries and Prepared Statements - Interview Questions & Answers](Interview%20Preparation/Parameterized%20Queries%20and%20Prepared%20Statements%20-%20In%202d5562ad76f0801db646c21271b1a4d1.md)
+[**Critical Clarification: Parameterized Queries vs Prepared Statements**](Parameterized%20and%20Prepared%20Statement/Critical%20Clarification%20Parameterized%20Queries%20vs%20Pr.md)
 
-[Parameterized Queries and Prepared Statements - Quick Reference](Interview%20Preparation/Parameterized%20Queries%20and%20Prepared%20Statements%20-%20Qu%202d5562ad76f080c2a4ffc92a2211215e.md)
+[Parameterized Queries and Prepared Statements - Quick Reference](Parameterized%20and%20Prepared%20Statement/Parameterized%20Queries%20and%20Prepared%20Statements%20-%20Qu.md)
 
 ### CSRF - Cross Site Request Forgery
 
-[Critical Clarification: CSRF Misconceptions](Interview%20Preparation/Critical%20Clarification%20CSRF%20Misconceptions%202d5562ad76f08073ae60f71d52be7dbe.md)
+[**CSRF (Cross-Site Request Forgery) - Comprehensive Guide**](CSRF/CSRF%20(Cross-Site%20Request%20Forgery)%20-%20Comprehensive.md)
 
-[**CSRF (Cross-Site Request Forgery) - Comprehensive Guide**](Interview%20Preparation/CSRF%20(Cross-Site%20Request%20Forgery)%20-%20Comprehensive%20%202d5562ad76f0803eb5d1f6de43ffe3ca.md)
+[**CSRF - Interview Questions & Answers**](CSRF/CSRF%20-%20Interview%20Questions%20&%20Answers.md)
 
-[**CSRF - Interview Questions & Answers**](Interview%20Preparation/CSRF%20-%20Interview%20Questions%20&%20Answers%202d5562ad76f08037a5aaffa02456f92b.md)
+[Critical Clarification: CSRF Misconceptions](CSRF/Critical%20Clarification%20CSRF%20Misconceptions.md)
 
-[**CSRF - Quick Reference**](Interview%20Preparation/CSRF%20-%20Quick%20Reference%202d5562ad76f080428ba1d89890f0cb31.md)
+[**CSRF - Quick Reference**](CSRF/CSRF%20-%20Quick%20Reference.md)
 
 ### XSS - Cross Site Scripting
 
-[Critical Clarification: XSS Misconceptions](Interview%20Preparation/Critical%20Clarification%20XSS%20Misconceptions%202d5562ad76f080eb8597e4b96732bb11.md)
+[**XSS (Cross-Site Scripting) - Comprehensive Guide**](XSS/XSS%20(Cross-Site%20Scripting)%20-%20Comprehensive%20Guide.md)
 
-[**XSS (Cross-Site Scripting) - Comprehensive Guide**](Interview%20Preparation/XSS%20(Cross-Site%20Scripting)%20-%20Comprehensive%20Guide%202d5562ad76f0808a9d5cdcac50e05ee9.md)
+[XSS - Interview Questions & Answers](XSS/XSS%20-%20Interview%20Questions%20&%20Answers.md)
 
-[XSS - Interview Questions & Answers](Interview%20Preparation/XSS%20-%20Interview%20Questions%20&%20Answers%202d5562ad76f080a9993cfe8e0df661ab.md)
+[Critical Clarification: XSS Misconceptions](XSS/Critical%20Clarification%20XSS%20Misconceptions.md)
 
-[**XSS - Quick Reference**](Interview%20Preparation/XSS%20-%20Quick%20Reference%202d5562ad76f080628a76ee25c2b9418b.md)
+[**XSS - Quick Reference**](XSS/XSS%20-%20Quick%20Reference.md)
 
 ### XXE - XML External Entity
 
-[**Critical Clarification: XXE Misconceptions**](Interview%20Preparation/Critical%20Clarification%20XXE%20Misconceptions%202d5562ad76f080e5a323df6c62ce3957.md)
+[XXE (XML External Entity) - Comprehensive Guide](XXE/XXE%20(XML%20External%20Entity)%20-%20Comprehensive%20Guide.md)
 
-[XXE (XML External Entity) - Comprehensive Guide](Interview%20Preparation/XXE%20(XML%20External%20Entity)%20-%20Comprehensive%20Guide%202d5562ad76f08059a557c3710d1c976e.md)
+[XXE - Interview Questions & Answers](XXE/XXE%20-%20Interview%20Questions%20&%20Answers.md)
 
-[XXE - Interview Questions & Answers](Interview%20Preparation/XXE%20-%20Interview%20Questions%20&%20Answers%202d5562ad76f080c092dbd0843125b149.md)
+[**Critical Clarification: XXE Misconceptions**](XXE/Critical%20Clarification%20XXE%20Misconceptions.md)
 
-[**XXE - Quick Reference**](Interview%20Preparation/XXE%20-%20Quick%20Reference%202d5562ad76f08067b0a0d386288afddd.md)
+[**XXE - Quick Reference**](XXE/XXE%20-%20Quick%20Reference.md)
 
 ### SSRF - Server Side Request Forgery
 
-[Critical Clarification: SSRF Misconceptions](Interview%20Preparation/Critical%20Clarification%20SSRF%20Misconceptions%202d5562ad76f080d1a1ecf30b4de48f9b.md)
+[SSRF (Server-Side Request Forgery) - Comprehensive Guide](SSRF/SSRF%20(Server-Side%20Request%20Forgery)%20-%20Comprehensive.md)
 
-[SSRF (Server-Side Request Forgery) - Comprehensive Guide](Interview%20Preparation/SSRF%20(Server-Side%20Request%20Forgery)%20-%20Comprehensive%202d5562ad76f080b799ffd172da127847.md)
+[SSRF - Interview Questions & Answers](SSRF/SSRF%20-%20Interview%20Questions%20&%20Answers.md)
 
-[SSRF - Interview Questions & Answers](Interview%20Preparation/SSRF%20-%20Interview%20Questions%20&%20Answers%202d5562ad76f0802aa409f145d7637c34.md)
+[Critical Clarification: SSRF Misconceptions](SSRF/Critical%20Clarification%20SSRF%20Misconceptions.md)
 
-[SSRF - Quick Reference](Interview%20Preparation/SSRF%20-%20Quick%20Reference%202d5562ad76f0808c9baafbe9a91d1b99.md)
+[SSRF - Quick Reference](SSRF/SSRF%20-%20Quick%20Reference.md)
+
+### IDOR - Insecure Direct Object Reference
+
+[IDOR - Comprehensive Guide](IDOR/IDOR%20-%20Comprehensive%20Guide.md)
+
+[IDOR - Interview Questions](IDOR/IDOR%20-%20Interview%20Questions.md)
+
+[Critical Clarification: IDOR Misconceptions](IDOR/Critical%20Clarification%20IDOR%20Misconceptions.md)
+
+[IDOR - Quick Reference](IDOR/IDOR%20-%20Quick%20Reference.md)
 
 ### XSS vs CSRF
 
-[Critical Clarification: XSS vs CSRF Misconceptions](Interview%20Preparation/Critical%20Clarification%20XSS%20vs%20CSRF%20Misconceptions%202d5562ad76f080199487d71f067bbf7e.md)
+[**XSS vs CSRF - Comprehensive Comparison Guide**](XSS/XSS%20vs%20CSRF%20-%20Comprehensive%20Comparison%20Guide.md)
 
-[**XSS vs CSRF - Comprehensive Comparison Guide**](Interview%20Preparation/XSS%20vs%20CSRF%20-%20Comprehensive%20Comparison%20Guide%202d5562ad76f0803f9d51e570f1e47476.md)
+[**XSS vs CSRF - Interview Questions & Answers**](XSS%20vs%20CSRF/XSS%20vs%20CSRF%20-%20Interview%20Questions%20&%20Answers.md)
 
-[**XSS vs CSRF - Interview Questions & Answers**](Interview%20Preparation/XSS%20vs%20CSRF%20-%20Interview%20Questions%20&%20Answers%202d5562ad76f080bfb73dedc9d8895f5e.md)
+[Critical Clarification: XSS vs CSRF Misconceptions](XSS%20vs%20CSRF/Critical%20Clarification%20XSS%20vs%20CSRF%20Misconceptions.md)
 
-[XSS vs CSRF - Quick Reference](Interview%20Preparation/XSS%20vs%20CSRF%20-%20Quick%20Reference%202d5562ad76f080aeb171dde2da0972fe.md)
+[XSS vs CSRF - Quick Reference](XSS%20vs%20CSRF/XSS%20vs%20CSRF%20-%20Quick%20Reference.md)
 
 ### MITM Attack
 
-[**Critical Clarification: MITM Attack Misconceptions**](Interview%20Preparation/Critical%20Clarification%20MITM%20Attack%20Misconceptions%202d5562ad76f0808684bfd6455e1920da.md)
+[**MITM (Man-in-the-Middle) Attack - Comprehensive Guide**](MITM%20Attack/MITM%20(Man-in-the-Middle)%20Attack%20-%20Comprehensive%20Gu.md)
 
-[**MITM (Man-in-the-Middle) Attack - Comprehensive Guide**](Interview%20Preparation/MITM%20(Man-in-the-Middle)%20Attack%20-%20Comprehensive%20Gu%202d5562ad76f080008659f61fabf23b7c.md)
+[**MITM Attack - Interview Questions & Answers**](MITM%20Attack/MITM%20Attack%20-%20Interview%20Questions%20&%20Answers.md)
 
-[**MITM Attack - Interview Questions & Answers**](Interview%20Preparation/MITM%20Attack%20-%20Interview%20Questions%20&%20Answers%202d5562ad76f08095b5c5e9f1818f9f83.md)
+[**Critical Clarification: MITM Attack Misconceptions**](MITM%20Attack/Critical%20Clarification%20MITM%20Attack%20Misconceptions.md)
 
-[MITM Attack - Quick Reference](Interview%20Preparation/MITM%20Attack%20-%20Quick%20Reference%202d5562ad76f0801eb0bdf72dae52f456.md)
+[MITM Attack - Quick Reference](MITM%20Attack/MITM%20Attack%20-%20Quick%20Reference.md)
+
+---
 
 ## Product Security
 
+### Authorization and Authentication
+
+[**Authorization and Authentication - Comprehensive Guide**](Authorization%20and%20Authentication/Authorization%20and%20Authentication%20-%20Comprehensive%20G.md)
+
+[**Authorization and Authentication - Interview Questions & Answers**](Authorization%20and%20Authentication/Authorization%20and%20Authentication%20-%20Interview%20Quest.md)
+
+[**Critical Clarification: Authorization and Authentication**](Authorization%20and%20Authentication/Critical%20Clarification%20Authorization%20and%20Authentic.md)
+
+[**Authorization and Authentication - Quick Reference**](Authorization%20and%20Authentication/Authorization%20and%20Authentication%20-%20Quick%20Reference.md)
+
 ### Agile Security Compliance
 
-[**Critical Clarification: Agile Security Compliance**](Interview%20Preparation/Critical%20Clarification%20Agile%20Security%20Compliance%202d5562ad76f08091b07bf50184e8a61a.md)
+[**Agile Security Compliance - Comprehensive Guide**](Agile%20Security%20Compliance/Agile%20Security%20Compliance%20-%20Comprehensive%20Guide.md)
 
-[**Agile Security Compliance - Comprehensive Guide**](Interview%20Preparation/Agile%20Security%20Compliance%20-%20Comprehensive%20Guide%202d5562ad76f0800084e4cd53058e9fb5.md)
+[**Agile Security Compliance - Interview Questions & Answers**](Agile%20Security%20Compliance/Agile%20Security%20Compliance%20-%20Interview%20Questions%20&.md)
 
-[**Agile Security Compliance - Interview Questions & Answers**](Interview%20Preparation/Agile%20Security%20Compliance%20-%20Interview%20Questions%20&%20%202d5562ad76f080688b98c0f82046815f.md)
+[**Critical Clarification: Agile Security Compliance**](Agile%20Security%20Compliance/Critical%20Clarification%20Agile%20Security%20Compliance.md)
 
-[**Agile Security Compliance - Quick Reference**](Interview%20Preparation/Agile%20Security%20Compliance%20-%20Quick%20Reference%202d5562ad76f080e99fbde603aee3971b.md)
+[**Agile Security Compliance - Quick Reference**](Agile%20Security%20Compliance/Agile%20Security%20Compliance%20-%20Quick%20Reference.md)
 
 ### Multi-Team Security Incident Response
 
-[Critical Clarification: Multi-Team Security Incident Response](Interview%20Preparation/Critical%20Clarification%20Multi-Team%20Security%20Inciden%202d5562ad76f080f6ac1edc88363ec28c.md)
+[**Multi-Team Security Incident Response - Comprehensive Guide**](Multi-Team%20Security%20Incident%20Response/Multi-Team%20Security%20Incident%20Response%20-%20Comprehens.md)
 
-[**Multi-Team Security Incident Response - Comprehensive Guide**](Interview%20Preparation/Multi-Team%20Security%20Incident%20Response%20-%20Comprehens%202d5562ad76f08088b941ccdf32461fd1.md)
+[**Multi-Team Security Incident Response - Interview Questions & Answers**](Multi-Team%20Security%20Incident%20Response/Multi-Team%20Security%20Incident%20Response%20-%20Interview.md)
 
-[**Multi-Team Security Incident Response - Interview Questions & Answers**](Interview%20Preparation/Multi-Team%20Security%20Incident%20Response%20-%20Interview%20%202d5562ad76f080088b81d110f1badfb3.md)
+[Critical Clarification: Multi-Team Security Incident Response](Multi-Team%20Security%20Incident%20Response/Critical%20Clarification%20Multi-Team%20Security%20Inciden.md)
 
-[**Multi-Team Security Incident Response - Quick Reference**](Interview%20Preparation/Multi-Team%20Security%20Incident%20Response%20-%20Quick%20Refe%202d5562ad76f0802da8a4d913de97cfc6.md)
-
-### Authorization and Authentication
-
-[**Critical Clarification: Authorization and Authentication**](Interview%20Preparation/Critical%20Clarification%20Authorization%20and%20Authentic%202d9562ad76f080348810ec2d9e4cc114.md)
-
-[**Authorization and Authentication - Comprehensive Guide**](Interview%20Preparation/Authorization%20and%20Authentication%20-%20Comprehensive%20G%202d9562ad76f080f4bd74cd3a1df22add.md)
-
-[**Authorization and Authentication - Interview Questions & Answers**](Interview%20Preparation/Authorization%20and%20Authentication%20-%20Interview%20Quest%202d9562ad76f080c482b2ca8e6ef89ca8.md)
-
-[**Authorization and Authentication - Quick Reference**](Interview%20Preparation/Authorization%20and%20Authentication%20-%20Quick%20Reference%202d9562ad76f08089939cd87c33812c35.md)
+[**Multi-Team Security Incident Response - Quick Reference**](Multi-Team%20Security%20Incident%20Response/Multi-Team%20Security%20Incident%20Response%20-%20Quick%20Refe.md)
 
 ### Penetration Testing and Security Assessment
 
-[**Critical Clarification: Penetration Testing and Security Assessment**](Interview%20Preparation/Critical%20Clarification%20Penetration%20Testing%20and%20Sec%202d9562ad76f080e09bbeff9d0c93a631.md)
+[**Penetration Testing and Security Assessment - Comprehensive Guide**](Penetration%20Testing%20and%20Security%20Assessment/Penetration%20Testing%20and%20Security%20Assessment%20-%20Comp.md)
 
-[**Penetration Testing and Security Assessment - Comprehensive Guide**](Interview%20Preparation/Penetration%20Testing%20and%20Security%20Assessment%20-%20Comp%202d9562ad76f080a5af73fc8980041516.md)
+[Penetration Testing and Security Assessment - Interview Questions & Answers](Penetration%20Testing%20and%20Security%20Assessment/Penetration%20Testing%20and%20Security%20Assessment%20-%20Inte.md)
 
-[Penetration Testing and Security Assessment - Interview Questions & Answers](Interview%20Preparation/Penetration%20Testing%20and%20Security%20Assessment%20-%20Inte%202da562ad76f080cb94e0d199ee26d925.md)
+[**Critical Clarification: Penetration Testing and Security Assessment**](Penetration%20Testing%20and%20Security%20Assessment/Critical%20Clarification%20Penetration%20Testing%20and%20Sec.md)
 
-[**Penetration Testing and Security Assessment - Quick Reference**](Interview%20Preparation/Penetration%20Testing%20and%20Security%20Assessment%20-%20Quic%202da562ad76f08024bf73d15bae4bba60.md)
+[**Penetration Testing and Security Assessment - Quick Reference**](Penetration%20Testing%20and%20Security%20Assessment/Penetration%20Testing%20and%20Security%20Assessment%20-%20Quic.md)
 
 ### Proactive Security Assessment
 
-[**Critical Clarification: Proactive Security Assessment**](Interview%20Preparation/Critical%20Clarification%20Proactive%20Security%20Assessme%202da562ad76f080d28ad6f0d7ef83c8f7.md)
+[**Proactive Security Assessment - Comprehensive Guide**](Proactive%20Security%20Assessment/Proactive%20Security%20Assessment%20-%20Comprehensive%20Guide.md)
 
-[**Proactive Security Assessment - Comprehensive Guide**](Interview%20Preparation/Proactive%20Security%20Assessment%20-%20Comprehensive%20Guid%202da562ad76f0807bbdb4ddc58b351e29.md)
+[**Proactive Security Assessment - Interview Questions & Answers**](Proactive%20Security%20Assessment/Proactive%20Security%20Assessment%20-%20Interview%20Question.md)
 
-[**Proactive Security Assessment - Interview Questions & Answers**](Interview%20Preparation/Proactive%20Security%20Assessment%20-%20Interview%20Question%202da562ad76f080a4be8ddd9a361ba36d.md)
+[**Critical Clarification: Proactive Security Assessment**](Proactive%20Security%20Assessment/Critical%20Clarification%20Proactive%20Security%20Assessme.md)
 
-[**Proactive Security Assessment - Quick Reference**](Interview%20Preparation/Proactive%20Security%20Assessment%20-%20Quick%20Reference%202da562ad76f08032b063d31c109b6a98.md)
+[**Proactive Security Assessment - Quick Reference**](Proactive%20Security%20Assessment/Proactive%20Security%20Assessment%20-%20Quick%20Reference.md)
 
 ### Product Security Assessment Design
 
-[**Critical Clarification: Product Security Assessment Design**](Interview%20Preparation/Critical%20Clarification%20Product%20Security%20Assessment%202da562ad76f08019baf7d937544cccd3.md)
+[**Product Security Assessment Design - Comprehensive Guide**](Product%20Security%20Assessment%20Design/Product%20Security%20Assessment%20Design%20-%20Comprehensive.md)
 
-[**Product Security Assessment Design - Comprehensive Guide**](Interview%20Preparation/Product%20Security%20Assessment%20Design%20-%20Comprehensive%202da562ad76f0806f890ec5eccccebf41.md)
+[**Product Security Assessment Design - Interview Questions & Answers**](Product%20Security%20Assessment%20Design/Product%20Security%20Assessment%20Design%20-%20Interview%20Que.md)
 
-[**Product Security Assessment Design - Interview Questions & Answers**](Interview%20Preparation/Product%20Security%20Assessment%20Design%20-%20Interview%20Que%202da562ad76f080fda8fefc8d398b6c6a.md)
+[**Critical Clarification: Product Security Assessment Design**](Product%20Security%20Assessment%20Design/Critical%20Clarification%20Product%20Security%20Assessment.md)
 
-[**Product Security Assessment Design - Quick Reference**](Interview%20Preparation/Product%20Security%20Assessment%20Design%20-%20Quick%20Referen%202da562ad76f08052bd06d2331af54f70.md)
+[**Product Security Assessment Design - Quick Reference**](Product%20Security%20Assessment%20Design/Product%20Security%20Assessment%20Design%20-%20Quick%20Referen.md)
 
 ### Production Security Incident Response
 
-[**Critical Clarification: Production Security Incident Response**](Interview%20Preparation/Critical%20Clarification%20Production%20Security%20Inciden%202da562ad76f0804f9ef8dcc81d0e145c.md)
+[**Production Security Incident Response - Comprehensive Guide**](Production%20Security%20Incident%20Response/Production%20Security%20Incident%20Response%20-%20Comprehens.md)
 
-[**Production Security Incident Response - Comprehensive Guide**](Interview%20Preparation/Production%20Security%20Incident%20Response%20-%20Comprehens%202da562ad76f080a38ae1e33fd765b644.md)
+[Production Security Incident Response - Interview Questions & Answers](Production%20Security%20Incident%20Response/Production%20Security%20Incident%20Response%20-%20Interview.md)
 
-[Production Security Incident Response - Interview Questions & Answers](Interview%20Preparation/Production%20Security%20Incident%20Response%20-%20Interview%20%202da562ad76f08038be3cc72d9b890bb3.md)
+[**Critical Clarification: Production Security Incident Response**](Production%20Security%20Incident%20Response/Critical%20Clarification%20Production%20Security%20Inciden.md)
 
-[**Production Security Incident Response - Quick Reference**](Interview%20Preparation/Production%20Security%20Incident%20Response%20-%20Quick%20Refe%202da562ad76f08053bcdcddbaa20d5aa4.md)
+[**Production Security Incident Response - Quick Reference**](Production%20Security%20Incident%20Response/Production%20Security%20Incident%20Response%20-%20Quick%20Refe.md)
 
 ### Secure Microservices Communication
 
-[**Critical Clarification: Secure Microservices Communication**](Interview%20Preparation/Critical%20Clarification%20Secure%20Microservices%20Commun%202da562ad76f0800d9a17d14e90f65217.md)
+[**Secure Microservices Communication - Comprehensive Guide**](Secure%20Microservices%20Communication/Secure%20Microservices%20Communication%20-%20Comprehensive.md)
 
-[**Secure Microservices Communication - Comprehensive Guide**](Interview%20Preparation/Secure%20Microservices%20Communication%20-%20Comprehensive%202da562ad76f08053a479e861aba4ab64.md)
+[Secure Microservices Communication - Interview Questions & Answers](Secure%20Microservices%20Communication/Secure%20Microservices%20Communication%20-%20Interview%20Que.md)
 
-[Secure Microservices Communication - Interview Questions & Answers](Interview%20Preparation/Secure%20Microservices%20Communication%20-%20Interview%20Que%202da562ad76f0803db60cfaccbf870520.md)
+[**Critical Clarification: Secure Microservices Communication**](Secure%20Microservices%20Communication/Critical%20Clarification%20Secure%20Microservices%20Commun.md)
 
-[**Secure Microservices Communication - Quick Reference**](Interview%20Preparation/Secure%20Microservices%20Communication%20-%20Quick%20Referen%202da562ad76f080628f02ff3fe735fba9.md)
+[**Secure Microservices Communication - Quick Reference**](Secure%20Microservices%20Communication/Secure%20Microservices%20Communication%20-%20Quick%20Referen.md)
 
 ### Security vs Usability Balance
 
-[**Critical Clarification: Security vs Usability Balance**](Interview%20Preparation/Critical%20Clarification%20Security%20vs%20Usability%20Balan%202da562ad76f080c3aa09e8e5090b528f.md)
+[**Security vs Usability Balance - Comprehensive Guide**](Security%20vs%20Usability%20Balance/Security%20vs%20Usability%20Balance%20-%20Comprehensive%20Guide.md)
 
-[**Security vs Usability Balance - Comprehensive Guide**](Interview%20Preparation/Security%20vs%20Usability%20Balance%20-%20Comprehensive%20Guid%202da562ad76f080369ca3f6ba5d54023b.md)
+[**Security vs Usability Balance - Interview Questions & Answers**](Security%20vs%20Usability%20Balance/Security%20vs%20Usability%20Balance%20-%20Interview%20Questions%20&%20Answers.md)
 
-[**Security vs Usability Balance - Interview Questions & Answers**](Interview%20Preparation/Security%20vs%20Usability%20Balance%20-%20Interview%20Question%202da562ad76f0802d898ac083c68ac3b4.md)
+[**Critical Clarification: Security vs Usability Balance**](Security%20vs%20Usability%20Balance/Critical%20Clarification%20Security%20vs%20Usability%20Balan.md)
 
-[Security vs Usability Balance - Quick Reference](Interview%20Preparation/Security%20vs%20Usability%20Balance%20-%20Quick%20Reference%202da562ad76f080b0bb8ddfe75e302173.md)
+[Security vs Usability Balance - Quick Reference](Security%20vs%20Usability%20Balance/Security%20vs%20Usability%20Balance%20-%20Quick%20Reference.md)
 
 ### Security-Development Collaboration
 
-[**Critical Clarification: Security-Development Collaboration**](Interview%20Preparation/Critical%20Clarification%20Security-Development%20Collab%202da562ad76f080b0b91ae4b6c70a35d7.md)
+[Security-Development Collaboration - Comprehensive Guide](Security-Development%20Collaboration/Security-Development%20Collaboration%20-%20Comprehensive.md)
 
-[Security-Development Collaboration - Comprehensive Guide](Interview%20Preparation/Security-Development%20Collaboration%20-%20Comprehensive%202da562ad76f08089bfa4fcb034786a6d.md)
+[**Security-Development Collaboration - Interview Questions & Answers**](Security-Development%20Collaboration/Security-Development%20Collaboration%20-%20Interview%20Que.md)
 
-[**Security-Development Collaboration - Interview Questions & Answers**](Interview%20Preparation/Security-Development%20Collaboration%20-%20Interview%20Que%202da562ad76f0804194a0f4e384828e19.md)
-
-[Security-Development Collaboration - Quick Reference](Interview%20Preparation/Security-Development%20Collaboration%20-%20Quick%20Referen%202da562ad76f080f5bd53cb361dbc5678.md)
+[**Critical Clarification: Security-Development Collaboration**](Security-Development%20Collaboration/Critical%20Clarification%20Security-Development%20Collab.md)
 
 ### System vs Personal API Tokens
 
-[**Critical Clarification: System vs Personal API Tokens**](Interview%20Preparation/Critical%20Clarification%20System%20vs%20Personal%20API%20Toke%202da562ad76f080e0bbc6c9b11fe1821c.md)
+[**System vs Personal API Tokens - Comprehensive Guide**](System%20vs%20Personal%20API%20Tokens/System%20vs%20Personal%20API%20Tokens%20-%20Comprehensive%20Guide.md)
 
-[**System vs Personal API Tokens - Comprehensive Guide**](Interview%20Preparation/System%20vs%20Personal%20API%20Tokens%20-%20Comprehensive%20Guid%202da562ad76f0806996c2cb65fb8ea267.md)
+[**System vs Personal API Tokens - Interview Questions & Answers**](System%20vs%20Personal%20API%20Tokens/System%20vs%20Personal%20API%20Tokens%20-%20Interview%20Question.md)
 
-[**System vs Personal API Tokens - Interview Questions & Answers**](Interview%20Preparation/System%20vs%20Personal%20API%20Tokens%20-%20Interview%20Question%202da562ad76f080a5b3fdcb379f7427b8.md)
+[**Critical Clarification: System vs Personal API Tokens**](System%20vs%20Personal%20API%20Tokens/Critical%20Clarification%20System%20vs%20Personal%20API%20Toke.md)
 
-[System vs Personal API Tokens - Quick Reference](Interview%20Preparation/System%20vs%20Personal%20API%20Tokens%20-%20Quick%20Reference%202da562ad76f0803aaecfe50ed18d266b.md)
+[System vs Personal API Tokens - Quick Reference](System%20vs%20Personal%20API%20Tokens/System%20vs%20Personal%20API%20Tokens%20-%20Quick%20Reference.md)
 
 ### Third-Party Integration Security
 
-[Critical Clarification: Third-Party Integration Security](Interview%20Preparation/Critical%20Clarification%20Third-Party%20Integration%20Sec%202da562ad76f0802eb9b7eccdf5e588b1.md)
+[**Third-Party Integration Security - Comprehensive Guide**](Third-Party%20Integration%20Security/Third-Party%20Integration%20Security%20-%20Comprehensive%20G.md)
 
-[**Third-Party Integration Security - Comprehensive Guide**](Interview%20Preparation/Third-Party%20Integration%20Security%20-%20Comprehensive%20G%202da562ad76f080d390dfc8fdc35f0c7c.md)
+[**Third-Party Integration Security - Interview Questions & Answers**](Third-Party%20Integration%20Security/Third-Party%20Integration%20Security%20-%20Interview%20Quest.md)
 
-[**Third-Party Integration Security - Interview Questions & Answers**](Interview%20Preparation/Third-Party%20Integration%20Security%20-%20Interview%20Quest%202da562ad76f080108c3ccc5009c55f3f.md)
+[Critical Clarification: Third-Party Integration Security](Third-Party%20Integration%20Security/Critical%20Clarification%20Third-Party%20Integration%20Sec.md)
 
-[**Third-Party Integration Security - Quick Reference**](Interview%20Preparation/Third-Party%20Integration%20Security%20-%20Quick%20Reference%202da562ad76f0807fba39ec03233f018a.md)
+[**Third-Party Integration Security - Quick Reference**](Third-Party%20Integration%20Security/Third-Party%20Integration%20Security%20-%20Quick%20Reference.md)
 
 ### Web Application Security Vulnerabilities
 
-[**Critical Clarification: Web Application Security Vulnerabilities**](Interview%20Preparation/Critical%20Clarification%20Web%20Application%20Security%20Vu%202da562ad76f0800d8bd3f2792ef56f96.md)
+[**Web Application Security Vulnerabilities - Comprehensive Guide**](Web%20Application%20Security%20Vulnerabilities/Web%20Application%20Security%20Vulnerabilities%20-%20Compreh.md)
 
-[**Web Application Security Vulnerabilities - Comprehensive Guide**](Interview%20Preparation/Web%20Application%20Security%20Vulnerabilities%20-%20Compreh%202da562ad76f08060bfe5d9d6260dd7e2.md)
+[Web Application Security Vulnerabilities - Interview Questions & Answers](Web%20Application%20Security%20Vulnerabilities/Web%20Application%20Security%20Vulnerabilities%20-%20Intervi.md)
 
-[Web Application Security Vulnerabilities - Interview Questions & Answers](Interview%20Preparation/Web%20Application%20Security%20Vulnerabilities%20-%20Intervi%202da562ad76f080328d88f7f258836959.md)
+[**Critical Clarification: Web Application Security Vulnerabilities**](Web%20Application%20Security%20Vulnerabilities/Critical%20Clarification%20Web%20Application%20Security%20Vu.md)
 
-[**Web Application Security Vulnerabilities - Quick Reference**](Interview%20Preparation/Web%20Application%20Security%20Vulnerabilities%20-%20Quick%20R%202da562ad76f080d7a6e4c4b680d12247.md)
+[**Web Application Security Vulnerabilities - Quick Reference**](Web%20Application%20Security%20Vulnerabilities/Web%20Application%20Security%20Vulnerabilities%20-%20Quick%20R.md)
+
+---
+
+## Cloud & Infrastructure Security
+
+### Cloud Security Architecture
+
+[**Cloud Security Architecture - Comprehensive Guide**](Cloud%20Security%20Architecture/Cloud%20Security%20Architecture%20-%20Comprehensive%20Guide.md)
+
+[**Cloud Security Architecture - Interview Questions**](Cloud%20Security%20Architecture/Cloud%20Security%20Architecture%20-%20Interview%20Questions.md)
+
+[**Cloud Security Architecture - Quick Reference**](Cloud%20Security%20Architecture/Cloud%20Security%20Architecture%20-%20Quick%20Reference.md)
+
+### Cloud-Native Security Patterns
+
+[**Cloud-Native Security Patterns - Comprehensive Guide**](Cloud-Native%20Security%20Patterns/Cloud-Native%20Security%20Patterns%20-%20Comprehensive%20Guide.md)
+
+[**Cloud-Native Security Patterns - Interview Questions**](Cloud-Native%20Security%20Patterns/Cloud-Native%20Security%20Patterns%20-%20Interview%20Questions.md)
+
+[**Cloud-Native Security Patterns - Quick Reference**](Cloud-Native%20Security%20Patterns/Cloud-Native%20Security%20Patterns%20-%20Quick%20Reference.md)
+
+### Container Security
+
+[**Container Security - Comprehensive Guide**](Container%20Security/Container%20Security%20-%20Comprehensive%20Guide.md)
+
+[**Container Security - Interview Questions**](Container%20Security/Container%20Security%20-%20Interview%20Questions.md)
+
+[**Container Security - Quick Reference**](Container%20Security/Container%20Security%20-%20Quick%20Reference.md)
+
+### Infrastructure as Code (IaC) Security
+
+[**IaC Security - Comprehensive Guide**](Infrastructure%20as%20Code%20Security/IaC%20Security%20-%20Comprehensive%20Guide.md)
+
+[**IaC Security - Interview Questions**](Infrastructure%20as%20Code%20Security/IaC%20Security%20-%20Interview%20Questions.md)
+
+[**IaC Security - Quick Reference**](Infrastructure%20as%20Code%20Security/IaC%20Security%20-%20Quick%20Reference.md)
+
+---
+
+## Threat Modeling & Code Review
+
+### Threat Modeling
+
+[**Advanced Threat Modeling - Comprehensive Guide**](Threat%20Modeling/Advanced%20Threat%20Modeling%20-%20Comprehensive%20Guide.md)
+
+[**Threat Modeling - Interview Questions**](Threat%20Modeling/Threat%20Modeling%20-%20Interview%20Questions.md)
+
+[**Threat Modeling - Critical Clarifications**](Threat%20Modeling/Threat%20Modeling%20-%20Critical%20Clarifications.md)
+
+[**Threat Modeling - Quick Reference**](Threat%20Modeling/Threat%20Modeling%20-%20Quick%20Reference.md)
+
+### Secure Source Code Review
+
+[**Secure Source Code Review - Comprehensive Guide**](Secure%20Source%20Code%20Review/Secure%20Source%20Code%20Review%20-%20Comprehensive%20Guide.md)
+
+[**Secure Source Code Review - Interview Questions & Answers**](Secure%20Source%20Code%20Review/Secure%20Source%20Code%20Review%20-%20Interview%20Questions%20&.md)
+
+[**Critical Clarification: Secure Source Code Review**](Secure%20Source%20Code%20Review/Critical%20Clarification%20Secure%20Source%20Code%20Review.md)
+
+[**Secure Source Code Review - Quick Reference**](Secure%20Source%20Code%20Review/Secure%20Source%20Code%20Review%20-%20Quick%20Reference.md)
+
+---
+
+## Senior/Staff Expansion Topics
+
+### Cross-Origin Authentication
+
+[**Cross-Origin Authentication - Comprehensive Guide**](Cross-Origin%20Authentication/Cross-Origin%20Authentication%20-%20Comprehensive%20Guide.md)
+
+[**Cross-Origin Authentication - Interview Questions**](Cross-Origin%20Authentication/Cross-Origin%20Authentication%20-%20Interview%20Questions.md)
+
+[**Cross-Origin Authentication - Quick Reference**](Cross-Origin%20Authentication/Cross-Origin%20Authentication%20-%20Quick%20Reference.md)
+
+### Secure CI/CD Pipeline Security
+
+[**Secure CI/CD Pipeline Security - Comprehensive Guide**](Secure%20CI%20CD%20Pipeline%20Security/Secure%20CI%20CD%20Pipeline%20Security%20-%20Comprehensive%20Guide.md)
+
+[**Secure CI/CD Pipeline Security - Interview Questions & Answers**](Secure%20CI%20CD%20Pipeline%20Security/Secure%20CI%20CD%20Pipeline%20Security%20-%20Interview%20Questions%20&%20Answers.md)
+
+[**Secure CI/CD Pipeline Security - Quick Reference**](Secure%20CI%20CD%20Pipeline%20Security/Secure%20CI%20CD%20Pipeline%20Security%20-%20Quick%20Reference.md)
+
+### Software Supply Chain Security
+
+[**Software Supply Chain Security - Comprehensive Guide**](Software%20Supply%20Chain%20Security/Software%20Supply%20Chain%20Security%20-%20Comprehensive%20Guide.md)
+
+[**Software Supply Chain Security - Interview Questions & Answers**](Software%20Supply%20Chain%20Security/Software%20Supply%20Chain%20Security%20-%20Interview%20Questions%20&%20Answers.md)
+
+[**Software Supply Chain Security - Quick Reference**](Software%20Supply%20Chain%20Security/Software%20Supply%20Chain%20Security%20-%20Quick%20Reference.md)
+
+### Secrets Management and Key Lifecycle
+
+[**Secrets Management and Key Lifecycle - Comprehensive Guide**](Secrets%20Management%20and%20Key%20Lifecycle/Secrets%20Management%20and%20Key%20Lifecycle%20-%20Comprehensive%20Guide.md)
+
+[**Secrets Management and Key Lifecycle - Interview Questions & Answers**](Secrets%20Management%20and%20Key%20Lifecycle/Secrets%20Management%20and%20Key%20Lifecycle%20-%20Interview%20Questions%20&%20Answers.md)
+
+[**Secrets Management and Key Lifecycle - Quick Reference**](Secrets%20Management%20and%20Key%20Lifecycle/Secrets%20Management%20and%20Key%20Lifecycle%20-%20Quick%20Reference.md)
+
+### Zero Trust Architecture for Product Security
+
+[**Zero Trust Architecture - Comprehensive Guide**](Zero%20Trust%20Architecture%20for%20Product%20Security/Zero%20Trust%20Architecture%20for%20Product%20Security%20-%20Comprehensive%20Guide.md)
+
+[**Zero Trust Architecture - Interview Questions & Answers**](Zero%20Trust%20Architecture%20for%20Product%20Security/Zero%20Trust%20Architecture%20for%20Product%20Security%20-%20Interview%20Questions%20&%20Answers.md)
+
+[**Zero Trust Architecture - Quick Reference**](Zero%20Trust%20Architecture%20for%20Product%20Security/Zero%20Trust%20Architecture%20for%20Product%20Security%20-%20Quick%20Reference.md)
+
+### GenAI / LLM Product Security
+
+[**GenAI LLM Product Security - Comprehensive Guide**](GenAI%20LLM%20Product%20Security/GenAI%20LLM%20Product%20Security%20-%20Comprehensive%20Guide.md)
+
+[**GenAI LLM Product Security - Interview Questions & Answers**](GenAI%20LLM%20Product%20Security/GenAI%20LLM%20Product%20Security%20-%20Interview%20Questions%20&%20Answers.md)
+
+[**GenAI LLM Product Security - Quick Reference**](GenAI%20LLM%20Product%20Security/GenAI%20LLM%20Product%20Security%20-%20Quick%20Reference.md)
+
+### IAM and Least Privilege at Scale
+
+[**IAM and Least Privilege at Scale - Comprehensive Guide**](IAM%20and%20Least%20Privilege%20at%20Scale/IAM%20and%20Least%20Privilege%20at%20Scale%20-%20Comprehensive%20Guide.md)
+
+[**IAM and Least Privilege at Scale - Interview Questions & Answers**](IAM%20and%20Least%20Privilege%20at%20Scale/IAM%20and%20Least%20Privilege%20at%20Scale%20-%20Interview%20Questions%20&%20Answers.md)
+
+[**IAM and Least Privilege at Scale - Quick Reference**](IAM%20and%20Least%20Privilege%20at%20Scale/IAM%20and%20Least%20Privilege%20at%20Scale%20-%20Quick%20Reference.md)
+
+### Security Observability and Detection Engineering
+
+[**Security Observability - Comprehensive Guide**](Security%20Observability%20and%20Detection%20Engineering/Security%20Observability%20and%20Detection%20Engineering%20-%20Comprehensive%20Guide.md)
+
+[**Security Observability - Interview Questions & Answers**](Security%20Observability%20and%20Detection%20Engineering/Security%20Observability%20and%20Detection%20Engineering%20-%20Interview%20Questions%20&%20Answers.md)
+
+[**Security Observability - Quick Reference**](Security%20Observability%20and%20Detection%20Engineering/Security%20Observability%20and%20Detection%20Engineering%20-%20Quick%20Reference.md)
+
+### Business Logic Abuse and Fraud Threats
+
+[**Business Logic Abuse - Comprehensive Guide**](Business%20Logic%20Abuse%20and%20Fraud%20Threats/Business%20Logic%20Abuse%20and%20Fraud%20Threats%20-%20Comprehensive%20Guide.md)
+
+[**Business Logic Abuse - Interview Questions & Answers**](Business%20Logic%20Abuse%20and%20Fraud%20Threats/Business%20Logic%20Abuse%20and%20Fraud%20Threats%20-%20Interview%20Questions%20&%20Answers.md)
+
+[**Business Logic Abuse - Quick Reference**](Business%20Logic%20Abuse%20and%20Fraud%20Threats/Business%20Logic%20Abuse%20and%20Fraud%20Threats%20-%20Quick%20Reference.md)
+
+### Browser and Frontend Runtime Security Deep Dive
+
+[**Browser Security Deep Dive - Comprehensive Guide**](Browser%20and%20Frontend%20Runtime%20Security%20Deep%20Dive/Browser%20and%20Frontend%20Runtime%20Security%20Deep%20Dive%20-%20Comprehensive%20Guide.md)
+
+[**Browser Security Deep Dive - Interview Questions & Answers**](Browser%20and%20Frontend%20Runtime%20Security%20Deep%20Dive/Browser%20and%20Frontend%20Runtime%20Security%20Deep%20Dive%20-%20Interview%20Questions%20&%20Answers.md)
+
+[**Browser Security Deep Dive - Quick Reference**](Browser%20and%20Frontend%20Runtime%20Security%20Deep%20Dive/Browser%20and%20Frontend%20Runtime%20Security%20Deep%20Dive%20-%20Quick%20Reference.md)
+
+### Risk Prioritization and Security Metrics
+
+[**Risk Prioritization - Comprehensive Guide**](Risk%20Prioritization%20and%20Security%20Metrics/Risk%20Prioritization%20and%20Security%20Metrics%20-%20Comprehensive%20Guide.md)
+
+[**Risk Prioritization - Interview Questions & Answers**](Risk%20Prioritization%20and%20Security%20Metrics/Risk%20Prioritization%20and%20Security%20Metrics%20-%20Interview%20Questions%20&%20Answers.md)
+
+[**Risk Prioritization - Quick Reference**](Risk%20Prioritization%20and%20Security%20Metrics/Risk%20Prioritization%20and%20Security%20Metrics%20-%20Quick%20Reference.md)
+
+### DDoS and Resilience
+
+[**DDoS and Resilience - Comprehensive Guide**](DDoS%20and%20Resilience/DDoS%20and%20Resilience%20-%20Comprehensive%20Guide.md)
+
+[**DDoS and Resilience - Interview Questions & Answers**](DDoS%20and%20Resilience/DDoS%20and%20Resilience%20-%20Interview%20Questions%20&%20Answers.md)
+
+[**DDoS and Resilience - Quick Reference**](DDoS%20and%20Resilience/DDoS%20and%20Resilience%20-%20Quick%20Reference.md)
+
+### Rate Limiting and Abuse Prevention
+
+[**Rate Limiting - Comprehensive Guide**](Rate%20Limiting%20and%20Abuse%20Prevention/Rate%20Limiting%20and%20Abuse%20Prevention%20-%20Comprehensive%20Guide.md)
+
+[**Rate Limiting - Interview Questions & Answers**](Rate%20Limiting%20and%20Abuse%20Prevention/Rate%20Limiting%20and%20Abuse%20Prevention%20-%20Interview%20Questions%20&%20Answers.md)
+
+[**Rate Limiting - Quick Reference**](Rate%20Limiting%20and%20Abuse%20Prevention/Rate%20Limiting%20and%20Abuse%20Prevention%20-%20Quick%20Reference.md)
+
+### GraphQL and API Security
+
+[**GraphQL and API Security - Comprehensive Guide**](GraphQL%20and%20API%20Security/GraphQL%20and%20API%20Security%20-%20Comprehensive%20Guide.md)
+
+[**GraphQL and API Security - Interview Questions & Answers**](GraphQL%20and%20API%20Security/GraphQL%20and%20API%20Security%20-%20Interview%20Questions%20&%20Answers.md)
+
+[**GraphQL and API Security - Quick Reference**](GraphQL%20and%20API%20Security/GraphQL%20and%20API%20Security%20-%20Quick%20Reference.md)
+
+### SAML and Enterprise Federation
+
+[**SAML and Enterprise Federation - Comprehensive Guide**](SAML%20and%20Enterprise%20Federation/SAML%20and%20Enterprise%20Federation%20-%20Comprehensive%20Guide.md)
+
+[**SAML and Enterprise Federation - Interview Questions & Answers**](SAML%20and%20Enterprise%20Federation/SAML%20and%20Enterprise%20Federation%20-%20Interview%20Questions%20&%20Answers.md)
+
+[**SAML and Enterprise Federation - Quick Reference**](SAML%20and%20Enterprise%20Federation/SAML%20and%20Enterprise%20Federation%20-%20Quick%20Reference.md)
+
+### gRPC and Protobuf Security
+
+[**gRPC and Protobuf Security - Comprehensive Guide**](gRPC%20and%20Protobuf%20Security/gRPC%20and%20Protobuf%20Security%20-%20Comprehensive%20Guide.md)
+
+[**gRPC and Protobuf Security - Interview Questions & Answers**](gRPC%20and%20Protobuf%20Security/gRPC%20and%20Protobuf%20Security%20-%20Interview%20Questions%20&%20Answers.md)
+
+[**gRPC and Protobuf Security - Quick Reference**](gRPC%20and%20Protobuf%20Security/gRPC%20and%20Protobuf%20Security%20-%20Quick%20Reference.md)
+
+### Security Metrics and OKRs
+
+[**Security Metrics and OKRs - Comprehensive Guide**](Security%20Metrics%20and%20OKRs/Security%20Metrics%20and%20OKRs%20-%20Comprehensive%20Guide.md)
+
+[**Security Metrics and OKRs - Interview Questions & Answers**](Security%20Metrics%20and%20OKRs/Security%20Metrics%20and%20OKRs%20-%20Interview%20Questions%20&%20Answers.md)
+
+[**Security Metrics and OKRs - Quick Reference**](Security%20Metrics%20and%20OKRs/Security%20Metrics%20and%20OKRs%20-%20Quick%20Reference.md)
+
+### Vulnerability Management Lifecycle
+
+[**Vulnerability Management Lifecycle - Comprehensive Guide**](Vulnerability%20Management%20Lifecycle/Vulnerability%20Management%20Lifecycle%20-%20Comprehensive%20Guide.md)
+
+[**Vulnerability Management Lifecycle - Interview Questions & Answers**](Vulnerability%20Management%20Lifecycle/Vulnerability%20Management%20Lifecycle%20-%20Interview%20Questions%20&%20Answers.md)
+
+[**Vulnerability Management Lifecycle - Quick Reference**](Vulnerability%20Management%20Lifecycle/Vulnerability%20Management%20Lifecycle%20-%20Quick%20Reference.md)
+
+---
+
+## Real-World Scenarios & Practice
+
+### Product Security Real-World Scenarios
+
+[**Product Security Real-World Scenarios - Comprehensive Guide**](Product%20Security%20Real-World%20Scenarios/Product%20Security%20Real-World%20Scenarios%20-%20Comprehensive%20Guide.md)
+
+[**Product Security Real-World Scenarios - Interview Questions**](Product%20Security%20Real-World%20Scenarios/Product%20Security%20Real-World%20Scenarios%20-%20Interview%20Questions.md)
+
+[**Product Security Real-World Scenarios - Quick Reference**](Product%20Security%20Real-World%20Scenarios/Product%20Security%20Real-World%20Scenarios%20-%20Quick%20Reference.md)
+
+### Microsoft Product Security Engineer II Interview Prep
+
+[**Microsoft Prep - Comprehensive Guide**](Microsoft%20Product%20Security%20Engineer%20II%20Interview%20Prep/Microsoft%20Product%20Security%20Engineer%20II%20Interview%20Prep%20-%20Comprehensive%20Guide.md)
+
+[**Microsoft Prep - Interview Questions & Answers**](Microsoft%20Product%20Security%20Engineer%20II%20Interview%20Prep/Microsoft%20Product%20Security%20Engineer%20II%20Interview%20Prep%20-%20Interview%20Questions%20&%20Answers.md)
+
+[**Microsoft Prep - Quick Reference**](Microsoft%20Product%20Security%20Engineer%20II%20Interview%20Prep/Microsoft%20Product%20Security%20Engineer%20II%20Interview%20Prep%20-%20Quick%20Reference.md)
+
+[**Microsoft Prep - Mastery Track**](Microsoft%20Product%20Security%20Engineer%20II%20Interview%20Prep/Microsoft%20Product%20Security%20Engineer%20II%20Interview%20Prep%20-%20Mastery%20Track.md)

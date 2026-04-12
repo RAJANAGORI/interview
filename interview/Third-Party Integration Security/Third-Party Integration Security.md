@@ -1,7 +1,9 @@
 # Third-Party Integration Security
 
-[**Third-Party Integration Security - Comprehensive Guide**](Security Headers.md)
+[**Third-Party Integration Security - Comprehensive Guide**](Third-Party%20Integration%20Security%20-%20Comprehensive%20G.md)
 
-[**Third-Party Integration Security - Interview Questions & Answers**](Security vs Usability Balance - Interview Question.md)
+[**Third-Party Integration Security - Interview Questions & Answers**](Third-Party%20Integration%20Security%20-%20Interview%20Quest.md)
 
-[**Third-Party Integration Security - Quick Reference Guide**](Third-Party Integration Security - Quick Reference.md)
+[**Critical Clarification: Third-Party Integration Security Misconceptions**](Critical%20Clarification%20Third-Party%20Integration%20Sec.md)
+
+[**Third-Party Integration Security - Quick Reference**](Third-Party%20Integration%20Security%20-%20Quick%20Reference.md)

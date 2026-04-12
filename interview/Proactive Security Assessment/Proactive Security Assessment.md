@@ -1,7 +1,9 @@
 # Proactive Security Assessment
 
-[**Proactive Security Assessment - Comprehensive Guide**](Proactive Security Assessment - Comprehensive Guid.md)
+[**Proactive Security Assessment - Comprehensive Guide**](Proactive%20Security%20Assessment%20-%20Comprehensive%20Guide.md)
 
-[**Proactive Security Assessment - Interview Questions & Answers**](Security vs Usability Balance - Interview Question.md)
+[**Proactive Security Assessment - Interview Questions & Answers**](Proactive%20Security%20Assessment%20-%20Interview%20Question.md)
 
-[**Proactive Security Assessment - Quick Reference Guide**](Security-Development Collaboration - Quick Referen.md)
+[**Critical Clarification: Proactive Security Assessment Misconceptions**](Critical%20Clarification%20Proactive%20Security%20Assessme.md)
+
+[**Proactive Security Assessment - Quick Reference**](Proactive%20Security%20Assessment%20-%20Quick%20Reference.md)
