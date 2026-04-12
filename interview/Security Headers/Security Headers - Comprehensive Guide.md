@@ -445,7 +445,7 @@ This is simple, effective, and works well with modern JavaScript bundlers. The n
 #### Common pitfalls
 
 - **Inline event handlers** (`onclick="..."`) are blocked by CSP unless `'unsafe-inline'` is allowed. Refactor to `addEventListener()`.
-- **Inline styles** in JavaScript frameworks (e.g., React's `style={{}}`) may require `'unsafe-inline'` in `style-src` or nonces.
+- **Inline styles** in JavaScript frameworks (e.g., React's `style` prop with object literals that use doubled curly braces) may require `'unsafe-inline'` in `style-src` or nonces.
 - **Third-party scripts** (analytics, ads, chat widgets) load additional scripts dynamically. Without `strict-dynamic`, you'd need to whitelist every domain they load from — and those domains change.
 - **eval() usage** by libraries (e.g., some template engines, Webpack dev mode) requires `'unsafe-eval'`, which weakens CSP.
 - **CSP on cached pages**: If you cache HTML with a nonce, the nonce in the HTML won't match the nonce in the CSP header of subsequent responses. Use hashes for cached content or configure cache keys to include the nonce.
@@ -468,14 +468,16 @@ The JSONP response is `alert(1)//({"data":"..."})`, which is valid JavaScript. *
 
 If a CSP allows a CDN that hosts Angular.js, an attacker can inject Angular template syntax within the page:
 
+{% raw %}
 ```html
 <div ng-app>
   {{constructor.constructor('alert(1)')()}}
 </div>
 <script src="https://allowed-cdn.com/angular.min.js"></script>
 ```
+{% endraw %}
 
-Angular evaluates the `{{...}}` expression, bypassing CSP because the script came from an allowed domain. **Mitigation**: Use `strict-dynamic` with nonces; avoid domain-based allowlists for `script-src`.
+Angular evaluates the double-curly template expression, bypassing CSP because the script came from an allowed domain. **Mitigation**: Use `strict-dynamic` with nonces; avoid domain-based allowlists for `script-src`.
 
 #### base-uri hijacking
 
@@ -1094,12 +1096,14 @@ CSP_REPORT_URI = "/csp-report/"
 
 In templates:
 
+{% raw %}
 ```html
 {% load csp %}
 <script nonce="{% csp_nonce %}">
   console.log('CSP-compliant inline script');
 </script>
 ```
+{% endraw %}
 
 ### Common Misconfigurations
 

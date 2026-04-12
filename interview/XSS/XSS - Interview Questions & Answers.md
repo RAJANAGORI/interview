@@ -592,6 +592,7 @@ def show_post(id):
 
 **Template (Jinja2 auto-escaping):**
 
+{% raw %}
 ```html
 <!-- post.html -->
 {% for comment in comments %}
@@ -599,6 +600,7 @@ def show_post(id):
 {% endfor %}
 
 ```
+{% endraw %}
 
 **Additional Defenses:**
 

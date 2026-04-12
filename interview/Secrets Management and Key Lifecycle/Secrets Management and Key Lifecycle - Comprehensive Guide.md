@@ -235,6 +235,7 @@ Vault's database secret engine generates temporary database users on-demand:
 3. The service uses the credentials for the lease duration.
 4. When the lease expires (or is explicitly revoked), Vault connects to the database and drops the user.
 
+{% raw %}
 ```hcl
 # Role definition for Vault database secret engine
 resource "vault_database_secret_backend_role" "app_readonly" {
@@ -256,6 +257,7 @@ resource "vault_database_secret_backend_role" "app_readonly" {
   max_ttl     = "24h"
 }
 ```
+{% endraw %}
 
 ### Cloud IAM Temporary Credentials
 
@@ -289,6 +291,7 @@ A sidecar process runs alongside the application container, authenticates to Vau
 **Vault Agent Injector (Kubernetes):**
 A mutating admission webhook automatically injects a Vault Agent sidecar into annotated pods. The agent authenticates using the pod's Kubernetes service account, retrieves secrets, renders them to a shared volume, and keeps them renewed.
 
+{% raw %}
 ```yaml
 annotations:
   vault.hashicorp.com/agent-inject: "true"
@@ -299,6 +302,7 @@ annotations:
     postgresql://{{ .Data.username }}:{{ .Data.password }}@db:5432/app
     {{- end }}
 ```
+{% endraw %}
 
 Advantages: No application code changes, automatic renewal, works with any language.
 Disadvantages: Additional resource consumption per pod, startup latency, shared volume security.

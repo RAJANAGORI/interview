@@ -1856,6 +1856,7 @@ $.get("/profile", function(data, status){
 
 **Vulnerable Pattern:**
 
+{% raw %}
 ```jsx
 // Bad: dangerouslySetInnerHTML allows XSS
 function HelloWorld(message) {
@@ -1868,6 +1869,7 @@ function HelloWorld(message) {
 }
 
 ```
+{% endraw %}
 
 **Secure Pattern:**
 

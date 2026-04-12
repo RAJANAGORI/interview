@@ -749,6 +749,7 @@ Resources:
 ```
 
 **Secrets Manager:**
+{% raw %}
 ```yaml
 Resources:
   DatabaseSecret:
@@ -761,6 +762,7 @@ Resources:
           "password": "{{resolve:secretsmanager:database/password:SecretString:password}}"
         }
 ```
+{% endraw %}
 
 ---
 
