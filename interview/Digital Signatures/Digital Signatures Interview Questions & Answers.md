@@ -1,5 +1,16 @@
 # Digital Signatures Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## Fundamental Questions
 
 ### Q1: What is a digital signature and what does it provide?
@@ -1177,3 +1188,20 @@ These interview questions cover:
 - ✅ Advanced topics
 
 **Key takeaway:** Digital signatures provide authentication, integrity, and non-repudiation through public key cryptography and hash functions. Private key protection is critical for security.
+
+---
+
+## Depth: Interview follow-ups — Digital Signatures
+
+**Authoritative references:** NIST [FIPS 186-5](https://csrc.nist.gov/publications/detail/fips/186/5/final) (Digital Signature Standard); high-level: [NIST Cryptographic Standards](https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines).
+
+**Follow-ups:**
+- **Integrity vs non-repudiation** — who can repudiate if keys leak?
+- **Hash then sign** — collision relevance (historic MD5/SHA-1 issues in certs).
+- **Key custody:** HSM/KMS, separation of duties.
+
+**Production verification:** Algorithm allowlists; key rotation; verify chain-of-trust in code that validates packages/tokens.
+
+**Cross-read:** Encryption vs Hashing, TLS, Software Supply Chain.
+
+<!-- verified-depth-merged:v1 ids=digital-signatures -->

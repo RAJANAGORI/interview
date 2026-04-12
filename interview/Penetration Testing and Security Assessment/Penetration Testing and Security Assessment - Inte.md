@@ -1,5 +1,16 @@
 # Penetration Testing and Security Assessment - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: What's your process for conducting a penetration test or security assessment of a product?**
@@ -267,3 +278,20 @@
 ---
 
 **Note:** This is a template. Expand with more detailed methodologies, tools, techniques, and real-world examples as needed.
+
+---
+
+## Depth: Interview follow-ups — Penetration Testing vs Security Assessment
+
+**Authoritative references:** [PTES](http://www.pentest-standard.org/) (methodology overview); NIST [SP 800-115](https://csrc.nist.gov/publications/detail/sp/800-115/final) (technical security testing—verify relevance); OWASP Testing Guide (project).
+
+**Follow-ups:**
+- **Pentest is a time-boxed attack simulation; assessment is broader** (design, config, process).
+- **Rules of engagement, scope creep, production safety.**
+- **Finding quality vs noise** — reproducible steps, severity rationale.
+
+**Production verification:** Remediation retest; trend of exploitability-weighted backlog.
+
+**Cross-read:** Proactive Assessment, Web App Vulnerabilities, Product Security Assessment Design.
+
+<!-- verified-depth-merged:v1 ids=penetration-testing-and-security-assessment -->

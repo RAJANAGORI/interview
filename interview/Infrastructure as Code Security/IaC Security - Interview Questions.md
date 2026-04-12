@@ -1,5 +1,16 @@
 # Infrastructure as Code (IaC) Security - Interview Questions
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: What are the main security risks in Infrastructure as Code?**
@@ -658,3 +669,19 @@ deny[msg] {
 
 IaC security requires secure coding practices, automated scanning, policy enforcement, and proper secrets management. Key areas include never hardcoding secrets, implementing least privilege, enabling encryption, and integrating security into CI/CD pipelines.
 
+---
+
+## Depth: Interview follow-ups — Infrastructure as Code Security
+
+**Authoritative references:** [Terraform security best practices](https://developer.hashicorp.com/terraform/tutorials/security) (vendor); [Checkov](https://www.checkov.io/) / [OPA](https://www.openpolicyagent.org/) as examples of policy-as-code (mention as patterns); [CWE-94](https://cwe.mitre.org/data/definitions/94.html) (code injection) for templating risks.
+
+**Follow-ups:**
+- **CI credentials to cloud** — OIDC federation vs long-lived keys.
+- **Drift** — Terraform state sensitivity; who can `apply`?
+- **Modules** — supply chain of third-party modules.
+
+**Production verification:** Plan/apply separation; required reviews; secret scanning in IaC repos.
+
+**Cross-read:** Secure CI/CD, Secrets Management, Cloud Security Architecture.
+
+<!-- verified-depth-merged:v1 ids=infrastructure-as-code-security -->

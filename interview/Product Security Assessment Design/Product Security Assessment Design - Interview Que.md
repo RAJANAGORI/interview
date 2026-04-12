@@ -1,5 +1,16 @@
 # Product Security Assessment Design - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: How would you design a product security assessment?**
@@ -221,3 +232,20 @@ Methodology: OWASP Testing Guide + PTES
 ---
 
 **Note:** This is a template. Expand with more detailed methodologies, examples, and real-world scenarios as needed.
+
+---
+
+## Depth: Interview follow-ups — Product Security Assessment Design
+
+**Authoritative references:** [OWASP ASVS](https://owasp.org/www-project-application-security-verification-standard/); [SAMM](https://owaspsamm.org/) for program maturity framing (optional).
+
+**Follow-ups:**
+- **Assessment tiers** — when full TM vs lightweight questionnaire.
+- **Evidence:** what artifacts prove a control (config, test, log)?
+- **Scaling:** security champions, guardrails, not gatekeeping every PR.
+
+**Production verification:** SLA for critical findings; coverage % of services assessed; repeat finding rate.
+
+**Cross-read:** Proactive Assessment, Risk Metrics, Agile Compliance.
+
+<!-- verified-depth-merged:v1 ids=product-security-assessment-design -->

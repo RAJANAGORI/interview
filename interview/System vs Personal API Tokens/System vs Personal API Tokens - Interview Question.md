@@ -1,5 +1,16 @@
 # System vs Personal API Tokens - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: What is System level and Personal level API token in product security?**
@@ -248,3 +259,20 @@ def validate_personal_token(token):
 ---
 
 **Note:** This is a template. Expand with more detailed answers, code examples, and real-world scenarios as needed.
+
+---
+
+## Depth: Interview follow-ups — System vs Personal API Tokens
+
+**Authoritative references:** Provider docs (GitHub, Azure DevOps, etc.) for **fine-grained PATs** vs **GitHub Apps/OAuth apps** patterns—cite generically in interview; [OAuth 2.0](https://www.rfc-editor.org/rfc/rfc6749) for delegation model.
+
+**Follow-ups:**
+- **Non-repudiation / audit:** personal tokens tie actions to humans; system tokens need service identity + rotation.
+- **Blast radius:** org-wide PAT vs repo-scoped token.
+- **Rotation & offboarding** — what breaks when someone leaves?
+
+**Production verification:** Token inventory, expiry, scoped permissions, audit logs for high-risk operations.
+
+**Cross-read:** OAuth, IAM at Scale, Secrets Management.
+
+<!-- verified-depth-merged:v1 ids=system-vs-personal-api-tokens -->

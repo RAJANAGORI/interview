@@ -1,16 +1,29 @@
-# Software Supply Chain Security - Comprehensive Guide
+# Software Supply Chain Security — Comprehensive Guide
 
-## What interviewers want to hear (senior / staff product security)
+## At a glance
 
-They want to see that you understand **software supply chain attacks** as *end-to-end integrity problems*: from **developer workstation → source control → CI → artifacts → registry → deploy → runtime**—not “just npm audit.”
+**Software supply chain security** treats integrity as an **end-to-end** problem: **developer workstation → source control → CI → artifacts → registry → deploy → runtime**. Senior interviews expect you to connect **standards** (SBOM, SLSA, signing) to **program mechanics**: ownership, SLAs, policy gates, and **incident response** when a dependency or pipeline is compromised—not “we run `npm audit`.”
 
-You should connect **standards** (SBOM formats, SLSA, signing) to **program mechanics**: ownership, SLAs, policy gates, and incident response when a dependency is compromised.
+---
+
+## Learning outcomes
+
+- Define **SBOM**, **SLSA**, **provenance**, **attestations**, and **Sigstore** in your own words with **where verification happens** (build vs deploy).
+- Map threats across **dependencies**, **build systems**, **artifacts**, and **registries**.
+- Describe **failure modes** (SBOM theater, ownership gaps) credibly.
+- Align with **OWASP CI/CD Top 10** and **supply chain** incident playbooks.
+
+---
+
+## Prerequisites
+
+Secure CI/CD Pipeline Security, Vulnerability Management Lifecycle, Risk Prioritization, Container Security (helpful) (this repo).
 
 ---
 
 ## Why this matters (validated incidents)
 
-Industry writeups of CI/CD and dependency abuse—including **SolarWinds**, **Codecov**, **dependency confusion**, and **compromised OSS packages**—motivated both **SLSA** and the **OWASP Top 10 CI/CD Security Risks** ([OWASP CI/CD Top 10](https://owasp.org/www-project-top-10-ci-cd-security-risks/)). Use these as **examples**, not as fear-mongering.
+Industry writeups of CI/CD and dependency abuse—including **SolarWinds**, **Codecov**, **dependency confusion**, and **compromised OSS packages**—motivated both **SLSA** and the **OWASP Top 10 CI/CD Security Risks** ([OWASP CI/CD Top 10](https://owasp.org/www-project-top-10-ci-cd-security-risks/)). Use these as **examples**, not fear-mongering.
 
 ---
 
@@ -18,51 +31,79 @@ Industry writeups of CI/CD and dependency abuse—including **SolarWinds**, **Co
 
 ### SBOM (Software Bill of Materials)
 
-A structured inventory of software components (dependencies, versions, licenses). Common formats include **SPDX** and **CycloneDX**. In the U.S. public-sector context, **NTIA** published guidance on **minimum elements** for SBOMs (component identity, dependencies, and known relationships)—often referenced in federal procurement and security discussions. **Generating** an SBOM is necessary but not sufficient; **consumers** need **policy**, **ownership**, and **remediation** workflows.
+A structured inventory of components (dependencies, versions, licenses). Common formats: **SPDX**, **CycloneDX**. **NTIA** minimum elements (identity, dependencies, relationships) often referenced in procurement. **Generating** an SBOM is necessary but not sufficient—**consumers** need **policy**, **ownership**, and **remediation** workflows.
 
 ### SLSA (Supply-chain Levels for Software Artifacts)
 
-[SLSA](https://slsa.dev/) is a framework for **artifact integrity** with **tracks** (for example **Build** and **Source** tracks) and **levels** of increasing assurance. Practically: generate **provenance**, sign artifacts, verify in CI/deploy, and reduce opportunities for **tampering** between source and binary. Predicate types and versioning evolve—cite [slsa.dev](https://slsa.dev/) for current details.
+[SLSA](https://slsa.dev/) frames **artifact integrity** with **tracks** (e.g., Build, Source) and **levels** of increasing assurance: provenance, signing, **verify at deploy**, reduce tampering between source and binary. Predicate types evolve—cite [slsa.dev](https://slsa.dev/) for current details.
 
 ### Signing and attestations
 
-**Sigstore** (cosign, Fulcio, Rekor) is widely used to **sign containers and attestations** with short-lived keys and transparency. **in-toto** layouts and attestations can describe **steps** in a supply chain. Interview answer: “We verify **signatures/provenance at deploy**, not only at build.”
+**Sigstore** (cosign, Fulcio, Rekor) is widely used to **sign containers and attestations** with short-lived keys and transparency. **in-toto** can describe **steps** in a pipeline. Interview answer: “We verify **signatures/provenance at deploy**, not only at build.”
 
 ---
 
 ## Threat model (compact)
 
 - **Dependency tampering**: typosquatting, compromised maintainer, malicious release.
-- **Build system compromise**: poisoned pipeline, stolen CI secrets, malicious build plugins.
+- **Build system compromise**: poisoned pipeline, stolen CI secrets, malicious build plugins (**PPE**).
 - **Artifact tampering**: unsigned or unverified images/binaries promoted to prod.
-- **Registry abuse**: wrong image pulled due to tags, mutable tags, lack of digest pinning.
+- **Registry abuse**: mutable tags, wrong digest pulled, confused proxies.
 - **Insider / process failure**: unreviewed changes to release paths.
 
 Map defenses to **OWASP CI/CD** risks such as **CICD-SEC-3 Dependency Chain Abuse** and **CICD-SEC-9 Improper Artifact Integrity Validation** ([list](https://owasp.org/www-project-top-10-ci-cd-security-risks/)).
 
 ---
 
-## Practical program (what “good” looks like)
+## How it fails
 
-1. **Inventory**: repos, package ecosystems, registries, build systems, who owns what.
-2. **Dependency hygiene**: pin versions or lockfiles; private mirrors; **approved upstreams**; block known-bad packages where feasible.
-3. **Vulnerability management**: prioritize with **reachability**, **exploit intelligence** (e.g., **EPSS** from FIRST—probability of exploitation, not severity alone), **asset criticality**, and **exposure**—not CVSS-only triage.
-4. **Build integrity**: ephemeral/isolated builds, minimal CI permissions, **OIDC** to cloud over static keys (pairs with CI/CD security—see your **Secure CI CD Pipeline Security** notes).
-5. **Provenance + signing**: generate SLSA-style provenance where possible; **verify** before deploy; pin by **digest**.
-6. **SBOM in the release process**: generate per artifact; store with release; **scan/policy** against license and critical vulns; route to owners.
-7. **Incident readiness**: playbook for “malicious package version published,” **rollback**, **key rotation**, and **customer communication** if applicable.
+- **SBOM theater**: PDFs nobody consumes; no deploy-time verification.
+- **Only build-time checks**: attacker replaces artifact **after** build.
+- **Ownership gap**: orphaned “opensource@” lists with no team accountable for upgrades.
+- **Policy without context**: blocking every medium CVE with no exploitability or tier context.
 
 ---
 
-## Failure modes (credible in interviews)
+## Practical program (what “good” looks like)
 
-- **SBOM theater**: PDFs that nobody consumes; no deploy-time verification.
-- **Only build-time checks**: attacker replaces artifact after build.
-- **Ownership gap**: “opensource@” with no team accountable for upgrades.
-- **Policy without context**: blocking builds on every medium CVE with no exploitability.
+1. **Inventory**: repos, ecosystems, registries, build systems, **owners**.
+2. **Dependency hygiene**: lockfiles; private mirrors; **approved upstreams**; block known-bad packages where feasible.
+3. **Vulnerability management**: **reachability**, **EPSS**, **asset criticality**, **exposure**—not CVSS-only triage.
+4. **Build integrity**: ephemeral/isolated builds; minimal CI permissions; **OIDC** to cloud over static keys (pairs with Secure CI/CD topic).
+5. **Provenance + signing**: SLSA-style provenance where possible; **verify** before deploy; **pin by digest**.
+6. **SBOM in release**: generate per artifact; store with release; **policy** against license and critical vulns; route to owners.
+7. **Incident readiness**: playbook for malicious package version, **rollback**, **key rotation**, customer communication if applicable.
+
+---
+
+## Verification
+
+- **Coverage**: % artifacts with **provenance verified** at deploy; % with SBOM attached.
+- **MTTR** for tier‑0 supply chain issues; **repeat** incidents (same class).
+- **Tabletops**: compromised npm package or stolen signing key.
+
+---
+
+## Operational reality
+
+Supply chain security is **platform + AppSec + SRE + legal/compliance**. Measure **integrity coverage**, **mean time to remediate** tier‑0 issues, and **exception debt**—not “number of SBOMs generated.”
+
+---
+
+## Interview clusters
+
+- **Fundamentals:** “What is an SBOM?” “SLSA level in one sentence?”
+- **Senior:** “Where do you verify integrity—CI, registry, or Kubernetes admission?”
+- **Staff:** “SolarWinds-style compromise—what controls fail first in a typical org?”
 
 ---
 
 ## Staff-level positioning
 
-**Supply chain security** is **platform + AppSec + SRE + legal/compliance**: standards are easy; **enforcement**, **scale**, and **triage discipline** are hard. Measure **integrity coverage** (signed/provenance-verified artifacts), **mean time to remediate** tier-0 issues, and **exception debt**—not “number of SBOMs generated.”
+**Supply chain security** is the **most privileged automation** path in the company: standards are easy; **enforcement**, **scale**, and **triage discipline** are hard.
+
+---
+
+## Cross-links
+
+Secure CI/CD Pipeline Security, Vulnerability Management Lifecycle, Risk Prioritization, Container Security, Secrets Management, GenAI LLM Product Security (model supply).

@@ -1,5 +1,6 @@
 # Critical Clarification: Third-Party Integration Security
 
+
 ## **⚠️ Common Misconceptions**
 
 ### **Misconception 1: "Third-party security is the vendor's responsibility, not ours"**

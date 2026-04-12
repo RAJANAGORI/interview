@@ -1,5 +1,16 @@
 # Proactive Security Assessment - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: How would you convince a very busy team to proactively seek out a security assessment in production?**
@@ -176,3 +187,20 @@
 ---
 
 **Note:** This is a template. Expand with more detailed answers, real-world examples, and case studies as needed.
+
+---
+
+## Depth: Interview follow-ups — Proactive Security Assessment
+
+**Authoritative references:** Align with [OWASP SAMM](https://owaspsamm.org/) Design / Implementation practices; internal secure SDLC docs if any.
+
+**Follow-ups:**
+- **Shift-left without burning teams** — templates, secure defaults, CI checks.
+- **Risk-ranked backlog** — how security feeds the same systems as product work.
+- **Design review SLAs** — how you avoid becoming a bottleneck.
+
+**Production verification:** Fewer late-stage surprises; reduced repeat vuln classes; engagement satisfaction from eng partners.
+
+**Cross-read:** Product Security Assessment Design, Secure CI/CD, Security–Development Collaboration.
+
+<!-- verified-depth-merged:v1 ids=proactive-security-assessment -->

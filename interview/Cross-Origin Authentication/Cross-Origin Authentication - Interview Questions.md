@@ -1,5 +1,16 @@
 # Cross-Origin Authentication - Interview Questions
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: What is cross-origin authentication and why is it needed?**
@@ -995,3 +1006,19 @@ app.use(cors({
 
 Cross-origin authentication requires understanding of SOP, CORS, authentication mechanisms, and security best practices. Key areas include proper CORS configuration, secure cookie/token handling, CSRF protection, and XSS mitigation.
 
+---
+
+## Depth: Interview follow-ups — Cross-Origin Authentication
+
+**Authoritative references:** [OAuth 2.0 RFC 6749](https://www.rfc-editor.org/rfc/rfc6749); [RFC 9700](https://www.rfc-editor.org/rfc/rfc9700) (OAuth security BCP); [OIDC](https://openid.net/specs/openid-connect-core-1_0.html) (identity layer—high level).
+
+**Follow-ups:**
+- **Browser same-site rules vs OAuth redirects** — subtle breakage modes.
+- **PKCE** — why required for public OAuth clients.
+- **Front-channel vs back-channel logout** — session consistency.
+
+**Production verification:** Redirect URI allowlists; state parameter; token storage choices audited.
+
+**Cross-read:** OAuth, CORS, Cookie Security, JWT.
+
+<!-- verified-depth-merged:v1 ids=cross-origin-authentication -->

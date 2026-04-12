@@ -1,5 +1,16 @@
 # Secure CI CD Pipeline Security - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## Frameworks
 
 ### 1) What is the OWASP CI/CD Top 10?
@@ -73,3 +84,20 @@ Malicious or vulnerable packages executed during **install/build**—**CICD-SEC-
 ### 12) What is insufficient flow control?
 
 **CICD-SEC-1: Insufficient Flow Control Mechanisms**—lack of approvals/reviews so **untrusted changes** can flow to production ([OWASP](https://owasp.org/www-project-top-10-ci-cd-security-risks/CICD-SEC-01-Insufficient-Flow-Control-Mechanisms)). Fix with **branch protection**, **required reviewers**, **CODEOWNERS**, and **release gates**.
+
+---
+
+## Depth: Interview follow-ups — Secure CI/CD
+
+**Authoritative references:** [SLSA](https://slsa.dev/) (Supply-chain Levels for Software Artifacts); [NIST SP 800-218](https://csrc.nist.gov/publications/detail/sp/800-218/final) (SSDF); [GitHub security hardening](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions) (if GitHub Actions).
+
+**Follow-ups:**
+- **OIDC from CI to cloud** — short-lived tokens vs static cloud keys.
+- **Protected branches, required reviewers, signing commits/tags.**
+- **Poisoned pipeline PR** — untrusted forks.
+
+**Production verification:** Workflow permissions scoped; secrets not in logs; artifact signing and verification.
+
+**Cross-read:** Software Supply Chain, IaC Security, Secrets Management.
+
+<!-- verified-depth-merged:v1 ids=secure-ci-cd-pipeline-security -->

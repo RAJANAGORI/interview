@@ -1,5 +1,16 @@
 # Cloud Security Architecture - Interview Questions
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: Explain the shared responsibility model in cloud security.**
@@ -812,3 +823,19 @@ Security Group → Application → Database
 
 Cloud security architecture requires understanding provider-specific services, implementing defense in depth, and maintaining continuous monitoring. Key areas include identity management, network security, data protection, and incident response.
 
+---
+
+## Depth: Interview follow-ups — Cloud Security Architecture
+
+**Authoritative references:** [CSA CCM](https://cloudsecurityalliance.org/research/working-groups/cloud-controls-matrix) (controls matrix—high level); [AWS/Azure/GCP Well-Architected](https://docs.aws.amazon.com/wellarchitected/) **security pillars** (pick the provider you discuss); [NIST SP 800-144](https://csrc.nist.gov/publications/detail/sp/800-144/final) (general cloud guidance—older but foundational concepts).
+
+**Follow-ups:**
+- **Share responsibility model** — where your org’s obligation starts/ends.
+- **Data plane vs control plane** attacks—IAM as the perimeter.
+- **Landing zone / guardrails** — org-level policies vs team autonomy.
+
+**Production verification:** Org-wide SCPs/policies; centralized logging; network segmentation diagrams current.
+
+**Cross-read:** IAM, Zero Trust, Container Security, Secrets Management.
+
+<!-- verified-depth-merged:v1 ids=cloud-security-architecture -->

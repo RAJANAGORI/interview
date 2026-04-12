@@ -1,5 +1,16 @@
 # Third-Party Integration Security - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: How do you ensure the security of third-party integrations in your product?**
@@ -218,3 +229,20 @@
 ---
 
 **Note:** This is a template. Expand with more detailed processes, checklists, and real-world examples as needed.
+
+---
+
+## Depth: Interview follow-ups — Third-Party Integration Security
+
+**Authoritative references:** Vendor risk frameworks (e.g. [SOC 2](https://www.aicpa.org/soc) reports—high level); [OWASP API Security Top 10](https://owasp.org/www-project-api-security/) for API integrations.
+
+**Follow-ups:**
+- **Webhook signing** — replay, timestamp, idempotency.
+- **OAuth to third parties** — token storage, scope minimization, redirect hygiene (RFC 9700 themes).
+- **Data residency / subprocessors** — contractual vs technical controls.
+
+**Production verification:** Integration inventory; scoped credentials; monitoring outbound calls.
+
+**Cross-read:** OAuth, SSRF, Secrets Management, Product Real-World Scenarios.
+
+<!-- verified-depth-merged:v1 ids=third-party-integration-security -->

@@ -1,5 +1,25 @@
 # XXE (XML External Entity) - Comprehensive Guide
 
+## At a glance
+
+**XXE** abuses **XML external entities** so parsers resolve **local files**, **internal URLs** (SSRF), or **expand** entities to cause DoS. It remains relevant wherever **XML** is parsed with **unsafe** defaults—**SAML**, legacy APIs, SOAP, some document pipelines. **Disable** external entities and **harden** parsers; defense is not “validate user input” alone.
+
+---
+
+## Learning outcomes
+
+- Explain **external entities**, **parameter entities**, and **billion laughs** at interview depth.
+- Connect XXE to **SSRF** and **file read** impact narratives.
+- List **parser** and **framework** mitigations (DTD off, safe modes).
+
+---
+
+## Prerequisites
+
+SSRF topic, SAML (XML), basic XML structure (this repo).
+
+---
+
 ## **Introduction**
 
 XXE (XML External Entity) is a vulnerability that allows attackers to exploit XML parsers by including external entities, leading to information disclosure, SSRF attacks, or denial of service. It ranks #4 in OWASP Top 10 2017.
@@ -909,3 +929,17 @@ XXE is a critical vulnerability affecting XML processing. Key points:
 7. **Test thoroughly** - Code reviews, SAST/DAST scanning
 
 Remember: **XXE is prevented by using secure XML parsers with external entities disabled, not by input validation alone!**
+
+---
+
+## Interview clusters
+
+- **Fundamentals:** “What is an external entity?” “XXE vs SSRF?”
+- **Senior:** “How do you configure Java/.NET/Go XML parsers safely?”
+- **Staff:** “SAML stack—where does XML parsing risk sit end-to-end?”
+
+---
+
+## Cross-links
+
+SSRF, SAML and Enterprise Federation, Secure Source Code Review, Dependency/supply chain for XML libraries.

@@ -1,5 +1,16 @@
 # Agile Security Compliance - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ---
 
 ## **Fundamental Questions**
@@ -253,3 +264,20 @@
 ---
 
 **Note:** This is a template. Expand with more detailed strategies, implementation examples, and metrics as needed.
+
+---
+
+## Depth: Interview follow-ups — Agile Security Compliance
+
+**Authoritative references:** [OWASP SAMM](https://owaspsamm.org/); mapping security stories to frameworks ([ISO 27001](https://www.iso.org/standard/27001) / SOC 2—high level, not certification advice).
+
+**Follow-ups:**
+- **Compliance as code** — policies checked in CI/CD; evidence from systems, not screenshots only.
+- **Incremental audits** — per sprint vs big-bang.
+- **Vendor questionnaires** — how product security answers without blocking shipping.
+
+**Production verification:** Automated evidence collection; fewer audit findings; traceability from control → ticket → deploy.
+
+**Cross-read:** Secure CI/CD, Risk Metrics, Product Security Assessment Design.
+
+<!-- verified-depth-merged:v1 ids=agile-security-compliance -->

@@ -1,5 +1,25 @@
 # XSS (Cross-Site Scripting) - Comprehensive Guide
 
+## At a glance
+
+**XSS** lets attackers run **JavaScript in victims’ browsers** in the **origin** of your app—stealing cookies where possible, performing actions, defacing UI, or pivoting to **supply chain** via admin sessions. **Reflected**, **stored**, and **DOM-based** XSS differ in **persistence** and **sink** location; **defense** combines **output encoding**, **CSP**, **framework** defaults, and **HttpOnly** cookies where appropriate.
+
+---
+
+## Learning outcomes
+
+- Differentiate **reflected**, **stored**, and **DOM XSS** with examples.
+- Explain **defense in depth**: encoding, CSP, Trusted Types, cookie flags.
+- Connect XSS to **session theft**, **CSRF** interaction, and **post-exploitation**.
+
+---
+
+## Prerequisites
+
+HTML/JS basics, Browser Same-Origin Policy, Cookie Security (this repo).
+
+---
+
 ## **Introduction**
 
 XSS (Cross-Site Scripting) is a security vulnerability that allows attackers to inject malicious scripts into web pages viewed by other users. It ranks #3 in OWASP Top 10 (2017) and is one of the most common web application vulnerabilities.
@@ -1265,3 +1285,17 @@ XSS is a critical web application vulnerability. Key points:
 7. **Follow security standards** - OWASP guidelines
 
 Remember: **XSS is prevented by output encoding based on context, not by input validation or CSP alone!**
+
+---
+
+## Interview clusters
+
+- **Fundamentals:** “Reflected vs stored XSS?” “Why HttpOnly?”
+- **Senior:** “CSP rollout strategy for a legacy SPA?” “DOM XSS example?”
+- **Staff:** “Org-wide XSS prevention—standards, guardrails, metrics.”
+
+---
+
+## Cross-links
+
+CSRF, Cookie Security, Browser Frontend Deep Dive (CSP, Trusted Types), OWASP XSS Prevention Cheat Sheet, Secure Source Code Review.

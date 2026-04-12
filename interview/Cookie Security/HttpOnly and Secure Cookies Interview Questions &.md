@@ -1,5 +1,13 @@
 # HttpOnly and Secure Cookies Interview Questions  & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
 ---
 
 ## **Fundamental Questions**
@@ -782,3 +790,35 @@ These interview questions cover:
 - ✅ Advanced topics
 
 **Key takeaway:** HttpOnly protects against XSS, SameSite protects against CSRF, and Secure ensures HTTPS-only transmission. Use all three together for comprehensive cookie security.
+
+---
+
+## Depth: Interview follow-ups — Cookie Security
+
+**Authoritative references:** [RFC 6265](https://www.rfc-editor.org/rfc/rfc6265) (HTTP cookies); [SameSite cookies](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite) (MDN—browser behavior); [OWASP Session Management](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html).
+
+**Follow-ups:**
+- **`SameSite=Lax` vs `Strict` vs `None`** — when is `None` required and what else is mandatory?
+- **Prefix cookies** (`__Host-`, `__Secure-`) — deployment constraints.
+- **Domain / Path scope** — minimizing blast radius.
+
+**Production verification:** Set-Cookie flags on all auth responses; no secrets in non-HttpOnly stores when XSS matters.
+
+**Cross-read:** CSRF, XSS, OAuth, Cross-Origin Authentication.
+
+---
+
+## Depth: Interview follow-ups — HttpOnly & Secure Cookies
+
+**Authoritative references:** [MDN Set-Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie); [OWASP Session Management CS](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html); [SameSite](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite) (browser enforcement).
+
+**Follow-ups:**
+- **HttpOnly stops JS read—not CSRF** — why browsers still attach cookies on cross-site requests per policy.
+- **`SameSite=None` requires `Secure`** — deployment gotchas.
+- **Subdomain cookie scope** — `Domain=` attribute risks.
+
+**Production verification:** Inspect Set-Cookie on all auth responses; fix mixed content; monitor for unexpected cross-site POSTs to state-changing routes.
+
+**Cross-read:** CSRF, XSS, OAuth, Cross-Origin Authentication.
+
+<!-- verified-depth-merged:v1 ids=cookie-security,httponly-and-secure-cookies-interview-questions -->

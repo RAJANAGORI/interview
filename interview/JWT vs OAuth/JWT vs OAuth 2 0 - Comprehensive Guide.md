@@ -1,5 +1,25 @@
 # JWT vs OAuth 2.0 - Comprehensive Guide
 
+## At a glance
+
+**JWT** is a **token format** (signed or encrypted claims). **OAuth 2.0** is an **authorization framework** for delegated access to APIs. They are **not alternatives**—OAuth often **issues** tokens that **may** be JWTs. Interviews test whether you can separate **format** from **protocol**, describe **bearer** threats, and compare **revocation** trade-offs (opaque vs JWT).
+
+---
+
+## Learning outcomes
+
+- Explain why “JWT vs OAuth” is usually a **category error**—and how they **compose** (e.g., OAuth access token as JWT).
+- Compare **local JWT validation** vs **introspection**; discuss **key rotation** and **audience** checks.
+- Choose **opaque** vs **JWT** access tokens for a scenario (revocation, size, privacy).
+
+---
+
+## Prerequisites
+
+Study the standalone **JWT** and **OAuth** topics in this repo first; basic TLS and API security context helps.
+
+---
+
 ## **Introduction**
 
 JWT and OAuth 2.0 are often confused because they're both related to authentication and authorization, but they serve completely different purposes. Understanding their relationship is crucial for building secure applications.
@@ -641,3 +661,17 @@ Authorization: Bearer a1b2c3d4e5f6
 - No → OAuth 2.0 alone (authorization only)
 
 Remember: **JWT is the "what" (token format), OAuth 2.0 is the "how" (authorization process). They're complementary, not competitors!**
+
+---
+
+## Interview clusters
+
+- **Fundamentals:** “Is JWT authentication or authorization?” “Can OAuth use non-JWT tokens?”
+- **Senior:** “How do you revoke JWT access tokens at scale?” “What claims must you validate?”
+- **Staff:** “Design token strategy for mobile + SPA + services with strict revocation for admin.”
+
+---
+
+## Cross-links
+
+JWT (JSON Web Token), OAuth 2.0, OIDC topics, Cookie Security, CORS, Rate Limiting and Abuse Prevention.

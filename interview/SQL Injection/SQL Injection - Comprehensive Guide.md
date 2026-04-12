@@ -1,5 +1,25 @@
 # SQL Injection - Comprehensive Guide
 
+## At a glance
+
+**SQL injection** interferes with **database queries** by injecting attacker-controlled SQL fragments—often bypassing auth, **exfiltrating** data, or **writing** files depending on DB privileges. **Parameterized queries / prepared statements** are the primary **fix**; **ORMs** help but don’t eliminate **unsafe** dynamic SQL. **Second-order** and **blind** SQLi are common **senior** follow-ups.
+
+---
+
+## Learning outcomes
+
+- Explain how injection arises in **string concatenation** vs **parameters**.
+- Describe **boolean**, **time-based**, and **union** techniques at a high level.
+- Map defenses: **prepared statements**, **least-privilege** DB users, **WAF** as secondary.
+
+---
+
+## Prerequisites
+
+Web app architecture basics, OWASP Injection category (this repo).
+
+---
+
 ## **Introduction**
 
 SQL Injection (SQLi) is one of the most critical and prevalent web application vulnerabilities. It ranks #3 in the OWASP Top 10 2021 and has been a persistent threat since the early days of web applications.
@@ -1433,3 +1453,17 @@ SQL Injection remains one of the most critical web application vulnerabilities. 
 10. **Follow security standards** - OWASP guidelines and best practices
 
 Remember: **SQL Injection is prevented by parameterized queries (prepared statements), not by input validation or WAFs alone!**
+
+---
+
+## Interview clusters
+
+- **Fundamentals:** “Parameterized query vs escaping?” “Second-order SQLi?”
+- **Senior:** “ORM still SQLi—how?” “Blind SQLi detection in logs?”
+- **Staff:** “Secure multi-tenant DB access pattern for SaaS.”
+
+---
+
+## Cross-links
+
+Parameterized Queries topic, OWASP Injection, Secure Source Code Review, IDOR (often paired in APIs).

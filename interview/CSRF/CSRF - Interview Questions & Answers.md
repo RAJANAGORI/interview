@@ -1,5 +1,16 @@
 # CSRF - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: What is CSRF and how does it work?**
@@ -712,3 +723,20 @@ CSRF is a critical web application vulnerability. Key points for interviews:
 7. **Use defense in depth** - multiple layers of protection
 
 Remember: **CSRF is prevented by verifying request origin (CSRF tokens, SameSite cookies, Origin/Referer validation), not by HTTPS or HttpOnly alone!**
+
+---
+
+## Depth: Interview follow-ups — CSRF
+
+**Authoritative references:** [OWASP CSRF](https://owasp.org/www-community/attacks/csrf); [CSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html).
+
+**Follow-ups:**
+- **Double-submit vs synchronizer token** — trade-offs for SPAs.
+- **SameSite** as defense-in-depth—browser coverage caveats.
+- **Login CSRF** — often forgotten.
+
+**Production verification:** State-changing endpoints require secret or SameSite-appropriate cookie policy; test cross-site POST.
+
+**Cross-read:** Cookie Security, XSS, CORS, OAuth.
+
+<!-- verified-depth-merged:v1 ids=csrf -->

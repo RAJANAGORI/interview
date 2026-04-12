@@ -1,5 +1,16 @@
 # Parameterized Queries and Prepared Statements - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: What are parameterized queries and how do they prevent SQL injection?**
@@ -573,3 +584,20 @@ Parameterized queries and prepared statements are the primary defense against SQ
 6. **Different databases use different syntax** - But concept is the same
 
 Remember: **Parameterized queries (prepared statements) prevent SQL injection by separating SQL structure from data values, ensuring the database treats input as data, never as code!**
+
+---
+
+## Depth: Interview follow-ups — Parameterized / Prepared Statements
+
+**Authoritative references:** [OWASP SQL Injection Prevention CS](https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html) (prepared statements + safe APIs).
+
+**Follow-ups:**
+- **Dynamic table/column names** — cannot bind identifiers; how do you allowlist?
+- **Stored procedures** — still risky if dynamic SQL inside.
+- **ORM edge cases:** `whereRaw`, string-built `order by`.
+
+**Production verification:** Code search for concat SQL; CI grep rules; explain plans for hot paths.
+
+**Cross-read:** SQL Injection, Secure Code Review.
+
+<!-- verified-depth-merged:v1 ids=parameterized-and-prepared-statement -->

@@ -1,5 +1,16 @@
 # OAuth 2.0 - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: What is OAuth 2.0 and what problem does it solve?**
@@ -1302,3 +1313,21 @@ These questions cover fundamental concepts, security considerations, implementat
 10. **Proper error handling** and security monitoring
 
 Good luck with your interview!
+
+---
+
+## Depth: Interview follow-ups — OAuth 2.0
+
+**Authoritative references:** [RFC 9700](https://www.rfc-editor.org/rfc/rfc9700) — *OAuth 2.0 Security Best Current Practice* (2025; supersedes much informal “OAuth is secure if…” advice); [RFC 6749](https://www.rfc-editor.org/rfc/rfc6749) (framework); [OAuth 2.0 for Native Apps BCP](https://www.rfc-editor.org/rfc/rfc8252) where mobile applies.
+
+**Follow-ups:**
+- **Why PKCE for public clients:** What stops authorization code interception without a client secret?
+- **Redirect URI exactness / open redirect:** How do you validate `redirect_uri` and state/nonce patterns?
+- **Token audience & resource binding:** Access token accepted only by intended resource servers?
+- **Refresh token rotation & reuse detection:** What do you do when a reused refresh is seen?
+
+**Production verification:** Token lifetimes, revocation story, introspection vs local JWT validation trade-offs, logging of grant failures (no secrets in logs).
+
+**Cross-read:** JWT vs OAuth, Cross-Origin Authentication, Cookie Security, TLS.
+
+<!-- verified-depth-merged:v1 ids=oauth -->

@@ -1,5 +1,16 @@
 # JWT vs OAuth 2.0 - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: What is the fundamental difference between JWT and OAuth 2.0?**
@@ -803,3 +814,20 @@ These questions cover the key distinctions and relationships between JWT and OAu
 8. **Choose based on requirements**, not as alternatives
 
 Good luck with your interview!
+
+---
+
+## Depth: Interview follow-ups — JWT vs OAuth
+
+**Authoritative references:** Same as OAuth (RFC 9700) + JWT (RFC 7519/8725). **Concept:** OAuth is an *authorization framework*; JWT is often a *token format* used inside OAuth (but JWT is not OAuth).
+
+**Follow-ups:**
+- **“We use JWT for auth”** — Do you mean self-contained session state, or OAuth-issued access tokens? Clarify trust establishment vs transport.
+- **OIDC layer:** When do you need OpenID Connect (identity) on top of OAuth (authorization)?
+- **Client types:** Confidential vs public—how does your threat model change?
+
+**Production verification:** Map each token type to issuer, audience, crypto verification, and revocation path.
+
+**Cross-read:** JWT, OAuth, Authorization and Authentication.
+
+<!-- verified-depth-merged:v1 ids=jwt-vs-oauth -->

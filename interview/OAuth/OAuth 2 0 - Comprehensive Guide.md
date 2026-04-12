@@ -1,5 +1,25 @@
 # OAuth 2.0 - Comprehensive Guide
 
+## At a glance
+
+**OAuth 2.0** (RFC 6749) is an **authorization framework**: clients obtain **delegated access** to resources using **access tokens**, without sharing the user’s password with third-party apps. It is **not** authentication—**OpenID Connect** adds identity. Interviews drill **grant types**, **redirect URI** validation, **token** handling, and **common** implementation mistakes.
+
+---
+
+## Learning outcomes
+
+- Contrast **authorization** vs **authentication**; position **OIDC** vs OAuth-only.
+- Explain **authorization code** flow (with **PKCE** for public clients) at the whiteboard.
+- List **threats**: redirect manipulation, **token** leakage, **scope** abuse, **client** impersonation.
+
+---
+
+## Prerequisites
+
+HTTP, TLS, JWT (often used as access token format but not required), Cookie/CORS basics (this repo).
+
+---
+
 ## **Introduction**
 
 OAuth 2.0 is an authorization framework that enables third-party applications to obtain limited access to a user's resources on another service without exposing the user's credentials (like username and password). It is defined in RFC 6749 and is widely used for API authorization.
@@ -1221,3 +1241,17 @@ OAuth 2.0 is a powerful authorization framework that enables secure third-party 
 10. **Proper error handling** and security monitoring
 
 Remember: **Security depends on proper implementation and following best practices!**
+
+---
+
+## Interview clusters
+
+- **Fundamentals:** “What is OAuth used for?” “Authorization vs authentication?” “What is PKCE?”
+- **Senior:** “How do you validate redirect URIs?” “Where do refresh tokens live for SPAs?”
+- **Staff:** “Design OAuth for multi-tenant B2B with per-customer IdPs and service-to-service clients.”
+
+---
+
+## Cross-links
+
+JWT, OIDC topics, Cross-Origin Authentication, CSRF, Cookie Security, SAML (enterprise SSO comparison).

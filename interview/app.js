@@ -90,6 +90,7 @@ function toAbsolute(filePath) {
 function availableFileTypes(files) {
   const labels = {
     comprehensive: "Comprehensive Guide",
+    mastery: "Mastery Track",
     questions: "Interview Questions",
     critical: "Critical Clarification",
     quickRef: "Quick Reference",
@@ -130,7 +131,7 @@ function isModuleComplete(topicId, fileKey) {
 }
 
 function topicModuleKeys(topic) {
-  return ["comprehensive", "questions", "critical", "quickRef"].filter((k) => topic?.files?.[k]);
+  return ["comprehensive", "mastery", "questions", "critical", "quickRef"].filter((k) => topic?.files?.[k]);
 }
 
 function computeProgress() {

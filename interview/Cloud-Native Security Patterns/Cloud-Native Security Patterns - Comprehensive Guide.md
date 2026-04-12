@@ -1,5 +1,25 @@
 # Cloud-Native Security Patterns - Comprehensive Guide
 
+## At a glance
+
+**Cloud-native** applications use **microservices**, **containers**, **dynamic orchestration**, and **API-first** design—security must be **platform-aligned**: admission control, **service identity**, **observability**, and **progressive delivery**. This guide complements **Container Security** and **Cloud Security Architecture** with **patterns** (sidecars, gateways, policy-as-code) rather than a single checklist.
+
+---
+
+## Learning outcomes
+
+- Map **patterns** to threats: lateral movement, noisy neighbor, **secret** sprawl, **CI** as control plane.
+- Compare **mesh/gateway** vs **library** enforcement trade-offs at a high level.
+- Discuss **SRE** coupling: rollouts, feature flags, **graceful degradation**.
+
+---
+
+## Prerequisites
+
+Container Security, Cloud Security Architecture, Zero Trust, Secure CI/CD (this repo).
+
+---
+
 ## **Introduction**
 
 ### **What are Cloud-Native Security Patterns?**
@@ -739,3 +759,16 @@ Cloud-native security patterns provide reusable strategies for building secure, 
 6. Centralize secret management
 7. Enable comprehensive observability
 
+---
+
+## Interview clusters
+
+- **Fundamentals:** “What changes vs three-tier app security?” “What is service mesh for security?”
+- **Senior:** “mTLS everywhere—what breaks operationally?” “How do you do authZ between 50 microservices?”
+- **Staff:** “Progressive rollout of zero trust for internal east-west traffic.”
+
+---
+
+## Cross-links
+
+Container Security, Cloud Security Architecture, Zero Trust, gRPC/mTLS topics, Rate Limiting.

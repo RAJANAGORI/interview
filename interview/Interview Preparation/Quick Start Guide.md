@@ -2,19 +2,11 @@
 
 # **🚀 Quick Start Guide - Interview Preparation**
 
-## **📋 All Topics Available (34 Total)**
+## **How this library is organized**
 
-### **Core Security Topics (19)**
+Use **[Content Mastery Framework](Content%20Mastery%20Framework.md)** for the learning model (basics → expert + interview). Use **[Topic Syllabus Index](Topic%20Syllabus%20Index.md)** for the full list of **~58** indexed entries in `Config/topics.json` (core, product, and special categories, including meta entries such as this guide). Use **[Role-Based Study Paths](Role-Based%20Study%20Paths.md)** to pick a curriculum instead of reading alphabetically.
 
-JWT, OAuth, JWT vs OAuth, Encryption vs Hashing, Session Fixation and Session Hijacking, Cookie Security, SQL Injection, Parameterized and Prepared Statement, CSRF, XSS, XSS vs CSRF, CORS and SOP, XXE, SSRF, MITM Attack, OSI Layer, Digital Signatures, Secure Source Code Review, Threat Modeling
-
-### **Product Security Topics (13)**
-
-Authorization and Authentication, Product Security Assessment Design, Penetration Testing and Security Assessment, Proactive Security Assessment, Production Security Incident Response, Multi-Team Security Incident Response, Web Application Security Vulnerabilities, Secure Microservices Communication, Third-Party Integration Security, System vs Personal API Tokens, Security-Development Collaboration, Security vs Usability Balance, Agile Security Compliance
-
-### **Special Topics (2)**
-
-Security Headers, TLS
+**Typical files inside a topic folder:** Comprehensive Guide, Interview Questions & Answers, Critical Clarification (where applicable), Quick Reference. Some flagship topics also include a **Mastery Track** (deeper syllabus and drills)—for example, **Microsoft Product Security Engineer II Interview Prep**.
 
 ---
 
@@ -33,19 +25,17 @@ Security Headers, TLS
 
 ---
 
-### **Step 2: Read the Topic Overview (10 min)**
+### **Step 2: Open the right module first (10 min)**
 
-1. Open the topic folder (e.g., `jwt(JSON web token)/`)
-2. Read `README.md` first
-    - Get the overview
-    - Understand the structure
-    - Check the study plan
+1. Open the topic folder (e.g. `JWT (JSON Web Token)/`).
+2. Start with the **Comprehensive Guide** (or the **Mastery Track** if the topic has one and you want a guided path).
+3. Skim the table of contents; note **Learning outcomes** sections when present.
 
 ---
 
 ### **Step 3: Understand Common Mistakes (10 min)**
 
-1. Read `00_CRITICAL_CLARIFICATION.md`
+1. Open the **Critical Clarification** file in that folder (naming varies; often `Critical Clarification … Misconceptions.md`).
     - These are the mistakes interviewers expect you to avoid
     - Take quick notes
     - This prevents embarrassing errors
@@ -54,7 +44,7 @@ Security Headers, TLS
 
 ### **Step 4: Quick Reference Review (5 min)**
 
-1. Skim `03_QUICK_REFERENCE.md`
+1. Skim the **Quick Reference** markdown for the topic (often `… - Quick Reference.md`).
     - Get the big picture
     - See key concepts at a glance
     - Don't memorize yet, just familiarize
@@ -65,22 +55,22 @@ Security Headers, TLS
 
 ### **Option A: Deep Dive Approach**
 
-1. **Read `01_COMPREHENSIVE_GUIDE.md`** (60-90 min)
+1. **Read the Comprehensive Guide** (60–90 min) — file name usually contains `Comprehensive Guide`.
     - Read section by section
     - Take notes in your own words
     - Focus on understanding, not speed
-2. **Practice Questions** (20-30 min)
-    - Open `02_INTERVIEW_QUESTIONS.md`
-    - Try answering 3-5 questions
+2. **Practice Questions** (20–30 min)
+    - Open the **Interview Questions** file for that topic
+    - Try answering 3–5 questions
     - Compare with provided answers
 
 ### **Option B: Quick Overview Approach**
 
-1. **Read `00_CRITICAL_CLARIFICATION.md`** (10 min)
-2. **Read `03_QUICK_REFERENCE.md`** (15 min)
-3. **Practice Questions** (30 min)
-    - Answer questions from `02_INTERVIEW_QUESTIONS.md`
-    - Use `01_COMPREHENSIVE_GUIDE.md` as reference when stuck
+1. **Critical Clarification** (10 min)
+2. **Quick Reference** (15 min)
+3. **Practice Questions** (30 min)
+    - Answer questions from the Interview Questions file
+    - Use the Comprehensive Guide as reference when stuck
 
 ---
 

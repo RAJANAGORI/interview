@@ -1,5 +1,25 @@
 # Cross-Origin Authentication - Comprehensive Guide
 
+## At a glance
+
+**Cross-origin authentication** covers how **SPAs**, **mobile apps**, and **APIs** establish sessions when **login**, **API**, and **static** assets span **different origins**. Interviews combine **cookies**, **SameSite**, **CORS**, **OAuth/OIDC redirects**, **postMessage**, and **CSRF**—expect **end-to-end** reasoning, not isolated definitions.
+
+---
+
+## Learning outcomes
+
+- Trace a **browser** login flow across origins with **cookie** and **token** choices.
+- Explain **CSRF** and **CORS** in relation to **credentialed** requests.
+- Compare **BFF**, **public client**, and **native** OAuth patterns at a high level.
+
+---
+
+## Prerequisites
+
+CORS and SOP, CSRF, Cookie Security, OAuth/OIDC basics (this repo).
+
+---
+
 ## **Introduction**
 
 ### **What is Cross-Origin Authentication?**
@@ -1117,3 +1137,16 @@ Cross-origin authentication requires careful consideration of CORS, cookie secur
 6. Use HTTPS for all communication
 7. Test authentication flows thoroughly
 
+---
+
+## Interview clusters
+
+- **Fundamentals:** “Why is SameSite important?” “Credentialed CORS—what’s risky?”
+- **Senior:** “SPA with OAuth—token storage trade-offs?” “BFF pattern—when?”
+- **Staff:** “Multiple products, one IdP, different TLDs—session and CSRF strategy.”
+
+---
+
+## Cross-links
+
+CORS and SOP, CSRF, Cookie Security, OAuth/OIDC, JWT, XSS (token theft).

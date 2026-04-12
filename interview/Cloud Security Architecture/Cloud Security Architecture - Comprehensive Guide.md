@@ -1,5 +1,25 @@
 # Cloud Security Architecture - Comprehensive Guide
 
+## At a glance
+
+**Cloud security architecture** is how you implement **identity**, **network segmentation**, **data protection**, **logging**, and **resilience** using cloud primitives—within the **shared responsibility model**. Interviews expect you to **name** who owns patching the hypervisor vs **your** S3 bucket policy, and to discuss **defense in depth** across accounts, VPCs, and services.
+
+---
+
+## Learning outcomes
+
+- Explain the **shared responsibility model** for your primary cloud(s).
+- Describe **account** structure, **network** boundaries, **IAM** boundaries, and **encryption** defaults.
+- Connect architecture to **blast radius**, **multi-tenant** isolation, and **incident** containment.
+
+---
+
+## Prerequisites
+
+IAM concepts, OSI/TLS basics, Zero Trust themes (this repo).
+
+---
+
 ## **Introduction**
 
 ### **What is Cloud Security Architecture?**
@@ -733,3 +753,16 @@ Cloud security architecture requires a comprehensive approach covering identity 
 6. Regular security assessments
 7. Stay updated with provider security features
 
+---
+
+## Interview clusters
+
+- **Fundamentals:** “What is the shared responsibility model?” “Who patches the hypervisor?”
+- **Senior:** “How do you segment prod from non-prod in cloud accounts?” “Encryption keys—who manages them?”
+- **Staff:** “Design landing zone for multi-business-unit cloud with centralized security.”
+
+---
+
+## Cross-links
+
+Zero Trust, IAM, IaC Security, Container Security, DDoS and Resilience, Compliance topics.

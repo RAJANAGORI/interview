@@ -1,5 +1,25 @@
 # Secure Source Code Review - Comprehensive Guide
 
+## At a glance
+
+**Secure code review** finds **vulnerabilities and design flaws** before release by reading **source** with attacker mindset—often combining **checklists** (OWASP, language pitfalls), **tooling** (SAST), and **manual** reasoning for **business logic** and **trust boundaries**. Staff interviews emphasize **methodology**, **signal vs noise**, and **partnership** with engineering.
+
+---
+
+## Learning outcomes
+
+- Structure a review: **scope**, **threat model**, **hotspots**, **verification**.
+- Prioritize **high-impact** bug classes for the stack (injection, authZ, deserialization, concurrency).
+- Integrate with **CI**, **severity rubrics**, and **fix** coaching.
+
+---
+
+## Prerequisites
+
+Solid grasp of OWASP Top 10 categories; one deep language ecosystem helps (this repo).
+
+---
+
 ## **Introduction**
 
 Secure source code review is the systematic examination of source code to identify security vulnerabilities, design flaws, and implementation weaknesses. This guide provides comprehensive checklists and methodologies for conducting thorough security-focused code reviews.
@@ -2002,3 +2022,17 @@ private boolean isAllowedRedirect(String url){
 ---
 
 **Note:** This comprehensive guide provides detailed checklists for secure code review. Use it systematically to review code for security vulnerabilities and implementation weaknesses.
+
+---
+
+## Interview clusters
+
+- **Fundamentals:** “Manual vs SAST?” “What do you look for first in a PR?”
+- **Senior:** “How do you scope a review for a large change?” “Business logic—how found?”
+- **Staff:** “Build a review program with SLAs—without blocking all shipping.”
+
+---
+
+## Cross-links
+
+OWASP categories, SQL Injection, XSS, IDOR, deserialization topics, Product Security Real-World Scenarios.

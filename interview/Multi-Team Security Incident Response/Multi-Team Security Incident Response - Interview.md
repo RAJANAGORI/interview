@@ -1,5 +1,16 @@
 # Multi-Team Security Incident Response - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: Can you describe a time when you had to respond to a security incident that required coordination with multiple teams?**
@@ -257,3 +268,20 @@
 ---
 
 **Note:** This is a template. Expand with more detailed procedures, real-world examples, and case studies as needed.
+
+---
+
+## Depth: Interview follow-ups — Multi-Team Incident Response
+
+**Authoritative references:** [NIST 800-61](https://csrc.nist.gov/publications/detail/sp/800-61/rev-3/final) (incident handling); org-specific runbooks; [PAGERDUTY / ITIL](https://www.pagerduty.com/resources/learn/what-is-incident-management/) style incident command concepts (verify vendor-neutral phrasing in interview).
+
+**Follow-ups:**
+- **RACI across SecOps / SRE / Product / Legal** — who owns customer comms?
+- **Coordination mechanics:** war room, severity schema, executive checkpoints.
+- **Post-incident:** blameless retro with **tracked** security follow-ups.
+
+**Production verification:** Cross-team drills; clear severity definitions; shared timeline tooling.
+
+**Cross-read:** Production IR, Risk Metrics, Security Observability.
+
+<!-- verified-depth-merged:v1 ids=multi-team-security-incident-response -->

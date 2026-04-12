@@ -1,5 +1,16 @@
 # Business Logic Abuse and Fraud Threats - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## OWASP and terminology
 
 ### 1) OWASP categorizes “software integrity failures” and business logic—how do you frame this?
@@ -71,3 +82,20 @@ Model **abuse cases** alongside **threat actors**: **incentives**, **paths**, **
 ### 12) Curveball: isn’t this just WAF?
 
 **WAF** helps with **web attacks**; **business logic** abuse often uses **valid API calls**. You need **domain rules**, **state machines**, **monotonic** constraints, and **account-level** controls—not just edge filtering.
+
+---
+
+## Depth: Interview follow-ups — Business Logic & Fraud
+
+**Authoritative references:** [OWASP Automated Threats](https://owasp.org/www-project-automated-threats-to-web-applications/) (OAT—verify); OWASP **API Top 10** business logic angles; fraud industry sources optional (Stripe Radar docs, etc.—cite as examples).
+
+**Follow-ups:**
+- **WAF won’t save you** from valid authenticated abuse.
+- **Velocity limits, device fingerprinting ethics, manual review queues.**
+- **Monotonic constraints** — inventory, wallet balances.
+
+**Production verification:** Domain metrics (chargeback rate, abuse rate); shadow rules before enforcement.
+
+**Cross-read:** Rate limiting (Recommended Additional Topics), IDOR, Product Real-World Scenarios.
+
+<!-- verified-depth-merged:v1 ids=business-logic-abuse-and-fraud-threats -->

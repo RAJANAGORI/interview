@@ -28,7 +28,7 @@ This repository is designed to help security professionals prepare for technical
 
 ### Key Features
 
-- ✅ **43+ Security Topics** - Comprehensive coverage of security domains
+- ✅ **60+ indexed topic entries** (core, product, special) — see `Config/topics.json` and the [Topic Syllabus Index](Interview%20Preparation/Topic%20Syllabus%20Index.md) (includes former “recommended additional” Tier A topics such as GraphQL, gRPC, SAML, DDoS, rate limiting, metrics/OKRs, vuln management)
 - ✅ **Structured Content** - Organized by category (Core, Product, Special)
 - ✅ **Real-World Scenarios** - Practical examples and use cases
 - ✅ **Interview-Focused** - Tailored for 6.5+ years experienced professionals
@@ -37,6 +37,13 @@ This repository is designed to help security professionals prepare for technical
 ---
 
 ## 🚀 Getting Started
+
+### One-stop learning (basics → interview)
+
+- **[Content Mastery Framework](Interview%20Preparation/Content%20Mastery%20Framework.md)** — How topics are structured (literacy → mechanics → judgment → interview performance).
+- **[Topic Syllabus Index](Interview%20Preparation/Topic%20Syllabus%20Index.md)** — All indexed topics with tiers, prerequisites, and time budgets.
+- **[Role-Based Study Paths](Interview%20Preparation/Role-Based%20Study%20Paths.md)** — Curricula for Product Security, AppSec, Staff+, and a 21-day sprint.
+- **[Recommended Additional Topics](Interview%20Preparation/Recommended%20Additional%20Topics.md)** — Suggested new folders (GraphQL security, gRPC, SAML, DDoS, rate limiting, etc.) and merge guidance.
 
 ### Quick Start
 
@@ -58,7 +65,7 @@ This repository is designed to help security professionals prepare for technical
 
 ```
 my-interview-preparation/
-├── 📚 Topic Folders/          # 43+ security topic folders
+├── 📚 Topic Folders/          # 65+ indexed security topic entries
 ├── ⚙️ Config/                  # Configuration files
 ├── 🔧 Scripts/                # Automation scripts
 ├── 📖 Documentation/           # Project documentation
@@ -181,6 +188,7 @@ my-interview-preparation/
 
 - **[Config/](Config/)** - Configuration files
   - `topics.json` - Complete topic index with file mappings and metadata
+  - `topic_interview_depth.json` - Per-topic **verified** interview depth (references + follow-ups); rebuilt from `Scripts/depth_data_*.py` via `build_topic_interview_depth.py`; applied with `apply_verified_topic_depth.py`
 
 ### Scripts
 
@@ -219,6 +227,9 @@ my-interview-preparation/
 ## 📝 Interview Preparation Resources
 
 - **[Interview Preparation/](Interview%20Preparation/)** - General guides and resources
+  - `Content Mastery Framework.md` - Standard for depth and interview readiness per topic
+  - `Topic Syllabus Index.md` - Full topic map with tiers and prerequisites
+  - `Role-Based Study Paths.md` - Role-specific curricula
   - `Study Plan.md` - Structured study plan
   - `Quick Start Guide.md` - Getting started guide
   - `📊 Interview Preparation Progress Tracker.md` - Track your preparation progress
@@ -227,7 +238,7 @@ my-interview-preparation/
 
 ## 📊 Statistics
 
-- **Total Topics**: 43+
+- **Total Topics**: 65 indexed entries (see `Config/topics.json`)
 - **Categories**: Core Security, Product Security, Special Topics
 - **Content Types**: Comprehensive Guides, Interview Questions, Critical Clarifications, Quick References
 - **Target Audience**: 6.5+ years experienced security professionals

@@ -1,5 +1,25 @@
 # IDOR (Insecure Direct Object Reference) - Comprehensive Guide
 
+## At a glance
+
+**IDOR** is a **broken access control** flaw: the application exposes **direct references** (IDs, keys, filenames) to objects and fails to verify that the **authenticated** user may access **that specific** object. It is one of the most common **API and B2B** findings because **authorization** is easy to skip on “obscure” IDs.
+
+---
+
+## Learning outcomes
+
+- Describe **horizontal** vs **vertical** privilege abuse through object references.
+- Go beyond “use UUIDs”—explain **server-side** authorization and **context** (tenant, org, role).
+- Connect IDOR to **GraphQL** nesting, **file** downloads, and **export** endpoints.
+
+---
+
+## Prerequisites
+
+Authentication vs Authorization, OWASP access control concepts, API security basics (this repo).
+
+---
+
 ## **Introduction**
 
 ### **What is IDOR?**
@@ -671,6 +691,20 @@ def upload_file():
 - **Implement defense in depth** - Multiple authorization layers
 - **Monitor and log** - Detect unauthorized access attempts
 - **Regular security reviews** - Audit access control logic
+
+---
+
+## Interview clusters
+
+- **Fundamentals:** “What is IDOR?” “Why don’t UUIDs fix it?”
+- **Senior:** “Where do GraphQL resolvers often miss authZ?” “How do you test IDOR systematically?”
+- **Staff:** “Design a central authorization service for multi-tenant APIs without N+1 policy calls killing latency.”
+
+---
+
+## Cross-links
+
+GraphQL and API Security, OWASP access control, JWT/OAuth scopes, Business Logic Abuse, Security Observability (audit logs).
 
 ---
 

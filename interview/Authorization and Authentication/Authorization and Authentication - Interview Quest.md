@@ -1,5 +1,16 @@
 # Authorization and Authentication - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ---
 
 ## **Fundamental Questions**
@@ -326,3 +337,35 @@ def check_permission(user, resource, action):
 ---
 
 **Note:** This is a template. Expand with more detailed answers, code examples, and real-world scenarios as needed.
+
+---
+
+## Depth: Interview follow-ups — Authorization and Authentication
+
+**Authoritative references:** [OWASP Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html); [OWASP Authorization Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html); [CWE-285](https://cwe.mitre.org/data/definitions/285.html) (Improper Authorization).
+
+**Follow-ups:**
+- **AuthN established once; AuthZ every request** — where enforcement breaks in microservices.
+- **IDOR** as failed object-level authZ—patterns to test.
+- **Policy engines (RBAC/ABAC)** — when attribute-based matters.
+
+**Production verification:** Consistent middleware/gateway checks; audit logs for sensitive actions; break-glass paths monitored.
+
+**Cross-read:** JWT, OAuth, IDOR, IAM at Scale, Zero Trust.
+
+---
+
+## Depth: Interview follow-ups — AuthN vs AuthZ (Critical Clarifications)
+
+**Authoritative references:** [OWASP Authentication CS](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html); [Authorization CS](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html).
+
+**Follow-ups:**
+- **Session vs token** — where identity is proved vs where permissions are enforced.
+- **401 vs 403** semantics in APIs you’ve shipped.
+- **Federated identity** — trust boundaries between IdP and apps.
+
+**Production verification:** Consistent enforcement middleware; audit logs on sensitive actions.
+
+**Cross-read:** Authorization and Authentication, JWT, OAuth, IDOR.
+
+<!-- verified-depth-merged:v1 ids=authorization-and-authentication,critical-clarification-authorization-and-authentic -->

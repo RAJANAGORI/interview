@@ -1,5 +1,25 @@
 # Advanced Threat Modeling - Comprehensive Guide
 
+## At a glance
+
+**Threat modeling** identifies **credible threats** against a system **early**—structured (STRIDE, PASTA, LINDDUN, attack trees) or scenario-driven—so teams prioritize controls before code **hardens**. Advanced practice integrates **diagrams** (DFD, architecture), **abuse cases**, **data classification**, and **continuous** updates as features ship.
+
+---
+
+## Learning outcomes
+
+- Facilitate **STRIDE** (or chosen method) on a real architecture without checklist theater.
+- Connect findings to **controls**, **owners**, and **verification** (tests, monitoring).
+- Explain how threat modeling **scales** (templates, champions, service catalog).
+
+---
+
+## Prerequisites
+
+Core AppSec topics (auth, data flows), Product Security Real-World Scenarios for practice (this repo).
+
+---
+
 ## **Introduction**
 
 ### **What is Advanced Threat Modeling?**
@@ -1747,3 +1767,17 @@ Advanced threat modeling combines multiple frameworks and approaches:
 - [Open Threat Modeling Format (OTM)](https://github.com/iriusrisk/OpenThreatModel)
 - [OWASP Threat Modeling](https://owasp.org/www-community/Threat_Modeling)
 - [Microsoft Threat Modeling](https://docs.microsoft.com/en-us/azure/security/develop/threat-modeling-tool)
+
+---
+
+## Interview clusters
+
+- **Fundamentals:** “What is STRIDE?” “What diagram do you start from?”
+- **Senior:** “How do you prioritize threats?” “Who owns mitigations?”
+- **Staff:** “Scale threat modeling to 500 teams without one central bottleneck.”
+
+---
+
+## Cross-links
+
+Product Security Real-World Scenarios, Risk Prioritization, Secure Design / Zero Trust, Agile Security Compliance (evidence).

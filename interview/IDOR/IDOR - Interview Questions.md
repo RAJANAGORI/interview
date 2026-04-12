@@ -1,5 +1,16 @@
 # IDOR (Insecure Direct Object Reference) - Interview Questions
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: What is IDOR and why is it dangerous?**
@@ -454,3 +465,20 @@ def download_file(file_token):
 ---
 
 **Remember:** Authentication ≠ Authorization. Always verify both!
+
+---
+
+## Depth: Interview follow-ups — IDOR
+
+**Authoritative references:** [OWASP IDOR](https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/05-Authorization_Testing/04-Testing_for_Insecure_Direct_Object_References); [CWE-639](https://cwe.mitre.org/data/definitions/639.html).
+
+**Follow-ups:**
+- **Horizontal vs vertical** IDOR—testing matrix.
+- **Predictable IDs / UUIDs** don’t fix missing authZ.
+- **Mass assignment** adjacent issues.
+
+**Production verification:** Integration tests per role; object-level policy tests; logging of denied access.
+
+**Cross-read:** Authorization and Authentication, API security, Business Logic Abuse.
+
+<!-- verified-depth-merged:v1 ids=idor -->

@@ -1,5 +1,16 @@
 # MITM Attack - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ---
 
 ## **Fundamental Questions**
@@ -240,3 +251,20 @@ MITM attacks are critical security threats. Key points:
 5. **Understand attack techniques** - ARP spoofing, DNS spoofing, certificate spoofing
 
 Remember: **MITM attacks can occur on any network. Use HTTPS, certificate validation, and network security measures for defense in depth!**
+
+---
+
+## Depth: Interview follow-ups — MITM
+
+**Authoritative references:** [TLS 1.3 RFC 8446](https://www.rfc-editor.org/rfc/rfc8446); [OWASP Transport Layer Protection CS](https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Protection_Cheat_Sheet.html).
+
+**Follow-ups:**
+- **TLS alone doesn’t fix phishing** — what MITM are you actually stopping (network adversaries vs malicious CAs)?
+- **Certificate validation failures** — custom trust stores in mobile apps.
+- **HSTS** — downgrade resistance, not a server-side crypto substitute.
+
+**Production verification:** TLS versions/ciphers; cert expiry automation; mTLS for service meshes where required.
+
+**Cross-read:** TLS, Cookie Security, Network isolation topics.
+
+<!-- verified-depth-merged:v1 ids=mitm-attack -->

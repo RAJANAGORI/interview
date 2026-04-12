@@ -1,5 +1,25 @@
 # Zero Trust Architecture for Product Security - Comprehensive Guide
 
+## At a glance
+
+**Zero Trust** moves security from **implicit trust** in network location (“inside the VPN”) to **explicit verification** of identity, device/workload posture, and **authorization** for each **session** and **resource** access—backed by **telemetry**. For product security, it maps to **strong authZ on APIs**, **workload identity**, **segmentation as enforcement**, and **measurable** coverage—not a single vendor SKU.
+
+---
+
+## Learning outcomes
+
+- Summarize **NIST SP 800-207** tenets in interview language (without memorizing every clause).
+- Map **identity, device, network, app, data** pillars to **controls you have shipped**.
+- Discuss **migration**, **availability** risks of centralized policy, and **metrics** for privilege and blast radius.
+
+---
+
+## Prerequisites
+
+IAM and Least Privilege, TLS, basic cloud networking; NIST SP 800-207 as optional reading (this repo).
+
+---
+
 ## What interviewers want to hear (senior / staff product security)
 
 They are testing whether you can **translate Zero Trust from slogans into shipped controls**: identity-first access, explicit authorization, observable policy decisions, and migration paths that do not freeze product velocity.
@@ -116,6 +136,14 @@ In interviews, describe **your** pattern: what enforces, what decides, what logs
 - **Blast radius**: successful lateral movement simulations blocked; reduced implicit east-west connectivity.
 - **Detection**: policy denials correlated with incidents; time to detect misuse of credentials.
 - **Resilience**: auth dependency SLOs and incident counts for policy misconfiguration.
+
+---
+
+## Interview clusters
+
+- **Fundamentals:** “What is Zero Trust in one sentence?” “Why isn’t VPN replacement enough?”
+- **Senior:** “Map NIST tenets to something you shipped (identity, device, data).” “How do you avoid auth as single point of failure?”
+- **Staff:** “Migration plan from flat VPC to explicit service auth without stalling launches.”
 
 ---
 

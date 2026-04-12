@@ -1,5 +1,16 @@
 # Software Supply Chain Security - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 Authoritative references: [SLSA](https://slsa.dev/), [OWASP Top 10 CI/CD Security Risks](https://owasp.org/www-project-top-10-ci-cd-security-risks/), SPDX/CycloneDX communities, [Sigstore](https://www.sigstore.dev/) (signing ecosystem).
 
 ---
@@ -65,3 +76,20 @@ No **owner** per dependency/domain, **SBOM** generated but not **consumed**, **p
 ### 12) Vendor SaaS supply chain—what do you ask?
 
 Subprocessor and **data flow**, **SOC 2** / ISO reports, **change notification**, **pen test** summaries, **SBOM** or component transparency for on-prem agents, and **incident** responsibilities.
+
+---
+
+## Depth: Interview follow-ups — Software Supply Chain Security
+
+**Authoritative references:** [SLSA](https://slsa.dev/); [NIST SSDF SP 800-218](https://csrc.nist.gov/publications/detail/sp/800-218/final); [Sigstore/cosign](https://www.sigstore.dev/) (artifact signing ecosystem).
+
+**Follow-ups:**
+- **SBOM** — what you *do* with it (prioritize vulns, not just inventory).
+- **Dependency confusion / typosquatting** — package managers.
+- **Provenance** — build attestation linking commit → artifact.
+
+**Production verification:** Verified builds; pinned deps; alert on critical CVE reachability.
+
+**Cross-read:** Secure CI/CD, Container Security, Secrets Management.
+
+<!-- verified-depth-merged:v1 ids=software-supply-chain-security -->

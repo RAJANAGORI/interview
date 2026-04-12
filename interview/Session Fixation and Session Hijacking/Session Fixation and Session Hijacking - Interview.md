@@ -1,5 +1,16 @@
 # Session Fixation and Session Hijacking - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: What is session hijacking and how does it work?**
@@ -746,3 +757,20 @@ These questions cover the key concepts of session fixation and session hijacking
 8. **Defense-in-depth** approach is essential
 
 Good luck with your interview!
+
+---
+
+## Depth: Interview follow-ups — Session Fixation and Session Hijacking
+
+**Authoritative references:** [OWASP Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html); [OWASP Session Fixation](https://owasp.org/www-community/attacks/Session_fixation) (community page—verify current).
+
+**Follow-ups:**
+- **Regenerate session ID on privilege change** — where exactly in your framework?
+- **Transport:** Why HTTPS + Secure cookies are table stakes; what HttpOnly does *not* fix (CSRF).
+- **Fixation delivery:** Attacker-supplied session id in URL—mitigations?
+
+**Production verification:** Session rotation events in logs; idle/absolute timeouts; concurrent session policy.
+
+**Cross-read:** Cookie Security, CSRF, XSS, MITM.
+
+<!-- verified-depth-merged:v1 ids=session-fixation-and-session-hijacking -->

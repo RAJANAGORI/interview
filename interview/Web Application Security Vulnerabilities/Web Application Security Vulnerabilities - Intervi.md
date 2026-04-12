@@ -1,5 +1,16 @@
 # Web Application Security Vulnerabilities - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: What methodologies do you follow to identify and mitigate common web application security vulnerabilities?**
@@ -220,3 +231,20 @@ document.getElementById('output').textContent = userInput;
 ---
 
 **Note:** This is a template. Expand with more detailed methodologies, code examples, and real-world scenarios as needed.
+
+---
+
+## Depth: Interview follow-ups — Web Application Security Vulnerabilities
+
+**Authoritative references:** [OWASP Top 10](https://owasp.org/www-project-top-ten/) (verify current year list); mapping to [CWE Top 25](https://cwe.mitre.org/top25/) for prioritization discussions.
+
+**Follow-ups:**
+- **Top 10 vs real org risk** — business logic and authZ often dominate in practice.
+- **Defense in depth:** WAF limitations vs code fixes.
+- **SSRF/XXE resurgence** in APIs and parsers—how you prioritize.
+
+**Production verification:** ASVS-aligned testing; trending by CWE; reduction in criticals over releases.
+
+**Cross-read:** Individual vuln topics (XSS, CSRF, SSRF), Business Logic Abuse.
+
+<!-- verified-depth-merged:v1 ids=web-application-security-vulnerabilities -->

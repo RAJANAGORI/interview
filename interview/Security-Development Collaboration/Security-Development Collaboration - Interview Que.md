@@ -1,5 +1,16 @@
 # Security-Development Collaboration - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: Describe a time when you collaborated with developers to address security concerns without impeding the development process.**
@@ -162,3 +173,20 @@
 ---
 
 **Note:** This is a template. Expand with more detailed answers, real-world examples, and case studies as needed.
+
+---
+
+## Depth: Interview follow-ups — Security–Development Collaboration
+
+**Authoritative references:** [OWASP SAMM](https://owaspsamm.org/) (governance, education, review); [Google SRE](https://sre.google/sre-book/part-III-practices/) blameless culture (analogy for partnership—not security-specific but credible).
+
+**Follow-ups:**
+- **Security as enablement** — guardrails vs gates; measurable friction reduction.
+- **Embedded vs centralized model** — trade-offs at scale.
+- **Handling “just this once” exceptions** — risk register discipline.
+
+**Production verification:** Joint OKRs; time-to-remediate; developer NPS-style feedback loops (if measured).
+
+**Cross-read:** Agile Compliance, Security vs Usability, Product Security Assessment Design.
+
+<!-- verified-depth-merged:v1 ids=security-development-collaboration -->

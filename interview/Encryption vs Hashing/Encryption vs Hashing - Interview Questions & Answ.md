@@ -1,5 +1,16 @@
 # Encryption vs Hashing - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: What is the fundamental difference between encryption and hashing?**
@@ -747,3 +758,20 @@ These questions cover the key distinctions between encryption and hashing. Key p
 7. **Never use MD5/SHA-1** for security purposes
 
 Good luck with your interview!
+
+---
+
+## Depth: Interview follow-ups — Encryption vs Hashing
+
+**Authoritative references:** NIST guidance on [approved algorithms](https://csrc.nist.gov/projects/block-cipher-techniques); general primers: encryption provides **confidentiality**; cryptographic hashes support **integrity** / password storage (with proper KDFs: Argon2/bcrypt/scrypt—**not** naked SHA-256 for passwords).
+
+**Follow-ups:**
+- **When is hashing wrong for passwords?** (fast hash, no salt, pepper mishandled.)
+- **Authenticated encryption:** Why AES-GCM/ChaCha20-Poly1305 vs AES-CBC alone?
+- **MAC vs signature:** Symmetric integrity vs asymmetric non-repudiation (tie to Digital Signatures topic).
+
+**Production verification:** KDF parameters, key rotation, AEAD nonce uniqueness, no keys in repos.
+
+**Cross-read:** Digital Signatures, TLS, Secrets Management.
+
+<!-- verified-depth-merged:v1 ids=encryption-vs-hashing -->

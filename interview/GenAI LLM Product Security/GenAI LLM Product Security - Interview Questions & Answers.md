@@ -1,5 +1,16 @@
 # GenAI LLM Product Security - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 References: [OWASP LLM Top 10 (2025)](https://genai.owasp.org/llm-top-10/), [OWASP Top 10 CI/CD Security Risks](https://owasp.org/www-project-top-10-ci-cd-security-risks/) (for pipeline/supply issues touching ML systems).
 
 ---
@@ -89,3 +100,20 @@ Filters help for **safety/abuse** but are not a full security strategy. You stil
 ### 15) Who owns “LLM security”?
 
 **Shared**: AppSec owns **tooling and threat models**, ML owns **data and evals**, platform owns **infra and quotas**, privacy/legal own **commitments**. Product security often **orchestrates** requirements and metrics.
+
+---
+
+## Depth: Interview follow-ups — GenAI / LLM Product Security
+
+**Authoritative references:** [OWASP LLM Top 10](https://owasp.org/www-project-top-10-for-large-language-model-applications/) (model-specific risks); [NIST AI RMF](https://www.nist.gov/itl/ai-risk-management-framework) (risk management framing—high level).
+
+**Follow-ups:**
+- **Prompt injection** vs traditional injection—trust boundaries for tools/plugins.
+- **Data leakage** — training data, RAG corpora, cross-tenant retrieval.
+- **Human-in-the-loop** for high-impact actions (payments, deletes).
+
+**Production verification:** Content filters where appropriate; logging without PII spillage; abuse monitoring on API quotas.
+
+**Cross-read:** Third-Party Integration, Business Logic Abuse, Privacy themes.
+
+<!-- verified-depth-merged:v1 ids=genai-llm-product-security -->

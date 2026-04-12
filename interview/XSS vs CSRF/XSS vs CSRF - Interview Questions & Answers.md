@@ -1,5 +1,16 @@
 # XSS vs CSRF - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ---
 
 ## **Comparison Questions**
@@ -296,3 +307,20 @@ fetch('/transfer', {
 - Both require defense in depth
 
 **Remember:** XSS and CSRF are different vulnerabilities requiring different mitigation strategies. Both must be addressed separately!
+
+---
+
+## Depth: Interview follow-ups — XSS vs CSRF
+
+**Authoritative references:** OWASP cheat sheets for [XSS](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html) and [CSRF](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html).
+
+**Follow-ups:**
+- **One sentence distinction:** XSS executes script in victim browser; CSRF forges cross-site *requests* using the victim’s cookies/session.
+- **Can CSRF tokens stop XSS?** (No—attacker reads token via XSS.)
+- **Defense pairing:** HttpOnly limits token theft but not CSRF action while session alive.
+
+**Production verification:** Separate test cases for stored XSS vs CSRF on state-changing routes.
+
+**Cross-read:** XSS, CSRF, Cookie Security.
+
+<!-- verified-depth-merged:v1 ids=xss-vs-csrf -->

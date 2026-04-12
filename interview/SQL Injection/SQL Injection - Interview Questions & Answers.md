@@ -1,5 +1,16 @@
 # SQL Injection - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: What is SQL Injection and how does it work?**
@@ -952,3 +963,20 @@ SQL Injection remains a critical vulnerability. Key points for interviews:
 7. **Defense in depth** - Multiple layers of protection
 
 Remember: **SQL injection is prevented by parameterized queries, not by input validation or WAFs alone!**
+
+---
+
+## Depth: Interview follow-ups — SQL Injection
+
+**Authoritative references:** [OWASP SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection); [SQL Injection Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html); [CWE-89](https://cwe.mitre.org/data/definitions/89.html).
+
+**Follow-ups:**
+- **Second-order SQLi:** Stored payload executed later—how do you test?
+- **ORM isn’t automatic safety:** Raw queries, string concat in migrations, reporting DBs.
+- **Blind techniques:** timing/boolean inference—impact on prioritization.
+
+**Production verification:** Parametrize all query paths; static analysis + DAST; least-privilege DB roles.
+
+**Cross-read:** Parameterized Statements, IDOR (different layer), Secure Code Review.
+
+<!-- verified-depth-merged:v1 ids=sql-injection -->

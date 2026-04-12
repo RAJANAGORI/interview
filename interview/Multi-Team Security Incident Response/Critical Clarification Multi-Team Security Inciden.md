@@ -1,5 +1,6 @@
 # Critical Clarification: Multi-Team Security Incident Response
 
+
 ## **⚠️ Common Misconceptions**
 
 ### **Misconception 1: "Security team handles incidents alone"**

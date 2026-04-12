@@ -1,5 +1,16 @@
 # XXE - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: What is XXE and how does it work?**
@@ -473,3 +484,20 @@ XXE is a critical vulnerability affecting XML processing. Key points:
 6. **Understand attack types** - File disclosure, SSRF, blind XXE, DoS
 
 Remember: **XXE is prevented by using secure XML parsers with external entities disabled, not by input validation alone!**
+
+---
+
+## Depth: Interview follow-ups — XXE
+
+**Authoritative references:** [OWASP XML External Entity (XXE)](https://owasp.org/www-community/vulnerabilities/XML_External_Entity_(XXE)); [CWE-611](https://cwe.mitre.org/data/definitions/611.html); [XML External Entity Prevention CS](https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html).
+
+**Follow-ups:**
+- **Blind XXE** exfiltration via out-of-band DNS/HTTP—how you’d detect in prod.
+- **Disable DTDs / external entities** in parsers—library defaults matter.
+- **XInclude / SVG / office formats** — non-obvious XML surfaces.
+
+**Production verification:** Parser configs audited; file upload pipelines; SSRF overlap when entities hit internal URLs.
+
+**Cross-read:** SSRF, Secure Code Review, Supply Chain (document parsers).
+
+<!-- verified-depth-merged:v1 ids=xxe -->

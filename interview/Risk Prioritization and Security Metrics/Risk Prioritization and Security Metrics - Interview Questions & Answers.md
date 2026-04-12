@@ -1,5 +1,16 @@
 # Risk Prioritization and Security Metrics - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## Fundamentals
 
 ### 1) How do you prioritize two “critical” findings?
@@ -73,3 +84,20 @@ Introduce **tiering** and **single-threaded** sequencing for tier-0; **time-box*
 ### 14) What is a risk register?
 
 A **single source of truth** for top risks: description, **owner**, **impact**, **likelihood**, **controls**, **next steps**, **target date**—reviewed on a **cadence** (monthly/quarterly).
+
+---
+
+## Depth: Interview follow-ups — Risk Prioritization & Metrics
+
+**Authoritative references:** [FAIR](https://www.fairinstitute.org/) (risk quant—optional); [CVSS](https://www.first.org/cvss/) (scoring—limitations); [EPSS](https://www.first.org/epss/) (exploit probability—FIRST).
+
+**Follow-ups:**
+- **CVSS alone is insufficient** — reachability, asset value, compensating controls.
+- **Leading vs lagging** metrics for security programs.
+- **OKRs** without incentivizing wrong behavior (e.g. raw vuln count).
+
+**Production verification:** Trend of critical exploitable issues; time-to-remediate by tier; incident recurrence.
+
+**Cross-read:** Threat Modeling, Product Security Assessment, Compliance mapping.
+
+<!-- verified-depth-merged:v1 ids=risk-prioritization-and-security-metrics -->

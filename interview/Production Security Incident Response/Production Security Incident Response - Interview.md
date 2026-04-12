@@ -1,5 +1,16 @@
 # Production Security Incident Response - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: How would you handle a reported security incident in a live production environment?**
@@ -239,3 +250,20 @@
 ---
 
 **Note:** This is a template. Expand with more detailed procedures, checklists, and real-world examples as needed.
+
+---
+
+## Depth: Interview follow-ups — Production Security Incident Response
+
+**Authoritative references:** [NIST SP 800-61 Rev. 3](https://csrc.nist.gov/publications/detail/sp/800-61/rev-3/final) (Computer Security Incident Handling—verify latest revision); [FIRST](https://www.first.org/) CSIRT practices (high level).
+
+**Follow-ups:**
+- **Contain vs eradicate vs recover** — order when data exfil is suspected.
+- **Evidence preservation** — chain of custody, logging immutability.
+- **Comms:** legal/PR/regulatory triggers.
+
+**Production verification:** Runbooks; tabletop exercises; MTTD/MTTR trends for security incidents.
+
+**Cross-read:** Multi-Team IR, Observability/Detection, Cloud Security Architecture.
+
+<!-- verified-depth-merged:v1 ids=production-security-incident-response -->

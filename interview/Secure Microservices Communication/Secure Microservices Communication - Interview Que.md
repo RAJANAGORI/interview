@@ -1,5 +1,16 @@
 # Secure Microservices Communication - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: How would you approach implementing secure communication between different microservices in a distributed system?**
@@ -222,3 +233,20 @@ spec:
 ---
 
 **Note:** This is a template. Expand with more detailed technical information, implementation examples, and architectural patterns as needed.
+
+---
+
+## Depth: Interview follow-ups — Secure Microservices Communication
+
+**Authoritative references:** [NIST SP 800-204 series](https://csrc.nist.gov/publications/sp800) (microservices security—search “800-204” for microservices/DevSecOps guidance); service mesh docs (Istio/Linkerd) for mTLS patterns.
+
+**Follow-ups:**
+- **mTLS everywhere vs selective** — operational cost vs blast radius.
+- **Identity for services:** SPIFFE/SPIRE concepts (high level).
+- **Zero trust between services** — JWT vs mTLS vs both.
+
+**Production verification:** Service identity issuance, cert rotation, authorization policies enforced at mesh/app.
+
+**Cross-read:** Zero Trust, TLS, IAM, Container Security.
+
+<!-- verified-depth-merged:v1 ids=secure-microservices-communication -->

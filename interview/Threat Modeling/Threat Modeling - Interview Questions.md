@@ -1,5 +1,16 @@
 # Threat Modeling - Interview Questions
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: What is threat modeling and why is it important?**
@@ -1118,3 +1129,20 @@ These questions cover:
 - Design approaches can be combined
 - OTM enables automation and integration
 - Risk assessment is critical for prioritization
+
+---
+
+## Depth: Interview follow-ups — Threat Modeling
+
+**Authoritative references:** [STRIDE](https://learn.microsoft.com/en-us/azure/security/develop/threat-modeling-tool-threats) (Microsoft threat modeling tool docs); [OWASP Threat Modeling](https://owasp.org/www-community/Threat_Modeling); NIST-ish framing: identify assets & trust boundaries.
+
+**Follow-ups:**
+- **STRIDE without prioritization** — how you rank (impact × likelihood × exposure).
+- **Agile integration** — DoD on stories, lightweight diagrams, “abuse cases.”
+- **When TM is theater** — mitigations not tracked as engineering work.
+
+**Production verification:** Mitigations in backlog; test cases; telemetry for abuse cases you named.
+
+**Cross-read:** Risk Prioritization, Zero Trust, Product Security Assessment Design.
+
+<!-- verified-depth-merged:v1 ids=threat-modeling -->

@@ -1,5 +1,25 @@
 # Infrastructure as Code (IaC) Security - Comprehensive Guide
 
+## At a glance
+
+**IaC security** treats Terraform, CloudFormation, Helm, and Kubernetes manifests as **code**: review, test, **policy-as-code**, and **least-privilege** CI—because **misconfigurations replicate at scale**. Interviews focus on **static scanning**, **drift**, **secrets in repos**, and **blast radius** of CI roles.
+
+---
+
+## Learning outcomes
+
+- Threat-model **who can plan/apply** infra and what **credentials** CI holds.
+- Use **policy engines** conceptually (OPA, Sentinel, cloud-native guardrails).
+- Pair IaC with **Cloud Security Architecture** (network, IAM, encryption defaults).
+
+---
+
+## Prerequisites
+
+Cloud Security Architecture, Secure CI/CD Pipeline Security, Secrets Management (this repo).
+
+---
+
 ## **Introduction**
 
 ### **What is Infrastructure as Code Security?**
@@ -849,3 +869,16 @@ IaC security requires secure coding practices, automated scanning, policy enforc
 6. Enforce policies as code
 7. Regular security reviews
 
+---
+
+## Interview clusters
+
+- **Fundamentals:** “Secrets in Terraform—what’s wrong?” “What is drift?”
+- **Senior:** “Policy-as-code in CI—what do you block?” “How do you scope CI cloud roles?”
+- **Staff:** “Monorepo infra owned by 30 teams—governance model.”
+
+---
+
+## Cross-links
+
+Secure CI/CD, Cloud Security Architecture, Secrets Management, Container/Kubernetes policy engines.

@@ -1,5 +1,16 @@
 # Secure Source Code Review - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ---
 
 ## **Fundamental Questions**
@@ -666,3 +677,20 @@ def login(username, password):
 ---
 
 **Note:** This is a template. Expand with more detailed answers, code examples, and real-world scenarios as needed.
+
+---
+
+## Depth: Interview follow-ups — Secure Source Code Review
+
+**Authoritative references:** [OWASP Code Review Guide](https://owasp.org/www-project-code-review-guide/) (project—verify latest structure); [ASVS](https://owasp.org/www-project-application-security-verification-standard/) as requirement taxonomy.
+
+**Follow-ups:**
+- **Threat-led vs checklist-led** — how you prioritize files (auth, parsers, crypto).
+- **Tooling + human judgment** — when SAST/semgrep rules miss business logic.
+- **Secure defaults in libraries** — framework-specific pitfalls.
+
+**Production verification:** Review coverage metrics; recurring defect classes trending down; severity-calibrated findings.
+
+**Cross-read:** SQLi/XSS/IDOR modules, Product Security Assessment Design.
+
+<!-- verified-depth-merged:v1 ids=secure-source-code-review -->

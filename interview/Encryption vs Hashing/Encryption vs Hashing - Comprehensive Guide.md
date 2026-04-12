@@ -1,5 +1,25 @@
 # Encryption vs Hashing - Comprehensive Guide
 
+## At a glance
+
+**Encryption** provides **confidentiality** (reversible with the right key). **Hashing** produces a **fixed-size digest**—by default **one-way** for password storage (with proper algorithms and **salting**). They are **not interchangeable**; interviews often probe **when** you need authenticated encryption, **KDFs**, and why **MD5/SHA1** are wrong for passwords.
+
+---
+
+## Learning outcomes
+
+- Contrast goals: confidentiality vs integrity vs password **verification**.
+- Name modern choices: **AES-GCM**, **ChaCha20-Poly1305** for symmetric; **Argon2/bcrypt/scrypt** for passwords.
+- Explain **salt**, **pepper** (conceptually), and why **speed** matters for password hashes.
+
+---
+
+## Prerequisites
+
+Basic crypto vocabulary; TLS topic optional (this repo).
+
+---
+
 ## **Introduction**
 
 Encryption and hashing are fundamental cryptographic techniques used in information security, but they serve different purposes and operate in distinct ways. Understanding their differences is crucial for implementing secure systems.
@@ -705,3 +725,17 @@ if (downloadedHash === publishedHash) {
 - Use Hashing (SHA-256)
 
 Remember: **Encryption protects confidentiality (secrecy), Hashing protects integrity (verification). They're complementary, not interchangeable!**
+
+---
+
+## Interview clusters
+
+- **Fundamentals:** “Encrypt passwords in the database—yes or no?” “SHA-256 for passwords?”
+- **Senior:** “When do you need AEAD vs plain AES?” “KDF vs hash for passwords?”
+- **Staff:** “Design a key hierarchy for multi-tenant SaaS with customer-managed keys.”
+
+---
+
+## Cross-links
+
+TLS, JWT signing, Secrets Management, Cloud KMS topics, CSRF/XSS (where crypto intersects browser).

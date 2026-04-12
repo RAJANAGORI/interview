@@ -1,5 +1,16 @@
 # SSRF - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: What is SSRF and how does it work?**
@@ -296,3 +307,20 @@ SSRF is a critical vulnerability allowing attackers to make requests from the se
 5. **Understand bypass techniques** - IP encoding, DNS rebinding, etc.
 
 Remember: **SSRF is prevented by whitelisting allowed URLs and blocking private IP ranges, not by blacklisting!**
+
+---
+
+## Depth: Interview follow-ups — SSRF
+
+**Authoritative references:** [OWASP SSRF](https://owasp.org/www-community/attacks/Server_Side_Request_Forgery); [CWE-918](https://cwe.mitre.org/data/definitions/918.html); [SSRF Prevention CS](https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html).
+
+**Follow-ups:**
+- **URL parser differentials** (IPv6, `@`, DNS rebinding) — why blocklists fail.
+- **Cloud metadata endpoints** (`169.254.169.254`) — classic blast radius.
+- **Defense:** strict allowlists, disable unnecessary URL schemes, network egress controls.
+
+**Production verification:** Egress allowlists, service mesh policies, logging of outbound fetches.
+
+**Cross-read:** XXE, Cloud Security Architecture, Container Security.
+
+<!-- verified-depth-merged:v1 ids=ssrf -->

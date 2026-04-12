@@ -1,5 +1,6 @@
 # Critical Clarification: Web Application Security Vulnerabilities
 
+
 ## **⚠️ Common Misconceptions**
 
 ### **Misconception 1: "OWASP Top 10 covers all security vulnerabilities"**

@@ -1,5 +1,16 @@
 # JSON Web Token (JWT) - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: What is JWT and how does it work?**
@@ -1075,3 +1086,21 @@ These questions cover fundamental concepts, security considerations, implementat
 7. **Follow security best practices** throughout implementation
 
 Good luck with your interview!
+
+---
+
+## Depth: Interview follow-ups — JWT (JSON Web Token)
+
+**Authoritative references (re-check periodically):** [OWASP JSON Web Token Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html); [RFC 7519](https://www.rfc-editor.org/rfc/rfc7519) (JWT); [RFC 8725](https://www.rfc-editor.org/rfc/rfc8725) (JSON Web Signature / JWT best practices—algorithm hygiene, key management).
+
+**Follow-ups interviewers love:**
+- **Algorithm confusion / `none`:** How does your stack reject `alg=none`, restrict allowed algs, and prevent RSA/HMAC confusion (use libs that implement RFC 8725 guidance)?
+- **`kid` / JKU / x5u abuse:** If headers can steer verification keys, how do you pin trust to a known key set (no arbitrary URL fetches)?
+- **Storage vs threat model:** Browser storage vs HttpOnly cookie—what XSS residual risk remains in each case?
+- **Replay / rotation:** `jti`, token binding, short `exp`, refresh rotation—what breaks if the clock skews?
+
+**Production verification:** Log verification failures without logging secrets; canary claims (`aud`, `iss`); monitor anomalous `sub`/`tenant` patterns.
+
+**Cross-read:** OAuth, Cookie Security, TLS, XSS (this repo).
+
+<!-- verified-depth-merged:v1 ids=jwt-json-web-token- -->

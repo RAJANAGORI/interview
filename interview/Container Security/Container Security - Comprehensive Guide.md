@@ -1,5 +1,25 @@
 # Container Security - Comprehensive Guide
 
+## At a glance
+
+**Container security** spans **images**, **registries**, **runtime**, **orchestration** (Kubernetes), and **supply chain**. The **4Cs** (code, container, cluster, cloud) remind you that **fixing only runtime** misses Dockerfile, CI, and **IAM**. Interviews expect **non-root**, **minimal images**, **admission control**, **network policy**, and **secrets** patterns—not only “we scan images.”
+
+---
+
+## Learning outcomes
+
+- Explain the **4Cs** and place common failures (root user, latest tags, privileged pods).
+- Describe **image** provenance, **registry** controls, and **runtime** policies (seccomp, AppArmor, OPA/Gatekeeper).
+- Connect to **supply chain** (SBOM, signing) and **observability** (audit, syscall anomalies).
+
+---
+
+## Prerequisites
+
+Linux basics, Software Supply Chain Security, Cloud/Kubernetes overview, IAM (this repo).
+
+---
+
 ## **Introduction**
 
 ### **What is Container Security?**
@@ -830,3 +850,16 @@ Container security requires a defense-in-depth approach covering image security,
 6. Enforce policies automatically
 7. Regular security assessments
 
+---
+
+## Interview clusters
+
+- **Fundamentals:** “Why non-root in containers?” “Image vs runtime security?”
+- **Senior:** “Admission control—what would you enforce first?” “How do secrets reach pods safely?”
+- **Staff:** “Design Kubernetes security for multi-tenant platform team serving 200 apps.”
+
+---
+
+## Cross-links
+
+Cloud-Native Security Patterns, Software Supply Chain Security, IAM, Zero Trust, Secure CI/CD.

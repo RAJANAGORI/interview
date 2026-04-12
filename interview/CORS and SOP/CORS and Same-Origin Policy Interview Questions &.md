@@ -1,5 +1,16 @@
 # CORS and Same-Origin Policy Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ---
 
 ## Fundamental Questions
@@ -931,3 +942,20 @@ These interview questions cover:
 - ✅ Real-world scenarios
 
 **Key takeaway:** CORS is a browser-enforced relaxation of SOP, not a server security feature. Always validate Origin headers and use whitelists, never wildcards with credentials.
+
+---
+
+## Depth: Interview follow-ups — CORS and Same-Origin Policy
+
+**Authoritative references:** [MDN CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS); [OWASP HTML5 Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html) (CORS section).
+
+**Follow-ups:**
+- **CORS is not a replacement for authZ** — it relaxes *browser* read access, not server trust.
+- **`Access-Control-Allow-Credentials: true` + `*` origins** — invalid pattern.
+- **Preflight** — when required; caching (`Access-Control-Max-Age`) risks.
+
+**Production verification:** Allowlist origins; no reflected arbitrary `Origin` trust; test credentialed cross-origin flows.
+
+**Cross-read:** Cross-Origin Authentication, CSRF, XSS.
+
+<!-- verified-depth-merged:v1 ids=cors-and-sop -->

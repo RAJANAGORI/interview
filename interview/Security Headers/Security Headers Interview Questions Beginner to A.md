@@ -1,5 +1,16 @@
 # Security Headers Interview Questions Beginner to Advanced
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ---
 
 ## Beginner Level Questions
@@ -1260,3 +1271,20 @@ app.post('/coep-report', (req, res) => {
 
 - X-XSS-Protection
 - Expect-CT
+
+---
+
+## Depth: Interview follow-ups — Security Headers
+
+**Authoritative references:** [OWASP Secure Headers Project](https://owasp.org/www-project-secure-headers/); [MDN security headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers#security) overview.
+
+**Follow-ups:**
+- **CSP** deployment strategy—report-only first, nonce/hash rollout.
+- **HSTS preload** implications—subdomain coverage, recovery from HTTPS misconfig.
+- **Clickjacking:** `frame-ancestors` vs legacy headers.
+
+**Production verification:** Header linting in CI; monitor CSP reports; avoid breaking third-party embeds.
+
+**Cross-read:** XSS, Browser/Frontend Deep Dive, TLS.
+
+<!-- verified-depth-merged:v1 ids=security-headers -->

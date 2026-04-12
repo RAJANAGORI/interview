@@ -1,5 +1,6 @@
 # Critical Clarification: Penetration Testing and Security Assessment
 
+
 ## **⚠️ Common Misconceptions**
 
 ### **Misconception 1: "Penetration testing and security assessment are the same thing"**

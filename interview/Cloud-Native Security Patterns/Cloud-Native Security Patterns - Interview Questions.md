@@ -1,5 +1,16 @@
 # Cloud-Native Security Patterns - Interview Questions
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: Explain the Zero Trust architecture pattern.**
@@ -600,3 +611,19 @@ API Gateway → Service Mesh → Microservices
 
 Cloud-native security patterns provide reusable strategies for building secure applications. Key patterns include zero trust, microservices security, service mesh, immutable infrastructure, and defense in depth.
 
+---
+
+## Depth: Interview follow-ups — Cloud-Native Security Patterns
+
+**Authoritative references:** [CNCF Security TAG publications](https://github.com/cncf/tag-security) (e.g. cloud-native security whitepapers—verify latest PDF); service mesh security docs (Istio/Linkerd) for mTLS discussion.
+
+**Follow-ups:**
+- **Immutable infrastructure** — patching vs replacing.
+- **Sidecar/mesh** — policy enforcement point; latency/ops cost.
+- **Observability-driven security** — traces for attack reconstruction.
+
+**Production verification:** Policy enforcement in CI/CD and runtime; golden signals for security SLOs where applicable.
+
+**Cross-read:** Zero Trust, Microservices Communication, Observability.
+
+<!-- verified-depth-merged:v1 ids=cloud-native-security-patterns -->

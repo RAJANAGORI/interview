@@ -1,5 +1,16 @@
 # XSS - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: What is XSS and how does it work?**
@@ -818,3 +829,20 @@ XSS is a critical web application vulnerability. Key points for interviews:
 7. **Test thoroughly** - Code reviews, scanners, manual testing
 
 Remember: **XSS is prevented by output encoding based on context (HTML, JavaScript, URL, CSS), not by input validation or CSP alone!**
+
+---
+
+## Depth: Interview follow-ups — XSS
+
+**Authoritative references:** [OWASP XSS](https://owasp.org/www-community/attacks/xss/); [XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html); [CSP](https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html).
+
+**Follow-ups:**
+- **Contextual encoding:** HTML vs JS vs URL vs CSS—why “encode everything” still fails if wrong context.
+- **DOM XSS:** Sources and sinks in SPA frameworks.
+- **CSP** as backstop—`unsafe-inline` realities.
+
+**Production verification:** DOMPurify patterns where needed; CSP reports; no user HTML in dangerous sinks.
+
+**Cross-read:** CSRF, Cookie Security, Browser/Frontend Deep Dive, Security Headers.
+
+<!-- verified-depth-merged:v1 ids=xss -->

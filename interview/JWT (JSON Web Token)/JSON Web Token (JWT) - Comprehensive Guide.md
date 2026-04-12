@@ -1,5 +1,25 @@
 # JSON Web Token (JWT) - Comprehensive Guide
 
+## At a glance
+
+A **JWT** is a compact, often **signed** (JWS) or **encrypted** (JWE) representation of **claims** for use between parties. It is **not** “secure by default”: **algorithm confusion**, **weak secrets**, **missing validation** (`aud`, `iss`, `exp`, `nbf`), and **key management** failures dominate real incidents. Interviews expect **validation** steps and **where not to store** tokens.
+
+---
+
+## Learning outcomes
+
+- Describe **header.payload.signature** structure and common **alg** choices (HS256 vs RS256 trade-offs).
+- List **required checks** before trusting a JWT; explain **revocation** limitations for stateless JWTs.
+- Compare **JWE**, **JWS**, and **opaque** tokens for different threats.
+
+---
+
+## Prerequisites
+
+Encryption vs Hashing, TLS, OAuth/OIDC context (this repo).
+
+---
+
 ## **Introduction**
 
 JSON Web Token (JWT) is an open standard (RFC 7519) that defines a compact and self-contained way for securely transmitting information between parties as a JSON object. This information can be verified and trusted because it is digitally signed.
@@ -1401,3 +1421,17 @@ JWTs are a powerful tool for authentication and authorization, but they must be 
 10. **Follow security best practices** throughout implementation
 
 Remember: **Security is not about using the right technology, but about implementing it correctly.**
+
+---
+
+## Interview clusters
+
+- **Fundamentals:** “alg none?” “What claims do you validate?”
+- **Senior:** “HS256 vs RS256—key management implications?” “How to revoke JWT access tokens?”
+- **Staff:** “Multi-region key rotation without downtime—high level.”
+
+---
+
+## Cross-links
+
+OAuth/OIDC, Encryption vs Hashing, JWT vs OAuth comparison, Cookie Security, Rate Limiting (token abuse).

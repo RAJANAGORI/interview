@@ -1,5 +1,6 @@
 # Critical Clarification: Security-Development Collaboration
 
+
 ## **⚠️ Common Misconceptions**
 
 ### **Misconception 1: "Security team's role is to block insecure code"**

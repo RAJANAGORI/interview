@@ -1,5 +1,16 @@
 # Zero Trust Architecture for Product Security - Interview Questions & Answers
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## Fundamentals
 
 ### 1) What is Zero Trust in one precise sentence?
@@ -101,3 +112,20 @@ No—**location is not trust**. Internal traffic should still be **authenticated
 ### 20) What is a realistic non-goal for Zero Trust?
 
 **Perfect elimination of all attacks** or **zero usability friction**. The goal is **material reduction** of implicit trust and blast radius, with **managed** risk and **measurable** improvements.
+
+---
+
+## Depth: Interview follow-ups — Zero Trust
+
+**Authoritative references:** [NIST SP 800-207](https://csrc.nist.gov/publications/detail/sp/800-207/final) (Zero Trust Architecture); [Microsoft Zero Trust](https://learn.microsoft.com/en-us/security/zero-trust/) (vendor mapping—use as example set).
+
+**Follow-ups:**
+- **Identity as primary perimeter** — network segmentation as *supplement*.
+- **Continuous validation** — not one-time VPN connect.
+- **Policy engine / PDP/PEP** concepts at high level.
+
+**Production verification:** Per-request authZ logs; segmentation tests; least privilege IAM metrics.
+
+**Cross-read:** IAM, Microservices, Cloud Security Architecture, Microsoft PSE prep.
+
+<!-- verified-depth-merged:v1 ids=zero-trust-architecture-for-product-security -->

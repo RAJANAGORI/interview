@@ -1,5 +1,16 @@
 # Container Security - Interview Questions
 
+<!-- interview-module:v1 -->
+
+> **How to use this interview module**
+>
+> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+>
+> **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
+
+---
+
+
 ## **Fundamental Questions**
 
 ### **Q1: Explain the 4 C's of cloud-native security.**
@@ -756,3 +767,19 @@ CMD ["./app"]
 
 Container security requires defense in depth across images, runtime, orchestration, and supply chain. Key areas include running as non-root, implementing network policies, managing secrets securely, and continuous monitoring.
 
+---
+
+## Depth: Interview follow-ups — Container Security
+
+**Authoritative references:** [NIST SP 800-190](https://csrc.nist.gov/publications/detail/sp/800-190/final) (container security guide); [CIS Docker Benchmark](https://www.cisecurity.org/benchmark/docker) / [CIS Kubernetes Benchmark](https://www.cisecurity.org/benchmark/kubernetes) (verify access).
+
+**Follow-ups:**
+- **Root in container / privileged flags** — escape risk.
+- **Image provenance & scanning** — supply chain tie-in.
+- **Network policies** — default deny between pods/namespaces.
+
+**Production verification:** Admission controllers; non-root users; read-only root FS where possible; runtime alerts.
+
+**Cross-read:** Supply Chain, Kubernetes admission (see Recommended Additional Topics), Cloud Security Architecture.
+
+<!-- verified-depth-merged:v1 ids=container-security -->

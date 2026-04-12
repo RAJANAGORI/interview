@@ -1,5 +1,25 @@
 # Product Security Real-World Scenarios - Comprehensive Guide
 
+## At a glance
+
+This guide collects **scenario-style** prompts—design reviews, **incident** judgment, **trade-offs**, and **stakeholder** conflicts—typical of **product security** interviews. Use scenarios to practice **structured** answers: **clarify constraints**, **name threats**, **propose controls**, **verify**, and **measure**—not encyclopedic trivia.
+
+---
+
+## Learning outcomes
+
+- Answer **open-ended** prompts with **STAR**-style structure where appropriate.
+- Balance **security**, **shipping**, **UX**, and **compliance** in narratives.
+- Cross-reference deeper topics in this repo when a scenario maps to them.
+
+---
+
+## Prerequisites
+
+Content Mastery Framework; familiarity with 8–12 core topics (threat modeling, IAM, AppSec).
+
+---
+
 ## Introduction
 
 This guide contains real-world scenario-based interview questions commonly asked in product-based companies. Each scenario includes:
@@ -2167,3 +2187,18 @@ Additional Protections:
 ---
 
 *[Additional Advanced Scenarios continue in Part 2...]*
+
+---
+
+## Interview clusters (how to use this doc)
+
+- **Fundamentals:** Pick one **Beginner** scenario; answer aloud in **5 minutes** with **assumptions** stated.
+- **Senior:** For **Intermediate** scenarios, add **metrics**, **rollback**, and **stakeholder** communication.
+- **Staff:** For **Advanced** scenarios, connect to **program** (policy, scale, multi-team) and **verification**.
+
+---
+
+## Cross-links
+
+Threat Modeling, Microsoft PSE II prep (if applicable), Cloud/IAM topics, Content Mastery Framework, Security Observability.
+

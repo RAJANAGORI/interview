@@ -1,5 +1,26 @@
 # GenAI LLM Product Security - Comprehensive Guide
 
+## At a glance
+
+**LLM features** introduce a new trust boundary: **untrusted input** (prompts, documents, images) flows through **models** and **tools** that may touch **customer data**, **IAM**, and **regulated** outputs. Product security here means **explicit authorization for tools**, **tenant-safe retrieval**, **safe downstream handling** of model output, and **continuous evaluation** when models and prompts change every release.
+
+---
+
+## Learning outcomes
+
+- Map risks to **OWASP LLM Top 10** (cite **2025** vs older editions when comparing).
+- Design **tool** and **RAG** controls that do **not** depend on the model “being nice.”
+- Explain **failure modes**: excessive agency, cross-tenant retrieval, prompt injection leading to **action**, logging **PII** in prompts.
+- Define **metrics** for safety, security, cost, and governance—not only model quality.
+
+---
+
+## Prerequisites
+
+Application security fundamentals, OAuth/API authorization concepts, Data classification, Security Observability (this repo).
+
+---
+
 ## What interviewers want to hear (senior / staff product security)
 
 They want evidence that you treat **LLM features as a new trust boundary**: not “smarter autocomplete,” but **untrusted input → high-privilege tools → customer data → regulated outputs**. You should connect **controls** to **product requirements**, **observability**, and **safe failure modes** when models or tools misbehave.
@@ -92,6 +113,14 @@ Use the official pages under [genai.owasp.org/llm-top-10](https://genai.owasp.or
 - **RAG without authZ** on chunks (**LLM08**) or **logging** full prompts with secrets (**LLM02**).
 - **Prompt injection** framed only as a model bug—without **tool-tier** controls (**LLM01** + **LLM06**).
 - **Evaluations** that track helpfulness but not **security regressions** after fine-tuning (**LLM04**).
+
+---
+
+## Interview clusters
+
+- **Fundamentals:** “What is prompt injection vs XSS?” “Why is LLM06 (Excessive Agency) a product security issue?”
+- **Senior:** “How do you authorize every tool call without trusting the model?” “How do you isolate tenants in a vector store?”
+- **Staff:** “Red-team an agent that can read email and file tickets—what breaks first?” “How do you govern third-party model subprocessors?”
 
 ---
 

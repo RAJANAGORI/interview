@@ -1,5 +1,26 @@
 # IAM and Least Privilege at Scale - Comprehensive Guide
 
+## At a glance
+
+**IAM at scale** is how you give every **human** and **workload** the **minimum** permissions needed, **only when needed**, with **ownership**, **auditability**, and **safe emergency access**. Interviews test whether you can run a program across many teams without **production** meltdowns—**policy as code**, **JIT**, **break-glass**, and **measurable** privilege reduction over time.
+
+---
+
+## Learning outcomes
+
+- Contrast **RBAC**, **ABAC**, and **hybrid** patterns; explain **role explosion** and mitigations.
+- Design **workload identity** vs long-lived keys; **federation** patterns at a high level.
+- Operate **JIT elevation**, **access reviews**, and **exception** registers with expiry.
+- Tie IAM to **incident response** (revocation, containment).
+
+---
+
+## Prerequisites
+
+Zero Trust Architecture (conceptual), Secrets Management, Cloud provider IAM basics (this repo).
+
+---
+
 ## What interviewers want to hear (7+ years)
 
 They are testing whether you can **design and run an IAM program** across many teams/services without breaking production:
@@ -117,3 +138,17 @@ During incidents, IAM is often the fastest containment lever:
 - revoke tokens, rotate keys, disable roles
 - restrict trust policies
 - isolate workloads by identity boundaries
+
+---
+
+## Interview clusters
+
+- **Fundamentals:** “What is least privilege?” “Why are shared service accounts bad?”
+- **Senior:** “RBAC vs ABAC at scale?” “How does JIT work with on-call?”
+- **Staff:** “Design IAM for 2,000 microservices with quarterly access reviews and no standing prod admin.”
+
+---
+
+## Cross-links
+
+Zero Trust Architecture, Secrets Management, SAML/OAuth, Container Security (workload identity), Security Observability (audit events), Agile Security Compliance (governance).
