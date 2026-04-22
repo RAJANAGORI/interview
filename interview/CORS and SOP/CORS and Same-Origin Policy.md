@@ -1296,6 +1296,6 @@ Access-Control-Allow-Methods: GET, POST
 
 ## **Next Steps**
 
-- Review `02_INTERVIEW_QUESTIONS.md` for practice
-- Check `03_QUICK_REFERENCE.md` for quick lookup
+- Review **Interview Questions & Answers** for this topic for practice
+- Check **Quick Reference** for quick lookup
 - Test CORS configuration in your applications

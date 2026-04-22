@@ -9,7 +9,13 @@
 
 ---
 
-## **📚 Topics Overview (34 Total Topics)**
+## **Library size note**
+
+This tracker’s numbered checklist covers **34** foundational + product topics. The complete machine-readable index is **`interview/Config/topics.json`** (**65** entries). For a pre-assessment, use **[Baseline Diagnostic - Interview Preparation](Baseline%20Diagnostic%20-%20Interview%20Preparation.md)**; for round-based drills, **[Interview Round Playbook](Interview%20Round%20Playbook.md)**.
+
+---
+
+## **📚 Topics overview (34-item checklist; full library has 65 topics)**
 
 ### **Core Authentication & Authorization**
 
@@ -72,8 +78,8 @@
 
 ### **1. JWT (JSON Web Token)**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -81,8 +87,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -96,8 +102,8 @@
 
 ### **2. OAuth**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -105,8 +111,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -120,10 +126,10 @@
 
 ### **3. JWT vs OAuth**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -137,10 +143,10 @@
 
 ### **4. Encryption vs Hashing**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -154,8 +160,8 @@
 
 ### **5. Session Fixation and Session Hijacking**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -163,8 +169,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -178,8 +184,8 @@
 
 ### **6. SQL Injection**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -187,8 +193,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -202,10 +208,10 @@
 
 ### **7. Parameterized and Prepared Statement**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -219,8 +225,8 @@
 
 ### **8. CSRF**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -228,8 +234,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -243,8 +249,8 @@
 
 ### **9. XSS**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -252,8 +258,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -267,10 +273,10 @@
 
 ### **10. XSS vs CSRF**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -284,8 +290,8 @@
 
 ### **11. XXE**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -293,8 +299,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -308,8 +314,8 @@
 
 ### **12. SSRF**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -317,8 +323,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -332,8 +338,8 @@
 
 ### **13. MITM Attack**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -341,8 +347,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -356,10 +362,10 @@
 
 ### **14. OSI Layer**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -373,8 +379,8 @@
 
 ### **15. Cookie Security**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -382,8 +388,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -397,8 +403,8 @@
 
 ### **16. CORS and SOP**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -406,8 +412,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -421,8 +427,8 @@
 
 ### **17. Digital Signatures**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -430,8 +436,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -445,8 +451,8 @@
 
 ### **18. Secure Source Code Review**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -454,8 +460,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -469,8 +475,8 @@
 
 ### **19. Threat Modeling**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -478,8 +484,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -493,7 +499,7 @@
 
 ### **20. TLS**
 
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md` (Note: Limited content available)
+- [ ]  Read **Comprehensive Guide** (`TLS/`; filenames may be truncated in some views)
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -507,9 +513,9 @@
 
 ### **21. Security Headers**
 
-- [ ]  Read `SECURITY_HEADERS_INTERVIEW.md`
-- [ ]  Read `SECURITY_HEADERS_INTERVIEW_QUESTIONS.md`
-- [ ]  Practiced questions
+- [ ]  Read **Comprehensive Guide** (`Security Headers/`)
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -525,8 +531,8 @@
 
 ### **22. Authorization and Authentication (Product Security)**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -534,8 +540,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -549,8 +555,8 @@
 
 ### **23. Product Security Assessment Design**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -558,8 +564,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -573,8 +579,8 @@
 
 ### **24. Penetration Testing and Security Assessment**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -582,8 +588,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -597,8 +603,8 @@
 
 ### **25. Proactive Security Assessment**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -606,8 +612,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -621,8 +627,8 @@
 
 ### **26. Production Security Incident Response**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -630,8 +636,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -645,8 +651,8 @@
 
 ### **27. Multi-Team Security Incident Response**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -654,8 +660,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -669,8 +675,8 @@
 
 ### **28. Web Application Security Vulnerabilities (Product Security)**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -678,8 +684,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -693,8 +699,8 @@
 
 ### **29. Secure Microservices Communication**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -702,8 +708,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -717,8 +723,8 @@
 
 ### **30. Third-Party Integration Security**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -726,8 +732,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -741,8 +747,8 @@
 
 ### **31. System vs Personal API Tokens**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -750,8 +756,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -765,8 +771,8 @@
 
 ### **32. Security-Development Collaboration**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -774,8 +780,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -789,8 +795,8 @@
 
 ### **33. Security vs Usability Balance**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -798,8 +804,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -813,8 +819,8 @@
 
 ### **34. Agile Security Compliance**
 
-- [ ]  Read `00_CRITICAL_CLARIFICATION.md`
-- [ ]  Read `01_COMPREHENSIVE_GUIDE.md`
+- [ ]  Read **Critical Clarification** (filename varies; see topic folder)
+- [ ]  Read **Comprehensive Guide**
 - [ ]  Studied Advanced Exploitation Techniques
 - [ ]  Studied Penetration Testing Methodology
 - [ ]  Studied Threat Modeling (STRIDE)
@@ -822,8 +828,8 @@
 - [ ]  Studied Advanced Mitigations
 - [ ]  Reviewed SAST/DAST Detection
 - [ ]  Reviewed Risk Assessment
-- [ ]  Practiced questions from `02_INTERVIEW_QUESTIONS.md`
-- [ ]  Reviewed `03_QUICK_REFERENCE.md`
+- [ ]  Practiced **Interview Questions & Answers**
+- [ ]  Reviewed **Quick Reference**
 - [ ]  Can explain confidently: Yes No
 
 **Notes:**
@@ -1082,7 +1088,7 @@
 - [ ]  Completed Week 4 topics (Advanced & Special)
 - [ ]  Completed Week 5 topics (Product Security - Assessment)
 - [ ]  Completed Week 6 topics (Product Security - Architecture)
-- [ ]  Completed all 34 topics
+- [ ]  Completed all topics in this checklist (see **`interview/Config/topics.json`** for the full **65** topic index)
 - [ ]  First mock interview
 - [ ]  Can explain all topics confidently
 - [ ]  Ready for interview!

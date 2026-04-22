@@ -4,7 +4,7 @@
 
 ## **How this library is organized**
 
-Use **[Content Mastery Framework](Content%20Mastery%20Framework.md)** for the learning model (basics → expert + interview). Use **[Topic Syllabus Index](Topic%20Syllabus%20Index.md)** for the full list of **~58** indexed entries in `Config/topics.json` (core, product, and special categories, including meta entries such as this guide). Use **[Role-Based Study Paths](Role-Based%20Study%20Paths.md)** to pick a curriculum instead of reading alphabetically.
+Use **[Content Mastery Framework](Content%20Mastery%20Framework.md)** for the learning model (basics → expert + interview). Use **[Topic Syllabus Index](Topic%20Syllabus%20Index.md)** for the full map of topics backed by **`interview/Config/topics.json`** (**65** entries: **23** core, **34** product, **8** special—including navigational/meta items). **New here?** Start with **[Baseline Diagnostic - Interview Preparation](Baseline%20Diagnostic%20-%20Interview%20Preparation.md)**, then **[Role-Based Study Paths](Role-Based%20Study%20Paths.md)**. For drills by interview round, use **[Interview Round Playbook](Interview%20Round%20Playbook.md)**.
 
 **Typical files inside a topic folder:** Comprehensive Guide, Interview Questions & Answers, Critical Clarification (where applicable), Quick Reference. Some flagship topics also include a **Mastery Track** (deeper syllabus and drills)—for example, **Microsoft Product Security Engineer II Interview Prep**.
 
@@ -331,22 +331,17 @@ Evening (1 hour):
 
 ### **If you have limited time:**
 
-1. **Review All `03_QUICK_REFERENCE.md`** (3-4 hours)
-    - Quick overview of all 34 topics
-    - Key concepts and mitigations
-    - Focus on high-priority topics first
-2. **Read All `00_CRITICAL_CLARIFICATION.md`** (2-3 hours)
-    - Avoid common mistakes
-    - Understand misconceptions
-    - Prioritize high-frequency topics
-3. **Practice Top Questions** (2-3 hours)
-    - From high-priority topic `02_INTERVIEW_QUESTIONS.md` files
-    - Focus on: JWT, OAuth, SQL Injection, XSS, CSRF, Session Management
-    - If applying for product security roles: also review product security questions
-4. **Review Your Notes** (30 min)
-    - Your personal cheat sheet
-    - Key points you want to remember
-    - Common mistakes to avoid
+1. **Quick Reference sweep** (3–4 hours)
+    - Open each topic’s **Quick Reference** (filename varies; often `… - Quick Reference.md`) for **high-priority topics** (see **Topic Priority** section above) first, then expand if time allows.
+    - Full index: **`interview/Config/topics.json`**.
+2. **Critical Clarification sweep** (2–3 hours)
+    - For the same high-priority topics, read **Critical Clarification** (or `Critical Clarification … Misconceptions.md`) to avoid interview-killer mistakes.
+3. **Practice top questions** (2–3 hours)
+    - From each topic’s **Interview Questions & Answers** file; use **[Interview Round Playbook](Interview%20Round%20Playbook.md)** Set A for structure.
+    - Focus on: JWT, OAuth, SQL Injection, XSS, CSRF, session/cookie management.
+    - Product security roles: add cloud, IAM, and scenario modules from your role path.
+4. **Review your notes** (30 min)
+    - Personal cheat sheet; mistakes you repeat; **[Story Library Template - Behavioral Interviews](Story%20Library%20Template%20-%20Behavioral%20Interviews.md)** headlines.
 
 ---
 
@@ -386,11 +381,11 @@ Before your interview, you should be able to:
 
 **Your Next 30 Minutes:**
 
-1. Pick a topic (JWT recommended)
-2. Read `README.md`
-3. Read `00_CRITICAL_CLARIFICATION.md`
-4. Skim `03_QUICK_REFERENCE.md`
-5. Try 2-3 practice questions
+1. Optionally run **[Baseline Diagnostic - Interview Preparation](Baseline%20Diagnostic%20-%20Interview%20Preparation.md)** (or pick JWT if you already know your gap list).
+2. Open the topic folder (e.g. `JWT (JSON Web Token)/`).
+3. Read **Critical Clarification** for that topic.
+4. Skim **Quick Reference** for that topic.
+5. Answer 2–3 prompts from **Interview Questions & Answers** (timed); score with **[Topic Readiness Rubric - Timed Scoring](Topic%20Readiness%20Rubric%20-%20Timed%20Scoring.md)**.
 
 **Then:**
 

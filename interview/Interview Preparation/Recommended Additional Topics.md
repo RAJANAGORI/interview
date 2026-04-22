@@ -4,7 +4,7 @@ Use this list when **expanding the repository**. Topics are ordered by **intervi
 
 ### Tier A status (repository)
 
-These **Tier A** items are now **first-class topics** in `Config/topics.json` with the same module layout (Comprehensive Guide, Interview Q&A, Critical Clarification, Quick Reference) and **verified** interview depth:
+These **Tier A** items are now **first-class topics** in **`interview/Config/topics.json`** with the same module layout (Comprehensive Guide, Interview Q&A, Critical Clarification, Quick Reference) and **verified** interview depth:
 
 | Topic | Folder |
 |-------|--------|
@@ -68,7 +68,7 @@ Before adding a folder, search the library for: **API**, **mesh**, **supply chai
 
 ## How to add a topic (consistency)
 
-Follow the **[Content Mastery Framework](Content%20Mastery%20Framework.md)** and register the topic in `Config/topics.json` so it appears in the interactive app.
+Follow the **[Content Mastery Framework](Content%20Mastery%20Framework.md)** and register the topic in **`interview/Config/topics.json`** so it appears in the interactive app.
 
 ---
 

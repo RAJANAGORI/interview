@@ -6,9 +6,11 @@ This plan ties together the **topic library**, **role paths**, and **mastery fra
 
 ## Before you start
 
-1. Read **[Content Mastery Framework](Content%20Mastery%20Framework.md)** (10 minutes) — understand the four learning layers and folder contract.
-2. Skim **[Topic Syllabus Index](Topic%20Syllabus%20Index.md)** — note your tier (foundation vs product vs staff).
-3. Pick **[Role-Based Study Paths](Role-Based%20Study%20Paths.md)** — Path A (Product Security), B (AppSec), C (Staff+), or D (21-day sprint).
+1. Run **[Baseline Diagnostic - Interview Preparation](Baseline%20Diagnostic%20-%20Interview%20Preparation.md)** (optional but recommended) — pick a path with evidence, not guesswork.
+2. Read **[Content Mastery Framework](Content%20Mastery%20Framework.md)** (10 minutes) — understand the four learning layers and folder contract.
+3. Skim **[Topic Syllabus Index](Topic%20Syllabus%20Index.md)** — note your tier (foundation vs product vs staff).
+4. Pick **[Role-Based Study Paths](Role-Based%20Study%20Paths.md)** — Path A (Product Security), B (AppSec), C (Staff+), or D (21-day sprint).
+5. Bookmark **[Interview Round Playbook](Interview%20Round%20Playbook.md)** and **[Topic Readiness Rubric - Timed Scoring](Topic%20Readiness%20Rubric%20-%20Timed%20Scoring.md)** for weekly drills and scoring.
 
 ---
 
@@ -54,7 +56,7 @@ Adjust pace: strong on web? Compress weeks 3–4; weak on cloud? extend 7–8.
 
 ## Using the interactive app
 
-Open `interview/index.html` (or your deployed site). Topics load from `Config/topics.json`. Mark modules complete as you finish **Comprehensive**, **Mastery Track** (where present), **Interview Questions**, **Critical Clarification**, and **Quick Reference**.
+Open `interview/index.html` (or your deployed site). Topics load from **`interview/Config/topics.json`**. Mark modules complete as you finish **Comprehensive**, **Mastery Track** (where present), **Interview Questions**, **Critical Clarification**, and **Quick Reference**.
 
 ---
 

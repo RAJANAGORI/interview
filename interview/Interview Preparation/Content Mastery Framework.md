@@ -95,7 +95,11 @@ Senior+ interviews reward **structured experience**, not trivia.
 - **[Role-Based Study Paths](Role-Based%20Study%20Paths.md)** — Ordered curricula by role.
 - **[Topic Syllabus Index](Topic%20Syllabus%20Index.md)** — Full map of topics, tiers, and prerequisites.
 - **[Study Plan](Study%20Plan.md)** — Suggested calendar and milestones.
-- **`Config/topics.json`** — Machine-readable index for the interactive prep app.
+- **[Baseline Diagnostic - Interview Preparation](Baseline%20Diagnostic%20-%20Interview%20Preparation.md)** — Where to start when you do not know your gaps.
+- **[Interview Round Playbook](Interview%20Round%20Playbook.md)** — Map material to screening, deep technical, design, behavioral, and manager rounds.
+- **[Story Library Template - Behavioral Interviews](Story%20Library%20Template%20-%20Behavioral%20Interviews.md)** — Central STAR + metrics worksheet.
+- **[Topic Readiness Rubric - Timed Scoring](Topic%20Readiness%20Rubric%20-%20Timed%20Scoring.md)** — Objective per-topic drill scores.
+- **`interview/Config/topics.json`** — Machine-readable index for the interactive prep app.
 
 ---
 

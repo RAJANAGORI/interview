@@ -4,9 +4,11 @@ These paths turn the topic library into **ordered curricula**. Durations assume 
 
 **How to use**
 
-1. Pick a path below.
-2. For each topic, follow the **[Content Mastery Framework](Content%20Mastery%20Framework.md)** order: Comprehensive → Critical Clarification → Interview Q&A → Quick Reference.
-3. Use the **[Topic Syllabus Index](Topic%20Syllabus%20Index.md)** for prerequisites when a topic feels too hard.
+1. If you are unsure where you stand, run **[Baseline Diagnostic - Interview Preparation](Baseline%20Diagnostic%20-%20Interview%20Preparation.md)** first.
+2. Pick a path below.
+3. For each topic, follow the **[Content Mastery Framework](Content%20Mastery%20Framework.md)** order: Comprehensive → Critical Clarification → Interview Q&A → Quick Reference.
+4. Use the **[Topic Syllabus Index](Topic%20Syllabus%20Index.md)** for prerequisites when a topic feels too hard.
+5. Practice by interview round with **[Interview Round Playbook](Interview%20Round%20Playbook.md)**; score drills with **[Topic Readiness Rubric - Timed Scoring](Topic%20Readiness%20Rubric%20-%20Timed%20Scoring.md)**; keep behavioral stories in **[Story Library Template - Behavioral Interviews](Story%20Library%20Template%20-%20Behavioral%20Interviews.md)**.
 
 ---
 
@@ -26,7 +28,7 @@ These paths turn the topic library into **ordered curricula**. Durations assume 
 | **6. Operations** | Production Security IR, Multi-Team IR, Security Observability and Detection, Web App Vulnerabilities (OWASP framing), Browser/Frontend Deep Dive, Security Headers | Shows end-to-end ownership. |
 | **7. Capstone** | Microsoft Product Security Engineer II Interview Prep (includes Mastery Track), Product Security Real-World Scenarios | Scenario synthesis and loop-specific polish. |
 
-**Optional deep API & platform stack (post–Tier A library topics):** GraphQL and API Security, gRPC and Protobuf Security, Rate Limiting and Abuse Prevention, DDoS and Resilience, SAML and Enterprise Federation, Security Metrics and OKRs, Vulnerability Management Lifecycle—same folder structure as other topics in `Config/topics.json`.
+**Optional deep API & platform stack (post–Tier A library topics):** GraphQL and API Security, gRPC and Protobuf Security, Rate Limiting and Abuse Prevention, DDoS and Resilience, SAML and Enterprise Federation, Security Metrics and OKRs, Vulnerability Management Lifecycle—same folder structure as other topics in **`interview/Config/topics.json`**.
 
 ---
 
@@ -69,8 +71,8 @@ Use **Quick Reference** sheets for daily 15-minute spaced repetition.
 ## Cross-Cutting Modules (Everyone)
 
 - **Misconceptions:** Always read **Critical Clarification** for topics you “already know.”
-- **Communication:** `Practice & Exercises/` for STAR and stakeholder framing.
-- **Meta:** [Study Plan](Study%20Plan.md), [Quick Start Guide](Quick%20Start%20Guide.md).
+- **Communication:** `Practice & Exercises/` for STAR and stakeholder framing; central worksheet: [Story Library Template - Behavioral Interviews](Story%20Library%20Template%20-%20Behavioral%20Interviews.md).
+- **Meta:** [Study Plan](Study%20Plan.md), [Quick Start Guide](Quick%20Start%20Guide.md), [Interview Round Playbook](Interview%20Round%20Playbook.md), [Topic Readiness Rubric - Timed Scoring](Topic%20Readiness%20Rubric%20-%20Timed%20Scoring.md).
 
 ---
 

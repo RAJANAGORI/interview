@@ -1,6 +1,6 @@
 # Topic Syllabus Index
 
-Complete map of topics in `Config/topics.json`: **learning tier**, **suggested prerequisites**, **time budget**, and **what to open first**.
+Complete map of topics in **`interview/Config/topics.json`** (**65** entries: **23** core, **34** product, **8** special): **learning tier**, **suggested prerequisites**, **time budget**, and **what to open first**.
 
 **Legend**
 
@@ -23,6 +23,10 @@ Complete map of topics in `Config/topics.json`: **learning tier**, **suggested p
 | Study Plan | `study-plan` | Meta | None | 0.5 h | `Interview Preparation/Study Plan.md` |
 | Content Mastery Framework | *(doc)* | Meta | None | 0.5 h | `Interview Preparation/Content Mastery Framework.md` |
 | Role-Based Study Paths | *(doc)* | Meta | None | 0.5 h | `Interview Preparation/Role-Based Study Paths.md` |
+| Baseline Diagnostic | *(doc)* | Meta | None | 0.75 h | `Interview Preparation/Baseline Diagnostic - Interview Preparation.md` |
+| Interview Round Playbook | *(doc)* | Meta | None | 0.5 h | `Interview Preparation/Interview Round Playbook.md` |
+| Story Library Template | *(doc)* | Meta | None | 0.5 h | `Interview Preparation/Story Library Template - Behavioral Interviews.md` |
+| Topic Readiness Rubric | *(doc)* | Meta | None | 0.25 h | `Interview Preparation/Topic Readiness Rubric - Timed Scoring.md` |
 
 ---
 
@@ -163,7 +167,7 @@ See **[Recommended Additional Topics](Recommended%20Additional%20Topics.md)** fo
 
 When you add or split topics, update:
 
-1. `Config/topics.json`
+1. `interview/Config/topics.json`
 2. This index
 3. `README.md` topic counts if needed
 

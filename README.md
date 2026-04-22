@@ -12,7 +12,7 @@ This project exists because that friction is real, and because consolidating cre
 
 The repository bundles curated notes and guides into a few navigable areas:
 
-- **Interview** — Topic folders with comprehensive guides, quick references, interview Q&A, and critical clarifications where misconceptions matter.
+- **Interview** — Topic folders with comprehensive guides, quick references, interview Q&A, and critical clarifications where misconceptions matter. Start in [`interview/Interview Preparation/Quick Start Guide.md`](interview/Interview%20Preparation/Quick%20Start%20Guide.md); optional **[baseline diagnostic](interview/Interview%20Preparation/Baseline%20Diagnostic%20-%20Interview%20Preparation.md)** and **[interview round playbook](interview/Interview%20Preparation/Interview%20Round%20Playbook.md)** live alongside the study plan.
 - **Threat model** — Material aligned with structured threat modeling practice.
 - **Zero-to-Hero** — Progressive material for building from fundamentals.
 - **Secure source code review** — Guides and references for review-oriented interviews and day-to-day work.
