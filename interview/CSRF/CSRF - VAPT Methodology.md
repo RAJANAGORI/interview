@@ -201,4 +201,3 @@ After fixes:
   - [ ] Legitimate user flows continue to work across browsers.
   - [ ] Cross‑origin attempts fail as expected.
 - [ ] Update documentation and onboarding material with CSRF‑safe patterns.
-

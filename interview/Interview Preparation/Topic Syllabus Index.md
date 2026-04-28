@@ -71,7 +71,20 @@ Complete map of topics in **`interview/Config/topics.json`** (**65** entries: **
 | IDOR | `idor` | AuthZ | 3–5 h | Comprehensive Guide |
 | XXE | `xxe` | XML basics | 3–5 h | Comprehensive Guide |
 | SSRF | `ssrf` | HTTP, networking | 4–7 h | Comprehensive Guide |
+| Open Redirect | `open-redirect` | HTTP, OAuth basics | 2–4 h | Comprehensive Guide |
+| HTTP Request Smuggling | `http-request-smuggling` | HTTP framing, proxy basics | 5–9 h | Comprehensive Guide |
+| File Upload Security | `file-upload-security` | HTTP multipart, storage basics | 4–7 h | Comprehensive Guide |
+| Insecure Deserialization | `insecure-deserialization` | Runtime/object model basics | 4–8 h | Comprehensive Guide |
+| Server-Side Template Injection (SSTI) | `server-side-template-injection-ssti` | Server rendering basics | 3–6 h | Comprehensive Guide |
+| Remote Code Execution (RCE) | `remote-code-execution-rce` | Injection + runtime security | 4–8 h | Comprehensive Guide |
+| Race Condition Vulnerabilities | `race-condition-vulnerabilities` | Transactions, API semantics | 4–7 h | Comprehensive Guide |
+| HTTP Parameter Pollution (HPP) | `http-parameter-pollution-hpp` | Request parsing semantics | 3–6 h | Comprehensive Guide |
 | MITM Attack | `mitm-attack` | TLS | 3–5 h | Comprehensive Guide |
+| Basic Exploitation Fundamentals | `basic-exploitation-fundamentals` | Web/app attack fundamentals | 3–6 h | Comprehensive Guide |
+| Security Bug Identification and Validation | `security-bug-identification-and-validation` | Testing + validation workflow | 3–6 h | Comprehensive Guide |
+| Fuzzing Security Testing | `fuzzing-security-testing` | Input handling and parser behavior | 4–8 h | Comprehensive Guide |
+| OSINT for Security Assessments | `osint-for-security-assessments` | Recon and attack surface mapping | 3–6 h | Comprehensive Guide |
+| Initial Access and Attack Surface Entry | `initial-access-and-attack-surface-entry` | Recon and exposure analysis | 4–8 h | Comprehensive Guide |
 
 ---
 
@@ -138,6 +151,11 @@ Complete map of topics in **`interview/Config/topics.json`** (**65** entries: **
 | SAML and Enterprise Federation | `saml-and-enterprise-federation` | core | OAuth, JWT, XML/XXE awareness | 5–9 h | Comprehensive Guide |
 | Security Metrics and OKRs | `security-metrics-and-okrs` | product | Risk Prioritization (helpful) | 3–6 h | Comprehensive Guide |
 | Vulnerability Management Lifecycle | `vulnerability-management-lifecycle` | product | Risk, Supply Chain, CI/CD (helpful) | 5–8 h | Comprehensive Guide |
+| Fuzzing Methodology and Campaign Design | `fuzzing-methodology-and-campaign-design` | product | Fuzzing Security Testing (helpful) | 4–8 h | Comprehensive Guide |
+| OSINT Methodology and Operational Safety | `osint-methodology-and-operational-safety` | product | OSINT for Security Assessments | 3–6 h | Comprehensive Guide |
+| Rapid Security Triage (Fast Checking) | `rapid-security-triage-fast-checking` | product | Vulnerability management basics | 3–6 h | Comprehensive Guide |
+| WAF Bypass and Defense Evaluation | `waf-bypass-and-defense-evaluation` | product | WAF/network and web attack basics | 4–8 h | Comprehensive Guide |
+| Advanced Red Team Operations | `advanced-red-team-operations` | product | Threat modeling, IR, cloud/app architecture | 6–12 h | Comprehensive Guide |
 
 ---
 
@@ -146,6 +164,14 @@ Complete map of topics in **`interview/Config/topics.json`** (**65** entries: **
 | Topic | ID | Tier | Prerequisites | Time | Start here |
 |-------|-----|------|---------------|------|------------|
 | Microsoft Product Security Engineer II Interview Prep | `microsoft-product-security-engineer-ii-interview-prep` | Capstone | Tier 3–5 mix | 10–20 h | Comprehensive → **Mastery Track** → Q&A → Quick Ref |
+| Exploit Development | `exploit-development` | Special | Memory safety and low-level debugging basics | 8–16 h | Comprehensive Guide |
+| Exploit Development Learning Path | `exploit-development-learning-path` | Special | Exploit Development | 6–12 h | Comprehensive Guide |
+| Crash Analysis for Security | `crash-analysis-for-security` | Special | Debugging and runtime internals | 6–12 h | Comprehensive Guide |
+| Shellcode Fundamentals and Detection | `shellcode-fundamentals-and-detection` | Special | Assembly/runtime basics | 6–12 h | Comprehensive Guide |
+| Keylogger Architecture and Detection | `keylogger-architecture-and-detection` | Special | Endpoint telemetry basics | 4–8 h | Comprehensive Guide |
+| EDR Evasion Awareness and Defense | `edr-evasion-awareness-and-defense` | Special | Endpoint security controls | 6–12 h | Comprehensive Guide |
+| Windows Security Boundaries | `windows-security-boundaries` | Special | Windows internals basics | 6–12 h | Comprehensive Guide |
+| Windows Exploit Mitigations | `windows-exploit-mitigations` | Special | Windows memory protections | 6–12 h | Comprehensive Guide |
 
 ---
 

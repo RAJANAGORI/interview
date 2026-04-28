@@ -194,4 +194,3 @@ After fixes:
 - [ ] Update:
   - [ ] Threat models to reflect corrected access control assumptions.
   - [ ] Secure coding & review checklists with IDOR‑specific guidance.
-

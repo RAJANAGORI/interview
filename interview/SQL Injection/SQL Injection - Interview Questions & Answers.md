@@ -10,7 +10,6 @@
 
 ---
 
-
 ## **Fundamental Questions**
 
 ### **Q1: What is SQL Injection and how does it work?**
@@ -236,9 +235,12 @@ Second-order SQL injection occurs when malicious input is stored in the database
 **Step 1: Registration (Stored)**
 
 ```python
+
 # Attacker registers with malicious username
+
 username = "admin'--"
 db.execute(f"INSERT INTO users (username, password) VALUES ('{username}', 'password')")
+
 # Stored as: admin'--
 
 ```
@@ -246,11 +248,15 @@ db.execute(f"INSERT INTO users (username, password) VALUES ('{username}', 'passw
 **Step 2: Login (Exploited)**
 
 ```python
+
 # Later, during login
+
 username = get_username_from_db()  # Returns: admin'--
 query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
+
 # Executes: SELECT * FROM users WHERE username = 'admin'--' AND password = '...'
-# Bypasses password check!
+
+# Bypasses password check
 
 ```
 
@@ -376,7 +382,9 @@ query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{pas
 **Primary Defense: Parameterized Queries (Prepared Statements)**
 
 ```python
+
 # ✅ CORRECT
+
 query = "SELECT * FROM users WHERE username = ? AND password = ?"
 cursor.execute(query, (username, password))
 
@@ -419,7 +427,9 @@ try:
     cursor.execute(query, params)
 except DatabaseError as e:
     logger.error(f"Database error: {str(e)}")
-    # Don't expose error details
+
+# Don't expose error details
+
     raise ApplicationError("An error occurred")
 
 ```
@@ -443,7 +453,9 @@ except DatabaseError as e:
 - **Always effective** when used correctly
 
 ```python
+
 # ✅ CORRECT
+
 query = "SELECT * FROM users WHERE username = ?"
 cursor.execute(query, (username,))
 
@@ -457,7 +469,9 @@ cursor.execute(query, (username,))
 - **Not reliable** as primary defense
 
 ```python
+
 # ⚠️ NOT SUFFICIENT ALONE
+
 def sanitize(input_value):
     return input_value.replace("'", "''")  # Can be bypassed!
 
@@ -466,7 +480,9 @@ def sanitize(input_value):
 **Why Sanitization Fails:**
 
 ```python
+
 # Attacker can use encoding
+
 username = "admin'--"  # Blocked
 username = "admin%27--"  # URL encoded, might bypass
 username = "admin\u0027--"  # Unicode, might bypass
@@ -488,20 +504,27 @@ username = "admin\u0027--"  # Unicode, might bypass
 **1. Bypass Techniques:**
 
 ```python
+
 # Validation: Only alphanumeric
+
 username = "admin123"  # Passes validation
 
-# But what if query is:
+# But what if query is
+
 query = f"SELECT * FROM users WHERE id = {user_id}"
-# user_id = "1 OR 1=1"  # No quotes needed!
+
+# user_id = "1 OR 1=1"  # No quotes needed
 
 ```
 
 **2. Encoding/Obfuscation:**
 
 ```python
+
 # Validation blocks: admin'--
-# But attacker uses:
+
+# But attacker uses
+
 username = "admin%27--"  # URL encoded
 username = "admin\u0027--"  # Unicode
 username = "admin" + chr(39) + "--"  # Character code
@@ -511,11 +534,16 @@ username = "admin" + chr(39) + "--"  # Character code
 **3. Context Matters:**
 
 ```python
+
 # Validation allows: admin123
-# But in different context:
+
+# But in different context
+
 query = f"SELECT * FROM users WHERE id = {user_id}"
+
 # user_id = "1 UNION SELECT * FROM users--"
-# No quotes, validation passes!
+
+# No quotes, validation passes
 
 ```
 
@@ -538,7 +566,9 @@ query = f"SELECT * FROM users WHERE id = {user_id}"
 **Step 1: Identify Vulnerability**
 
 ```python
+
 # Vulnerable code
+
 username = request.form['username']
 password = request.form['password']
 query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
@@ -841,13 +871,17 @@ Username: ' UNION SELECT username, password FROM users--
 **1. SQLMap:**
 
 ```bash
+
 # Basic scan
+
 sqlmap -u "http://target.com/page?id=1" --dbs
 
 # Extract data
+
 sqlmap -u "http://target.com/page?id=1" -D database -T users --dump
 
 # Advanced options
+
 sqlmap -u "http://target.com/page?id=1" --level=5 --risk=3 --tamper=space2comment
 
 ```
@@ -980,3 +1014,44 @@ Remember: **SQL injection is prevented by parameterized queries, not by input v
 **Cross-read:** Parameterized Statements, IDOR (different layer), Secure Code Review.
 
 <!-- verified-depth-merged:v1 ids=sql-injection -->
+
+---
+
+## Flagship Mock Question Ladder — SQL Injection
+
+**Primary competency axis:** injection root cause, exploit classes, defensive query construction.
+
+### Junior (Fundamental clarity)
+
+- What causes SQL injection at code level?
+- Why are parameterized queries the primary fix?
+- What is the difference between error-based and blind SQLi?
+
+### Senior (Design and trade-offs)
+
+- How can SQLi still happen in ORM-heavy codebases?
+- How would you triage a suspected second-order SQLi report?
+- What database permissions model limits SQLi blast radius?
+
+### Staff (Strategy and scale)
+
+- How do you reduce SQLi class recurrence across hundreds of repos?
+- Which SDL gate should block release for injection regressions?
+- How do you quantify SQLi risk reduction for leadership?
+
+### 10-minute mock drill format
+
+- **3 min:** Pick one Junior prompt and answer with definition, mechanism, and one mitigation.
+- **4 min:** Pick one Senior prompt and answer with trade-offs and implementation caveats.
+- **3 min:** Pick one Staff prompt and answer with architecture/policy plus measurement plan.
+
+### Answer quality rubric (quick score)
+
+Score each answer from 0 to 2 for:
+
+- **Accuracy** (facts and mechanism)
+- **Depth** (trade-offs and failure modes)
+- **Practicality** (implementable controls)
+- **Verification** (tests/telemetry proving success)
+
+**Interpretation:** `7-8/8` indicates strong interview-readiness for this topic.

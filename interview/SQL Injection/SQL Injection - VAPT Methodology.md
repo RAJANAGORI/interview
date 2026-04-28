@@ -193,4 +193,3 @@ After fixes are implemented:
 - [ ] Update documentation:
   - [ ] Coding guidelines (mandatory parameterization, safe patterns)
   - [ ] Secure code review checklists for future changes.
-

@@ -10,7 +10,6 @@
 
 ---
 
-
 ## **Fundamental Questions**
 
 ### **Q1: What is XSS and how does it work?**
@@ -31,13 +30,16 @@ XSS (Cross-Site Scripting) is a vulnerability that allows attackers to inject ma
 **Example:**
 
 ```python
+
 # Vulnerable code
+
 @app.route('/search')
 def search():
     query = request.args.get('q')
     return f"<h1>Results for: {query}</h1>"  # XSS!
 
 # Attack
+
 # URL: /search?q=<script>alert('XSS')</script>
 
 ```
@@ -95,23 +97,30 @@ def search():
 **Example:**
 
 ```python
+
 # ❌ Input validation alone
+
 def validate_input(input_value):
     if '<script>' in input_value:
         return input_value.replace('<script>', '')
     return input_value
 
 cleaned = validate_input('<script>alert(1)</script>')
+
 # Result: alert(1)  (still dangerous!)
 
 # Output to HTML
+
 document.innerHTML = cleaned;  # Still executes!
 
 # ✅ Output encoding
+
 from html import escape
 user_input = '<script>alert(1)</script>'
 safe_output = escape(user_input)
+
 # Result: &lt;script&gt;alert(1)&lt;/script&gt;
+
 # Safe: Browser treats as text, not code
 
 ```
@@ -131,13 +140,16 @@ safe_output = escape(user_input)
 **Example:**
 
 ```python
+
 # Vulnerable code
+
 @app.route('/search')
 def search():
     query = request.args.get('q')
     return f"<h1>Results for: {query}</h1>"
 
 # Attack: User visits malicious URL
+
 # /search?q=<script>alert('XSS')</script>
 
 ```
@@ -154,7 +166,9 @@ def search():
 **Example:**
 
 ```python
+
 # Vulnerable code
+
 @app.route('/comment', methods=['POST'])
 def add_comment():
     comment = request.form['comment']
@@ -167,7 +181,9 @@ def show_post(id):
     return render_template('post.html', comments=comments)  # Displayed!
 
 # Attack: Attacker submits malicious comment
+
 # Comment: <script>alert('XSS')</script>
+
 # Stored in database, executed for all users viewing post
 
 ```
@@ -234,9 +250,11 @@ from html import escape
 
 user_input = "<script>alert('XSS')</script>"
 safe_output = escape(user_input)
+
 # Result: &lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;
 
 # Browser treats as text, not executable code
+
 <h1>{safe_output}</h1>
 
 ```
@@ -335,7 +353,9 @@ HttpOnly cookies prevent JavaScript from accessing cookies via `document.cookie
 **How It Works:**
 
 ```python
+
 # Set HttpOnly cookie
+
 response.set_cookie(
     'sessionId',
     value=session_id,
@@ -449,22 +469,31 @@ response.set_cookie(
 **Example:**
 
 ```python
+
 # ❌ Input validation alone
+
 def validate_input(input_value):
-    # Remove <script> tags
+
+# Remove <script> tags
+
     return input_value.replace('<script>', '').replace('</script>', '')
 
 cleaned = validate_input('<script>alert(1)</script>')
+
 # Result: alert(1)  (still dangerous!)
 
 # Output to HTML
+
 document.innerHTML = cleaned;  # Still executes!
 
 # ✅ Output encoding
+
 from html import escape
 user_input = '<script>alert(1)</script>'
 safe_output = escape(user_input)
+
 # Result: &lt;script&gt;alert(1)&lt;/script&gt;
+
 # Safe: Browser treats as text
 
 ```
@@ -486,7 +515,9 @@ safe_output = escape(user_input)
 **Step 1: Identify Input Point**
 
 ```python
+
 # Vulnerable code
+
 @app.route('/search')
 def search():
     query = request.args.get('q')
@@ -575,7 +606,9 @@ from html import escape
 @app.route('/comment', methods=['POST'])
 def add_comment():
     comment = request.form['comment']
-    # Optionally validate input
+
+# Optionally validate input
+
     if len(comment) > 1000:
         return "Comment too long", 400
     db.comments.insert({'comment': comment})
@@ -584,7 +617,9 @@ def add_comment():
 @app.route('/post/<id>')
 def show_post(id):
     comments = db.comments.find({'post_id': id})
-    # Encode on output
+
+# Encode on output
+
     safe_comments = [{'comment': escape(c['comment'])} for c in comments]
     return render_template('post.html', comments=safe_comments)
 
@@ -848,3 +883,44 @@ Remember: **XSS is prevented by output encoding based on context (HTML, JavaScr
 **Cross-read:** CSRF, Cookie Security, Browser/Frontend Deep Dive, Security Headers.
 
 <!-- verified-depth-merged:v1 ids=xss -->
+
+---
+
+## Flagship Mock Question Ladder — XSS
+
+**Primary competency axis:** context-aware encoding, browser trust model, defense in depth.
+
+### Junior (Fundamental clarity)
+
+- Reflected vs stored vs DOM XSS: quick distinction.
+- Why does output context matter for escaping?
+- How does CSP help and where is it insufficient alone?
+
+### Senior (Design and trade-offs)
+
+- How do you secure rich-text HTML rendering features?
+- How would you test and harden a SPA against DOM XSS sinks?
+- How do cookie flags and token storage interact with XSS risk?
+
+### Staff (Strategy and scale)
+
+- How do you set org-wide frontend secure rendering standards?
+- How should CSP rollout be staged across legacy products?
+- What metrics indicate sustained XSS risk reduction?
+
+### 10-minute mock drill format
+
+- **3 min:** Pick one Junior prompt and answer with definition, mechanism, and one mitigation.
+- **4 min:** Pick one Senior prompt and answer with trade-offs and implementation caveats.
+- **3 min:** Pick one Staff prompt and answer with architecture/policy plus measurement plan.
+
+### Answer quality rubric (quick score)
+
+Score each answer from 0 to 2 for:
+
+- **Accuracy** (facts and mechanism)
+- **Depth** (trade-offs and failure modes)
+- **Practicality** (implementable controls)
+- **Verification** (tests/telemetry proving success)
+
+**Interpretation:** `7-8/8` indicates strong interview-readiness for this topic.

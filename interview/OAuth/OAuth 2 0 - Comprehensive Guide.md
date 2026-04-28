@@ -1255,3 +1255,18 @@ Remember: **Security depends on proper implementation and following best practi
 ## Cross-links
 
 JWT, OIDC topics, Cross-Origin Authentication, CSRF, Cookie Security, SAML (enterprise SSO comparison).
+
+---
+
+## Offensive testing additions (advanced)
+
+For offensive interview depth and real-world assessments, include these checks:
+
+- **Redirect URI bypass testing:** exact-match enforcement matters; test parser normalization and open-redirect chaining.
+- **State/nonce binding:** verify anti-CSRF state and OIDC nonce are tied to session and single-use.
+- **PKCE robustness:** ensure code verifier validation is mandatory and cannot be downgraded.
+- **Token-type confusion:** resource APIs must reject ID tokens when access tokens are required.
+- **Refresh token controls:** rotation with reuse detection and revocation strategy.
+- **Modern hardening options:** PAR/JAR/JARM and sender-constrained tokens (DPoP/mTLS) for higher assurance flows.
+
+These additions are frequently used as follow-up probes in senior AppSec and product-security interviews.

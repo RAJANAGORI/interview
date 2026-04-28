@@ -1435,3 +1435,17 @@ Remember: **Security is not about using the right technology, but about impleme
 ## Cross-links
 
 OAuth/OIDC, Encryption vs Hashing, JWT vs OAuth comparison, Cookie Security, Rate Limiting (token abuse).
+
+---
+
+## Offensive testing additions (advanced)
+
+Interviewers for offensive AppSec roles may ask beyond basic claim validation:
+
+- **Header key injection surfaces:** validate and constrain `kid`, `jku`, `jwk`, and `x5u`; never trust remote key URLs by default.
+- **Algorithm confusion:** enforce strict algorithm allowlists and key-type matching to prevent RS256/HS256 confusion classes.
+- **JWKS cache hygiene:** short TTL, strong `kid` uniqueness, and safe key rotation semantics.
+- **Token confusion risks:** prevent ID token vs access token misuse across APIs.
+- **Client storage risks (mobile/web):** avoid weak local storage patterns that expose bearer tokens.
+
+These offensive checks complement defensive controls and are especially useful in senior product-security interviews.

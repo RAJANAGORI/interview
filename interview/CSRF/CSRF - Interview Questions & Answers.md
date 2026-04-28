@@ -10,7 +10,6 @@
 
 ---
 
-
 ## **Fundamental Questions**
 
 ### **Q1: What is CSRF and how does it work?**
@@ -247,7 +246,9 @@ SameSite cookie attribute controls when cookies are sent with cross-site request
 **Implementation:**
 
 ```python
+
 # SameSite=Strict (maximum protection)
+
 response.set_cookie(
     'sessionId',
     value=session_id,
@@ -257,6 +258,7 @@ response.set_cookie(
 )
 
 # SameSite=Lax (balanced)
+
 response.set_cookie(
     'sessionId',
     value=session_id,
@@ -304,12 +306,14 @@ def validate_request_origin(request):
 
     expected_origin = 'https://bank.com'
 
-    # Prefer Origin (more reliable)
+# Prefer Origin (more reliable)
+
     if origin:
         if origin != expected_origin:
             return False
 
-    # Fallback to Referer
+# Fallback to Referer
+
     elif referer:
         if not referer.startswith(expected_origin):
             return False
@@ -511,7 +515,9 @@ console.log(document.cookie); // Does not include sessionId
 **1. Weak Token Implementation:**
 
 ```python
+
 # Predictable token
+
 csrf_token = str(int(time.time()))  # Predictable!
 
 # Bypass: Predict token based on time
@@ -740,3 +746,44 @@ Remember: **CSRF is prevented by verifying request origin (CSRF tokens, SameSit
 **Cross-read:** Cookie Security, XSS, CORS, OAuth.
 
 <!-- verified-depth-merged:v1 ids=csrf -->
+
+---
+
+## Flagship Mock Question Ladder — CSRF
+
+**Primary competency axis:** cross-site request trust abuse and anti-CSRF architecture.
+
+### Junior (Fundamental clarity)
+
+- What conditions are required for CSRF to work?
+- How do CSRF tokens mitigate attack execution?
+- What does SameSite do for CSRF risk?
+
+### Senior (Design and trade-offs)
+
+- How do you protect JSON APIs that rely on cookies?
+- Double-submit cookie vs synchronizer token: when choose which?
+- How do CORS and CSRF defenses differ in purpose?
+
+### Staff (Strategy and scale)
+
+- How do you build default CSRF protection into platform frameworks?
+- How do you test CSRF posture in multi-origin product suites?
+- Which legacy exceptions are acceptable and how are they governed?
+
+### 10-minute mock drill format
+
+- **3 min:** Pick one Junior prompt and answer with definition, mechanism, and one mitigation.
+- **4 min:** Pick one Senior prompt and answer with trade-offs and implementation caveats.
+- **3 min:** Pick one Staff prompt and answer with architecture/policy plus measurement plan.
+
+### Answer quality rubric (quick score)
+
+Score each answer from 0 to 2 for:
+
+- **Accuracy** (facts and mechanism)
+- **Depth** (trade-offs and failure modes)
+- **Practicality** (implementable controls)
+- **Verification** (tests/telemetry proving success)
+
+**Interpretation:** `7-8/8` indicates strong interview-readiness for this topic.

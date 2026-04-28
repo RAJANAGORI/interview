@@ -68,11 +68,56 @@ Use **Quick Reference** sheets for daily 15-minute spaced repetition.
 
 ---
 
+## Path E — Offensive AppSec / Bug Bounty Style Interviews
+
+**Goal:** Perform well in exploit-thinking rounds while still communicating safe, production-ready remediation.
+
+**Estimated time:** 6–10 weeks part-time.
+
+| Phase | Topics |
+|-------|--------|
+| **Foundations** | Basic Exploitation Fundamentals, Security Bug Identification and Validation, Rapid Security Triage (Fast Checking) |
+| **Web exploit depth** | Open Redirect, HTTP Parameter Pollution (HPP), Race Condition Vulnerabilities, File Upload Security, SSTI, Insecure Deserialization |
+| **Protocol and edge** | HTTP Request Smuggling, WAF Bypass and Defense Evaluation |
+| **Validation craft** | Fuzzing Security Testing, Fuzzing Methodology and Campaign Design, OSINT for Security Assessments |
+| **Advanced stretch** | Initial Access and Attack Surface Entry, Remote Code Execution (RCE), Advanced Red Team Operations |
+
+**Interview emphasis:** hypothesis-driven testing, reproducible evidence, severity discipline, and remediation quality.
+
+---
+
+## Path F — Specialized Red Team / Exploit Development Track
+
+**Goal:** Prepare for advanced security research or red-team loops that include low-level and endpoint topics.
+
+**Estimated time:** 10–16 weeks part-time.
+
+| Phase | Topics |
+|-------|--------|
+| **Entry and operations** | Initial Access and Attack Surface Entry, Advanced Red Team Operations, EDR Evasion Awareness and Defense |
+| **Exploit research core** | Exploit Development, Exploit Development Learning Path, Crash Analysis for Security |
+| **Endpoint and memory** | Shellcode Fundamentals and Detection, Windows Security Boundaries, Windows Exploit Mitigations, Keylogger Architecture and Detection |
+| **Practical bridge back to product security** | Production Security Incident Response, Security Observability and Detection Engineering, Risk Prioritization and Security Metrics |
+
+**Interview emphasis:** exploitability reasoning, mitigation-aware analysis, and responsible/authorized testing boundaries.
+
+---
+
+## Interview-Type Routing (Quick pick)
+
+- **Product Security Engineer loops:** Start with **Path A**, then add Path E’s web exploit depth module.
+- **Application Security Engineer loops:** Start with **Path B**, then add Open Redirect, HPP, Race Conditions, and File Upload from Path E.
+- **Bug bounty / offensive AppSec interviews:** Start with **Path E** directly.
+- **Red team / exploit research interviews:** Use **Path F**; keep one product-security module weekly for communication balance.
+- **Staff+/Principal loops:** Start with **Path C**, then add selected advanced modules from Path E/F only if role requires offensive depth.
+
+---
+
 ## Cross-Cutting Modules (Everyone)
 
 - **Misconceptions:** Always read **Critical Clarification** for topics you “already know.”
 - **Communication:** `Practice & Exercises/` for STAR and stakeholder framing; central worksheet: [Story Library Template - Behavioral Interviews](Story%20Library%20Template%20-%20Behavioral%20Interviews.md).
-- **Meta:** [Study Plan](Study%20Plan.md), [Quick Start Guide](Quick%20Start%20Guide.md), [Interview Round Playbook](Interview%20Round%20Playbook.md), [Topic Readiness Rubric - Timed Scoring](Topic%20Readiness%20Rubric%20-%20Timed%20Scoring.md).
+- **Meta:** [Study Plan](Study%20Plan.md), [Quick Start Guide](Quick%20Start%20Guide.md), [Interview Round Playbook](Interview%20Round%20Playbook.md), [Topic Readiness Rubric - Timed Scoring](Topic%20Readiness%20Rubric%20-%20Timed%20Scoring.md), and topic-level **VAPT Methodology** files for practical tracks.
 
 ---
 

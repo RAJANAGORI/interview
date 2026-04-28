@@ -1467,3 +1467,17 @@ Remember: **SQL Injection is prevented by parameterized queries (prepared state
 ## Cross-links
 
 Parameterized Queries topic, OWASP Injection, Secure Source Code Review, IDOR (often paired in APIs).
+
+---
+
+## Offensive testing additions (advanced)
+
+Beyond classic form fields, modern SQLi testing often includes:
+
+- **API and JSON filters:** injection through nested filters/sort fields in REST/GraphQL payloads.
+- **Second-order SQLi:** payload stored safely at first, executed unsafely later in another workflow.
+- **WAF bypass patterns:** obfuscation and encoding tricks that exploit parser gaps.
+- **Cloud/data-plane pivots:** impact on managed DB environments and metadata access paths where misconfigured.
+- **ORM unsafe APIs:** misuse of raw query helpers even in frameworks marketed as safe-by-default.
+
+Interview-ready takeaway: SQLi defense is design-time (parameterization + least privilege + safe query construction), not regex filtering or WAF tuning alone.

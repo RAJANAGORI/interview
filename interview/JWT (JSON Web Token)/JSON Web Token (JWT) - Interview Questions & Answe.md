@@ -10,7 +10,6 @@
 
 ---
 
-
 ## **Fundamental Questions**
 
 ### **Q1: What is JWT and how does it work?**
@@ -72,20 +71,20 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMjMiLCJ1c2VybmFtZSI6ImpvaG4
     - Contains metadata about the token
     - Specifies algorithm (alg) and token type (typ)
     - Base64url encoded
-    
+
     ```json
     {
       "alg": "HS256",
       "typ": "JWT"
     }
-    
+
     ```
-    
+
 2. **Payload**
     - Contains claims (statements about the entity)
     - Can include registered claims (exp, iat, iss, aud) and custom claims
     - Base64url encoded (NOT encrypted!)
-    
+
     ```json
     {
       "userId": "123",
@@ -93,22 +92,21 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMjMiLCJ1c2VybmFtZSI6ImpvaG4
       "role": "admin",
       "exp": 1516242622
     }
-    
+
     ```
-    
+
 3. **Signature**
     - Created by signing the encoded header and payload
     - Ensures token hasn't been tampered with
     - Validates token authenticity
-    
+
     ```
     HMACSHA256(
       base64UrlEncode(header) + "." + base64UrlEncode(payload),
       secret
     )
-    
+
     ```
-    
 
 ---
 
@@ -1104,3 +1102,44 @@ Good luck with your interview!
 **Cross-read:** OAuth, Cookie Security, TLS, XSS (this repo).
 
 <!-- verified-depth-merged:v1 ids=jwt-json-web-token- -->
+
+---
+
+## Flagship Mock Question Ladder — JWT (JSON Web Token)
+
+**Primary competency axis:** token validation, key management, claim semantics, session design.
+
+### Junior (Fundamental clarity)
+
+- What is JWT and what are its three parts?
+- Why is JWT payload not confidential by default?
+- Which claims must be validated before trusting a token?
+
+### Senior (Design and trade-offs)
+
+- How do you prevent RS256/HS256 algorithm confusion in implementation?
+- How would you design key rotation with zero downtime?
+- When should you choose opaque tokens over JWT for API access?
+
+### Staff (Strategy and scale)
+
+- Design multi-tenant JWT trust boundaries across many services.
+- How do you enforce organization-wide issuer/audience policy safely?
+- What telemetry proves your JWT controls are actually working?
+
+### 10-minute mock drill format
+
+- **3 min:** Pick one Junior prompt and answer with definition, mechanism, and one mitigation.
+- **4 min:** Pick one Senior prompt and answer with trade-offs and implementation caveats.
+- **3 min:** Pick one Staff prompt and answer with architecture/policy plus measurement plan.
+
+### Answer quality rubric (quick score)
+
+Score each answer from 0 to 2 for:
+
+- **Accuracy** (facts and mechanism)
+- **Depth** (trade-offs and failure modes)
+- **Practicality** (implementable controls)
+- **Verification** (tests/telemetry proving success)
+
+**Interpretation:** `7-8/8` indicates strong interview-readiness for this topic.

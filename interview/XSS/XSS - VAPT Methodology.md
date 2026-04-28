@@ -200,4 +200,3 @@ After fixes:
 - [ ] Update:
   - [ ] Secure coding guidelines for front‑end and back‑end teams.
   - [ ] Code review checklists to include XSS‑specific anti‑patterns.
-

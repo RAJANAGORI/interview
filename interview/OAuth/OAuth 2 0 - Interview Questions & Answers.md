@@ -10,7 +10,6 @@
 
 ---
 
-
 ## **Fundamental Questions**
 
 ### **Q1: What is OAuth 2.0 and what problem does it solve?**
@@ -209,32 +208,32 @@ Resource server returns:
 **How PKCE Works:**
 
 1. **Generate Code Verifier and Challenge:**
-    
+
     ```jsx
     const codeVerifier = generateRandomString(43, 128);
     const codeChallenge = base64url(sha256(codeVerifier));
-    
+
     ```
-    
+
 2. **Authorization Request (with challenge):**
-    
+
     ```
     GET /oauth/authorize?
       code_challenge=xyz789&
       code_challenge_method=S256&
       ...
-    
+
     ```
-    
+
 3. **Authorization Code (same as before):**
-    
+
     ```
     https://app.com/callback?code=abcd1234
-    
+
     ```
-    
+
 4. **Token Exchange (with verifier):**
-    
+
     ```jsx
     POST /oauth/token
     {
@@ -242,9 +241,9 @@ Resource server returns:
       code: 'abcd1234',
       code_verifier: codeVerifier  // Original verifier
     }
-    
+
     ```
-    
+
 5. **Server Validates:**
     - Server hashes code_verifier: `hash = SHA256(code_verifier)`
     - Server encodes: `challenge = base64url(hash)`
@@ -557,37 +556,36 @@ scope=profile email calendar.readonly calendar.write
 **Best Practices:**
 
 1. **Request Minimum Necessary Scopes:**
-    
+
     ```jsx
     // ❌ WRONG: Requesting too much
     scope=profile email calendar contacts files photos
-    
+
     // ✅ CORRECT: Request only what's needed
     scope=profile email calendar.readonly
-    
+
     ```
-    
+
 2. **Use Granular Scopes:**
-    
+
     ```jsx
     // ✅ Better: Separate read and write
     scope=calendar.readonly calendar.write
-    
+
     // ⚠️ Less ideal: All-or-nothing
     scope=calendar  // Might grant both read and write
-    
+
     ```
-    
+
 3. **Validate Scopes on Resource Server:**
-    
+
     ```jsx
     // Resource server validates token has required scope
     if (!token.scopes.includes('calendar.write')) {
       return res.status(403).json({ error: 'Insufficient scope' });
     }
-    
+
     ```
-    
 
 **Why Scopes Matter:**
 
@@ -1161,34 +1159,33 @@ token_type_hint=access_token
 **Revocation Scenarios:**
 
 1. **Revoke Access Token:**
-    
+
     ```jsx
     // Revoke specific access token
     POST /oauth/revoke
     token=access_token_xyz&
     token_type_hint=access_token
-    
+
     ```
-    
+
 2. **Revoke Refresh Token:**
-    
+
     ```jsx
     // Revoke refresh token (invalidates all access tokens issued with it)
     POST /oauth/revoke
     token=refresh_token_abc&
     token_type_hint=refresh_token
-    
+
     ```
-    
+
 3. **Revoke All User Tokens:**
-    
+
     ```jsx
     // Some providers support revoking all tokens for a user
     POST /oauth/revoke
     user_id=123456
-    
+
     ```
-    
 
 **Implementation:**
 
@@ -1331,3 +1328,44 @@ Good luck with your interview!
 **Cross-read:** JWT vs OAuth, Cross-Origin Authentication, Cookie Security, TLS.
 
 <!-- verified-depth-merged:v1 ids=oauth -->
+
+---
+
+## Flagship Mock Question Ladder — OAuth
+
+**Primary competency axis:** authorization flows, redirect safety, token lifecycle, OIDC boundaries.
+
+### Junior (Fundamental clarity)
+
+- OAuth vs authentication: explain in 30 seconds.
+- What is PKCE and why is it required for public clients?
+- Why is state important in OAuth authorization flows?
+
+### Senior (Design and trade-offs)
+
+- How do you implement strict redirect_uri validation to avoid bypass?
+- How do you prevent ID-token-as-access-token confusion at APIs?
+- What refresh-token rotation model would you deploy and why?
+
+### Staff (Strategy and scale)
+
+- Design OAuth for multi-tenant enterprise SSO with partner IdPs.
+- How do you roll out DPoP/mTLS in a large platform incrementally?
+- Which controls are mandatory for high-assurance APIs?
+
+### 10-minute mock drill format
+
+- **3 min:** Pick one Junior prompt and answer with definition, mechanism, and one mitigation.
+- **4 min:** Pick one Senior prompt and answer with trade-offs and implementation caveats.
+- **3 min:** Pick one Staff prompt and answer with architecture/policy plus measurement plan.
+
+### Answer quality rubric (quick score)
+
+Score each answer from 0 to 2 for:
+
+- **Accuracy** (facts and mechanism)
+- **Depth** (trade-offs and failure modes)
+- **Practicality** (implementable controls)
+- **Verification** (tests/telemetry proving success)
+
+**Interpretation:** `7-8/8` indicates strong interview-readiness for this topic.

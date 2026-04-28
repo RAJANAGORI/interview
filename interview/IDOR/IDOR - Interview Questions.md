@@ -10,7 +10,6 @@
 
 ---
 
-
 ## **Fundamental Questions**
 
 ### **Q1: What is IDOR and why is it dangerous?**
@@ -55,7 +54,9 @@ Result: Unauthorized access to User B's data
 
 **Example:**
 ```python
+
 # Has authentication, missing authorization
+
 @app.route('/api/profile/<user_id>')
 @require_auth  # ✅ Authentication check
 def get_profile(user_id):
@@ -104,11 +105,13 @@ def get_profile(user_id):
 
 **Example:**
 ```python
+
 # Test script
+
 def test_idor(endpoint, user_a_token, user_b_id):
     headers = {"Authorization": f"Bearer {user_a_token}"}
     response = requests.get(f"{endpoint}/{user_b_id}", headers=headers)
-    
+
     if response.status_code == 200:
         print("⚠️ Potential IDOR detected")
 ```
@@ -125,15 +128,20 @@ def test_idor(endpoint, user_a_token, user_b_id):
 def get_profile(user_id):
     if int(user_id) != current_user.id:
         return jsonify({"error": "Forbidden"}), 403
-    # ... rest of code
+
+# ... rest of code
+
 ```
 
 **2. Indirect Object References:**
 ```python
+
 # Instead of direct ID
+
 /api/invoice/123
 
 # Use token
+
 /api/invoice/abc123xyz789
 ```
 
@@ -147,7 +155,9 @@ def can_access(resource, user_id):
 ```python
 @require_role('admin')
 def admin_endpoint():
-    # Only admins can access
+
+# Only admins can access
+
     pass
 ```
 
@@ -209,11 +219,12 @@ def require_ownership(resource_type):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             resource_id = kwargs.get('resource_id')
-            
-            # Check ownership
+
+# Check ownership
+
             if not is_owner(current_user.id, resource_type, resource_id):
                 return jsonify({"error": "Forbidden"}), 403
-            
+
             return f(*args, **kwargs)
         return decorated_function
     return decorator
@@ -226,10 +237,10 @@ def get_document(resource_id):
         id=resource_id,
         owner_id=current_user.id  # Additional check
     ).first()
-    
+
     if not document:
         return jsonify({"error": "Not found"}), 404
-    
+
     return jsonify(document)
 ```
 
@@ -253,23 +264,27 @@ def get_document(doc_id):
         id=doc_id,
         tenant_id=current_user.tenant_id  # Tenant isolation
     ).first()
-    
+
     if not document:
         return jsonify({"error": "Not found"}), 404
-    
-    # Additional ownership check
+
+# Additional ownership check
+
     if document.owner_id != current_user.id:
         return jsonify({"error": "Forbidden"}), 403
-    
+
     return jsonify(document)
 ```
 
 **2. Scoped IDs:**
 ```python
+
 # Use tenant-scoped IDs
+
 tenant_doc_id = f"{tenant_id}_{doc_id}"
 
 # Or use UUIDs with tenant validation
+
 document = Document.query.filter_by(
     id=doc_id,
     tenant_id=current_user.tenant_id
@@ -306,17 +321,20 @@ document = Document.query.filter_by(
 
 **4. Automated Testing:**
 ```python
+
 # Integration tests
+
 def test_idor_protection():
     user_a = create_user("user_a")
     user_b = create_user("user_b")
-    
-    # User A tries to access User B's resource
+
+# User A tries to access User B's resource
+
     response = client.get(
         f"/api/profile/{user_b.id}",
         headers={"Authorization": f"Bearer {user_a.token}"}
     )
-    
+
     assert response.status_code == 403
 ```
 
@@ -381,14 +399,15 @@ def test_idor_protection():
 @require_auth
 def get_order(order_id):
     order = Order.query.get(order_id)
-    
+
     if not order:
         return jsonify({"error": "Not found"}), 404
-    
-    # Authorization check
+
+# Authorization check
+
     if order.user_id != current_user.id:
         return jsonify({"error": "Forbidden"}), 403
-    
+
     return jsonify(order)
 ```
 
@@ -411,25 +430,28 @@ def get_order(order_id):
 @require_auth
 def download_file():
     filename = request.args.get('file')
-    
-    # Validate filename format
+
+# Validate filename format
+
     if not filename or not filename.startswith(f'user_{current_user.id}_'):
         return jsonify({"error": "Invalid file"}), 400
-    
-    # Additional validation
+
+# Additional validation
+
     file_path = os.path.join(UPLOAD_DIR, filename)
     if not os.path.exists(file_path):
         return jsonify({"error": "File not found"}), 404
-    
-    # Verify ownership in database
+
+# Verify ownership in database
+
     file_record = File.query.filter_by(
         filename=filename,
         owner_id=current_user.id
     ).first()
-    
+
     if not file_record:
         return jsonify({"error": "Forbidden"}), 403
-    
+
     return send_file(file_path)
 ```
 
@@ -442,10 +464,10 @@ def download_file(file_token):
         access_token=file_token,
         owner_id=current_user.id
     ).first()
-    
+
     if not file_record:
         return jsonify({"error": "Not found"}), 404
-    
+
     return send_file(file_record.path)
 ```
 
@@ -482,3 +504,44 @@ def download_file(file_token):
 **Cross-read:** Authorization and Authentication, API security, Business Logic Abuse.
 
 <!-- verified-depth-merged:v1 ids=idor -->
+
+---
+
+## Flagship Mock Question Ladder — IDOR (Insecure Direct Object Reference)
+
+**Primary competency axis:** object-level authorization and tenant isolation.
+
+### Junior (Fundamental clarity)
+
+- What is IDOR with one practical API example?
+- Why is authentication not enough to prevent IDOR?
+- How does predictable object ID increase exposure?
+
+### Senior (Design and trade-offs)
+
+- How do you design object authorization checks in service layers?
+- How do bulk endpoints create hidden IDOR risk?
+- How would you test BOLA/IDOR in GraphQL and REST consistently?
+
+### Staff (Strategy and scale)
+
+- How do you enforce object-level auth patterns org-wide?
+- How do you prevent IDOR in event-driven architectures?
+- What controls verify tenant isolation continuously?
+
+### 10-minute mock drill format
+
+- **3 min:** Pick one Junior prompt and answer with definition, mechanism, and one mitigation.
+- **4 min:** Pick one Senior prompt and answer with trade-offs and implementation caveats.
+- **3 min:** Pick one Staff prompt and answer with architecture/policy plus measurement plan.
+
+### Answer quality rubric (quick score)
+
+Score each answer from 0 to 2 for:
+
+- **Accuracy** (facts and mechanism)
+- **Depth** (trade-offs and failure modes)
+- **Practicality** (implementable controls)
+- **Verification** (tests/telemetry proving success)
+
+**Interpretation:** `7-8/8` indicates strong interview-readiness for this topic.
