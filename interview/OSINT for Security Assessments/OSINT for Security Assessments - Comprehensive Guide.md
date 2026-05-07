@@ -2,124 +2,126 @@
 
 ## At a glance
 
-This module is interview-focused depth on **external asset and exposure discovery for scoped security assessments**. It is written for AppSec/Product Security interviews where you are expected to explain both attacker mechanics and practical defensive engineering decisions.
+**Open-source intelligence (OSINT)** for security assessments is the **lawful, policy-aligned** collection of **public** (or client-authorized) information to map **attack surface**, **people**, **technology**, and **third parties**—before or during **penetration tests**, **red teams**, **threat intelligence**, and **due diligence**. It is **not** “hacking”; it is **recon** using **search engines**, **DNS**, **certificates**, **code repos**, **paste sites**, and **social** metadata—with strict **rules of engagement** and **privacy** respect.
+
+Aligned with **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.
 
 ---
 
 ## Learning outcomes
 
-After this module, you should be able to:
-
-- Explain the mechanism and trust boundaries for `osint-for-security-assessments` clearly in 2-3 minutes.
-- Identify high-signal attack/abuse indicators in real systems.
-- Propose mitigation strategy with rollout and verification steps.
-- Handle senior follow-up questions without switching to generic statements.
+- Build a **recon** **workflow**: scope → passive sources → **correlation** → **handoff** to testing.
+- Distinguish **passive** vs **active** techniques and **legal** boundaries.
+- Name **high-signal** sources: **CT logs**, **ASN**, **GitHub**, **Shodan/Censys** (authorized use).
+- Discuss **OPSEC** for consultants (accounts, **VPN**, **separate** **personas** per policy).
 
 ---
 
-## What interviewers evaluate
+## Prerequisites
 
-Interviewers generally score this topic across four dimensions:
-
-1. **Technical correctness** - Do you explain the mechanism accurately?
-2. **Risk judgment** - Can you separate noisy issues from business-critical risk?
-3. **Implementation realism** - Are controls deployable in production constraints?
-4. **Verification maturity** - Do you describe how to prove controls actually work?
+- **[Initial Access and Attack Surface Entry](../Initial%20Access%20and%20Attack%20Surface%20Entry/)**  
+- **[OSINT Methodology and Operational Safety](../OSINT%20Methodology%20and%20Operational%20Safety/)** (companion)  
+- Basic **DNS** and **HTTP** (this repo’s networking topics)
 
 ---
 
-## Threat model lens
+## L1 — Scope and ethics
 
-### High-signal indicators
-
-- shadow assets/subdomains
-- public code/secrets leakage
-- third-party surface exposure
-
-### Typical failure patterns
-
-- no legal scope controls
-- stale asset inventory
-- evidence without validation
-
-### Defensive control priorities
-
-- scope-locked recon workflow
-- asset inventory reconciliation
-- verified evidence capture
+- **Written RoE:** what **targets**, **out-of-scope** **assets**, **prohibited** techniques (e.g. **credential** stuffing, **scraping** **PII** without need).  
+- **Privacy / GDPR / local law:** minimize **personal** data; **document** **purpose**.  
+- **Safe harbor:** company **bug bounty** / **assessment** **letter** defines **what** “public” means for **that** engagement.
 
 ---
 
-## Practical interview answer structure (90-150 seconds)
+## L2 — Passive sources (interview map)
 
-Use this structure when asked open-ended questions:
-
-1. **Definition + boundary:** one-sentence definition and where it appears.
-2. **Failure mechanism:** what check/control breaks and why.
-3. **Impact chain:** technical impact -> business impact.
-4. **Mitigation plan:** design-time control + runtime detection.
-5. **Verification:** test or telemetry proving fix effectiveness.
-
-This format is usually stronger than listing payload names or tool commands.
-
----
-
-## Scenario drills (interview-ready)
-
-### Scenario 1 - Discovery phase
-
-- You are asked to assess a production-like environment with limited time.
-- State your first 3 steps to scope and collect high-value evidence.
-- Explain what you will **not** do without explicit authorization.
-
-### Scenario 2 - Validation phase
-
-- A finding looks plausible but noisy.
-- Explain your reproducibility bar before raising severity.
-- Describe how you avoid false positives while keeping speed.
-
-### Scenario 3 - Remediation phase
-
-- Engineering requests a low-friction fix this sprint.
-- Provide short-term guardrails and long-term structural fix.
-- Include owner, verification metric, and rollback risk.
+| Source | Typical value |
+|--------|----------------|
+| **DNS / subdomains** | **Attack** **surface**, **legacy** apps |
+| **Certificate Transparency** | **Hostnames** before **DNS** **propagation** |
+| **ASN / WHOIS (RDAP)** | **Netblocks**, **abuse** contacts |
+| **Search engines** (`site:`, `filetype:`) | **Exposed** docs, **configs** |
+| **GitHub/GitLab** | **Keys**, **internal** URLs, **terraform** |
+| **Shodan / Censys / FOFA** | **Banner** **intel** (use per **license** + **RoE**) |
+| **Wayback** | **Old** endpoints, **parameters** |
+| **Job postings** | **Stack** versions, **vendor** names |
+| **Mobile app** stores | **API** **endpoints** in binaries |
 
 ---
 
-## Senior/Staff discussion points
+## L2 — Workflow (repeatable)
 
-Use these to stand out in experienced loops:
-
-- How this topic intersects with SDLC and platform standards.
-- How you measure trend reduction, not just one-off fixes.
-- How detection quality and remediation quality are linked.
-- How to run this safely under legal/compliance constraints.
-
----
-
-## Verification checklist
-
-- [ ] Reproduction path documented with stable steps.
-- [ ] Impact statement includes affected assets/users.
-- [ ] Mitigation includes design-time and runtime controls.
-- [ ] Verification includes objective success criteria.
-- [ ] Residual risk documented if full fix is deferred.
+1. **Seed:** customer domains, **IPs**, **brands**, **acquisitions**.  
+2. **Enumerate:** subdomains (**amass**, **subfinder**, **securitytrails**-class APIs).  
+3. **Resolve & probe (if in scope):** **httpx**, **nmap** **may** be **active**—confirm **RoE**.  
+4. **Correlate:** **tech** stack (**Wappalyzer**-class), **cloud** **buckets** (only with **explicit** **client** **approval** and **legal** **review**).  
+5. **Prioritize:** **exposed** **admin**, **pre-prod**, **legacy** **VPN** portals.  
+6. **Report:** **sources**, **timestamps**, **confidence**; **no** **sensitive** **PII** **unnecessary**.
 
 ---
 
-## Interview follow-up prompts to practice
+## L3 — Operational safety (consultant OPSEC)
 
-- How do you avoid false positives in external recon?
-- How does OSINT feed threat modeling?
-- What trade-off would you accept if release deadlines are tight?
-- How would this topic change between startup and enterprise scale?
+- **Dedicated** **VM** or **browser** profile; **avoid** **personal** **Google** **session** **bleed**.  
+- **Rate-limit**; **don’t** **crash** **third-party** **services**.  
+- **Tor** / **VPN** only if **legal** and **approved** (some clients **forbid**).  
+- **Document** **what** you **touched** for **chain** of custody.
+
+---
+
+## L3 — Common mistakes
+
+- **Active** **scanning** **without** **permission** (illegal / contract breach).  
+- **Dumping** **employee** **PII** into **reports**.  
+- **Assuming** **GitHub** **leak** is **in** **scope** for **exploitation** (may be **third-party**).
+
+---
+
+## Toolchain (examples)
+
+**Subdomain:** amass, subfinder, puredns  
+**HTTP:** httpx, katana (with care)  
+**Repos:** trufflehog, gitleaks (on **cloned** **authorized** repos)  
+**Buckets:** tools exist—**only** with **explicit** **client** **approval**
+
+---
+
+## Interview clusters
+
+### Junior
+
+- Define OSINT vs **hacking**.
+
+### Mid
+
+- **CT** logs—why **matter** for **assessments**?
+
+### Senior
+
+- **Passive** vs **active** **recon** under **RoE**.
+
+### Staff
+
+- **Global** **program**: **OSINT** **playbook** + **privacy** **review**.
+
+---
+
+## Authoritative references
+
+- **NIST** OSINT guidance themes (organizational)  
+- **CAPEC** / **MITRE PRE-ATT&CK** (recon **concepts**—verify current **matrix** **mapping**)  
+- Vendor docs for **CT**, **RDAP**
 
 ---
 
 ## Cross-links
 
-- `Threat Modeling`
-- `Secure Source Code Review`
-- `Product Security Real-World Scenarios`
-- `Risk Prioritization and Security Metrics`
+`Initial Access` · `OSINT Methodology and Operational Safety` · `Threat Modeling` · `Penetration Testing`
 
+---
+
+## Verification checklist
+
+- [ ] **One** **engagement** **story** with **clear** **RoE** **limits**.  
+- [ ] **Enumerate** **5** **passive** **sources** **from** **memory**.  
+- [ ] Explain **why** **Shodan** **queries** need **approval**.

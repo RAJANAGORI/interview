@@ -1,13 +1,47 @@
-# Critical Clarification Open Redirect Misconceptions
+# Critical Clarification — Open Redirect Misconceptions
 
-## Misconception 1: "Knowing tool tricks is enough for interviews."
-**Clarification:** Interviewers prioritize mechanism clarity, risk judgment, and remediation realism.
+## 1. "Open redirect is always Low severity."
 
-## Misconception 2: "One observed signal proves exploitation."
-**Clarification:** Signals are hypotheses. You still need reproducibility and impact validation.
+**Reality:** **Phishing** **against** **high-value** **users** **or** **OAuth** **chains** **can** **be** **High**/**Critical**.
 
-## Misconception 3: "Fix means patching one endpoint."
-**Clarification:** Durable fixes usually include architecture/policy controls plus monitoring.
+---
 
-## Misconception 4: "Verification is optional once code is merged."
-**Clarification:** Security quality requires post-fix validation and regression coverage.
+## 2. "Blocking `http://` fixes it."
+
+**Reality:** **Attacker** **can** **use** **`https://`** **or** **scheme-relative** **`//`**.
+
+---
+
+## 3. "startswith('https://trusted.com') is enough."
+
+**Reality:** **`https://trusted.com.evil.com`** **and** **encoding** **tricks** **bypass** **naive** **prefix** **checks**.
+
+---
+
+## 4. "Client-side redirect validation is sufficient."
+
+**Reality:** **Attacker** **calls** **server** **directly** **with** **malicious** **parameter**—**validate** **server-side**.
+
+---
+
+## 5. "SameSite cookies block open redirect abuse."
+
+**Reality:** **Phishing** **doesn’t** **need** **cookie** **theft**—**user** **types** **password** **on** **evil** **page**.
+
+---
+
+## 6. "Only login flows matter."
+
+**Reality:** **Logout**, **marketing** **`return`**, **partner** **SSO**, **mobile** **deep** **links** **all** **bite**.
+
+---
+
+## 7. "URL parsing libraries always agree."
+
+**Reality:** **Parser** **differentials** **exist**—**test** **with** **framework** **you** **ship**.
+
+---
+
+## 8. "WAF is the right primary fix."
+
+**Reality:** **Allowlist** **in** **application** **code** **is** **durable**; **WAF** **is** **supplemental**.

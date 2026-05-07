@@ -2,124 +2,159 @@
 
 ## At a glance
 
-This module is interview-focused depth on **duplicate parameter parsing inconsistencies across request chain**. It is written for AppSec/Product Security interviews where you are expected to explain both attacker mechanics and practical defensive engineering decisions.
+**HTTP Parameter Pollution** arises when **the same parameter name appears multiple times** in a query string or body, and **different components** (WAF, cache, reverse proxy, application framework) **parse or merge** duplicates **differently**. Attackers abuse that **split view** to **smuggle** payloads past filters or **alter** server-side logic.
+
+Aligned with the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.
 
 ---
 
 ## Learning outcomes
 
-After this module, you should be able to:
-
-- Explain the mechanism and trust boundaries for `http-parameter-pollution-hpp` clearly in 2-3 minutes.
-- Identify high-signal attack/abuse indicators in real systems.
-- Propose mitigation strategy with rollout and verification steps.
-- Handle senior follow-up questions without switching to generic statements.
+- Explain **RFC 3875** (CGI) vs **framework** conventions for **duplicate** keys.
+- Differentiate **client-side** HPP (browser) from **server-side** HPP (backend parsing).
+- Chain HPP with **WAF bypass** and **open redirect** cases where **routing** differs.
+- Implement **safe parsing**: **explicit** **schemas**, **reject** **duplicates**, **canonical** **normalization** at **one** choke point.
 
 ---
 
-## What interviewers evaluate
+## Prerequisites
 
-Interviewers generally score this topic across four dimensions:
-
-1. **Technical correctness** - Do you explain the mechanism accurately?
-2. **Risk judgment** - Can you separate noisy issues from business-critical risk?
-3. **Implementation realism** - Are controls deployable in production constraints?
-4. **Verification maturity** - Do you describe how to prove controls actually work?
+- **[HTTP Refresh verbs and status codes](../HTTP%20Refresh%20verbs%20and%20status%20codes/)** (or HTTP basics).
+- **[WAF Bypass and Defense Evaluation](../WAF%20Bypass%20and%20Defense%20Evaluation/)**
+- **[Open Redirect](../Open%20Redirect/)** — shared URL composition pitfalls.
 
 ---
 
-## Threat model lens
+## L1 — Mechanism
 
-### High-signal indicators
+```
+Client sends: ?id=safe&id=malicious
+                     │
+        ┌────────────┴────────────┐
+        ▼                         ▼
+   WAF sees "safe"            App sees "malicious"
+   (first-only)              (last-wins concat)
+```
 
-- duplicate key handling differences
-- WAF/application precedence mismatch
-- query/body merge ambiguity
-
-### Typical failure patterns
-
-- validate first value execute last value
-- inconsistent canonicalization
-- legacy parser edge behavior
-
-### Defensive control priorities
-
-- duplicate-key rejection for sensitive endpoints
-- edge canonicalization policy
-- parser parity contract tests
+- **No single HTTP standard** mandates first/last/all for duplicates across **all** stacks—**behavior is implementation-defined**.
+- **Risk** appears at **trust boundaries** between **parsers**.
 
 ---
 
-## Practical interview answer structure (90-150 seconds)
+## L2 — Variant map
 
-Use this structure when asked open-ended questions:
-
-1. **Definition + boundary:** one-sentence definition and where it appears.
-2. **Failure mechanism:** what check/control breaks and why.
-3. **Impact chain:** technical impact -> business impact.
-4. **Mitigation plan:** design-time control + runtime detection.
-5. **Verification:** test or telemetry proving fix effectiveness.
-
-This format is usually stronger than listing payload names or tool commands.
+| Behavior | Who often does it | Attacker angle |
+|----------|-------------------|----------------|
+| **First wins** | Some WAFs / caches | Hide bad token in **second** copy |
+| **Last wins** | Many app frameworks | Hide bad token where WAF reads **first** |
+| **Concatenate** | Rare legacy patterns | Split **tokens** across pairs |
+| **Array** | PHP-style `key[]` | Type confusion with **expected** scalar |
 
 ---
 
-## Scenario drills (interview-ready)
+## L2 — Illustrative requests (authorized testing)
 
-### Scenario 1 - Discovery phase
+```http
+GET /search?q=news&q=<script>alert(1)</script> HTTP/1.1
+Host: example.com
+```
 
-- You are asked to assess a production-like environment with limited time.
-- State your first 3 steps to scope and collect high-value evidence.
-- Explain what you will **not** do without explicit authorization.
+If edge uses **first** `q` for **filtering** but app uses **last** for **render**, XSS **filters** **fail**.
 
-### Scenario 2 - Validation phase
-
-- A finding looks plausible but noisy.
-- Explain your reproducibility bar before raising severity.
-- Describe how you avoid false positives while keeping speed.
-
-### Scenario 3 - Remediation phase
-
-- Engineering requests a low-friction fix this sprint.
-- Provide short-term guardrails and long-term structural fix.
-- Include owner, verification metric, and rollback risk.
+**Body** duplicates in `application/x-www-form-urlencoded` follow **similar** **logic** splits.
 
 ---
 
-## Senior/Staff discussion points
+## L2 — Code lesson (normalize once)
 
-Use these to stand out in experienced loops:
+**Anti-pattern:** ad-hoc `request.GET.get("id")` vs `request.GET.getlist("id")` mismatch across modules.
 
-- How this topic intersects with SDLC and platform standards.
-- How you measure trend reduction, not just one-off fixes.
-- How detection quality and remediation quality are linked.
-- How to run this safely under legal/compliance constraints.
+**Pattern:** canonicalize at **boundary**:
 
----
+```python
+def single_param(params: dict, name: str) -> str:
+    values = params.getlist(name)
+    if len(values) != 1:
+        raise BadRequest("duplicate or missing parameter")
+    return values[0]
+```
 
-## Verification checklist
-
-- [ ] Reproduction path documented with stable steps.
-- [ ] Impact statement includes affected assets/users.
-- [ ] Mitigation includes design-time and runtime controls.
-- [ ] Verification includes objective success criteria.
-- [ ] Residual risk documented if full fix is deferred.
+Framework APIs differ—**principle** is **one** **policy** for duplicates.
 
 ---
 
-## Interview follow-up prompts to practice
+## L2 — Real patterns
 
-- How do you migrate safely to strict duplicate rejection?
-- What endpoints are most sensitive to HPP?
-- What trade-off would you accept if release deadlines are tight?
-- How would this topic change between startup and enterprise scale?
+- **WAF bypass** write-ups frequently combine **encoding** + **HPP**—signature sees **benign** **first** token.
+- **Cache poisoning** research (e.g., **web cache deception** adjacent) sometimes touches **key** **canonicalization**—**overlaps** with **parameter** **routing**.
+
+---
+
+## Detection
+
+- **Logs** with **multiple** **same-name** keys **reaching** the app.
+- **WAF** **miss** **correlated** with **duplicate** **parameters** in **access** logs.
+- **Tests** that **assert** **400** on **duplicate** **IDs** for **sensitive** operations.
+
+---
+
+## Mitigations (tier order)
+
+1. **Reject** duplicates on **sensitive** parameters (IDs, **redirect** targets).
+2. **Normalize** at a **single** middleware layer; **document** behavior.
+3. **Schema-validate** APIs (**OpenAPI** **strict**).
+4. **WAF** rules aware of **all** **duplicate** **representations** (high **maintenance**—**app** fix **preferred**).
+
+---
+
+## Bypass of mitigations
+
+- **Different** **encodings** (`;` **style** **legacy** **param** **splitters** in some stacks—**know** **your** **framework**).
+- **JSON** bodies where **duplicate** keys **parse** **unpredictably**—**reject** **dupes** in **parser** **config** if supported.
+
+---
+
+## Labs
+
+- **PortSwigger** topics touching **HTTP** **parameter** **pollution** / **routing** anomalies.
+- Custom **Flask/Django** mini-app to **observe** `getlist` behavior.
+
+---
+
+## Toolchain
+
+**Burp Suite** (parameter fuzzing), **curl** with repeated `-d` flags, **framework** docs.
+
+---
+
+## Interview clusters
+
+| Level | Prompt |
+|-------|--------|
+| Junior | What is HPP? |
+| Mid | First vs last wins—why dangerous? |
+| Senior | Design middleware policy for duplicates |
+| Staff | Org-wide **OpenAPI** rule: **unique** keys |
+
+**60-second answer:** “HPP is when **duplicate** **query/body** keys are **interpreted** **differently** by **edge** vs **app**. I **enforce** **one** **canonical** **parse** at the **boundary**, **reject** **dupes** on **sensitive** fields, and **test** **WAF** **with** **mutation** **matrices**.”
+
+---
+
+## Authoritative references
+
+- **RFC 3875** — CGI environment variable conventions (historical context).
+- **OWASP** testing guidance on **duplicate** parameters (check current edition).
+- **CWE-20** / **CWE-444** (HTTP request smuggling adjacent—different root, similar **parser** theme).
 
 ---
 
 ## Cross-links
 
-- `Threat Modeling`
-- `Secure Source Code Review`
-- `Product Security Real-World Scenarios`
-- `Risk Prioritization and Security Metrics`
+`WAF Bypass` · `HTTP Request Smuggling` · `Open Redirect` · `SSRF`
 
+---
+
+## Verification checklist
+
+- [ ] Document your **framework’s** **duplicate** key behavior in **two** sentences.
+- [ ] Add a **test** that sends **two** `redirect` parameters and expects **400**.

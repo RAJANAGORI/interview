@@ -2,124 +2,167 @@
 
 ## At a glance
 
-This module is interview-focused depth on **high-speed signal triage to separate noise from actionable risk**. It is written for AppSec/Product Security interviews where you are expected to explain both attacker mechanics and practical defensive engineering decisions.
+**Rapid security triage** is the discipline of taking an **inbound signal**—scanner finding, researcher report, pen-test note, bug-bounty submission, or engineer’s “is this bad?”—and **quickly** deciding **validity**, **severity**, **owner**, and **next action** without drowning in false positives. It powers **VM programs**, **incident** intake, **AppSec** consult queues, and **executive** escalations. Strong triage balances **speed**, **accuracy**, **reproducibility**, and **stakeholder** communication.
+
+Uses the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.
 
 ---
 
 ## Learning outcomes
 
-After this module, you should be able to:
-
-- Explain the mechanism and trust boundaries for `rapid-security-triage-fast-checking` clearly in 2-3 minutes.
-- Identify high-signal attack/abuse indicators in real systems.
-- Propose mitigation strategy with rollout and verification steps.
-- Handle senior follow-up questions without switching to generic statements.
+- Apply a **repeatable** triage **checklist** (signal → context → exploitability → impact → duplicate).
+- Compare **CVSS**, **EPSS**, and **business** context without **cargo-culting** numbers.
+- Decide **SLA** tier: drop, backlog, standard fix, **emergency**.
+- Communicate **uncertainty** honestly (“likely valid, needs confirm”).
 
 ---
 
-## What interviewers evaluate
+## Prerequisites
 
-Interviewers generally score this topic across four dimensions:
-
-1. **Technical correctness** - Do you explain the mechanism accurately?
-2. **Risk judgment** - Can you separate noisy issues from business-critical risk?
-3. **Implementation realism** - Are controls deployable in production constraints?
-4. **Verification maturity** - Do you describe how to prove controls actually work?
+- **[Vulnerability Management Lifecycle](../Vulnerability%20Management%20Lifecycle/)**  
+- **[Risk Prioritization and Security Metrics](../Risk%20Prioritization%20and%20Security%20Metrics/)**  
+- **[Security Bug Identification and Validation](../Security%20Bug%20Identification%20and%20Validation/)**
 
 ---
 
-## Threat model lens
+## L1 — What is “fast checking”?
 
-### High-signal indicators
+**Goal:** In **minutes to hours** (not days), answer:
 
-- high inbound report volume
-- alert fatigue
-- duplicate finding churn
+1. **Is it real?** Configuration error vs true vuln vs expected behavior?  
+2. **What breaks?** CIA + safety + compliance **angle**.  
+3. **Who fixes?** Product team, platform, vendor, **WAF** rule?  
+4. **How urgent?** Exploitability × exposure × asset value.
 
-### Typical failure patterns
-
-- severity inflation
-- missing reproducibility gate
-- inconsistent triage rubric
-
-### Defensive control priorities
-
-- triage rubric with confidence scores
-- dedup and clustering
-- time-boxed validation workflow
+**Not the goal:** Full **root-cause** analysis or **perfect** CVSS—that comes **after** prioritization when needed.
 
 ---
 
-## Practical interview answer structure (90-150 seconds)
+## L2 — Triage pipeline (recommended order)
 
-Use this structure when asked open-ended questions:
+```
+Intake → Normalize → Dedupe → Repro bar → Impact lens → Route → SLA
+```
 
-1. **Definition + boundary:** one-sentence definition and where it appears.
-2. **Failure mechanism:** what check/control breaks and why.
-3. **Impact chain:** technical impact -> business impact.
-4. **Mitigation plan:** design-time control + runtime detection.
-5. **Verification:** test or telemetry proving fix effectiveness.
+### 1. Intake normalization
 
-This format is usually stronger than listing payload names or tool commands.
+- **Source:** scanner, human, dependency DB, threat intel.  
+- **Asset:** hostname, repo, image, **environment** (prod vs staging).  
+- **Evidence:** screenshot, CVE ID, **request/response**, **commit**.
 
----
+### 2. Dedupe
 
-## Scenario drills (interview-ready)
+- Same **CWE** + **sink** + **asset** as open ticket? **Merge**.  
+- **Scanner** noise: **KB** articles without **local** relevance → **close** with reason.
 
-### Scenario 1 - Discovery phase
+### 3. Reproducibility bar
 
-- You are asked to assess a production-like environment with limited time.
-- State your first 3 steps to scope and collect high-value evidence.
-- Explain what you will **not** do without explicit authorization.
+| Confidence | Meaning |
+|------------|---------|
+| **P0 confirm** | You or reporter reproduced on **named** build |
+| **P1 likely** | Plausible chain; one step missing |
+| **P2 speculative** | Theoretical; needs time |
 
-### Scenario 2 - Validation phase
+**Policy:** “Likely” can still be **high** if **blast radius** is huge; “speculative” rarely gets **P0**.
 
-- A finding looks plausible but noisy.
-- Explain your reproducibility bar before raising severity.
-- Describe how you avoid false positives while keeping speed.
+### 4. Impact lens
 
-### Scenario 3 - Remediation phase
+- **Data:** PII, secrets, **payment**, health, **admin** actions.  
+- **Users:** Internet **anonymous** vs **auth** vs **staff-only**.  
+- **Privilege:** **RCE** vs **read** vs **DoS** vs **policy** bypass.
 
-- Engineering requests a low-friction fix this sprint.
-- Provide short-term guardrails and long-term structural fix.
-- Include owner, verification metric, and rollback risk.
+### 5. Route & SLA
 
----
-
-## Senior/Staff discussion points
-
-Use these to stand out in experienced loops:
-
-- How this topic intersects with SDLC and platform standards.
-- How you measure trend reduction, not just one-off fixes.
-- How detection quality and remediation quality are linked.
-- How to run this safely under legal/compliance constraints.
+- **Owner** + **service tier** + **exception** path if disputed.
 
 ---
 
-## Verification checklist
+## L3 — Scoring tools (use with judgment)
 
-- [ ] Reproduction path documented with stable steps.
-- [ ] Impact statement includes affected assets/users.
-- [ ] Mitigation includes design-time and runtime controls.
-- [ ] Verification includes objective success criteria.
-- [ ] Residual risk documented if full fix is deferred.
+- **CVSS v3.1 / v4.0:** **Base** vs **temporal** vs **environmental**—interviewers want **environmental** awareness (internet-facing? auth?).  
+- **EPSS:** **Probability** of exploitation—great for **noise** reduction on **CVE** floods; **not** business impact.  
+- **KEV catalog (CISA):** Known exploited—often **forces** priority regardless of internal debate.
+
+**Staff answer:** “CVSS is a **input** to prioritization, not the **output**.”
 
 ---
 
-## Interview follow-up prompts to practice
+## L3 — Common failure modes
 
-- How do you protect speed without lowering quality?
-- Which metrics indicate triage health?
-- What trade-off would you accept if release deadlines are tight?
-- How would this topic change between startup and enterprise scale?
+- **Severity inflation** to look responsive—burns dev trust.  
+- **Severity deflation** on “internal only” that attackers **reach** via **SSRF** or **VPN**.  
+- **Ignoring** **chained** impact (low **alone**, **critical** combined).  
+- **No** **written** close reason—same finding **reopens** forever.
+
+---
+
+## L4 — Communication templates (internal)
+
+**To engineering (valid, not emergency):**  
+“We believe this is **valid** on **service X** (prod). **Impact:** [one line]. **Repro:** [link/steps]. **Suggested owner:** [team]. **Ask:** confirm + **ETA** for fix or **risk acceptance** ticket.”
+
+**To reporter (needs info):**  
+“Thanks—can you provide **HTTP trace** on **version Y** and **account type** Z? We can’t assess **authZ** without **session** context.”
+
+---
+
+## Hands-on practice
+
+- Take **10** **Nuclei** findings; triage in **15 minutes**; compare to **manual** verify.  
+- **Red-team** **report** → map each item to **CWE** + **owner**.
+
+---
+
+## Toolchain
+
+| Tool | Role |
+|------|------|
+| ** scanners** (Trivy, Grype, Dependabot) | Signal volume |
+| **EPSS / NVD / OSV** | CVE context |
+| **Burp / curl** | Quick repro |
+| **Ticketing** (Jira + SLA fields) | Audit trail |
+
+---
+
+## Interview clusters
+
+### Junior
+
+- What is triage vs **remediation**?
+
+### Mid
+
+- When would you **ignore** a **Critical** CVE?
+
+### Senior
+
+- **CVSS 9** but **no** exploit in wild and **mitigating** control—your call?
+
+### Staff
+
+- Design **triage** for **500k** **container** images; **1** FTE.
+
+---
+
+## Authoritative references
+
+- **FIRST** (Forum of Incident Response and Security Teams) **triage** practices  
+- **NIST** vulnerability disclosure guidance themes  
+- **CISA KEV**, **EPSS** documentation
 
 ---
 
 ## Cross-links
 
-- `Threat Modeling`
-- `Secure Source Code Review`
-- `Product Security Real-World Scenarios`
-- `Risk Prioritization and Security Metrics`
+- **[Vulnerability Management Lifecycle](../Vulnerability%20Management%20Lifecycle/)**  
+- **[Security Observability and Detection Engineering](../Security%20Observability%20and%20Detection%20Engineering/)**  
+- **[Penetration Testing and Security Assessment](../Penetration%20Testing%20and%20Security%20Assessment/)**  
+- **[Production Security Incident Response](../Production%20Security%20Incident%20Response/)**
 
+---
+
+## Verification checklist
+
+- [ ] Triage **10** findings with **explicit** confidence **P0–P2**.  
+- [ ] Explain **one** **EPSS** vs **CVSS** disagreement **you** resolved.  
+- [ ] Write a **non-judgmental** “not valid” **close** note.

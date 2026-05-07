@@ -1,13 +1,47 @@
-# Critical Clarification EDR Evasion Awareness and Defense Misconceptions
+# Critical Clarification — EDR Evasion Awareness and Defense Misconceptions
 
-## Misconception 1: "Knowing tool tricks is enough for interviews."
-**Clarification:** Interviewers prioritize mechanism clarity, risk judgment, and remediation realism.
+## 1. “EDR sees everything on the endpoint.”
 
-## Misconception 2: "One observed signal proves exploitation."
-**Clarification:** Signals are hypotheses. You still need reproducibility and impact validation.
+**Reality:** **Kernel** **attacks**, **encryption**, and **sensor** **blind** **spots** **exist**.
 
-## Misconception 3: "Fix means patching one endpoint."
-**Clarification:** Durable fixes usually include architecture/policy controls plus monitoring.
+---
 
-## Misconception 4: "Verification is optional once code is merged."
-**Clarification:** Security quality requires post-fix validation and regression coverage.
+## 2. “More user-mode hooks = better security.”
+
+**Reality:** **Performance**/**stability** **limits** and **easy** **unhook** **targets**.
+
+---
+
+## 3. “BYOVD is theoretical.”
+
+**Reality:** **Abused** in **real** **intrusions**; **driver** **policy** **matters**.
+
+---
+
+## 4. “Linux endpoints don’t need EDR-like thinking.”
+
+**Reality:** **eBPF**/**auditd**/**Falco** **fill** **similar** **roles** with **different** **mechanics**.
+
+---
+
+## 5. “If malware is signed, it’s safe.”
+
+**Reality:** **Stolen** **certs** and **repurposed** **tools** **break** that **assumption**.
+
+---
+
+## 6. “Disabling EDR improves performance without risk.”
+
+**Reality:** **Attackers** **also** **disable** **sensors**—**tamper** **alerts** **should** **fire**.
+
+---
+
+## 7. “Kernel telemetry solves all syscall evasion.”
+
+**Reality:** **Volume**, **privacy**, and **compat** **constrain** **what** **ships** **by** **default**.
+
+---
+
+## 8. “Studying evasion is only for attackers.”
+
+**Reality:** **Defenders** **must** **understand** **blind** **spots** to **engineer** **detections**.

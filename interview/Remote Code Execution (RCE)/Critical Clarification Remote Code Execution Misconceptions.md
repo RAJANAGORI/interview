@@ -1,13 +1,53 @@
-# Critical Clarification Remote Code Execution Misconceptions
+# Critical Clarification — Remote Code Execution Misconceptions
 
-## Misconception 1: "RCE always means immediate root compromise."
-**Clarification:** Impact varies by runtime privileges and isolation, but still tends to be high/critical because attackers can often escalate or pivot.
+## 1. "RCE always means root on the box."
 
-## Misconception 2: "WAF blocks command injection so RCE risk is solved."
-**Clarification:** WAF is bypassable and does not cover all RCE vectors (deserialization, plugin CVEs, template escapes).
+**Reality:** You get **whatever the process user** can do—often **app** or **`www-data`**. **Container** + **non-root** + **read-only** FS **limits** but does not make RCE “low.” Attackers still **exfil** secrets, hit **metadata**, or **pivot**.
 
-## Misconception 3: "Patch once and close incident."
-**Clarification:** You also need forensic scoping, secret rotation, persistence checks, and regression controls.
+---
 
-## Misconception 4: "RCE is only an application bug."
-**Clarification:** Runtime posture, IAM, network controls, and observability strongly influence real-world impact.
+## 2. "WAF blocks RCE."
+
+**Reality:** WAF may catch **obvious** **`; rm`** payloads; it **won’t** stop **deserialization gadgets**, **file-format** bugs, or **encrypted** traffic to **legit** endpoints. **Code and dependency** fixes are primary.
+
+---
+
+## 3. "We don’t use `eval`, so no RCE."
+
+**Reality:** **`pickle`**, **`yaml.load`**, **template engines**, **`ObjectInputStream`**, **ImageMagick delegates**, **OGNL/SpEL**—none need `eval` in **your** source.
+
+---
+
+## 4. "Patching the library closes the incident."
+
+**Reality:** **Assume breach**: **rotate** credentials the process could read, **scan** for **webshells** and **cron**, **review** **egress** logs, **verify** **backup** integrity.
+
+---
+
+## 5. "Containers make RCE safe."
+
+**Reality:** Containers **shrink** blast radius vs bare metal but **share** kernel; **misconfigured** **`cap_sys_admin`**, **socket** mounts, or **weak** **network policies** still allow **serious** harm.
+
+---
+
+## 6. "Only internet-facing apps matter."
+
+**Reality:** **Internal** services often hold **more** trust and **weaker** auth—**SSRF** or **compromised** laptop can reach them. **Zero trust** assumes **RCE** anywhere is possible.
+
+---
+
+## 7. "Static scan clean == no RCE."
+
+**Reality:** **TPL** / **config** / **runtime** plugins and **dynamic** code paths evade **SAST**; **DAST** + **dependency** + **manual** review still required.
+
+---
+
+## 8. "Severity is always Critical 10/10."
+
+**Reality:** **CVSS** context: **scope**, **privileges**, **exploitability**, **data** at risk. Still usually **top** of backlog—but **communicate** **nuance** to leadership.
+
+---
+
+## Consolidated note
+
+Older generic “interview tips only” bullets are **superseded** by topic-specific content above; mechanism + **IR** + **supply chain** win interviews.

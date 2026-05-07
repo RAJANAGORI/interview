@@ -1,46 +1,50 @@
 # WAF Bypass and Defense Evaluation - Interview Questions & Answers
 
-## Core questions
+## 60-second answer
 
-### Q1: Give a concise explanation of this topic
+**Q: How do attackers bypass WAFs, and how do you evaluate whether yours works?**
 
-**Answer:** WAF Bypass and Defense Evaluation concerns evaluating WAF efficacy and resilience against evasive payload techniques. In interviews, I explain the boundary, failure mechanism, impact chain, and verification approach rather than only naming techniques.
-
-### Q2: How do you separate real risk from noisy signals
-
-**Answer:** I require reproducibility, clear trust-boundary violation, and measurable impact. I avoid severity inflation and document confidence level explicitly.
-
-### Q3: What is your mitigation strategy style
-
-**Answer:** I pair **immediate containment** (guardrails, policy, monitoring) with **structural fixes** (architecture, parser/canonicalization, privilege model, or workflow controls).
-
-### Q4: How do you verify remediation quality
-
-**Answer:** I define objective checks before implementation: negative tests, telemetry expectations, and post-fix regression runs. Closure requires evidence, not assumption.
-
-### Q5: How do you communicate this to non-security stakeholders
-
-**Answer:** I translate technical findings into business outcomes, estimate likelihood + blast radius, and propose phased remediation with clear owner and timeline.
-
-## Advanced follow-ups
-
-### Q6: What does “interview-ready depth” look like here
-
-**Answer:** I can explain mechanism in under 2 minutes, handle edge cases/follow-ups, and map controls to production constraints.
-
-### Q7: What mistakes do candidates make
-
-**Answer:** Over-indexing on payload/tool trivia, skipping trust-boundary explanation, and not discussing verification.
-
-### Q8: What is your 7-day improvement plan for this topic
-
-**Answer:** Day 1-2 mechanism review, day 3 scenario drill, day 4 mock follow-ups, day 5 remediation patterns, day 6 verification patterns, day 7 timed answer rehearsal.
+**A:** Bypasses usually exploit **parser or encoding differentials**—the WAF normalizes or matches literals differently than the application. I evaluate with **baseline** attacks on **staging** that mirror prod routes, then **systematic mutations** (encoding layers, JSON tricks, duplicated parameters, alternate content types). I measure **false positives** on real traffic samples and review **logs** for **silent** misses. The **primary** fix stays in the **application**; the WAF is **temporary** containment or **additional** friction.
 
 ---
 
-## Depth: Interview follow-ups — WAF Bypass and Defense Evaluation
+## Mechanics
 
-- How do you avoid breaking legitimate traffic with stricter WAF rules?
-- What controls catch successful bypass attempts?
-- What telemetry would show prevention is failing?
-- What policy guardrail would you introduce at platform level?
+### Q: WAF inline vs reverse proxy—what changes for bypass?
+
+**A:** **TLS termination** point changes what you can inspect and **which headers** you trust. **Path** and **host** routing may differ between **CDN** and **origin**, creating **alternate** entry paths that **skip** intended rules.
+
+### Q: Give three bypass classes without naming vendor bugs.
+
+**A:** **Double encoding**, **JSON Unicode escapes / duplicate keys**, **HTTP parameter pollution** where WAF and app disagree on concatenation order.
+
+---
+
+## Evaluation
+
+### Q: What’s in your pre-production WAF test plan?
+
+**A:** **Coverage** of all **external** routes, **positive** traffic **FP** sampling, **blocked** vs **logged** policy checks, **latency** budget, and **rollback** if **error rate** spikes.
+
+### Q: How do you handle APIs that break under aggressive WAF rules?
+
+**A:** **Tune** per-route; prefer **schema validation** and **authN/Z** at the gateway; use **positive** **allow-lists** for machine clients instead of **generic** **L7** **regex** storms.
+
+---
+
+## Senior / staff
+
+### Q: When would you recommend removing WAF reliance?
+
+**A:** When **mTLS + strict schema + narrow** **surface** provide **stronger** guarantees with **lower** **operational** **toil**, or when WAF **FP** **destabilizes** revenue paths and teams **chronically** **disable** rules.
+
+---
+
+## Mock ladder
+
+| Level | Question |
+|-------|----------|
+| Junior | WAF vs firewall |
+| Mid | Encoding bypass example |
+| Senior | Evaluation methodology |
+| Staff | Strategic reliance vs elimination |

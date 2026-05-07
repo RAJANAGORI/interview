@@ -1,46 +1,50 @@
 # OSINT Methodology and Operational Safety - Interview Questions & Answers
 
-## Core questions
+## 60-second answer
 
-### Q1: Give a concise explanation of this topic
+**Q: How do you approach OSINT methodology and operational safety?**
 
-**Answer:** OSINT Methodology and Operational Safety concerns repeatable recon methodology with compliance and operator safety constraints. In interviews, I explain the boundary, failure mechanism, impact chain, and verification approach rather than only naming techniques.
-
-### Q2: How do you separate real risk from noisy signals
-
-**Answer:** I require reproducibility, clear trust-boundary violation, and measurable impact. I avoid severity inflation and document confidence level explicitly.
-
-### Q3: What is your mitigation strategy style
-
-**Answer:** I pair **immediate containment** (guardrails, policy, monitoring) with **structural fixes** (architecture, parser/canonicalization, privilege model, or workflow controls).
-
-### Q4: How do you verify remediation quality
-
-**Answer:** I define objective checks before implementation: negative tests, telemetry expectations, and post-fix regression runs. Closure requires evidence, not assumption.
-
-### Q5: How do you communicate this to non-security stakeholders
-
-**Answer:** I translate technical findings into business outcomes, estimate likelihood + blast radius, and propose phased remediation with clear owner and timeline.
-
-## Advanced follow-ups
-
-### Q6: What does “interview-ready depth” look like here
-
-**Answer:** I can explain mechanism in under 2 minutes, handle edge cases/follow-ups, and map controls to production constraints.
-
-### Q7: What mistakes do candidates make
-
-**Answer:** Over-indexing on payload/tool trivia, skipping trust-boundary explanation, and not discussing verification.
-
-### Q8: What is your 7-day improvement plan for this topic
-
-**Answer:** Day 1-2 mechanism review, day 3 scenario drill, day 4 mock follow-ups, day 5 remediation patterns, day 6 verification patterns, day 7 timed answer rehearsal.
+**A:** I start with a **written** **objective** and **scope** tied to the **engagement** **RoE**. I **prefer** **passive** **sources**, **log** **what** I **queried** and **when**, and **minimize** **personal** **data**. For **OPSEC** I use **dedicated** **browser** **profiles** or **VMs**, **rate-limit** **automation**, and **avoid** **mixing** **personal** **accounts** with **client** **work**. I **corroborate** **claims**, **timestamp** **evidence**, and **follow** **retention** **rules**. If **active** **techniques** **are** **needed**, I **get** **explicit** **approval**—that’s **not** **OSINT** **alone**.
 
 ---
 
-## Depth: Interview follow-ups — OSINT Methodology and Operational Safety
+## Methodology
 
-- How do you design OSINT governance for enterprise scale?
-- What data should never be retained?
-- What telemetry would show prevention is failing?
-- What policy guardrail would you introduce at platform level?
+### Q: What belongs in an OSINT collection plan?
+
+**A:** **Goal**, **in-scope** **assets**, **approved** **sources**, **prohibited** **actions**, **retention**, **reporting** **format**, and **escalation** **path**.
+
+### Q: How do you rate confidence?
+
+**A:** **Multiple** **independent** **sources** **=** **higher**; **single** **paste** **site** **=** **low** **until** **verified**; **document** **assumptions**.
+
+---
+
+## Safety
+
+### Q: VPN for OSINT—yes or no?
+
+**A:** **Only** if **legal** **and** **contractually** **allowed**—some **clients** **forbid** **or** **require** **specific** **egress** **regions**.
+
+### Q: Scraping—concerns?
+
+**A:** **ToS**, **CFAA**-class **risk** **(US)**, **rate** **limits**, **robots.txt** **ethics**—**get** **legal** **review** **for** **non-trivial** **scraping**.
+
+---
+
+## Depth: Follow-ups
+
+- **Burn** **notice** **for** **compromised** **research** **personas**  
+- **OSINT** **in** **sanctioned** **countries**  
+- **Child** **safety** **and** **OSINT** **(red** **lines**)**
+
+---
+
+## Mock ladder
+
+| Level | Question |
+|-------|----------|
+| Junior | **Passive** **vs** **active** |
+| Mid | **OPSEC** **basics** |
+| Senior | **Privacy** **in** **reports** |
+| Staff | **Org** **policy** **template** |

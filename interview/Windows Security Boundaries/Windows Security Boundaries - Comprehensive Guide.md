@@ -2,124 +2,146 @@
 
 ## At a glance
 
-This module is interview-focused depth on **Windows trust boundaries and privilege transition security principles**. It is written for AppSec/Product Security interviews where you are expected to explain both attacker mechanics and practical defensive engineering decisions.
+**Security boundaries** on Windows separate **trust levels**: **kernel** vs **user**, **session** isolation, **integrity** levels (UIL), **AppContainer** sandboxes, and **virtualization-based security** (VBS) features like **HVCI**. Interviews expect you to explain **what crossing a boundary implies** (token **elevation**, **kernel** **RCE**, **sandbox** **escape**) and **which mitigations** enforce each line.
+
+Aligned with the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.
 
 ---
 
 ## Learning outcomes
 
-After this module, you should be able to:
-
-- Explain the mechanism and trust boundaries for `windows-security-boundaries` clearly in 2-3 minutes.
-- Identify high-signal attack/abuse indicators in real systems.
-- Propose mitigation strategy with rollout and verification steps.
-- Handle senior follow-up questions without switching to generic statements.
+- Draw **user ↔ kernel** and **process ↔ session** boundaries with **objects** (tokens, handles).
+- Explain **integrity levels** and **UAC** as **discretionary** controls, not **perfect** **walls**.
+- Relate **HVCI**, **Credential Guard**, **WDAC** to **trust** **anchors**.
+- Connect **boundary** **violations** to **ATT&CK** techniques (e.g., token theft, BYOVD).
 
 ---
 
-## What interviewers evaluate
+## Prerequisites
 
-Interviewers generally score this topic across four dimensions:
-
-1. **Technical correctness** - Do you explain the mechanism accurately?
-2. **Risk judgment** - Can you separate noisy issues from business-critical risk?
-3. **Implementation realism** - Are controls deployable in production constraints?
-4. **Verification maturity** - Do you describe how to prove controls actually work?
+- **[Windows Exploit Mitigations](../Windows%20Exploit%20Mitigations/)** — DEP/ASLR/CFG/CET.
+- **[EDR Evasion Awareness and Defense](../EDR%20Evasion%20Awareness%20and%20Defense/)** — telemetry across boundaries.
+- Basic **Windows** internals: **process**, **thread**, **token**.
 
 ---
 
-## Threat model lens
+## L1 — Core boundaries map
 
-### High-signal indicators
+```
+[ Kernel ] ◄── strict boundary ──► [ User mode ]
+                                      │
+                    Session / IL / sandbox (AppContainer, IL)
+```
 
-- token/privilege escalation paths
-- service boundary assumptions
-- desktop/session isolation issues
+- **Kernel boundary:** **Ring 0** code can read all **physical** memory (simplified); **user** **cannot** **touch** **kernel** **VA** **without** **bugs** or **syscalls**.
+- **Session boundary:** **Terminal** **sessions** isolate **interactive** **users**; **breakouts** via **misconfigured** **services** still occur.
+- **Integrity Level (IL):** **Mandatory** **Label** on **objects**; **Low** **IL** **Internet** **Explorer** era model evolved into **modern** **sandbox** **labels**.
 
-### Typical failure patterns
-
-- over-trusting local admin boundaries
-- misconfigured service permissions
-- legacy compatibility exceptions
-
-### Defensive control priorities
-
-- principle of least privilege
-- boundary-aware hardening baselines
-- periodic privilege path review
+**Interview line:** “A **boundary** is where **policy** changes **who** can **access** **what** **object**.”
 
 ---
 
-## Practical interview answer structure (90-150 seconds)
+## L2 — Objects and enforcement
 
-Use this structure when asked open-ended questions:
-
-1. **Definition + boundary:** one-sentence definition and where it appears.
-2. **Failure mechanism:** what check/control breaks and why.
-3. **Impact chain:** technical impact -> business impact.
-4. **Mitigation plan:** design-time control + runtime detection.
-5. **Verification:** test or telemetry proving fix effectiveness.
-
-This format is usually stronger than listing payload names or tool commands.
+| Object | Enforcement touchpoint |
+|--------|------------------------|
+| **Token** | **Privileges** (`SeDebug`, `SeImpersonate`), **groups**, **IL** |
+| **Handle** | **ACLs**, **inheritance**, **restricted** tokens |
+| **Job object** | **Limits** on child processes |
+| **AppContainer** | **Capabilities**, **lowbox** **SID** |
 
 ---
 
-## Scenario drills (interview-ready)
+## L2 — UAC and admin split
 
-### Scenario 1 - Discovery phase
-
-- You are asked to assess a production-like environment with limited time.
-- State your first 3 steps to scope and collect high-value evidence.
-- Explain what you will **not** do without explicit authorization.
-
-### Scenario 2 - Validation phase
-
-- A finding looks plausible but noisy.
-- Explain your reproducibility bar before raising severity.
-- Describe how you avoid false positives while keeping speed.
-
-### Scenario 3 - Remediation phase
-
-- Engineering requests a low-friction fix this sprint.
-- Provide short-term guardrails and long-term structural fix.
-- Include owner, verification metric, and rollback risk.
+- **UAC** splits **standard** vs **elevated** **admin** **tokens**; **not** a **security** **boundary** against **determined** **malware** on same **session**—**Microsoft** documentation stresses **elevation** is **consent** **UX**, not **kernel**-style **isolation**.
+- **Bypasses** historically involved **auto-elevate** **binaries**, **DLL** **search** order—**patched** over time; **design** assumes **malware** **already** **running** **as** **user** is **bad**.
 
 ---
 
-## Senior/Staff discussion points
+## L2 — Virtualization-based security (high level)
 
-Use these to stand out in experienced loops:
-
-- How this topic intersects with SDLC and platform standards.
-- How you measure trend reduction, not just one-off fixes.
-- How detection quality and remediation quality are linked.
-- How to run this safely under legal/compliance constraints.
+- **HVCI** (**Hypervisor-protected** **Code** **Integrity**): kernel **code** **integrity** **enforced** with **hypervisor** help—raises **bar** for **kernel** **rootkits**.
+- **Credential Guard**: isolates **secrets** with **VSM**—**mitigates** **Pass-the-Hash** **classes** in **many** **configs**.
+- **WDAC** / **AppLocker**: **code** **integrity** **policy** at **user/kernel** **load** paths.
 
 ---
 
-## Verification checklist
+## L2 — Illustrative escalation story (conceptual)
 
-- [ ] Reproduction path documented with stable steps.
-- [ ] Impact statement includes affected assets/users.
-- [ ] Mitigation includes design-time and runtime controls.
-- [ ] Verification includes objective success criteria.
-- [ ] Residual risk documented if full fix is deferred.
+1. **Web** **RCE** as **AppPool** identity → **local** **enumeration**.
+2. **SeImpersonate**-style primitive → **token** **manipulation** to **SYSTEM**-adjacent contexts (depends on **version**/**patch**).
+3. **BYOVD** → **kernel** **read/write** → **boundary** **gone**.
+
+Name **stages**, not **exploit** **recipes**.
 
 ---
 
-## Interview follow-up prompts to practice
+## Detection
 
-- Which boundaries matter most for enterprise endpoints?
-- How do you audit boundary violations at scale?
-- What trade-off would you accept if release deadlines are tight?
-- How would this topic change between startup and enterprise scale?
+- **4688** / **Sysmon** process events crossing **unexpected** **parents**.
+- **Token** **elevation** **events**, **LSASS** **access** attempts (Credential Guard changes **shape**).
+- **Driver** loads: **new** **untrusted** **kernel** **modules**.
+
+---
+
+## Mitigations (tier order)
+
+1. **Reduce** **attack** **surface** on **servers** (no **browsing**, **minimal** **roles**).
+2. **Credential** **Guard** / **protected** **users** for **high-value** **accounts**.
+3. **HVCI** where **compatible**; **WDAC** for **servers**.
+4. **Patch** **privesc** **chains** **fast**; **segment** **tier** **0**.
+
+---
+
+## Bypass / nuance
+
+- **Same-session** **malware** **often** **doesn’t** need **kernel**—**credential** **theft** at **user** may suffice.
+- **Third-party** **drivers** and **admin** **habits** **punch** **holes** in **policy**.
+
+---
+
+## Labs
+
+- **Microsoft** **learn** paths on **Windows** **security** baselines.
+- **HTB** Windows **privesc** rooms (authorized).
+
+---
+
+## Toolchain
+
+**Sysmon**, **Process Explorer** (token view), **accesschk**, **Windows** **Event** **Log**, **WDAC** **policy** **tools**.
+
+---
+
+## Interview clusters
+
+| Level | Prompt |
+|-------|--------|
+| Junior | User vs kernel |
+| Mid | What is an **integrity** **level**? |
+| Senior | Is UAC a **security** **boundary**? |
+| Staff | **Tier** **0** **hardening** with **HVCI** **tradeoffs** |
+
+**60-second answer:** “Windows **boundaries** separate **kernel**, **sessions**, and **sandbox** **labels** enforced via **tokens**, **ACLs**, and **VBS** features. **Crossing** them means **privilege** **gain** or **credential** **theft**—I **layer** **patching**, **VBS**, **WDAC**, and **segmentation**.”
+
+---
+
+## Authoritative references
+
+- **Microsoft** docs: **Windows** **internals** **security** model, **UAC**, **HVCI**, **Credential Guard**.
+- **MITRE ATT&CK** **Privilege** **Escalation** / **Credential** **Access** (Windows).
+- **Russinovich** et al., *Windows Internals* (reference).
 
 ---
 
 ## Cross-links
 
-- `Threat Modeling`
-- `Secure Source Code Review`
-- `Product Security Real-World Scenarios`
-- `Risk Prioritization and Security Metrics`
+`Windows Exploit Mitigations` · `EDR Evasion Awareness and Defense` · `Initial Access and Attack Surface Entry`
 
+---
+
+## Verification checklist
+
+- [ ] Explain **why** **UAC** **isn’t** a **kernel**-class **wall**.
+- [ ] Name **two** **VBS** features and **what** **boundary** they **strengthen**.

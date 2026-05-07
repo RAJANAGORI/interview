@@ -1,46 +1,62 @@
 # Insecure Deserialization - Interview Questions & Answers
 
-## Core questions
+## 60-second answer
 
-### Q1: Give a concise explanation of this topic
+**Q: What is insecure deserialization?**
 
-**Answer:** Insecure Deserialization concerns unsafe object reconstruction from untrusted serialized input. In interviews, I explain the boundary, failure mechanism, impact chain, and verification approach rather than only naming techniques.
-
-### Q2: How do you separate real risk from noisy signals
-
-**Answer:** I require reproducibility, clear trust-boundary violation, and measurable impact. I avoid severity inflation and document confidence level explicitly.
-
-### Q3: What is your mitigation strategy style
-
-**Answer:** I pair **immediate containment** (guardrails, policy, monitoring) with **structural fixes** (architecture, parser/canonicalization, privilege model, or workflow controls).
-
-### Q4: How do you verify remediation quality
-
-**Answer:** I define objective checks before implementation: negative tests, telemetry expectations, and post-fix regression runs. Closure requires evidence, not assumption.
-
-### Q5: How do you communicate this to non-security stakeholders
-
-**Answer:** I translate technical findings into business outcomes, estimate likelihood + blast radius, and propose phased remediation with clear owner and timeline.
-
-## Advanced follow-ups
-
-### Q6: What does “interview-ready depth” look like here
-
-**Answer:** I can explain mechanism in under 2 minutes, handle edge cases/follow-ups, and map controls to production constraints.
-
-### Q7: What mistakes do candidates make
-
-**Answer:** Over-indexing on payload/tool trivia, skipping trust-boundary explanation, and not discussing verification.
-
-### Q8: What is your 7-day improvement plan for this topic
-
-**Answer:** Day 1-2 mechanism review, day 3 scenario drill, day 4 mock follow-ups, day 5 remediation patterns, day 6 verification patterns, day 7 timed answer rehearsal.
+**A:** It’s when an application **reconstructs** **objects** from **attacker-controlled** **serialized** **data**—Java **`ObjectInputStream`**, **Python pickle**, **PHP unserialize**, **.NET BinaryFormatter**, etc. The runtime may **invoke** **magic** **methods** that **chain** into **file** **write**, **code** **load**, or **RCE** through **gadget** **libraries** already on the **classpath**. **Fix** by **not** **using** **native** **serialization** for **untrusted** **input**, **prefer** **JSON** + **strict** **schemas**, **signed** **tokens**, **allowlisted** **types**, and **patch** **gadget** **dependencies**. **Detection** includes **SAST** for **dangerous** **APIs** and **behavior** **analytics** for **post-deser** **process** **spawns**.
 
 ---
 
-## Depth: Interview follow-ups — Insecure Deserialization
+## Mechanism
 
-- How would you migrate a legacy serializer with minimal outage?
-- What static checks catch dangerous deserialization APIs?
-- What telemetry would show prevention is failing?
-- What policy guardrail would you introduce at platform level?
+### Q: What is a gadget chain?
+
+**A:** A **directed** **sequence** of **existing** **class** **methods** **triggered** **during** **deserialization** that **ends** in **harmful** **behavior**—**without** **the** **attacker** **uploading** **new** **code** **to** **disk**.
+
+### Q: Is JSON deserialization always safe?
+
+**A:** **No**—**Jackson** **polymorphic** **typing** **misconfig**, **.NET** **TypeNameHandling**, **JavaScript** **prototype** **pollution** **adjacent** **issues**. **Policy:** **disable** **polymorphism** **unless** **strictly** **needed**; **validate** **DTOs**.
+
+### Q: YAML?
+
+**A:** **`yaml.load`** in **Python** can **construct** **arbitrary** **objects**—use **`safe_load`** or **JSON**.
+
+---
+
+## Defense
+
+### Q: Preferred fix for Java microservices passing objects?
+
+**A:** **Protobuf** / **JSON** **with** **schema**; **JWT** **or** **mTLS** **for** **trust**—**not** **Java** **native** **serialization** **over** **HTTP**.
+
+### Q: How do allowlists work in Java deserialization filters?
+
+**A:** **JEP 290** **filters** / **`ObjectInputFilter`** **restrict** **classes** **allowed** **to** **deserialize**—**defense** **in** **depth** **with** **library** **updates**.
+
+---
+
+## Incident
+
+### Q: Log4j vs deserialization?
+
+**A:** **Log4j** was **JNDI** **lookup** from **log** **data**—**different** **primitive**, **similar** **lesson**: **don’t** **trust** **input** **that** **triggers** **dangerous** **resolution** **paths**.
+
+---
+
+## Depth: Follow-ups
+
+- **PHP** **phar** **metadata** **deserialization** **via** **file** **operations**.  
+- **Ruby** **Marshal** in **Rails** **sessions** **(legacy)**.  
+- **Kotlin** **serialization** **vs** **Java** **compat**.
+
+---
+
+## Mock ladder
+
+| Level | Question |
+|-------|----------|
+| Junior | **pickle** **risk**. |
+| Mid | **Gadget** **definition**. |
+| Senior | **Service** **A** **to** **B** **binary** **protocol** **hardening**. |
+| Staff | **Enterprise** **ban** **list** **for** **serializers**. |

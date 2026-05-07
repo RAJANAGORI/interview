@@ -2,124 +2,117 @@
 
 ## At a glance
 
-This module is interview-focused depth on **repeatable recon methodology with compliance and operator safety constraints**. It is written for AppSec/Product Security interviews where you are expected to explain both attacker mechanics and practical defensive engineering decisions.
+This module covers **how** to run **OSINT** **safely** and **repeatably**: **methodology** (plan → collect → analyze → report), **operational** **security** for **researchers**, **privacy** and **legal** **constraints**, and **coordination** with **stakeholders**. It pairs with **[OSINT for Security Assessments](../OSINT%20for%20Security%20Assessments/)** (sources and workflow) and emphasizes **safety** **first**.
+
+Aligned with **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.
 
 ---
 
 ## Learning outcomes
 
-After this module, you should be able to:
-
-- Explain the mechanism and trust boundaries for `osint-methodology-and-operational-safety` clearly in 2-3 minutes.
-- Identify high-signal attack/abuse indicators in real systems.
-- Propose mitigation strategy with rollout and verification steps.
-- Handle senior follow-up questions without switching to generic statements.
+- Document a **minimal** **OSINT** **plan**: objective, **RoE**, **sources**, **retention**.
+- Apply **OPSEC** basics for **consultant** and **in-house** **teams**.
+- Avoid **harassment**, **doxing**, and **unauthorized** **active** **measures** **disguised** as OSINT.
+- Produce **auditable** **notes** (source URL, time, **collector** **identity** **disclosure** where required).
 
 ---
 
-## What interviewers evaluate
+## Prerequisites
 
-Interviewers generally score this topic across four dimensions:
-
-1. **Technical correctness** - Do you explain the mechanism accurately?
-2. **Risk judgment** - Can you separate noisy issues from business-critical risk?
-3. **Implementation realism** - Are controls deployable in production constraints?
-4. **Verification maturity** - Do you describe how to prove controls actually work?
+- **OSINT for Security Assessments** · **Initial Access** · **Threat Modeling**
 
 ---
 
-## Threat model lens
+## L1 — Methodology phases
 
-### High-signal indicators
-
-- continuous recon programs
-- external monitoring obligations
-- regulatory boundaries
-
-### Typical failure patterns
-
-- unsanctioned collection sources
-- improper data handling
-- weak retention controls
-
-### Defensive control priorities
-
-- approved-source catalog
-- data minimization/retention policy
-- reviewed evidence chain
+1. **Define objective** — What decision does this **intel** **support**?  
+2. **Scope** — Domains, people (minimum necessary), time window.  
+3. **Collect** — **Passive** **first**; **log** **queries** and **URLs**.  
+4. **Analyze** — **Correlate**, **rate** **confidence** (A–F or **high**/**med**/**low**).  
+5. **Report** — **Actionable** **bullets**, **separate** **facts** vs **inference**.  
+6. **Dispose** — **Retention** **policy** for **notes** **and** **PII**.
 
 ---
 
-## Practical interview answer structure (90-150 seconds)
+## L2 — Operational safety (OPSEC)
 
-Use this structure when asked open-ended questions:
-
-1. **Definition + boundary:** one-sentence definition and where it appears.
-2. **Failure mechanism:** what check/control breaks and why.
-3. **Impact chain:** technical impact -> business impact.
-4. **Mitigation plan:** design-time control + runtime detection.
-5. **Verification:** test or telemetry proving fix effectiveness.
-
-This format is usually stronger than listing payload names or tool commands.
+| Practice | Why |
+|----------|-----|
+| **Dedicated** browser profile / VM | Reduce **account** **leakage** and **cookie** **bleed** |
+| **Rate limits** | Avoid **abuse** **signals** and **ToS** **violations** |
+| **No** personal accounts on **client** **research** | **Blurred** **lines** in **litigation** |
+| **VPN / egress** | Only if **legal** **and** **contractually** **allowed** |
+| **Encrypted** **note** **store** | **Client** **confidentiality** |
 
 ---
 
-## Scenario drills (interview-ready)
+## L2 — Legal and ethical boundaries
 
-### Scenario 1 - Discovery phase
-
-- You are asked to assess a production-like environment with limited time.
-- State your first 3 steps to scope and collect high-value evidence.
-- Explain what you will **not** do without explicit authorization.
-
-### Scenario 2 - Validation phase
-
-- A finding looks plausible but noisy.
-- Explain your reproducibility bar before raising severity.
-- Describe how you avoid false positives while keeping speed.
-
-### Scenario 3 - Remediation phase
-
-- Engineering requests a low-friction fix this sprint.
-- Provide short-term guardrails and long-term structural fix.
-- Include owner, verification metric, and rollback risk.
+- **CFAA**, **GDPR**, **local** **privacy** **law**—**know** **your** **jurisdiction**.  
+- **Active** **scanning**, **credential** **stuffing**, and **bypassing** **authentication** are **not** “OSINT” **in** **most** **contracts**.  
+- **Minimize** **personal** **data**; **don’t** **collect** **children’s** **data** **without** **clear** **basis**.
 
 ---
 
-## Senior/Staff discussion points
+## L2 — Safety for individuals
 
-Use these to stand out in experienced loops:
-
-- How this topic intersects with SDLC and platform standards.
-- How you measure trend reduction, not just one-off fixes.
-- How detection quality and remediation quality are linked.
-- How to run this safely under legal/compliance constraints.
+- **No** **stalking**, **harassment**, or **non-consensual** **tracking** **of** **employees** **as** **individuals**.  
+- **Executive** **protection** **teams** may **treat** **aggressive** **personal** **OSINT** **as** **threatening**—**stay** **professional**.
 
 ---
 
-## Verification checklist
+## L3 — Quality controls
 
-- [ ] Reproduction path documented with stable steps.
-- [ ] Impact statement includes affected assets/users.
-- [ ] Mitigation includes design-time and runtime controls.
-- [ ] Verification includes objective success criteria.
-- [ ] Residual risk documented if full fix is deferred.
+- **Corroborate** **single-source** **claims**.  
+- **Timestamp** **everything**—pages **change**.  
+- **Archive** **(authorized)** **snapshots** when **policy** **allows** (**Wayback** **terms**, **etc.**).
 
 ---
 
-## Interview follow-up prompts to practice
+## L3 — Team playbook (staff)
 
-- How do you design OSINT governance for enterprise scale?
-- What data should never be retained?
-- What trade-off would you accept if release deadlines are tight?
-- How would this topic change between startup and enterprise scale?
+- **Approved** **tool** **list**  
+- **Data** **handling** **classification**  
+- **Escalation** **when** **intel** **touches** **active** **law** **enforcement** **matters**
+
+---
+
+## Interview clusters
+
+### Junior
+
+- OSINT vs **active** **recon**?
+
+### Mid
+
+- **Three** **OPSEC** **practices** for **consultants**?
+
+### Senior
+
+- **GDPR** **considerations** **for** **employee** **LinkedIn** **data** **in** **reports**?
+
+### Staff
+
+- **Enterprise** **OSINT** **governance** **policy** **outline**?
+
+---
+
+## Authoritative references
+
+- **OSINT** **framework** **literature** (e.g. **IJ** **intel** **cycle** **variants**)  
+- **NIST** / **organizational** **privacy** **guidance**  
+- **FIRST** **ethics** **for** **handlers**
 
 ---
 
 ## Cross-links
 
-- `Threat Modeling`
-- `Secure Source Code Review`
-- `Product Security Real-World Scenarios`
-- `Risk Prioritization and Security Metrics`
+`OSINT for Security Assessments` · `Initial Access` · `Advanced Red Team Operations` · `Penetration Testing`
 
+---
+
+## Verification checklist
+
+- [ ] **Write** a **one-page** **RoE** **snippet** **for** **OSINT** **only**.  
+- [ ] **List** **five** **OPSEC** **controls**.  
+- [ ] **Explain** **when** **you** **stop** **collection**.

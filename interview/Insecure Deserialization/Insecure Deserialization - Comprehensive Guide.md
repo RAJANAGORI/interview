@@ -2,124 +2,123 @@
 
 ## At a glance
 
-This module is interview-focused depth on **unsafe object reconstruction from untrusted serialized input**. It is written for AppSec/Product Security interviews where you are expected to explain both attacker mechanics and practical defensive engineering decisions.
+**Insecure deserialization** turns **attacker-controlled serialized blobs** into **live objects** in memory, enabling **RCE**, **auth bypass**, **logic** **abuse**, and **data** **tampering** via **gadget chains**—sequences of **existing** **methods** (**gadgets**) that **bridge** from a **benign** **readObject** (or equivalent) to **dangerous** **behavior**. Languages differ (**Java**, **.NET**, **Python**, **PHP**, **Ruby**), but the **interview** **pattern** is the same: **never** **deserialize** **untrusted** **native** **formats**; prefer **signed** **tokens** or **schema-constrained** **formats** like **JSON** + **DTO** **validation**.
+
+Aligned with **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.
 
 ---
 
 ## Learning outcomes
 
-After this module, you should be able to:
-
-- Explain the mechanism and trust boundaries for `insecure-deserialization` clearly in 2-3 minutes.
-- Identify high-signal attack/abuse indicators in real systems.
-- Propose mitigation strategy with rollout and verification steps.
-- Handle senior follow-up questions without switching to generic statements.
+- Explain **deserialization** vs **decoding** (JSON parse is **not** always unsafe—**object** **graphs** are).
+- Describe **gadget chains** at a **high** **level** (no **weaponized** **payload** **recipes**).
+- Map **language-specific** **sink** **families** and **safe** **alternatives**.
+- Discuss **defense**: **allowlists**, **signing**, **isolation**, **patching** **known** **gadget** **libraries**.
 
 ---
 
-## What interviewers evaluate
+## Prerequisites
 
-Interviewers generally score this topic across four dimensions:
-
-1. **Technical correctness** - Do you explain the mechanism accurately?
-2. **Risk judgment** - Can you separate noisy issues from business-critical risk?
-3. **Implementation realism** - Are controls deployable in production constraints?
-4. **Verification maturity** - Do you describe how to prove controls actually work?
+- **[Remote Code Execution (RCE)](../Remote%20Code%20Execution%20(RCE)/)**  
+- **[Server-Side Template Injection (SSTI)](../Server-Side%20Template%20Injection%20(SSTI)/)** (different mechanism, similar **object** **graph** **risk** in some stacks)
 
 ---
 
-## Threat model lens
+## L1 — Mechanism
 
-### High-signal indicators
+**Serialization** flattens **objects** to **bytes** for **storage** or **transport**. **Deserialization** **reconstructs** **objects**, **running** **constructors**, **readObject**, **magic** **methods**—**attack surface**.
 
-- pickle/java/.NET serializer use
-- signed session blobs
-- message-bus object payloads
-
-### Typical failure patterns
-
-- deserializing untrusted bytes
-- unsafe polymorphic type binding
-- key misuse on signed blobs
-
-### Defensive control priorities
-
-- replace unsafe serializers
-- schema-validated formats
-- allowlisted concrete types
+**Unsafe when:** **attacker** **controls** **bytes** and **runtime** **loads** **arbitrary** **classes** **or** **prototypes**.
 
 ---
 
-## Practical interview answer structure (90-150 seconds)
+## L2 — Language notes (interview table)
 
-Use this structure when asked open-ended questions:
-
-1. **Definition + boundary:** one-sentence definition and where it appears.
-2. **Failure mechanism:** what check/control breaks and why.
-3. **Impact chain:** technical impact -> business impact.
-4. **Mitigation plan:** design-time control + runtime detection.
-5. **Verification:** test or telemetry proving fix effectiveness.
-
-This format is usually stronger than listing payload names or tool commands.
+| Platform | Risky patterns | Safer direction |
+|----------|----------------|-----------------|
+| **Java** | `ObjectInputStream`, **XMLDecoder**, some **YAML** **loaders** | **JSON** + **validated** **types**; **signed** **JWS**; **avoid** **native** **Java** **serialization** **for** **untrusted** **input** |
+| **.NET** | `BinaryFormatter`, `LosFormatter`, some **Binary** **serializers** | **System.Text.Json** with **DTOs**; **DataContractSerializer** with **allowlist** |
+| **Python** | `pickle`, `marshal`, unsafe **yaml.load** | `json` + **schema**; `yaml.safe_load` |
+| **PHP** | `unserialize` on **user** **data** | **JSON**; **signed** **tokens**; **avoid** **phar** **tricks** **on** **file** **ops** |
+| **Ruby** | `Marshal.load` | **JSON** / **msgpack** with **strict** **types** |
 
 ---
 
-## Scenario drills (interview-ready)
+## L2 — Gadget chains (concept)
 
-### Scenario 1 - Discovery phase
+**Gadget:** **Existing** **class** **method** **that** **does** **something** **useful** **to** **attacker** when **called** **in** **sequence**.  
+**Chain:** Attacker **ties** **gadgets** **together** via **deserialization** **graph** **edges**—**no** **new** **code** **on** **disk**, **only** **data**.
 
-- You are asked to assess a production-like environment with limited time.
-- State your first 3 steps to scope and collect high-value evidence.
-- Explain what you will **not** do without explicit authorization.
-
-### Scenario 2 - Validation phase
-
-- A finding looks plausible but noisy.
-- Explain your reproducibility bar before raising severity.
-- Describe how you avoid false positives while keeping speed.
-
-### Scenario 3 - Remediation phase
-
-- Engineering requests a low-friction fix this sprint.
-- Provide short-term guardrails and long-term structural fix.
-- Include owner, verification metric, and rollback risk.
+**Research tools** (authorized labs only): **ysoserial**, **marshalsec**—names for **interviews**; **not** **step-by-step** **weaponization** **in** **prod**.
 
 ---
 
-## Senior/Staff discussion points
+## L3 — Detection
 
-Use these to stand out in experienced loops:
-
-- How this topic intersects with SDLC and platform standards.
-- How you measure trend reduction, not just one-off fixes.
-- How detection quality and remediation quality are linked.
-- How to run this safely under legal/compliance constraints.
+- **Deserialization** **exceptions** **spikes**; **unexpected** **classes** **in** **logs**.  
+- **Child** **processes** **from** **JVM** / **dotnet** **after** **blob** **input**.  
+- **SAST** rules for **dangerous** **APIs**; **Dependabot** on **gadget** **libraries**.
 
 ---
 
-## Verification checklist
+## L3 — Mitigations (tiered)
 
-- [ ] Reproduction path documented with stable steps.
-- [ ] Impact statement includes affected assets/users.
-- [ ] Mitigation includes design-time and runtime controls.
-- [ ] Verification includes objective success criteria.
-- [ ] Residual risk documented if full fix is deferred.
+1. **Do not** **deserialize** **untrusted** **native** **binary** **formats**.  
+2. **If** **you** **must:** **strict** **allowlist** **of** **types**; **signed** **payloads** with **rotation**; **isolated** **low-priv** **worker**.  
+3. **Patch** **gadget** **primitives** in **commons-collections**, **Spring**, **etc.**—**fast**.  
+4. **WAF** **signatures** are **fragile** **secondary** **controls**.
 
 ---
 
-## Interview follow-up prompts to practice
+## Named patterns / CVE classes
 
-- How would you migrate a legacy serializer with minimal outage?
-- What static checks catch dangerous deserialization APIs?
-- What trade-off would you accept if release deadlines are tight?
-- How would this topic change between startup and enterprise scale?
+- **Java** **deserialization** **RCE** **era** (commons-collections, **etc.**)—**historical** **lesson**: **dependency** **hygiene**.  
+- **Log4j** is **JNDI**, **not** **classic** **deserialization**, but **often** **grouped** in **“object”** **injection** **discussions**—**keep** **precise**.
+
+---
+
+## Hands-on (authorized)
+
+- **WebGoat** / **PortSwigger** **deserialization** **labs**; **local** **Java** **gadget** **labs** in **VM**.
+
+---
+
+## Interview clusters
+
+### Junior
+
+- Why is **pickle** **dangerous**?
+
+### Mid
+
+- **Gadget** **chain** in **one** **paragraph**.
+
+### Senior
+
+- **Allowlist** vs **signing** for **internal** **service** **RPC**.
+
+### Staff
+
+- **Org** **policy**: **ban** **BinaryFormatter** **globally**—**how** **enforce**?
+
+---
+
+## Authoritative references
+
+- **CWE-502** — Deserialization of Untrusted Data  
+- **OWASP** Deserialization Cheat Sheet  
+- **CERT** advisories on **Java** **serialization**
 
 ---
 
 ## Cross-links
 
-- `Threat Modeling`
-- `Secure Source Code Review`
-- `Product Security Real-World Scenarios`
-- `Risk Prioritization and Security Metrics`
+`RCE` · `SQL Injection` · `Supply Chain` · `Secure Source Code Review` · `Threat Modeling`
 
+---
+
+## Verification checklist
+
+- [ ] **Name** **two** **language** **sinks** **and** **fixes**.  
+- [ ] Explain **why** **JSON.parse** **can** **still** **be** **risky** **(prototype** **pollution** **JS**—**related** **topic**).  
+- [ ] **No** **payload** **details** **in** **client** **reports**—**behavior** **only**.

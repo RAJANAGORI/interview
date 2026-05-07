@@ -67,3 +67,9 @@ http://external-api.com/admin
 | SSRF to Cloud Metadata | Critical |
 | SSRF to File System | High |
 | Blind SSRF | High |
+
+## **Practice links**
+
+- Labs map: `../Practice & Exercises/Labs Mapping.md`
+- Payload references: `../Practice & Exercises/Payload References.md`
+- Code examples: `../examples/ssrf/`

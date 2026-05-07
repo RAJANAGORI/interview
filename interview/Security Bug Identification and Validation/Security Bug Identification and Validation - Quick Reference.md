@@ -1,26 +1,41 @@
-# Security Bug Identification and Validation - Quick Reference
+# Security Bug Identification and Validation — Quick Reference
 
-## 60-second definition
-- Distinguishing real vulnerabilities from noise with reproducible evidence.
+## Pipeline
 
-## High-signal indicators
-- manual testing workflows
-- bug bounty triage
-- internal validation queues
+**Report** → **repro** → **impact** → **dedupe** → **severity** → **route** → **verify** **fix**
 
-## Common failure patterns
-- non-reproducible reports
-- missing root cause notes
-- weak remediation mapping
+---
 
-## Control priorities
-- minimum evidence checklist
-- root-cause tagging taxonomy
-- validation-to-remediation handoff
+## Evidence checklist
 
-## 2-minute answer skeleton
-- Definition + boundary
-- Failure mechanism
-- Impact chain
-- Mitigation plan
-- Verification criteria
+Build/version · **role** · **steps** · **HTTP/logs** · **minimal** **case** · **no** **secrets** **in** **ticket**
+
+---
+
+## Confidence labels
+
+**Confirmed** · **Likely** · **Speculative**
+
+---
+
+## False positive patterns
+
+Self-XSS · **unreachable** **dep** **CVE** · **default** **mitigation** **already** **on** · **intended** **behavior**
+
+---
+
+## Severity inputs
+
+**Exploitability** · **exposure** · **data** · **integrity** · **KEV/EPSS** (CVE class)
+
+---
+
+## Cross-read
+
+`Rapid Triage` · `Vuln Management` · `Code Review` · `Pen Testing`
+
+---
+
+## One-liner
+
+“**Repro** **first**, **evidence** **packaged**, **impact** **in** **context**, **dedupe**, **verify** **closure**.”

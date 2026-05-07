@@ -1,26 +1,41 @@
-# Open Redirect - Quick Reference
+# Open Redirect — Quick Reference
 
-## 60-second definition
-- Redirect validation, oauth callback safety, phishing-chain risk.
+## Definition
 
-## High-signal indicators
-- unvalidated `next`/`returnUrl` parameters
-- redirect helper endpoints
-- OAuth redirect_uri parsing mismatches
+**User-controlled** **target** **→** **`Location:`** **or** **JS** **navigate** **→** **external** **site** (**CWE-601**)
 
-## Common failure patterns
-- prefix-only host checks
-- double-decoding bypasses
-- accepting protocol-relative URLs
+---
 
-## Control priorities
-- server-side route IDs over raw URLs
-- strict canonical URL parsing + exact allowlist
-- external redirect interstitial + logging
+## Impacts
 
-## 2-minute answer skeleton
-- Definition + boundary
-- Failure mechanism
-- Impact chain
-- Mitigation plan
-- Verification criteria
+**Phishing** · **OAuth** **code**/**token** **theft** · **chain** **to** **SSRF**/malware
+
+---
+
+## Fix pattern
+
+**Parse** **URL** · **allowlist** **host** **(exact)** **or** **path-only** **`/safe/path`** · **reject** **`//`** **and** **`\`**
+
+---
+
+## Bypass keywords
+
+`//evil` · **subdomain** **trick** · **double** **encode** · **unicode** **host**
+
+---
+
+## OAuth
+
+**`redirect_uri`** **exact** **match** · **no** **open** **wildcards**
+
+---
+
+## Cross-read
+
+`OAuth` · `SSRF` · `XSS` · `Web App Vulnerabilities`
+
+---
+
+## One-liner
+
+“**Never** **reflect** **raw** **URLs** **into** **redirects**—**allowlist** **or** **internal** **paths** **only**, **parse** **and** **canonicalize**.”

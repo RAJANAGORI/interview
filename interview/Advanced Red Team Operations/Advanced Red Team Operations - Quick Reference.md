@@ -1,26 +1,45 @@
-# Advanced Red Team Operations - Quick Reference
+# Advanced Red Team Operations — Quick Reference
 
-## 60-second definition
-- Adversary simulation planning with measurable defensive outcomes.
+## Definitions
 
-## High-signal indicators
-- purple-team exercises
-- detection validation objectives
-- executive risk testing mandates
+**Red team** — **objective**-driven **adversary** **simulation** (authorized)  
+**Purple** — **attack** + **detection** **tuning** **together**  
+**Pen test** — **vuln** **discovery** **breadth** (generalization)
 
-## Common failure patterns
-- goal ambiguity
-- low telemetry integration
-- findings not mapped to control owners
+---
 
-## Control priorities
-- scenario-based objectives
-- joint blue-team instrumentation
-- remediation ownership mapping
+## Engagement checklist
 
-## 2-minute answer skeleton
-- Definition + boundary
-- Failure mechanism
-- Impact chain
-- Mitigation plan
-- Verification criteria
+Objectives · **Threat** **profile** · **RoE** · **Safety** · **Metrics** · **Reporting** · **Remediation** **owners**
+
+---
+
+## Metrics (examples)
+
+**TTD** · **TTC** · **ATT&CK** **coverage** · **detection** **rule** **hit** **rate** · **replay** **after** **fix**
+
+---
+
+## Defender-facing tradecraft topics
+
+Beaconing · **LOLBins** · **lateral** **movement** · **identity** **abuse**
+
+*(Teach **detection** & **architecture**, not **unauthorized** **evasion**.)*
+
+---
+
+## Deliverables
+
+**Timeline** · **ATT&CK** **mapping** · **business** **risk** · **verified** **fixes**
+
+---
+
+## Cross-read
+
+`Threat Modeling` · `EDR Evasion Awareness` · `Incident Response` · `Detection Engineering`
+
+---
+
+## One-liner
+
+“**Authorized** **simulation** with **clear** **goals**, **measure** **detection** & **response**, **close** **the** **loop** with **purple** **iterations**.”

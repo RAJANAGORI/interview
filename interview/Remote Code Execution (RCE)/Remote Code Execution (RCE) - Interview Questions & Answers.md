@@ -1,46 +1,73 @@
 # Remote Code Execution (RCE) - Interview Questions & Answers
 
-## Core questions
+## 60-second answer
 
-### Q1: Give a concise explanation of this topic
+**Q: What is RCE and why is it critical?**
 
-**Answer:** Remote Code Execution (RCE) concerns arbitrary command/code execution and blast-radius control. In interviews, I explain the boundary, failure mechanism, impact chain, and verification approach rather than only naming techniques.
-
-### Q2: How do you separate real risk from noisy signals
-
-**Answer:** I require reproducibility, clear trust-boundary violation, and measurable impact. I avoid severity inflation and document confidence level explicitly.
-
-### Q3: What is your mitigation strategy style
-
-**Answer:** I pair **immediate containment** (guardrails, policy, monitoring) with **structural fixes** (architecture, parser/canonicalization, privilege model, or workflow controls).
-
-### Q4: How do you verify remediation quality
-
-**Answer:** I define objective checks before implementation: negative tests, telemetry expectations, and post-fix regression runs. Closure requires evidence, not assumption.
-
-### Q5: How do you communicate this to non-security stakeholders
-
-**Answer:** I translate technical findings into business outcomes, estimate likelihood + blast radius, and propose phased remediation with clear owner and timeline.
-
-## Advanced follow-ups
-
-### Q6: What does “interview-ready depth” look like here
-
-**Answer:** I can explain mechanism in under 2 minutes, handle edge cases/follow-ups, and map controls to production constraints.
-
-### Q7: What mistakes do candidates make
-
-**Answer:** Over-indexing on payload/tool trivia, skipping trust-boundary explanation, and not discussing verification.
-
-### Q8: What is your 7-day improvement plan for this topic
-
-**Answer:** Day 1-2 mechanism review, day 3 scenario drill, day 4 mock follow-ups, day 5 remediation patterns, day 6 verification patterns, day 7 timed answer rehearsal.
+**A:** Remote code execution means an attacker can get **arbitrary code or commands** to run on a server or worker you operate—via **command injection**, **unsafe deserialization**, **template engines**, **dependency CVEs** like **Log4j**, or **upload + execute** chains. It is critical because it often **bypasses application logic**, allows **data theft**, **lateral movement**, and **persistence**, and usually forces **incident response**, **patching**, and **secret rotation**. Defense is **safe APIs** (no shell), **input separation**, **patch discipline**, **deserialization hygiene**, and **runtime containment** (non-root, read-only FS, egress controls).
 
 ---
 
-## Depth: Interview follow-ups — Remote Code Execution (RCE)
+## Taxonomy
 
-- How do you prioritize RCE vs auth bypass?
-- What post-exploit telemetry is highest value?
-- What telemetry would show prevention is failing?
-- What policy guardrail would you introduce at platform level?
+### Q: Name four different technical causes of RCE.
+
+**A:** (1) **OS command injection** (shell metacharacters). (2) **Unsafe deserialization / object injection**. (3) **Server-side template injection** escaping the sandbox. (4) **Known library flaws** (e.g. **JNDI** lookup chains) or **expression language** injection. (Bonus: **memory corruption** in native code.)
+
+### Q: RCE vs arbitrary file read vs SSRF?
+
+**A:** **RCE** is **code execution**. **File read** discloses data; may **chain** to RCE via **LFI** + upload. **SSRF** abuses **outbound** requests; may **chain** to cloud metadata or **internal** exploit—**not** RCE by itself unless combined.
+
+---
+
+## Defense engineering
+
+### Q: How do you call ImageMagick or ffmpeg safely from a web app?
+
+**A:** **No** string shell; **allowlisted** arguments; **separate** worker with **no** network; **latest** patched binaries; **resource** limits; consider **re-encoding** in **isolated** **queue**; validate **file type** before tools run.
+
+### Q: How do you defend against deserialization RCE in Java?
+
+**A:** Avoid **ObjectInputStream** on **untrusted** bytes; use **signed** formats; **JSON** + validated DTOs; **global** **denylist**/allowlist where framework supports; **patch** **gadget** libraries; **monitor** **unexpected** classes loaded.
+
+---
+
+## Incident response
+
+### Q: First three actions when RCE is confirmed in prod?
+
+**A:** (1) **Contain**: block IOCs, **isolate** instances, **preserve** evidence if needed. (2) **Patch** or **remove** vulnerable code path; **scale** to **clean** images. (3) **Rotate** **secrets** the process could read; **hunt** **persistence** and **lateral** movement.
+
+### Q: How do you prioritize “auth bypass” vs “RCE”?
+
+**A:** **RCE** usually **wins** on urgency because **blast radius** and **trust** collapse—but **auth bypass** on **admin** can be **equal**. Use **exploitability**, **exposure**, **data** sensitivity, and **existing** **controls**.
+
+---
+
+## Supply chain
+
+### Q: Log4j in three sentences.
+
+**A:** Attacker places **JNDI** string in logged input; vulnerable **Log4j** performs **lookup**; attacker serves **malicious** class → **code runs** in app JVM. **Fix:** upgrade Log4j, **disable** message lookups, **restrict egress**, **hunt** **IOC**s.
+
+---
+
+## Depth: Interview follow-ups
+
+- When is **`eval`** ever acceptable?  
+- How does **container** **non-root** help after RCE?  
+- **Falco** rule examples for **shell** from **java**.  
+- **Semgrep** vs **CodeQL** for finding **injection** sinks.
+
+---
+
+## Mock ladder
+
+| Level | Question |
+|-------|----------|
+| Junior | Define RCE; one **example** vector. |
+| Mid | Safe **subprocess** pattern in **your** language. |
+| Senior | **Defense in depth** for **dependency** RCE class. |
+| Staff | **Enterprise** program: **prevent** repeat **Log4j**-style events. |
+
+**Target:** 7–8/8 on accuracy, depth, practicality, verification.

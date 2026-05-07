@@ -1,26 +1,35 @@
-# EDR Evasion Awareness and Defense - Quick Reference
+# EDR Evasion Awareness and Defense — Quick Reference
 
-## 60-second definition
-- Understanding evasion tactics to design resilient layered endpoint defense.
+## Telemetry
 
-## High-signal indicators
-- sudden blind spots in detections
-- living-off-the-land abuse
-- telemetry suppression attempts
+User hooks · **ETW** · **kernel** callbacks · **network** **off-box**
 
-## Common failure patterns
-- single-vendor dependency
-- no detection-as-code validation
-- weak hardening baseline
+---
 
-## Control priorities
-- defense-in-depth endpoint strategy
-- detection validation exercises
-- tamper-protection and policy governance
+## Evasion (know names)
 
-## 2-minute answer skeleton
-- Definition + boundary
-- Failure mechanism
-- Impact chain
-- Mitigation plan
-- Verification criteria
+Unhook · **direct/indirect** **syscalls** · **BYOVD** · **PPID** **spoof** · **LOLBins**
+
+---
+
+## Defense
+
+**HVCI** · **WDAC** **drivers** · **sensor** **tamper** **protection** · **kernel** **visibility** · **assume** **gaps**
+
+---
+
+## Hunt ideas
+
+**ntdll** **integrity** · **new** **drivers** · **impossible** **parent** **edges** · **rare** **CLI** **chains**
+
+---
+
+## Cross-read
+
+`Windows Security Boundaries` · `Shellcode Fundamentals and Detection`
+
+---
+
+## One-liner
+
+“**Hooks** **lie**; **layer** **kernel** **policy**, **driver** **control**, and **behavior** **hunts**.”

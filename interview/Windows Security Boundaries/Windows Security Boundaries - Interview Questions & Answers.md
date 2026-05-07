@@ -1,46 +1,38 @@
 # Windows Security Boundaries - Interview Questions & Answers
 
-## Core questions
+## 60-second answer
 
-### Q1: Give a concise explanation of this topic
+**Q: What are Windows security boundaries and why do they matter?**
 
-**Answer:** Windows Security Boundaries concerns Windows trust boundaries and privilege transition security principles. In interviews, I explain the boundary, failure mechanism, impact chain, and verification approach rather than only naming techniques.
-
-### Q2: How do you separate real risk from noisy signals
-
-**Answer:** I require reproducibility, clear trust-boundary violation, and measurable impact. I avoid severity inflation and document confidence level explicitly.
-
-### Q3: What is your mitigation strategy style
-
-**Answer:** I pair **immediate containment** (guardrails, policy, monitoring) with **structural fixes** (architecture, parser/canonicalization, privilege model, or workflow controls).
-
-### Q4: How do you verify remediation quality
-
-**Answer:** I define objective checks before implementation: negative tests, telemetry expectations, and post-fix regression runs. Closure requires evidence, not assumption.
-
-### Q5: How do you communicate this to non-security stakeholders
-
-**Answer:** I translate technical findings into business outcomes, estimate likelihood + blast radius, and propose phased remediation with clear owner and timeline.
-
-## Advanced follow-ups
-
-### Q6: What does “interview-ready depth” look like here
-
-**Answer:** I can explain mechanism in under 2 minutes, handle edge cases/follow-ups, and map controls to production constraints.
-
-### Q7: What mistakes do candidates make
-
-**Answer:** Over-indexing on payload/tool trivia, skipping trust-boundary explanation, and not discussing verification.
-
-### Q8: What is your 7-day improvement plan for this topic
-
-**Answer:** Day 1-2 mechanism review, day 3 scenario drill, day 4 mock follow-ups, day 5 remediation patterns, day 6 verification patterns, day 7 timed answer rehearsal.
+**A:** They’re the **policy lines**—**kernel** vs **user**, **session** separation, **integrity** levels, **AppContainers**, and **VBS** features like **HVCI**—that **limit** how far code can **read**, **impersonate**, or **execute**. **Crossing** them is **privilege** **escalation** or **credential** **theft**. Defenders **patch** **privesc**, **enable** **VBS** where **supported**, **isolate** **tier** **0**, and **monitor** **token**/**driver** **events**.
 
 ---
 
-## Depth: Interview follow-ups — Windows Security Boundaries
+## Concepts
 
-- Which boundaries matter most for enterprise endpoints?
-- How do you audit boundary violations at scale?
-- What telemetry would show prevention is failing?
-- What policy guardrail would you introduce at platform level?
+### Q: Is UAC a security boundary?
+
+**A:** **Not** in the **strong** **sense**—it’s **elevation** **UX**; **malware** **already** **in** **session** has **many** **paths**. **Kernel** **boundaries** and **VBS** are **stronger**.
+
+### Q: AppContainer vs standard user?
+
+**A:** **AppContainer** adds **capability**-style **restrictions** and **lowbox** **SIDs**—**tighter** than **default** **user** for **sandboxed** apps.
+
+---
+
+## Architecture
+
+### Q: What does HVCI buy you?
+
+**A:** **Hypervisor-backed** **code** **integrity** for **kernel** **memory**—raises **bar** for **unsigned** **kernel** **code** and **some** **rootkit** **techniques**; **compatibility** **costs** exist.
+
+---
+
+## Mock ladder
+
+| Level | Question |
+|-------|----------|
+| Junior | User/kernel |
+| Mid | Integrity levels |
+| Senior | UAC limits |
+| Staff | Tier 0 + VBS |

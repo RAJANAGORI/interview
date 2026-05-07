@@ -152,4 +152,4 @@
 
 **Cross-read:** Authorization and Authentication, JWT, OAuth, IDOR.
 
-<!-- verified-depth-merged:v1 ids=authorization-and-authentication,critical-clarification-authorization-and-authentic -->
+<!-- verified-depth-merged:v1 ids=authorization-and-authentication -->

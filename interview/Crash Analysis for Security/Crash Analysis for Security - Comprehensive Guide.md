@@ -2,124 +2,136 @@
 
 ## At a glance
 
-This module is interview-focused depth on **turning crashes into security hypotheses and triaged risk statements**. It is written for AppSec/Product Security interviews where you are expected to explain both attacker mechanics and practical defensive engineering decisions.
+**Crash analysis for security** is the process of **triaging** **reproducible** **faults**—from **fuzzers**, **sanitizers**, **production** **crashes**, or **bug** **reports**—to decide **exploitability**, **severity**, **root** **cause**, and **fix** **priority**. It connects **signals** (stack traces, **ASan** reports, **minidumps**) to **actionable** **security** **conclusions** without **overclaiming** **RCE** on every **SIGSEGV**.
+
+Aligned with **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.
 
 ---
 
 ## Learning outcomes
 
-After this module, you should be able to:
-
-- Explain the mechanism and trust boundaries for `crash-analysis-for-security` clearly in 2-3 minutes.
-- Identify high-signal attack/abuse indicators in real systems.
-- Propose mitigation strategy with rollout and verification steps.
-- Handle senior follow-up questions without switching to generic statements.
+- Read **AddressSanitizer** / **UBSan** style output at a **high** **level**.
+- **Bucket** crashes (**dedupe**) and **minimize** **testcases**.
+- Apply **exploitability** **heuristics** (control of **PC**, **write** **primitive**) **conservatively**.
+- Communicate **uncertainty** to **engineering** and **leadership**.
 
 ---
 
-## What interviewers evaluate
+## Prerequisites
 
-Interviewers generally score this topic across four dimensions:
-
-1. **Technical correctness** - Do you explain the mechanism accurately?
-2. **Risk judgment** - Can you separate noisy issues from business-critical risk?
-3. **Implementation realism** - Are controls deployable in production constraints?
-4. **Verification maturity** - Do you describe how to prove controls actually work?
+- **[Exploit Development](../Exploit%20Development/)** (mitigations & primitives)  
+- **[Fuzzing Security Testing](../Fuzzing%20Security%20Testing/)**  
+- **[Security Bug Identification and Validation](../Security%20Bug%20Identification%20and%20Validation/)**
 
 ---
 
-## Threat model lens
+## L1 — Why triage matters
 
-### High-signal indicators
-
-- fuzzer crash output
-- production crash telemetry
-- parser/library instability
-
-### Typical failure patterns
-
-- no dedup or bucketing
-- missing root-cause tagging
-- crash severity overstatement
-
-### Defensive control priorities
-
-- crash bucketing + triage rubric
-- sanitizer-guided diagnosis
-- exploitability criteria checklist
+- **Fuzzing** produces **thousands** of **unique** **crashes**—many **duplicates** or **benign**.  
+- **Production** **crashes** may hide **memory** **safety** **regressions** or **DoS**.  
+- **Consistent** **rubric** prevents **alert** **fatigue** and **wrong** **SLAs**.
 
 ---
 
-## Practical interview answer structure (90-150 seconds)
+## L2 — Inputs you will see
 
-Use this structure when asked open-ended questions:
-
-1. **Definition + boundary:** one-sentence definition and where it appears.
-2. **Failure mechanism:** what check/control breaks and why.
-3. **Impact chain:** technical impact -> business impact.
-4. **Mitigation plan:** design-time control + runtime detection.
-5. **Verification:** test or telemetry proving fix effectiveness.
-
-This format is usually stronger than listing payload names or tool commands.
+| Source | Typical artifact |
+|--------|------------------|
+| **AFL++/libFuzzer** | **Testcase** **file**, **stack** **trace** |
+| **ASan/UBSan** | **Heap** **buffer** **overflow**, **UAF** **report** with **shadow** **memory** |
+| **Windows** | **minidump**, **WinDbg** **!analyze** |
+| **Linux** | **core** **dump**, **gdb** **backtrace** |
+| **Mobile** | **crash** **reports** (**symbolicated** **stacks**) |
 
 ---
 
-## Scenario drills (interview-ready)
+## L2 — Triage workflow
 
-### Scenario 1 - Discovery phase
-
-- You are asked to assess a production-like environment with limited time.
-- State your first 3 steps to scope and collect high-value evidence.
-- Explain what you will **not** do without explicit authorization.
-
-### Scenario 2 - Validation phase
-
-- A finding looks plausible but noisy.
-- Explain your reproducibility bar before raising severity.
-- Describe how you avoid false positives while keeping speed.
-
-### Scenario 3 - Remediation phase
-
-- Engineering requests a low-friction fix this sprint.
-- Provide short-term guardrails and long-term structural fix.
-- Include owner, verification metric, and rollback risk.
+1. **Reproduce** on **known** **build** **(commit** **hash** / **symbol** **server**).  
+2. **Minimize** **input** (delta **debugging**, **creduce**).  
+3. **Root** **cause**: **which** **line** / **allocator** **state**?  
+4. **Security** **impact**: **control** of **size** **/** **pointer**? **User** **reachable**?  
+5. **Dedupe**: **same** **root** **cause** as **existing** **bug**?  
+6. **Route**: **CVE**? **internal** **severity**? **duplicate** **report**?
 
 ---
 
-## Senior/Staff discussion points
+## L2 — Exploitability heuristics (interview-safe)
 
-Use these to stand out in experienced loops:
+**Higher** **concern** when:
 
-- How this topic intersects with SDLC and platform standards.
-- How you measure trend reduction, not just one-off fixes.
-- How detection quality and remediation quality are linked.
-- How to run this safely under legal/compliance constraints.
+- **Attacker** **controls** **length** **and** **content** **of** **overflow**.  
+- **Write** **primitive** with **controlled** **value** **and** **target**.  
+- **UAF** with **victim** **object** **under** **attacker** **influence**.
 
----
+**Lower** **concern** when:
 
-## Verification checklist
+- **Fixed** **null** **deref** **without** **user** **input** **path**.  
+- **Debug-only** **assert** **in** **unreachable** **config**.
 
-- [ ] Reproduction path documented with stable steps.
-- [ ] Impact statement includes affected assets/users.
-- [ ] Mitigation includes design-time and runtime controls.
-- [ ] Verification includes objective success criteria.
-- [ ] Residual risk documented if full fix is deferred.
+**Always** **validate** with **security** **engineers** for **release** **blockers**.
 
 ---
 
-## Interview follow-up prompts to practice
+## L3 — ASan primer (reading the report)
 
-- How do you distinguish denial-of-service vs potential RCE crash paths?
-- What evidence is needed before escalation?
-- What trade-off would you accept if release deadlines are tight?
-- How would this topic change between startup and enterprise scale?
+- **ERROR:** type (**heap-buffer-overflow**, **stack-buffer-overflow**, **use-after-free**, **double-free**).  
+- **Shadow** **bytes** show **redzone** **violations**.  
+- **Stack** **trace** of **allocation** and **free** **sites** for **UAF**.
+
+---
+
+## L3 — Bucketing and metrics
+
+- **Bucket** by **top** **N** **frames** **+** **fault** **type**—not **only** **hash** of **input**.  
+- **Track** **new** **regressions** vs **known** **noise**.  
+- **SLA:** **security** **crash** **class** vs **quality** **crash**.
+
+---
+
+## Tools (examples)
+
+**gdb**, **lldb**, **WinDbg**, **rr** (record/replay), **creduce**, **Bugzilla**/**Jira** **automation**
+
+---
+
+## Interview clusters
+
+### Junior
+
+- Why **minimize** **crash** **inputs**?
+
+### Mid
+
+- **ASan** vs **Valgrind** (speed vs **coverage** **themes**).
+
+### Senior
+
+- How do you **prevent** **duplicate** **CVEs** **from** **same** **root** **cause**?
+
+### Staff
+
+- **Org** **dashboard**: **crash** **→** **exploitability** **→** **MTTR**
+
+---
+
+## Authoritative references
+
+- **LLVM** **Sanitizer** **documentation**  
+- **Microsoft** **WinDbg** **docs**  
+- **GDB** **user** **manual**  
+- **CERT** **vulnerability** **analysis** **practices**
 
 ---
 
 ## Cross-links
 
-- `Threat Modeling`
-- `Secure Source Code Review`
-- `Product Security Real-World Scenarios`
-- `Risk Prioritization and Security Metrics`
+`Fuzzing` · `Exploit Development` · `Rapid Security Triage` · `Vulnerability Management`
 
+---
+
+## Verification checklist
+
+- [ ] **Walk** **one** **ASan** **report** **verbally**.  
+- [ ] **Explain** **dedupe** **strategy**.  
+- [ ] **One** **example** of **overrated** vs **underrated** **crash**.

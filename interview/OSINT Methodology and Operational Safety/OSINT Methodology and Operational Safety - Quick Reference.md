@@ -1,26 +1,35 @@
-# OSINT Methodology and Operational Safety - Quick Reference
+# OSINT Methodology and Operational Safety — Quick Reference
 
-## 60-second definition
-- Repeatable recon methodology with compliance and operator safety constraints.
+## Method (6 steps)
 
-## High-signal indicators
-- continuous recon programs
-- external monitoring obligations
-- regulatory boundaries
+**Objective** → **scope** → **collect** (passive) → **analyze** → **report** → **dispose**
 
-## Common failure patterns
-- unsanctioned collection sources
-- improper data handling
-- weak retention controls
+---
 
-## Control priorities
-- approved-source catalog
-- data minimization/retention policy
-- reviewed evidence chain
+## OPSEC quick wins
 
-## 2-minute answer skeleton
-- Definition + boundary
-- Failure mechanism
-- Impact chain
-- Mitigation plan
-- Verification criteria
+Dedicated **profile**/VM · **rate** limits · **no** **personal** **blur** · **encrypted** **notes** · **approved** **tools**
+
+---
+
+## Rules of thumb
+
+**RoE** **first** · **minimize** **PII** · **cite** **sources** + **time** · **corroborate** · **escalate** **legal** **gray** **zones**
+
+---
+
+## Not OSINT (without extra approval)
+
+**Credential** **stuffing** · **port** **scanning** · **exploitation** · **bypassing** **auth**
+
+---
+
+## Cross-read
+
+`OSINT for Security Assessments` · `Initial Access` · `Penetration Testing`
+
+---
+
+## One-liner
+
+“**Plan**, **scope**, **collect** **passively**, **document** **provenance**, **protect** **yourself** **and** **subjects** **with** **legal** **+** **OPSEC** **hygiene**.”

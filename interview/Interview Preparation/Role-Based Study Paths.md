@@ -8,7 +8,7 @@ These paths turn the topic library into **ordered curricula**. Durations assume 
 2. Pick a path below.
 3. For each topic, follow the **[Content Mastery Framework](Content%20Mastery%20Framework.md)** order: Comprehensive → Critical Clarification → Interview Q&A → Quick Reference.
 4. Use the **[Topic Syllabus Index](Topic%20Syllabus%20Index.md)** for prerequisites when a topic feels too hard.
-5. Practice by interview round with **[Interview Round Playbook](Interview%20Round%20Playbook.md)**; score drills with **[Topic Readiness Rubric - Timed Scoring](Topic%20Readiness%20Rubric%20-%20Timed%20Scoring.md)**; keep behavioral stories in **[Story Library Template - Behavioral Interviews](Story%20Library%20Template%20-%20Behavioral%20Interviews.md)**.
+5. Practice by interview round with **[Interview Round Playbook](Interview%20Round%20Playbook.md)**; score drills with **[Topic Readiness Rubric - Timed Scoring](Topic%20Readiness%20Rubric%20-%20Timed%20Scoring.md)**; keep behavioral stories in **[Story Library Template - Behavioral Interviews](Story%20Library%20Template%20-%20Behavioral%20Interviews.md)**; adapt loops with **[Company-Specific Interview Tracks](Company-Specific%20Interview%20Tracks.md)**.
 
 ---
 

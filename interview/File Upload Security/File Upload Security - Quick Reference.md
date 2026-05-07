@@ -1,26 +1,55 @@
-# File Upload Security - Quick Reference
+# File Upload Security — Quick Reference
 
-## 60-second definition
-- Secure ingestion/storage/serving of user-provided files.
+## Golden rules
 
-## High-signal indicators
-- public upload endpoints
-- media transformation workers
-- file preview/download features
+**Allowlist** · **magic** verify · **re-encode** · **random** names · **no** webroot · **least** privilege processors
 
-## Common failure patterns
-- extension-only checks
-- uploads in executable paths
-- unsafe archive extraction
+---
 
-## Control priorities
-- magic-byte + MIME + extension allowlist
-- non-executable isolated storage
-- re-encode/sanitize and malware scan
+## Attack cheat sheet
 
-## 2-minute answer skeleton
-- Definition + boundary
-- Failure mechanism
-- Impact chain
-- Mitigation plan
-- Verification criteria
+| Attack | Mitigation hint |
+|--------|-----------------|
+| Webshell | No **exec** path; **object** storage |
+| Polyglot | **Re-encode** / transcode |
+| Zip-slip | **Canonical** path **prefix** check |
+| SVG XSS | Rasterize or **strict** sanitize + **CSP** |
+| ImageTragick | **policy.xml**; **disable** MVG/MSL |
+| SSRF via ffmpeg | **Sandbox**; **no** **URL** inputs |
+
+---
+
+## CWEs
+
+- **CWE-434** — dangerous file type  
+- **CWE-22** — path traversal (archives)
+
+---
+
+## Headers / delivery
+
+`Content-Disposition: attachment` where appropriate · **`X-Content-Type-Options: nosniff`** · correct **Content-Type**
+
+---
+
+## Tools
+
+`file` / `xxd` · Burp · ImageMagick **policy** · container **seccomp**
+
+---
+
+## Cross-read
+
+`RCE` · `XSS` · `SSRF` · `Container Security`
+
+## Practice links
+
+- Labs map: `../Practice & Exercises/Labs Mapping.md`
+- Payload references: `../Practice & Exercises/Payload References.md`
+- Code examples: `../examples/file-upload/`
+
+---
+
+## 30-second pitch
+
+“Untrusted bytes: **allowlist** + **magic** + **re-encode**, **random** keys in **private** storage, **harden** ImageMagick/ffmpeg, **prevent** zip-slip, **CSP** for any **HTML/SVG** risk.”

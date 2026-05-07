@@ -2,124 +2,128 @@
 
 ## At a glance
 
-This module is interview-focused depth on **understanding evasion tactics to design resilient layered endpoint defense**. It is written for AppSec/Product Security interviews where you are expected to explain both attacker mechanics and practical defensive engineering decisions.
+**Endpoint Detection and Response (EDR)** products collect **telemetry** (process, file, network, registry, **kernel** callbacks) to **detect** and **investigate** **malware**. **Evasion** techniques try to **blind**, **disable**, or **overload** sensors—**direct syscalls**, **unhooking**, **BYOVD**, **parent** **process** **masquerading**, **encryption**. **Defense** is **sensor** **hardening**, **kernel** **telemetry** **parity**, **tamper** **protection**, and **assuming** **gaps**.
+
+This module is **awareness** for **blue** and **purple** teams—not a **playbook** for **unauthorized** use.
+
+Aligned with the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.
 
 ---
 
 ## Learning outcomes
 
-After this module, you should be able to:
-
-- Explain the mechanism and trust boundaries for `edr-evasion-awareness-and-defense` clearly in 2-3 minutes.
-- Identify high-signal attack/abuse indicators in real systems.
-- Propose mitigation strategy with rollout and verification steps.
-- Handle senior follow-up questions without switching to generic statements.
+- Map **user-mode** hooks vs **kernel** callbacks vs **ETW**.
+- Explain **why** **direct** **syscalls** **change** **visibility**.
+- Describe **BYOVD** risk and **driver** **allow-listing**.
+- Propose **detection** for **evasion** **behaviors** themselves.
 
 ---
 
-## What interviewers evaluate
+## Prerequisites
 
-Interviewers generally score this topic across four dimensions:
-
-1. **Technical correctness** - Do you explain the mechanism accurately?
-2. **Risk judgment** - Can you separate noisy issues from business-critical risk?
-3. **Implementation realism** - Are controls deployable in production constraints?
-4. **Verification maturity** - Do you describe how to prove controls actually work?
+- **[Windows Security Boundaries](../Windows%20Security%20Boundaries/)**
+- **[Shellcode Fundamentals and Detection](../Shellcode%20Fundamentals%20and%20Detection/)**
+- **[Initial Access and Attack Surface Entry](../Initial%20Access%20and%20Attack%20Surface%20Entry/)**
 
 ---
 
-## Threat model lens
+## L1 — EDR telemetry model
 
-### High-signal indicators
+```
+App ──► user-mode hooks (optional) ──► kernel callbacks / ETW providers ──► EDR cloud
+```
 
-- sudden blind spots in detections
-- living-off-the-land abuse
-- telemetry suppression attempts
-
-### Typical failure patterns
-
-- single-vendor dependency
-- no detection-as-code validation
-- weak hardening baseline
-
-### Defensive control priorities
-
-- defense-in-depth endpoint strategy
-- detection validation exercises
-- tamper-protection and policy governance
+- **Visibility** differs by **OS** **build**, **sensor** **mode**, and **policy**.
+- **Blind spots** are **expected**—design **defense** **in** **depth**.
 
 ---
 
-## Practical interview answer structure (90-150 seconds)
+## L2 — Evasion variant map (defensive framing)
 
-Use this structure when asked open-ended questions:
-
-1. **Definition + boundary:** one-sentence definition and where it appears.
-2. **Failure mechanism:** what check/control breaks and why.
-3. **Impact chain:** technical impact -> business impact.
-4. **Mitigation plan:** design-time control + runtime detection.
-5. **Verification:** test or telemetry proving fix effectiveness.
-
-This format is usually stronger than listing payload names or tool commands.
+| Class | Idea | Detection angle |
+|-------|------|-----------------|
+| **API unhooking** | Restore **clean** **ntdll** **stubs** | **Integrity** checks, **module** **baseline** |
+| **Direct syscalls** | Bypass **Win32** **hooks** | **Syscall** **telemetry** from **kernel**, **call** **stack** **anomalies** |
+| **BYOVD** | **Vulnerable** **signed** **driver** | **Driver** **loads**, **new** **certs**, **HVCI** **constraints** |
+| **PPID spoofing** | Fake **parent** | **Creator** **chain** **impossible** **edges** |
+| **Living-off-the-land** | **No** **malware** **binary** | **Rare** **command** **lines**, **script** **blocks** |
 
 ---
 
-## Scenario drills (interview-ready)
+## L2 — Why “more hooks” isn’t enough
 
-### Scenario 1 - Discovery phase
-
-- You are asked to assess a production-like environment with limited time.
-- State your first 3 steps to scope and collect high-value evidence.
-- Explain what you will **not** do without explicit authorization.
-
-### Scenario 2 - Validation phase
-
-- A finding looks plausible but noisy.
-- Explain your reproducibility bar before raising severity.
-- Describe how you avoid false positives while keeping speed.
-
-### Scenario 3 - Remediation phase
-
-- Engineering requests a low-friction fix this sprint.
-- Provide short-term guardrails and long-term structural fix.
-- Include owner, verification metric, and rollback risk.
+- **Performance** and **stability** cap **hook** density.
+- **Kernel** **exploits** **subvert** **user** **sensors**.
+- **Encryption** of **C2** **blinds** **content** inspection—**behavior** still **exists**.
 
 ---
 
-## Senior/Staff discussion points
+## L2 — BYOVD (conceptual)
 
-Use these to stand out in experienced loops:
+**Attack:** load **known** **vulnerable** **signed** **driver** → **arbitrary** **kernel** **R/W** → **disable** **callbacks**.
 
-- How this topic intersects with SDLC and platform standards.
-- How you measure trend reduction, not just one-off fixes.
-- How detection quality and remediation quality are linked.
-- How to run this safely under legal/compliance constraints.
+**Defense:** **HVCI**/memory integrity, **WDAC** for **drivers**, **revoked** **certs** **monitoring**, **Microsoft** **vulnerable** **driver** **blocklist** (concept—keep **updated**).
 
 ---
 
-## Verification checklist
+## Detection opportunities
 
-- [ ] Reproduction path documented with stable steps.
-- [ ] Impact statement includes affected assets/users.
-- [ ] Mitigation includes design-time and runtime controls.
-- [ ] Verification includes objective success criteria.
-- [ ] Residual risk documented if full fix is deferred.
+- **Evasion** **behaviors** are **also** **signals**: **suspicious** **syscall** **stubs**, **ntdll** **.text** **mismatch**.
+- **Kernel** **ETW** (where available) for **process** **creation** with **anomalous** **stacks**.
+- **Firmware** and **driver** **inventory** **drift**.
 
 ---
 
-## Interview follow-up prompts to practice
+## Mitigations (tier order)
 
-- How do you measure EDR resilience objectively?
-- What is your fallback when endpoint telemetry is degraded?
-- What trade-off would you accept if release deadlines are tight?
-- How would this topic change between startup and enterprise scale?
+1. **Keep** **OS** and **sensor** **current**; **enable** **tamper** **protection**.
+2. **HVCI** where **compatible**; **strict** **driver** **policy**.
+3. **Complement** EDR with **network** **visibility** and **identity** **controls**.
+4. **Purple** **exercises** with **safe** **tools** (**Atomic** **Red** **Team** in **lab**).
+
+---
+
+## Labs (authorized)
+
+- **Splunk** / vendor **detection** **engineering** **courses**.
+- **Microsoft** **Defender** **evaluation** **labs**.
+
+---
+
+## Toolchain
+
+**Sysmon**, **OSQuery**, vendor **EDR** **advanced** **hunting**, **pe-sieve**/**moneta** concepts for **hook** **detection**.
+
+---
+
+## Interview clusters
+
+| Level | Prompt |
+|-------|--------|
+| Junior | What does EDR see? |
+| Mid | Why **direct** **syscalls** matter |
+| Senior | BYOVD **response** **runbook** |
+| Staff | **Sensor** **architecture** **tradeoffs** |
+
+**60-second answer:** “EDR **stitches** **user** and **kernel** **telemetry**; **evasion** **targets** **hooks** and **drivers**. I **harden** **with** **HVCI**, **driver** **policy**, **kernel** **visibility**, and **hunt** for **evasion** **artifacts**—while **accepting** **some** **blind** **spots**.”
+
+---
+
+## Authoritative references
+
+- **MITRE ATT&CK** **Defense** **Evasion** (TA0005).
+- **Microsoft** **Windows** **security** **baselines** and **HVCI** guidance.
+- **CERT** guidance on **driver** **signing** abuse patterns.
 
 ---
 
 ## Cross-links
 
-- `Threat Modeling`
-- `Secure Source Code Review`
-- `Product Security Real-World Scenarios`
-- `Risk Prioritization and Security Metrics`
+`Windows Security Boundaries` · `Shellcode Fundamentals and Detection` · `Windows Exploit Mitigations`
 
+---
+
+## Verification checklist
+
+- [ ] Explain **user** **hook** vs **kernel** **callback** **visibility**.
+- [ ] List **three** **non-hook** **telemetry** sources.

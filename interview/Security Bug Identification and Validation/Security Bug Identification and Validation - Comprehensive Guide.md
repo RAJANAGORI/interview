@@ -2,124 +2,112 @@
 
 ## At a glance
 
-This module is interview-focused depth on **distinguishing real vulnerabilities from noise with reproducible evidence**. It is written for AppSec/Product Security interviews where you are expected to explain both attacker mechanics and practical defensive engineering decisions.
+**Security bug identification and validation** is the **end-to-end** craft of **finding** **suspected** **weaknesses** (code review, testing, **reports**) and **proving** **whether** they are **real**, **exploitable**, and **worth** **fixing**—with **clear** **reproduction** **steps**, **impact** **analysis**, and **responsible** **handling**. It sits between **raw** **finding** **noise** and **engineering** **action**, and is **core** to **AppSec**, **PSIRT**, and **assessment** **roles**.
+
+Aligned with **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.
 
 ---
 
 ## Learning outcomes
 
-After this module, you should be able to:
-
-- Explain the mechanism and trust boundaries for `security-bug-identification-and-validation` clearly in 2-3 minutes.
-- Identify high-signal attack/abuse indicators in real systems.
-- Propose mitigation strategy with rollout and verification steps.
-- Handle senior follow-up questions without switching to generic statements.
+- Separate **vulnerability**, **exposure**, **threat**, and **business** **impact**.
+- Build **repro** **packages** engineers **accept** (minimal, **deterministic**, **environment** **notes**).
+- Use **confidence** **levels** and **avoid** **duplicate** **noise**.
+- Navigate **disclosure** **etiquette** (internal, **bug** **bounty**, **vendor**).
 
 ---
 
-## What interviewers evaluate
+## Prerequisites
 
-Interviewers generally score this topic across four dimensions:
-
-1. **Technical correctness** - Do you explain the mechanism accurately?
-2. **Risk judgment** - Can you separate noisy issues from business-critical risk?
-3. **Implementation realism** - Are controls deployable in production constraints?
-4. **Verification maturity** - Do you describe how to prove controls actually work?
+- **[Rapid Security Triage (Fast Checking)](../Rapid%20Security%20Triage%20(Fast%20Checking)/)**  
+- **[Secure Source Code Review](../Secure%20Source%20Code%20Review/)**  
+- **[Penetration Testing and Security Assessment](../Penetration%20Testing%20and%20Security%20Assessment/)**
 
 ---
 
-## Threat model lens
+## L1 — Identification sources
 
-### High-signal indicators
-
-- manual testing workflows
-- bug bounty triage
-- internal validation queues
-
-### Typical failure patterns
-
-- non-reproducible reports
-- missing root cause notes
-- weak remediation mapping
-
-### Defensive control priorities
-
-- minimum evidence checklist
-- root-cause tagging taxonomy
-- validation-to-remediation handoff
+| Source | Notes |
+|--------|--------|
+| **Manual code review** | **Sink** **analysis**, **data** **flow** |
+| **SAST/DAST/IAST** | **Triage** **findings** |
+| **Fuzzing** | **Crashes** → **security** **classification** |
+| **External** **reports** | **Bug** **bounty**, **researcher** |
+| **Monitoring** | **Anomaly** **→** **hypothesis** |
 
 ---
 
-## Practical interview answer structure (90-150 seconds)
+## L2 — Validation workflow
 
-Use this structure when asked open-ended questions:
-
-1. **Definition + boundary:** one-sentence definition and where it appears.
-2. **Failure mechanism:** what check/control breaks and why.
-3. **Impact chain:** technical impact -> business impact.
-4. **Mitigation plan:** design-time control + runtime detection.
-5. **Verification:** test or telemetry proving fix effectiveness.
-
-This format is usually stronger than listing payload names or tool commands.
+1. **Understand** **claimed** **behavior** (read code, **trace** **request**).  
+2. **Reproduce** on **controlled** **build**; **capture** **evidence** (HTTP, **screenshots**, **logs**).  
+3. **Minimize** **steps**; **remove** **attacker** **assumptions** **that** **aren’t** **realistic**.  
+4. **Assess** **impact**: **CIA**, **authZ**, **users** **affected**, **data** **classes**.  
+5. **Check** **mitigations**: **WAF**, **CSP**, **network** **segmentation**—**real** **or** **paper**?  
+6. **Score** **severity** with **environmental** **context** (not **CVSS** **alone**).  
+7. **File** **ticket** with **owner**, **SLA**, **retest** **criteria**.
 
 ---
 
-## Scenario drills (interview-ready)
+## L2 — Evidence quality bar
 
-### Scenario 1 - Discovery phase
-
-- You are asked to assess a production-like environment with limited time.
-- State your first 3 steps to scope and collect high-value evidence.
-- Explain what you will **not** do without explicit authorization.
-
-### Scenario 2 - Validation phase
-
-- A finding looks plausible but noisy.
-- Explain your reproducibility bar before raising severity.
-- Describe how you avoid false positives while keeping speed.
-
-### Scenario 3 - Remediation phase
-
-- Engineering requests a low-friction fix this sprint.
-- Provide short-term guardrails and long-term structural fix.
-- Include owner, verification metric, and rollback risk.
+**Strong:** **curl** **commands**, **Burp** **project** **excerpt**, **git** **commit** **hash**, **test** **account** **role** **documented**.  
+**Weak:** “**maybe** **XSS**” **without** **browser** **context**; **screenshot** **only** **with** **no** **HTTP**.
 
 ---
 
-## Senior/Staff discussion points
+## L3 — Common false positives
 
-Use these to stand out in experienced loops:
-
-- How this topic intersects with SDLC and platform standards.
-- How you measure trend reduction, not just one-off fixes.
-- How detection quality and remediation quality are linked.
-- How to run this safely under legal/compliance constraints.
+- **Self-XSS** **presented** as **stored**.  
+- **Issues** **blocked** by **default** **framework** **behavior** **(CSRF** **token** **already** **there**).  
+- **Dependency** **CVE** **not** **reachable** **(dead** **code**).  
+- **Intended** **behavior** **misread** as **bug** (**public** **blog** **is** **public**).
 
 ---
 
-## Verification checklist
+## L3 — Chaining and “works as designed”
 
-- [ ] Reproduction path documented with stable steps.
-- [ ] Impact statement includes affected assets/users.
-- [ ] Mitigation includes design-time and runtime controls.
-- [ ] Verification includes objective success criteria.
-- [ ] Residual risk documented if full fix is deferred.
+- **Low** **severity** **finding** **+** **second** **bug** **may** **be** **Critical**—**document** **chains** **carefully**.  
+- **Risk** **acceptance** **requires** **named** **owner** and **expiry**—**not** **silent** **wontfix**.
 
 ---
 
-## Interview follow-up prompts to practice
+## Interview clusters
 
-- What is your minimum bar before filing high severity?
-- How do you reduce duplicate bug reports?
-- What trade-off would you accept if release deadlines are tight?
-- How would this topic change between startup and enterprise scale?
+### Junior
+
+- Difference between **bug** and **vulnerability**?
+
+### Mid
+
+- What makes a **good** **repro**?
+
+### Senior
+
+- How do you **push** **back** on **inflated** **severity** **without** **damaging** **trust**?
+
+### Staff
+
+- **Metrics** for **validation** **team** **quality** (**reopen** **rate**, **time** **to** **confirm**).
+
+---
+
+## Authoritative references
+
+- **FIRST** **vulnerability** **coordination** **practices**  
+- **ISO** **29147** themes (disclosure)  
+- **OWASP** **Testing** **Guide** (validation **methodology**)
 
 ---
 
 ## Cross-links
 
-- `Threat Modeling`
-- `Secure Source Code Review`
-- `Product Security Real-World Scenarios`
-- `Risk Prioritization and Security Metrics`
+`Rapid Triage` · `Vulnerability Management` · `Risk Prioritization` · `Secure Code Review` · `Crash Analysis`
 
+---
+
+## Verification checklist
+
+- [ ] **Write** **one** **minimal** **repro** **from** **scratch**.  
+- [ ] **Explain** **environmental** **CVSS** **in** **60** **seconds**.  
+- [ ] **Close** **one** **false** **positive** **with** **respectful** **language**.

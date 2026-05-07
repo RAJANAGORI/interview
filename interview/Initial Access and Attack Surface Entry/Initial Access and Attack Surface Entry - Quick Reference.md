@@ -1,26 +1,35 @@
-# Initial Access and Attack Surface Entry - Quick Reference
+# Initial Access and Attack Surface Entry — Quick Reference
 
-## 60-second definition
-- Common initial foothold paths and pre-entry exposure reduction.
+## ATT&CK
 
-## High-signal indicators
-- public-facing auth surfaces
-- email/workflow entry points
-- misconfigured internet services
+**TA0001** Initial Access — foothold **before** **lateral** **movement**
 
-## Common failure patterns
-- asset inventory gaps
-- weak external hardening baseline
-- credential hygiene issues
+---
 
-## Control priorities
-- external ASM monitoring
-- hardened identity entry points
-- attack-path informed hardening
+## Common vectors
 
-## 2-minute answer skeleton
-- Definition + boundary
-- Failure mechanism
-- Impact chain
-- Mitigation plan
-- Verification criteria
+Phish · **valid** accounts · **edge** **RCE** · **supply** chain · **trusted** relationship
+
+---
+
+## Controls stack
+
+Shrink **surface** · **phishing-resistant** MFA · **CA**/**device** posture · **fast** **edge** **patch** · **segmentation**
+
+---
+
+## Detection
+
+Auth **anomalies** · email **threat** · **perimeter** **telemetry** · **first-run** **endpoint** **behaviors**
+
+---
+
+## Cross-read
+
+`Threat Modeling` · `Supply Chain` · `SSRF` · `Advanced Red Team Operations`
+
+---
+
+## One-liner
+
+“**Inventory** **externals**, **kill** **anonymous** **admin**, **harden** **identity**, **patch** **edge**, **segment**, **detect** **early**.”

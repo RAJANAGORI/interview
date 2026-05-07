@@ -1,26 +1,51 @@
-# Fuzzing Methodology and Campaign Design - Quick Reference
+# Fuzzing Methodology and Campaign Design — Quick Reference
 
-## 60-second definition
-- Planning sustained fuzz campaigns with measurable risk reduction.
+## Lifecycle
 
-## High-signal indicators
-- high parser attack surface
-- historical memory-safety bugs
-- critical protocol handlers
+`inventory → prioritize → harness + seeds → run (+sanitizer) → dedup/triage → fix → regression seeds`
 
-## Common failure patterns
-- no objective metric for campaign success
-- poor ownership transfer
-- no remediation SLA linkage
+---
 
-## Control priorities
-- campaign charter with targets and KPIs
-- triage routing to owning teams
-- defect class trend tracking
+## Pick targets
 
-## 2-minute answer skeleton
-- Definition + boundary
-- Failure mechanism
-- Impact chain
-- Mitigation plan
-- Verification criteria
+Network exposure · user-controlled formats · **privilege** · historical **bug density** · harness cost
+
+---
+
+## Strategies
+
+| Input | Lean toward |
+|-------|-------------|
+| Opaque binary | Coverage-guided **mutation** + rich seeds |
+| Textual protocol | **Dictionary** + mutation |
+| Strict grammar | **Generation** / structure-aware |
+
+---
+
+## Metrics that matter
+
+New **edges**/week · **unique** security bugs · **MTTR** for crashers · job **uptime** · open **S0/S1**
+
+---
+
+## Governance
+
+**Owner** per target · **SLA** · dashboards · **no** silent **risk accept** without named accountability
+
+---
+
+## Toolchain
+
+libFuzzer · AFL++ · honggfuzz · ClusterFuzz / OSS-Fuzz patterns · **llvm-cov**
+
+---
+
+## Cross-read
+
+`Fuzzing Security Testing` · `Crash Analysis for Security` · `Secure CI CD Pipeline Security`
+
+---
+
+## One-liner
+
+“**Risk-ranked** inventory, **owned** harnesses with **sanitizers**, **coverage-aware** ops, **deduped** triage, and **regression** seeds so fixes stick.”

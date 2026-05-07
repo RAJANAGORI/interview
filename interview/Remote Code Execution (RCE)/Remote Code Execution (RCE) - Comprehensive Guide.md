@@ -2,124 +2,167 @@
 
 ## At a glance
 
-This module is interview-focused depth on **arbitrary command/code execution and blast-radius control**. It is written for AppSec/Product Security interviews where you are expected to explain both attacker mechanics and practical defensive engineering decisions.
+**Remote code execution (RCE)** means an attacker can **cause your system to run attacker-chosen code or system commands** on a machine you control—typically the **application server**, **worker**, or **container**. Vectors include **command injection**, **unsafe deserialization**, **template injection**, **expression language** injection, **known CVEs** in dependencies, and **misconfigured** plugins/runtimes. **Impact** scales with **privilege**, **network reachability**, and **secrets** on the host—not every RCE is instant “root,” but it is almost always **critical** from a risk standpoint.
+
+Aligned with the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.
 
 ---
 
 ## Learning outcomes
 
-After this module, you should be able to:
-
-- Explain the mechanism and trust boundaries for `remote-code-execution-rce` clearly in 2-3 minutes.
-- Identify high-signal attack/abuse indicators in real systems.
-- Propose mitigation strategy with rollout and verification steps.
-- Handle senior follow-up questions without switching to generic statements.
+- Map **major RCE families** (injection vs gadget chains vs memory corruption at high level).
+- Explain **defense layers**: safe APIs, sandboxing, dependency hygiene, **WAF** as secondary.
+- Discuss **incident** steps: scope, contain, rotate secrets, patch, hunt persistence.
+- Answer **senior** trade-offs: shell vs `exec`, containers vs VMs, **read-only** FS.
 
 ---
 
-## What interviewers evaluate
+## Prerequisites
 
-Interviewers generally score this topic across four dimensions:
-
-1. **Technical correctness** - Do you explain the mechanism accurately?
-2. **Risk judgment** - Can you separate noisy issues from business-critical risk?
-3. **Implementation realism** - Are controls deployable in production constraints?
-4. **Verification maturity** - Do you describe how to prove controls actually work?
+- **[SQL Injection](../SQL%20Injection/)**, **[SSRF](../SSRF/)**, **[Insecure Deserialization](../Insecure%20Deserialization/)**, **[SSTI](../Server-Side%20Template%20Injection%20(SSTI)/)** — common **paths** to RCE.
+- **[Container Security](../Container%20Security/)** — blast radius containment.
 
 ---
 
-## Threat model lens
+## L1 — What counts as RCE?
 
-### High-signal indicators
+**RCE:** Attacker supplies input that becomes **code execution** in the **victim process** (language VM, shell, template engine, expression evaluator, or native code via memory corruption).
 
-- shell command wrappers
-- plugin execution paths
-- known vulnerable dependency surfaces
-
-### Typical failure patterns
-
-- command injection sinks
-- runtime over-privilege
-- patch lag on exposed services
-
-### Defensive control priorities
-
-- safe API calls over shell
-- least-privilege process model
-- runtime isolation and egress controls
+**Not always RCE:** **SQLi** that only reads data; **XSS** in browser (different trust boundary)—unless interviewer says “RCE on admin’s browser” via **deserialization** in a browser context (rare framing).
 
 ---
 
-## Practical interview answer structure (90-150 seconds)
+## L2 — Primary vectors (interview taxonomy)
 
-Use this structure when asked open-ended questions:
-
-1. **Definition + boundary:** one-sentence definition and where it appears.
-2. **Failure mechanism:** what check/control breaks and why.
-3. **Impact chain:** technical impact -> business impact.
-4. **Mitigation plan:** design-time control + runtime detection.
-5. **Verification:** test or telemetry proving fix effectiveness.
-
-This format is usually stronger than listing payload names or tool commands.
-
----
-
-## Scenario drills (interview-ready)
-
-### Scenario 1 - Discovery phase
-
-- You are asked to assess a production-like environment with limited time.
-- State your first 3 steps to scope and collect high-value evidence.
-- Explain what you will **not** do without explicit authorization.
-
-### Scenario 2 - Validation phase
-
-- A finding looks plausible but noisy.
-- Explain your reproducibility bar before raising severity.
-- Describe how you avoid false positives while keeping speed.
-
-### Scenario 3 - Remediation phase
-
-- Engineering requests a low-friction fix this sprint.
-- Provide short-term guardrails and long-term structural fix.
-- Include owner, verification metric, and rollback risk.
+| Family | Mechanism sketch |
+|--------|------------------|
+| **OS command injection** | User input passed to `shell=True`, `exec()`, `os.system`, `Process.start` with concatenation |
+| **Code injection** | `eval`, unsafe **dynamic** `import`, **expression languages** (OGNL, SpEL, EL) |
+| **Deserialization** | Untrusted blob → object graph → **gadget chain** → runtime primitive |
+| **SSTI** | User controls template → **sandbox escape** |
+| **Dependency / supply chain** | Vulnerable library **JNDI** lookup, **Log4j**, **ImageMagick**, **Struts**, etc. |
+| **File upload + execution** | Web shell in executable path; **polyglot** files |
+| **Memory corruption** | Buffer overflow, UAF → shellcode (often **exploit dev** track; still nameable in AppSec) |
 
 ---
 
-## Senior/Staff discussion points
+## L2 — Minimal vulnerable vs safe patterns
 
-Use these to stand out in experienced loops:
+### Command injection (Python — illustrative)
 
-- How this topic intersects with SDLC and platform standards.
-- How you measure trend reduction, not just one-off fixes.
-- How detection quality and remediation quality are linked.
-- How to run this safely under legal/compliance constraints.
+**Vulnerable:**
+
+```python
+import os
+user = request.args.get("q")
+os.system(f"convert input.png -resize 50% out.png {user}")  # NEVER
+```
+
+**Safer:** Use **`subprocess.run`** with **argument list**, **no shell**, **fixed** binary path; validate **allowlisted** flags only.
+
+```python
+subprocess.run(["/usr/bin/convert", "input.png", "-resize", "50%", "out.png"], check=True)
+```
+
+### Java JNDI / Log4j class of issues (pattern)
+
+Untrusted data triggers a **lookup** to an attacker server → **loads** attacker-controlled class. **Fix:** patch runtime, **disable** remote JNDI/class loading, **network egress** restrictions.
 
 ---
 
-## Verification checklist
+## Named examples (verify versions in real incidents)
 
-- [ ] Reproduction path documented with stable steps.
-- [ ] Impact statement includes affected assets/users.
-- [ ] Mitigation includes design-time and runtime controls.
-- [ ] Verification includes objective success criteria.
-- [ ] Residual risk documented if full fix is deferred.
+| Example | Primitive |
+|---------|-----------|
+| **Log4Shell (Log4j CVE-2021-44228)** | JNDI lookup from log message → remote class load |
+| **Spring4Shell** area (Spring Framework RCE classes, **verify** CVE IDs for interview) | Auto-binding / classloader abuse (study **current** advisories) |
+| **ImageTragick** | Image decoder → `delegate` command execution |
+| **Deserialization chains** | **ysoserial**, **marshalsec** (Java); **pickle** abuse (Python) |
+
+Use **vendor advisories** and **NVD** for exact CVE metadata when preparing employer-specific loops.
 
 ---
 
-## Interview follow-up prompts to practice
+## L3 — Detection
 
-- How do you prioritize RCE vs auth bypass?
-- What post-exploit telemetry is highest value?
-- What trade-off would you accept if release deadlines are tight?
-- How would this topic change between startup and enterprise scale?
+- **Logs:** unexpected **child processes**, **`/bin/sh`**, **`curl`/`wget`** from app user.
+- **EDR / Falco:** shell spawned by **java**, **node**, **ruby**.
+- **Static analysis:** **Semgrep** rules for `exec`, `eval`, `pickle.loads`, `ObjectInputStream`, `yaml.load` unsafe patterns.
+- **Dependencies:** **SCA** (Snyk, Dependabot, OSV) for **known RCE CVEs**.
+
+---
+
+## L3 — Mitigations (tiered)
+
+1. **Eliminate shell:** **Never** pass user data to a shell; **argv arrays** only.  
+2. **No `eval` on untrusted input.**  
+3. **Deserialization:** **sign** payloads, use **JSON** + DTOs, **avoid** native binary formats from users.  
+4. **Templates:** **logic-less** templates or **strict** sandboxes.  
+5. **Patch** dependencies **fast** on RCE CVEs; **SBOM** + **automated** PRs.  
+6. **Runtime:** **non-root** containers, **read-only rootfs**, **seccomp/AppArmor**, **egress** deny-by-default.  
+7. **Secrets:** assume **exfil** after RCE—**rotate**, **short-lived** credentials.
+
+---
+
+## L3 — Why “we have a WAF” fails interviews
+
+WAFs **miss** deserialization, **file** bugs, **internal** admin plugins, and **novel** gadgets. **Depth:** code + dependency + **runtime** hardening.
+
+---
+
+## Hands-on (authorized labs)
+
+- **DVWA** / **WebGoat** command injection modules.  
+- **PortSwigger** SSTI / deserialization labs.  
+- Local **Log4j** test harness in an **isolated** VM (lab only).
+
+**Tools:** `semgrep`, `codeql`, `bandit` (Python), dependency scanners.
+
+---
+
+## L4 — Interview clusters
+
+### Junior
+
+- Define RCE; difference from **SQLi** reading data.
+
+### Mid
+
+- Safe **`subprocess`** pattern; why **shell=True** is toxic.
+
+### Senior
+
+- **Container** breakout vs **app** RCE—what limits impact?  
+- **Log4j** response in **first 24 hours** (contain, patch, hunt, rotate).
+
+### Staff
+
+- **Org-wide** control: **default-deny egress**, **Falco** alerts, **SLSA** / provenance for **artifacts**.
+
+---
+
+## Authoritative references
+
+- **CWE-78** (OS command injection), **CWE-94** (code injection), **CWE-502** (unsafe deserialization)  
+- **OWASP** cheat sheets: **Injection**, **Deserialization**  
+- **NIST** SSDF themes for **patch** and **build** security
 
 ---
 
 ## Cross-links
 
-- `Threat Modeling`
-- `Secure Source Code Review`
-- `Product Security Real-World Scenarios`
-- `Risk Prioritization and Security Metrics`
+- **[Insecure Deserialization](../Insecure%20Deserialization/)**  
+- **[Server-Side Template Injection (SSTI)](../Server-Side%20Template%20Injection%20(SSTI)/)**  
+- **[File Upload Security](../File%20Upload%20Security/)**  
+- **[Software Supply Chain Security](../Software%20Supply%20Chain%20Security/)**  
+- **[Production Security Incident Response](../Production%20Security%20Incident%20Response/)**  
+- **[Exploit Development](../Exploit%20Development/)** (mitigation-aware depth)
 
+---
+
+## Verification checklist
+
+- [ ] Explain **three** distinct paths to RCE **without** saying “injection” only once.  
+- [ ] Whiteboard **safe** vs **unsafe** subprocess.  
+- [ ] Walk **Log4j** at **architecture** level (lookup → load → code).  
+- [ ] List **four** **container** hardening controls that **limit** post-RCE.

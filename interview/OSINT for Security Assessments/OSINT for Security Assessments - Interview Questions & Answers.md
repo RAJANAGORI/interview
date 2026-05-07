@@ -1,46 +1,58 @@
 # OSINT for Security Assessments - Interview Questions & Answers
 
-## Core questions
+## 60-second answer
 
-### Q1: Give a concise explanation of this topic
+**Q: How do you use OSINT in a security assessment?**
 
-**Answer:** OSINT for Security Assessments concerns external asset and exposure discovery for scoped security assessments. In interviews, I explain the boundary, failure mechanism, impact chain, and verification approach rather than only naming techniques.
-
-### Q2: How do you separate real risk from noisy signals
-
-**Answer:** I require reproducibility, clear trust-boundary violation, and measurable impact. I avoid severity inflation and document confidence level explicitly.
-
-### Q3: What is your mitigation strategy style
-
-**Answer:** I pair **immediate containment** (guardrails, policy, monitoring) with **structural fixes** (architecture, parser/canonicalization, privilege model, or workflow controls).
-
-### Q4: How do you verify remediation quality
-
-**Answer:** I define objective checks before implementation: negative tests, telemetry expectations, and post-fix regression runs. Closure requires evidence, not assumption.
-
-### Q5: How do you communicate this to non-security stakeholders
-
-**Answer:** I translate technical findings into business outcomes, estimate likelihood + blast radius, and propose phased remediation with clear owner and timeline.
-
-## Advanced follow-ups
-
-### Q6: What does “interview-ready depth” look like here
-
-**Answer:** I can explain mechanism in under 2 minutes, handle edge cases/follow-ups, and map controls to production constraints.
-
-### Q7: What mistakes do candidates make
-
-**Answer:** Over-indexing on payload/tool trivia, skipping trust-boundary explanation, and not discussing verification.
-
-### Q8: What is your 7-day improvement plan for this topic
-
-**Answer:** Day 1-2 mechanism review, day 3 scenario drill, day 4 mock follow-ups, day 5 remediation patterns, day 6 verification patterns, day 7 timed answer rehearsal.
+**A:** Under **written scope**, I use **passive** sources—**DNS**, **certificate transparency**, **code** repos, **search** engines, and sometimes **internet-wide** scanners—to map **subdomains**, **tech** stacks, and **exposed** services **before** deeper testing. I **separate** passive collection from **active** scanning unless the **RoE** allows it, **minimize** **PII**, **cite** sources in the report, and **stop** at **out-of-scope** assets like **third-party** SaaS or **acquired** companies unless included. **OPSEC**: dedicated **profiles**, **rate** limits, and **legal** review for **sensitive** jurisdictions.
 
 ---
 
-## Depth: Interview follow-ups — OSINT for Security Assessments
+## Scope & law
 
-- How do you avoid false positives in external recon?
-- How does OSINT feed threat modeling?
-- What telemetry would show prevention is failing?
-- What policy guardrail would you introduce at platform level?
+### Q: Is using Shodan OSINT?
+
+**A:** **Querying** **Shodan** is **using** a **third-party** **database** of **banners**—often treated as **passive** **intel** **collection**, but **confirm** **contract** and **local** **law**; some clients require **no** **third-party** **paid** intel.
+
+### Q: Employee LinkedIn—fair game?
+
+**Reality:** **Public** **profiles** are **public**, but **mass** **harvesting** **PII** may violate **policy** or **privacy** **law**. **Use** **minimum** necessary for **tech** **stack** or **org** **chart** **context**.
+
+---
+
+## Technique
+
+### Q: What are certificate transparency logs useful for?
+
+**A:** **Discover** **hostnames** issued **TLS** certs—including **internal**-named **hosts** **misissued** or **staging** **domains**—often **before** or **without** **public** **DNS** **enumeration**.
+
+### Q: GitHub secret scanning in assessments?
+
+**A:** **Clone** **only** **repos** **in** **scope**; run **trufflehog**/gitleaks; **report** **keys** with **rotation** **advice**—**don’t** **use** **secrets** **maliciously**.
+
+---
+
+## Deliverables
+
+### Q: What does a good OSINT section in a report look like?
+
+**A:** **Methodology**, **sources**, **timestamp**, **confidence**, **no** **unnecessary** **personal** **data**, **clear** **mapping** to **later** **exploitation** **attempts** or **risk** **ratings**.
+
+---
+
+## Depth: Follow-ups
+
+- **Correlate** **ASN** **with** **cloud** **egress** **IPs**.  
+- **Brand** **impersonation** **domains** for **phishing** **intel**.  
+- **Dark** **web** **OSINT**—when **out** of **scope** for **AppSec** **roles**.
+
+---
+
+## Mock ladder
+
+| Level | Prompt |
+|-------|--------|
+| Junior | OSINT definition. |
+| Mid | **Passive** vs **active**. |
+| Senior | **RoE** **negotiation** for **gray** **areas**. |
+| Staff | **Vendor** **risk** **OSINT** **program**. |

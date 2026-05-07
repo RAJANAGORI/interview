@@ -2,124 +2,152 @@
 
 ## At a glance
 
-This module is interview-focused depth on **common initial foothold paths and pre-entry exposure reduction**. It is written for AppSec/Product Security interviews where you are expected to explain both attacker mechanics and practical defensive engineering decisions.
+**Initial access** is the first **adversary foothold** inside a target environment (MITRE **TA0001**). **Attack surface entry** is the **set of externally reachable** interfaces—**email**, **web**, **remote services**, **identity** flows, **supply chain**, **people**—that can yield that foothold. AppSec interviews often probe **phishing-resistant MFA**, **exposed** **services**, **zero-day** vs **credential** paths, and **detection** at the boundary.
+
+Aligned with the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.
 
 ---
 
 ## Learning outcomes
 
-After this module, you should be able to:
-
-- Explain the mechanism and trust boundaries for `initial-access-and-attack-surface-entry` clearly in 2-3 minutes.
-- Identify high-signal attack/abuse indicators in real systems.
-- Propose mitigation strategy with rollout and verification steps.
-- Handle senior follow-up questions without switching to generic statements.
+- Map **common initial access vectors** to **controls** and **detection** opportunities.
+- Explain **credential** attacks vs **technical** exploits at the **perimeter**.
+- Reason about **supply chain** and **third-party** **trust** as initial access.
+- Prioritize **attack surface reduction** vs **monitoring** given constraints.
 
 ---
 
-## What interviewers evaluate
+## Prerequisites
 
-Interviewers generally score this topic across four dimensions:
-
-1. **Technical correctness** - Do you explain the mechanism accurately?
-2. **Risk judgment** - Can you separate noisy issues from business-critical risk?
-3. **Implementation realism** - Are controls deployable in production constraints?
-4. **Verification maturity** - Do you describe how to prove controls actually work?
+- **[Threat Modeling](../Threat%20Modeling/)** · **[OSINT for Security Assessments](../OSINT%20for%20Security%20Assessments/)** (recon of exposed assets)
+- **[SSRF](../SSRF/)** · **[RCE](../Remote%20Code%20Execution%20(RCE)/)** concepts
+- **[Software Supply Chain Security](../Software%20Supply%20Chain%20Security/)**
 
 ---
 
-## Threat model lens
+## L1 — Attack surface inventory
 
-### High-signal indicators
+```
+Internet ──► [ exposed services / SaaS / IdP / email / VPN / contractors ]
+```
 
-- public-facing auth surfaces
-- email/workflow entry points
-- misconfigured internet services
-
-### Typical failure patterns
-
-- asset inventory gaps
-- weak external hardening baseline
-- credential hygiene issues
-
-### Defensive control priorities
-
-- external ASM monitoring
-- hardened identity entry points
-- attack-path informed hardening
+- **Enumerables:** **DNS**, **certificate transparency**, **Shodan-like** views (authorized), **cloud** **misconfigs**.
+- **Human:** **spear phishing**, **MFA** **fatigue**, **help desk** **social** **engineering**.
+- **Supply chain:** **compromised** **updates**, **malicious** **packages**, **vendor** **VPNs**.
 
 ---
 
-## Practical interview answer structure (90-150 seconds)
+## L2 — Initial access variant map (ATT&CK-aligned)
 
-Use this structure when asked open-ended questions:
-
-1. **Definition + boundary:** one-sentence definition and where it appears.
-2. **Failure mechanism:** what check/control breaks and why.
-3. **Impact chain:** technical impact -> business impact.
-4. **Mitigation plan:** design-time control + runtime detection.
-5. **Verification:** test or telemetry proving fix effectiveness.
-
-This format is usually stronger than listing payload names or tool commands.
+| Vector | Discriminator | Example controls |
+|--------|---------------|------------------|
+| **Valid accounts** | Stolen creds / bought logs | MFA, **phishing-resistant** factors, **session** binding |
+| **Phishing** | User executes payload | **E-mail** **auth**, **link** **protection**, **browser** isolation |
+| **Exploit public-facing app** | CVE / 0-day on edge | **Patch** SLAs, **WAF** depth, **zero** **trust** segmentation |
+| **Trusted relationship** | Vendor access | **VLAN** isolation, **PAM**, **expiring** **standing** access |
+| **Supply chain** | Build / update channel | **SLSA**, **signing**, **dependency** **pinning** |
 
 ---
 
-## Scenario drills (interview-ready)
+## L2 — Code/config example: exposed admin
 
-### Scenario 1 - Discovery phase
+**Anti-pattern:** management UI on `0.0.0.0` without **auth**.
 
-- You are asked to assess a production-like environment with limited time.
-- State your first 3 steps to scope and collect high-value evidence.
-- Explain what you will **not** do without explicit authorization.
+```yaml
+# Anti-pattern (conceptual docker-compose): admin port published
+services:
+  app:
+    ports:
+      - "0.0.0.0:9090:9090"  # admin console
+```
 
-### Scenario 2 - Validation phase
+**Improved:** bind to **loopback** + **SSH** tunnel, or **private** **VPC** only + **SSO**.
 
-- A finding looks plausible but noisy.
-- Explain your reproducibility bar before raising severity.
-- Describe how you avoid false positives while keeping speed.
-
-### Scenario 3 - Remediation phase
-
-- Engineering requests a low-friction fix this sprint.
-- Provide short-term guardrails and long-term structural fix.
-- Include owner, verification metric, and rollback risk.
-
----
-
-## Senior/Staff discussion points
-
-Use these to stand out in experienced loops:
-
-- How this topic intersects with SDLC and platform standards.
-- How you measure trend reduction, not just one-off fixes.
-- How detection quality and remediation quality are linked.
-- How to run this safely under legal/compliance constraints.
+```yaml
+services:
+  app:
+    ports:
+      - "127.0.0.1:9090:9090"
+```
 
 ---
 
-## Verification checklist
+## L2 — Named patterns / incidents
 
-- [ ] Reproduction path documented with stable steps.
-- [ ] Impact statement includes affected assets/users.
-- [ ] Mitigation includes design-time and runtime controls.
-- [ ] Verification includes objective success criteria.
-- [ ] Residual risk documented if full fix is deferred.
+- **SolarWinds (SUNBURST)** — **supply chain** initial access via **trojaned** **update** (2020).
+- **ProxyLogon** (Exchange) — **unauthenticated** **RCE** on **edge** **servers** (**CVE-2021-26855** et al.)—**patch velocity** determined exposure.
+- **Password spray** against **Azure AD** / **O365**—**no** **MFA** tenants **fold**.
 
 ---
 
-## Interview follow-up prompts to practice
+## Detection
 
-- Which initial-access vectors are most common in SaaS breaches?
-- What controls reduce blast radius after first foothold?
-- What trade-off would you accept if release deadlines are tight?
-- How would this topic change between startup and enterprise scale?
+- **Auth** logs: **impossible** travel, **new** device, **legacy** **protocol** use.
+- **Email** **gateway:** **first-seen** URLs, **attachment** **sandbox** misses.
+- **Perimeter:** **WAF** **blocks**, **unexpected** **geos**, **spike** in **4xx/5xx** on **login** paths.
+- **Endpoint:** **first** **execution** of **signed** but **rare** **binaries** from **download** folders.
+
+---
+
+## Mitigations (tier order)
+
+1. **Reduce** surface: **no** admin on internet, **close** **legacy** ports, **IP** allow-lists where viable.
+2. **Strong identity:** **phishing-resistant** MFA, **conditional** access, **device** compliance.
+3. **Patch** **edge** **fast** path for **RCE** classes.
+4. **Segment** so **initial** **access** ≠ **domain** **admin**.
+5. **Detect** early **post-access** activity (C2/beaconing) with **network** and **endpoint** telemetry.
+
+---
+
+## Bypass / failure modes
+
+- **MFA** **push** **fatigue** bypasses **naive** MFA.
+- **Break-glass** accounts **without** **supervision**.
+- **Shadow IT** SaaS **outside** **SSO**.
+
+---
+
+## Labs
+
+- **TryHackMe** / **HTB** **attack** **surface** rooms (authorized).
+- **MITRE ATT&CK** navigator layer for **TA0001**—map to your controls.
+
+---
+
+## Toolchain
+
+**BloodHound** (post-compromise, but informs **path** thinking), **nmap**/**masscan** (authorized), **cloud** **CSPM**, **phishing** simulators, **CT** logs monitoring.
+
+---
+
+## Interview clusters
+
+| Level | Prompt |
+|-------|--------|
+| Junior | Name three initial access vectors |
+| Mid | How does phishing-resistant MFA change risk? |
+| Senior | Design **attack** **surface** review for a **cloud** **migration** |
+| Staff | Tradeoffs: **zero** **standing** **access** vs **ops** **velocity** |
+
+**60-second answer:** “Initial access is the **first** **foothold**—credentials, **phish**, **edge** **RCE**, or **supply** **chain**. I **shrink** **reachable** **surface**, **harden** **identity**, **patch** **edge**, **segment**, and **detect** **early** **auth** and **endpoint** **signals**.”
+
+---
+
+## Authoritative references
+
+- **MITRE ATT&CK** **Initial Access** (TA0001).
+- **NIST SP 800-207** (Zero Trust) — identity and segmentation framing.
+- **CWE-284** / **CWE-306** — improper access control on management interfaces.
 
 ---
 
 ## Cross-links
 
-- `Threat Modeling`
-- `Secure Source Code Review`
-- `Product Security Real-World Scenarios`
-- `Risk Prioritization and Security Metrics`
+`Threat Modeling` · `SSRF` · `Supply Chain` · `Advanced Red Team Operations` · `Defense in Depth`
 
+---
+
+## Verification checklist
+
+- [ ] List **five** **internet** **exposures** you’d **ban** by policy.
+- [ ] Map **one** **real** **incident** to **TA0001** technique.

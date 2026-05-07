@@ -1,87 +1,62 @@
 # File Upload Security - Interview Questions & Answers
 
-## Core questions
+## 60-second answer
 
-### Q1: Give a concise explanation of this topic
+**Q: How do you secure file uploads?**
 
-**Answer:** File Upload Security concerns secure ingestion/storage/serving of user-provided files. In interviews, I explain the boundary, failure mechanism, impact chain, and verification approach rather than only naming techniques.
-
-### Q2: How do you separate real risk from noisy signals
-
-**Answer:** I require reproducibility, clear trust-boundary violation, and measurable impact. I avoid severity inflation and document confidence level explicitly.
-
-### Q3: What is your mitigation strategy style
-
-**Answer:** I pair **immediate containment** (guardrails, policy, monitoring) with **structural fixes** (architecture, parser/canonicalization, privilege model, or workflow controls).
-
-### Q4: How do you verify remediation quality
-
-**Answer:** I define objective checks before implementation: negative tests, telemetry expectations, and post-fix regression runs. Closure requires evidence, not assumption.
-
-### Q5: How do you communicate this to non-security stakeholders
-
-**Answer:** I translate technical findings into business outcomes, estimate likelihood + blast radius, and propose phased remediation with clear owner and timeline.
-
-## Advanced follow-ups
-
-### Q6: What does “interview-ready depth” look like here
-
-**Answer:** I can explain mechanism in under 2 minutes, handle edge cases/follow-ups, and map controls to production constraints.
-
-### Q7: What mistakes do candidates make
-
-**Answer:** Over-indexing on payload/tool trivia, skipping trust-boundary explanation, and not discussing verification.
-
-### Q8: What is your 7-day improvement plan for this topic
-
-**Answer:** Day 1-2 mechanism review, day 3 scenario drill, day 4 mock follow-ups, day 5 remediation patterns, day 6 verification patterns, day 7 timed answer rehearsal.
+**A:** Treat uploads as **untrusted bytes**: **allowlist** file types, verify **magic** signatures—not just extensions or browser MIME—**re-encode** images through a safe library, **randomize** stored names, keep files **outside** the web root or serve via **object storage** with **signed URLs**, and never let the **shell** process user files with **concatenated** commands. Add **size** and **rate** limits, **scan** if the threat model requires, and harden **downstream** tools like **ImageMagick** (`policy.xml`). Watch **zip-slip**, **SVG** **XSS**, and **polyglots**.
 
 ---
 
-## Depth: Interview follow-ups — File Upload Security
+## Mechanics
 
-- How do you safely support SVG and office docs?
-- What telemetry indicates upload abuse campaigns?
-- What telemetry would show prevention is failing?
-- What policy guardrail would you introduce at platform level?
+### Q: Extension vs Content-Type vs magic bytes—which do you trust?
+
+**A:** **Magic** (file signature) is **stronger** than extension or **client** Content-Type, but **attackers** can craft **polyglots**. **Best** practice: allowlist expected **signatures**, then **re-encode** to strip **dual** interpretations.
+
+### Q: What is zip-slip?
+
+**A:** Malicious archive entries with paths like `../../app/config.py` **escape** extract dir. **Fix:** resolve **canonical** path and **verify** it **stays under** target **root**; use **safe** APIs, not **raw** `tarfile`/`ZipFile` without checks.
+
+### Q: Can a “PNG” be XSS?
+
+**A:** **SVG** is XML—if served as **inline** image or mislabeled as HTML, **script** runs. **Policy:** treat SVG as **high risk**—sanitize, strip, or **convert** to raster.
 
 ---
 
-## Flagship Mock Question Ladder — File Upload Security
+## Architecture
 
-**Primary competency axis:** untrusted file ingestion, processing, storage, and serving controls.
+### Q: Where should uploads live?
 
-### Junior (Fundamental clarity)
+**A:** **Object storage** (S3/GCS) with **no** **exec** bit, **private** ACL, **short-lived** **signed** URLs for download. Avoid **co-locating** with **app** **code**.
 
-- Why is extension checking alone not sufficient?
-- What is magic-byte validation and why use it?
-- Why should uploads be stored outside executable paths?
+### Q: ImageMagick in production—your stance?
 
-### Senior (Design and trade-offs)
+**A:** **Pin** version; **policy.xml** **disable** dangerous **coders** (**MVG**, **MSL**, **EPHEMERAL**); run in **isolated** **worker** with **no** **network** if possible; **input** size caps.
 
-- How do you secure media transformation pipelines?
-- How do signed URLs affect download authorization risk?
-- How would you design safe handling for archive uploads?
+---
 
-### Staff (Strategy and scale)
+## Incident / bug bounty
 
-- How do you set enterprise upload policy without breaking product UX?
-- How do you measure upload abuse and control effectiveness?
-- What phased rollout would you use for strict file-type allowlists?
+### Q: Researcher uploaded JSP and got RCE—what failed?
 
-### 10-minute mock drill format
+**A:** Likely **executable** **extension** in **webroot**, **handler** mapping, or **deserialization** in **secondary** **step**. **IR:** **contain**, **rotate** **secrets**, **audit** **upload** **logs**.
 
-- **3 min:** Pick one Junior prompt and answer with definition, mechanism, and one mitigation.
-- **4 min:** Pick one Senior prompt and answer with trade-offs and implementation caveats.
-- **3 min:** Pick one Staff prompt and answer with architecture/policy plus measurement plan.
+---
 
-### Answer quality rubric (quick score)
+## Depth: Follow-ups
 
-Score each answer from 0 to 2 for:
+- **Content-Type** sniffing vs **`X-Content-Type-Options`**.  
+- **Malware** **hosting** **liability** and **hash** **blocklists**.  
+- **ffmpeg** **SSRF** via **playlist** / **HLS**.
 
-- **Accuracy** (facts and mechanism)
-- **Depth** (trade-offs and failure modes)
-- **Practicality** (implementable controls)
-- **Verification** (tests/telemetry proving success)
+---
 
-**Interpretation:** `7-8/8` indicates strong interview-readiness for this topic.
+## Mock ladder
+
+| Level | Question |
+|-------|----------|
+| Junior | Why **randomize** filenames? |
+| Mid | **Polyglot** defense? |
+| Senior | **Async** **virus** scan **architecture**. |
+| Staff | **UGC** **CDN** **abuse** **program** metrics. |

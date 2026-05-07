@@ -1,26 +1,35 @@
-# Keylogger Architecture and Detection - Quick Reference
+# Keylogger Architecture and Detection — Quick Reference
 
-## 60-second definition
-- Keylogging attack architecture and endpoint detection/response controls.
+## Layers
 
-## High-signal indicators
-- keyboard hook anomalies
-- suspicious persistence paths
-- credential theft indicators
+User **hooks** · **UIA**/screen · **kernel** **filter** · **hardware** · **browser** **ext**
 
-## Common failure patterns
-- assuming only malware families matter
-- no endpoint telemetry baselines
-- missing credential abuse correlation
+---
 
-## Control priorities
-- endpoint hardening + EDR rules
-- credential protection controls
-- hook/persistence monitoring
+## Detection
 
-## 2-minute answer skeleton
-- Definition + boundary
-- Failure mechanism
-- Impact chain
-- Mitigation plan
-- Verification criteria
+Hook **DLLs** · **injection** · **new** **drivers** · **Sysmon** **Image** loads · **extension** **policy**
+
+---
+
+## Mitigation
+
+**HVCI**/driver policy · **EDR** · **strong** MFA · **physical** controls
+
+---
+
+## ATT&CK
+
+**T1056** Input Capture
+
+---
+
+## Cross-read
+
+`EDR Evasion Awareness` · `Windows Security Boundaries`
+
+---
+
+## One-liner
+
+“**Input** **pipeline** **interception**—**layer** **driver** **policy**, **hook** **visibility**, and **identity** **resilience**.”

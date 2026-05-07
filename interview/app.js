@@ -224,12 +224,47 @@ function syncCompletionCheckbox() {
   els.completionCheckbox.checked = isModuleComplete(topicId, fileKey);
 }
 
-function selectTopic(topic) {
+function updateTopicQuery() {
+  if (!state.selectedTopic) return;
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.set("topic", state.selectedTopic.id);
+    if (state.selectedFileKey) {
+      url.searchParams.set("file", state.selectedFileKey);
+    } else {
+      url.searchParams.delete("file");
+    }
+    history.replaceState(null, "", url);
+  } catch {
+    // ignore invalid base URLs (e.g. file://)
+  }
+}
+
+function applyQueryParams() {
+  const params = new URLSearchParams(window.location.search);
+  const topicId = params.get("topic");
+  if (!topicId) return;
+  const topic = state.topics.find((t) => t.id === topicId);
+  if (!topic) return;
+  selectTopic(topic, { fromQuery: true });
+  const fileKey = params.get("file");
+  if (fileKey && topic.files?.[fileKey]) {
+    els.fileTypeSelector.value = fileKey;
+    state.selectedFileKey = fileKey;
+    syncCompletionCheckbox();
+    loadMarkdown(topic.files[fileKey]);
+  }
+}
+
+function selectTopic(topic, opts = {}) {
   state.selectedTopic = topic;
   els.topicTitle.textContent = topic.name;
   setContentTypes(topic);
   renderTopicList();
   scrollPanelIntoView(els.topicsView);
+  if (!opts.fromQuery) {
+    updateTopicQuery();
+  }
 }
 
 els.fileTypeSelector.addEventListener("change", (event) => {
@@ -238,6 +273,7 @@ els.fileTypeSelector.addEventListener("change", (event) => {
   state.selectedFileKey = key;
   syncCompletionCheckbox();
   loadMarkdown(state.selectedTopic.files[key]).then(() => {
+    updateTopicQuery();
     if (isMobileLayout()) {
       els.markdownContent.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
@@ -399,6 +435,7 @@ async function init() {
     state.topics = await response.json();
     state.filtered = [...state.topics];
     renderTopicList();
+    applyQueryParams();
   } catch (error) {
     els.markdownContent.innerHTML = "<p>Failed to load topics index.</p>";
   }

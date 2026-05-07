@@ -153,3 +153,9 @@ cursor.execute(query, (user_id,))
 - **Burp Suite**: Manual testing and scanning
 - **OWASP ZAP**: Automated scanning
 - **Custom Scripts**: Targeted testing
+
+## **Practice links**
+
+- Labs map: `../Practice & Exercises/Labs Mapping.md`
+- Payload references: `../Practice & Exercises/Payload References.md`
+- Code examples: `../examples/sql-injection/`

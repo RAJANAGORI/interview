@@ -1,87 +1,54 @@
 # Open Redirect - Interview Questions & Answers
 
-## Core questions
+## 60-second answer
 
-### Q1: Give a concise explanation of this topic
+**Q: What is an open redirect and how do you fix it?**
 
-**Answer:** Open Redirect concerns redirect validation, OAuth callback safety, phishing-chain risk. In interviews, I explain the boundary, failure mechanism, impact chain, and verification approach rather than only naming techniques.
-
-### Q2: How do you separate real risk from noisy signals
-
-**Answer:** I require reproducibility, clear trust-boundary violation, and measurable impact. I avoid severity inflation and document confidence level explicitly.
-
-### Q3: What is your mitigation strategy style
-
-**Answer:** I pair **immediate containment** (guardrails, policy, monitoring) with **structural fixes** (architecture, parser/canonicalization, privilege model, or workflow controls).
-
-### Q4: How do you verify remediation quality
-
-**Answer:** I define objective checks before implementation: negative tests, telemetry expectations, and post-fix regression runs. Closure requires evidence, not assumption.
-
-### Q5: How do you communicate this to non-security stakeholders
-
-**Answer:** I translate technical findings into business outcomes, estimate likelihood + blast radius, and propose phased remediation with clear owner and timeline.
-
-## Advanced follow-ups
-
-### Q6: What does “interview-ready depth” look like here
-
-**Answer:** I can explain mechanism in under 2 minutes, handle edge cases/follow-ups, and map controls to production constraints.
-
-### Q7: What mistakes do candidates make
-
-**Answer:** Over-indexing on payload/tool trivia, skipping trust-boundary explanation, and not discussing verification.
-
-### Q8: What is your 7-day improvement plan for this topic
-
-**Answer:** Day 1-2 mechanism review, day 3 scenario drill, day 4 mock follow-ups, day 5 remediation patterns, day 6 verification patterns, day 7 timed answer rehearsal.
+**A:** An open redirect lets an attacker supply a **URL**—often via a **`next`**, **`return`**, or **`redirect`** parameter—that the **application** **reflects** into a **`Location`** **header** **without** **proper** **validation**. Users think they’re on a **trusted** **site** but get **sent** to **phishing** or **malware**. The **fix** is **not** **regex** **blacklists** **alone**: **parse** the **URL**, **allowlist** **allowed** **hosts** **or** **use** **path-only** **redirects** **to** **known** **relative** **paths**, and **reject** **protocol-relative** **tricks** like **`//evil.com`**. For **OAuth**, **`redirect_uri`** must **match** **exactly** **per** **framework** **and** **BCP**.
 
 ---
 
-## Depth: Interview follow-ups — Open Redirect
+## Mechanics
 
-- How would you safely support third-party redirect domains?
-- What should be logged to detect redirect abuse?
-- What telemetry would show prevention is failing?
-- What policy guardrail would you introduce at platform level?
+### Q: Why is `//evil.com` dangerous?
+
+**A:** Browsers treat **`//host`** as **scheme-relative**—same **scheme** **as** **current** **page** **but** **attacker** **host**. **Naive** **“starts** **with** **`/`”** **checks** **fail**.
+
+### Q: Relative-only redirects—safe?
+
+**A:** **Safer** if you **enforce** **leading** **`/`**, **reject** **`//`**, **normalize** **path**, and **forbid** **`\`** **and** **encoded** **variants** **per** **your** **framework**.
 
 ---
 
-## Flagship Mock Question Ladder — Open Redirect
+## OAuth
 
-**Primary competency axis:** redirect trust abuse, OAuth chain risk, safe redirect design.
+### Q: How does open redirect relate to OAuth?
 
-### Junior (Fundamental clarity)
+**A:** **`redirect_uri`** **must** **be** **pre-registered** **and** **compared** **exactly** (no **open** **wildcard** **domains**). **Mishandling** **steals** **authorization** **codes** **or** **implicit** **tokens**.
 
-- What is open redirect and why can it still matter?
-- Give two common redirect parameter names to test.
-- Why is startsWith-style host check unsafe?
+---
 
-### Senior (Design and trade-offs)
+## Severity
 
-- How does open redirect chain into OAuth code/token theft?
-- How do you implement canonical URL validation robustly?
-- How would you prioritize open redirect findings by real impact?
+### Q: Bug bounty says Low—when do you disagree?
 
-### Staff (Strategy and scale)
+**A:** **OAuth** **in** **path**, **admin** **post-login** **redirect**, **mobile** **app** **deep** **link** **hijack**, or **chain** **to** **SSRF**—**escalate** **with** **evidence**.
 
-- How do you standardize redirect handling across microservices?
-- Should external redirects ever be allowed directly?
-- What monitoring would indicate active redirect abuse campaigns?
+---
 
-### 10-minute mock drill format
+## Depth: Follow-ups
 
-- **3 min:** Pick one Junior prompt and answer with definition, mechanism, and one mitigation.
-- **4 min:** Pick one Senior prompt and answer with trade-offs and implementation caveats.
-- **3 min:** Pick one Staff prompt and answer with architecture/policy plus measurement plan.
+- **JavaScript** **`location`** **open** **redirect** **vs** **HTTP** **302**  
+- **Open** **redirect** **in** **email** **tracking** **links**  
+- **CSP** **`navigate-to`** (limited **browser** **support**)
 
-### Answer quality rubric (quick score)
+---
 
-Score each answer from 0 to 2 for:
+## Mock ladder
 
-- **Accuracy** (facts and mechanism)
-- **Depth** (trade-offs and failure modes)
-- **Practicality** (implementable controls)
-- **Verification** (tests/telemetry proving success)
-
-**Interpretation:** `7-8/8` indicates strong interview-readiness for this topic.
+| Level | Question |
+|-------|----------|
+| Junior | Define + **one** **impact** |
+| Mid | **`//`** **bypass** |
+| Senior | **OAuth** **`redirect_uri`** |
+| Staff | **Enterprise** **SSO** **standard** |

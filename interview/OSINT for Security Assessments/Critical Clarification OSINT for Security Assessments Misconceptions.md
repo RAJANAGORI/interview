@@ -1,13 +1,47 @@
-# Critical Clarification OSINT for Security Assessments Misconceptions
+# Critical Clarification — OSINT for Security Assessments Misconceptions
 
-## Misconception 1: "Knowing tool tricks is enough for interviews."
-**Clarification:** Interviewers prioritize mechanism clarity, risk judgment, and remediation realism.
+## 1. "OSINT is always legal."
 
-## Misconception 2: "One observed signal proves exploitation."
-**Clarification:** Signals are hypotheses. You still need reproducibility and impact validation.
+**Reality:** **Collection** **method**, **jurisdiction**, **target**, and **use** **matter**. **Active** **probing**, **credential** **stuffing**, or **bypassing** **ToS** can be **illegal** or **breach** **contract**.
 
-## Misconception 3: "Fix means patching one endpoint."
-**Clarification:** Durable fixes usually include architecture/policy controls plus monitoring.
+---
 
-## Misconception 4: "Verification is optional once code is merged."
-**Clarification:** Security quality requires post-fix validation and regression coverage.
+## 2. "If it's on Google, it's in scope."
+
+**Reality:** **Scope** is **contractual**. **Acquired** **companies**, **partner** **tenants**, and **typosquat** **domains** may be **out** of **scope** even if **indexed**.
+
+---
+
+## 3. "More data is always better."
+
+**Reality:** **PII** **sprawl** **increases** **GDPR**/privacy **risk** and **hurts** **report** **quality**. **Targeted** **collection** **wins**.
+
+---
+
+## 4. "Shodan results prove vulnerability."
+
+**Reality:** **Banners** are **stale** and **ambiguous**. **Confirm** with **authorized** **validation**—**don’t** **assume** **RCE** from **an** **open** **port**.
+
+---
+
+## 5. "OSINT replaces penetration testing."
+
+**Reality:** OSINT **informs** **prioritization**; it **doesn’t** **replace** **technical** **testing**.
+
+---
+
+## 6. "Personal social media is off limits."
+
+**Reality:** **Public** **posts** may be **fair** **game** **ethically** for **high-level** **context**, but **many** **employers** **restrict** **targeting** **individuals**—**follow** **RoE**.
+
+---
+
+## 7. "We need fake identities for OSINT."
+
+**Reality:** **Sock** **puppets** may **violate** **law** or **platform** **ToS**. **Use** **transparent** **research** **accounts** **where** **required** and **approved**.
+
+---
+
+## 8. "GitHub secrets are the client's fault only."
+
+**Reality:** **Report** **responsibly**; **coordinate** **rotation**; **avoid** **public** **disclosure** **without** **agreement**.

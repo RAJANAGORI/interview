@@ -1,26 +1,51 @@
-# OSINT for Security Assessments - Quick Reference
+# OSINT for Security Assessments — Quick Reference
 
-## 60-second definition
-- External asset and exposure discovery for scoped security assessments.
+## Definition
 
-## High-signal indicators
-- shadow assets/subdomains
-- public code/secrets leakage
-- third-party surface exposure
+**Lawful, scoped** collection of **public** (or authorized) **data** to support **security** **assessments**—**not** exploitation by itself.
 
-## Common failure patterns
-- no legal scope controls
-- stale asset inventory
-- evidence without validation
+---
 
-## Control priorities
-- scope-locked recon workflow
-- asset inventory reconciliation
-- verified evidence capture
+## Passive sources (quick list)
 
-## 2-minute answer skeleton
-- Definition + boundary
-- Failure mechanism
-- Impact chain
-- Mitigation plan
-- Verification criteria
+DNS · **CT** logs · **ASN**/RDAP · search **dorks** · **code** repos · **Wayback** · job posts · app stores
+
+---
+
+## Active vs passive
+
+| Passive | May become active |
+|---------|-------------------|
+| CT, DNS **enum** via **API** | **Port** **scan**, **httpx** **probes** |
+
+**Always** match **RoE**.
+
+---
+
+## Workflow
+
+**Seeds** → **subdomain** **enum** → **resolve** → **correlate** **tech** → **prioritize** → **document** **sources**
+
+---
+
+## OPSEC
+
+Dedicated **browser**/VM · **rate** limits · **minimal** **PII** · **approved** **tools**
+
+---
+
+## Tools (examples)
+
+subfinder · amass · httpx · trufflehog/gitleaks (scoped repos)
+
+---
+
+## Cross-read
+
+`Initial Access` · `OSINT Methodology and Operational Safety` · `Penetration Testing`
+
+---
+
+## One-liner
+
+“**Scope** first, **passive** **mapping**, **cite** **sources**, **minimize** **PII**, **confirm** **findings** with **authorized** **testing**.”

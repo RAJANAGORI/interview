@@ -1,46 +1,85 @@
 # Race Condition Vulnerabilities - Interview Questions & Answers
 
-## Core questions
+## Elevator pitch (45 seconds)
 
-### Q1: Give a concise explanation of this topic
+**Q: What is a race condition vulnerability in web apps?**
 
-**Answer:** Race Condition Vulnerabilities concerns TOCTOU and concurrency abuse in security-sensitive business workflows. In interviews, I explain the boundary, failure mechanism, impact chain, and verification approach rather than only naming techniques.
-
-### Q2: How do you separate real risk from noisy signals
-
-**Answer:** I require reproducibility, clear trust-boundary violation, and measurable impact. I avoid severity inflation and document confidence level explicitly.
-
-### Q3: What is your mitigation strategy style
-
-**Answer:** I pair **immediate containment** (guardrails, policy, monitoring) with **structural fixes** (architecture, parser/canonicalization, privilege model, or workflow controls).
-
-### Q4: How do you verify remediation quality
-
-**Answer:** I define objective checks before implementation: negative tests, telemetry expectations, and post-fix regression runs. Closure requires evidence, not assumption.
-
-### Q5: How do you communicate this to non-security stakeholders
-
-**Answer:** I translate technical findings into business outcomes, estimate likelihood + blast radius, and propose phased remediation with clear owner and timeline.
-
-## Advanced follow-ups
-
-### Q6: What does “interview-ready depth” look like here
-
-**Answer:** I can explain mechanism in under 2 minutes, handle edge cases/follow-ups, and map controls to production constraints.
-
-### Q7: What mistakes do candidates make
-
-**Answer:** Over-indexing on payload/tool trivia, skipping trust-boundary explanation, and not discussing verification.
-
-### Q8: What is your 7-day improvement plan for this topic
-
-**Answer:** Day 1-2 mechanism review, day 3 scenario drill, day 4 mock follow-ups, day 5 remediation patterns, day 6 verification patterns, day 7 timed answer rehearsal.
+**A:** It is when **two or more concurrent requests** interleave so the application **checks** a condition—like “balance enough” or “coupon unused”—and then **acts** later **without** locking or **atomic** database operations. Another request changes state **between** the check and the act, so **invalid** or **duplicate** outcomes occur: double spend, oversold inventory, or bypassed limits. Fixes center on **atomic updates** (`UPDATE ... WHERE balance >= ?`), **proper isolation**, **idempotency keys**, and **constraints** the database enforces—not “more if statements.”
 
 ---
 
-## Depth: Interview follow-ups — Race Condition Vulnerabilities
+## Mechanism
 
-- When are distributed locks justified?
-- How to monitor invariant violations in production?
-- What telemetry would show prevention is failing?
-- What policy guardrail would you introduce at platform level?
+### Q: Explain TOCTOU in one sentence.
+
+**A:** **Time-of-check to time-of-use** gap: the **system** validates state at time T1 but **uses** that assumption at T2 after **concurrent** activity has changed reality.
+
+### Q: Lost update vs write skew?
+
+**A:** **Lost update:** two transactions both read X, both write based on stale X; last write wins—**first** change lost. **Write skew:** two transactions read **different** rows; each update is “locally” valid but **together** they violate a **global** rule (classic under **snapshot isolation**).
+
+### Q: Why are races a “business logic” issue?
+
+**A:** The code is often “correct” for **one** request at a time but wrong under **parallel** use—scanners miss it; **threat modeling** and **code review** catch it.
+
+---
+
+## Defense
+
+### Q: Best fix for a wallet debit?
+
+**A:** Prefer **`UPDATE accounts SET balance = balance - $amt WHERE id = $id AND balance >= $amt`** and verify **one row** updated; add **idempotency** for the **operation** key to handle **retries**.
+
+### Q: When do you need SERIALIZABLE?
+
+**A:** When **multiple rows** or **invariants** span reads/writes that **snapshot** isolation allows to skew. Expect **retries** on serialization failures—pair with **idempotency**.
+
+### Q: Distributed system without shared DB row?
+
+**A:** **Per-aggregate** **single writer** (queue), **distributed lock** with **lease** (careful with TTL/fencing), or **consensus**—never a **process-local** mutex alone.
+
+---
+
+## Testing and validation
+
+### Q: How do you prove a race in a bug bounty safely?
+
+**A:** **Coordinated** disclosure scope; **non-destructive** parallel requests; **document** timestamps and **duplicate** resource IDs; stop if **availability** impact.
+
+### Q: How do you regression-test races?
+
+**A:** **Load** test with **controlled** parallelism; **property** tests; **assert** DB constraints (`balance >= 0`); monitor **serialization** errors after hardening.
+
+---
+
+## Senior traps
+
+### Q: “We use Redis lock so we’re safe.”
+
+**A:** Redis locks need **correct** TTL, **fencing tokens**, and **failure** handling; **still** need **DB truth** for money. Interview answer: **defense in depth**, not **one** tool.
+
+### Q: Optimistic locking downside?
+
+**A:** **Retries** and **UX** under **contention**; clients must handle **409 Conflict** and **backoff**.
+
+---
+
+## Depth: Interview follow-ups
+
+- How does **idempotency** interact with **HTTP retries** and **network timeouts**?  
+- Design **inventory** for **flash sale** without oversell.  
+- What metrics prove **race** fixes work in production?  
+- **Stripe-style** **exactly-once** vs **at-least-once**—what can APIs honestly promise?
+
+---
+
+## Mock ladder
+
+| Level | Prompt |
+|-------|--------|
+| **Junior** | Define race; give **non-security** example. |
+| **Mid** | Predicate UPDATE vs **SELECT FOR UPDATE**. |
+| **Senior** | Race in **webhook** duplicate delivery + idempotency. |
+| **Staff** | **Multi-region** **checkout** consistency story. |
+
+**Rubric:** accuracy, concurrency depth, practical mitigation, verification—**7–8/8** target.

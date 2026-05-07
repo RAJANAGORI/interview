@@ -52,8 +52,7 @@ Complete map of topics in **`interview/Config/topics.json`** (**65** entries: **
 | JWT vs OAuth | `jwt-vs-oauth` | JWT, OAuth | 2–4 h | Comprehensive Guide |
 | Cookie Security | `cookie-security` | HTTP, sessions | 3–5 h | Comprehensive Guide |
 | Session Fixation & Hijacking | `session-fixation-and-session-hijacking` | Cookies | 2–4 h | Comprehensive + Quick Ref |
-| Authorization & Authentication | `authorization-and-authentication` | Identity basics | 4–6 h | Comprehensive Guide |
-| Critical Clarification (AuthN/AuthZ) | `critical-clarification-authorization-and-authentic` | Auth topics | 1–2 h | Critical clarification file |
+| Authorization & Authentication | `authorization-and-authentication` | Identity basics | 4–6 h | Comprehensive + Critical Clarification (same folder; indexed under this id) |
 | CORS and SOP | `cors-and-sop` | HTTP, browser model | 4–6 h | Comprehensive Guide |
 | Security Headers | `security-headers` | HTTP, XSS/clickjacking context | 2–4 h | Comprehensive + Questions |
 

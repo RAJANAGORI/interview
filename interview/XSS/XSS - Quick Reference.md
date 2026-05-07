@@ -147,3 +147,9 @@ element.textContent = userInput
 - ❌ Only user-generated content vulnerable
 - ❌ Server-side code is safe
 - ❌ Only
+
+## **Practice links**
+
+- Labs map: `../Practice & Exercises/Labs Mapping.md`
+- Payload references: `../Practice & Exercises/Payload References.md`
+- Code examples: `../examples/xss/`

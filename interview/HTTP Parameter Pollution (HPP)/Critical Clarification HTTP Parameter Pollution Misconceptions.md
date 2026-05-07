@@ -1,13 +1,47 @@
-# Critical Clarification HTTP Parameter Pollution Misconceptions
+# Critical Clarification — HTTP Parameter Pollution Misconceptions
 
-## Misconception 1: "Duplicate params are harmless parser noise."
-**Clarification:** They can drive security bypasses when different layers choose different values.
+## 1. “HTTP defines duplicate parameter behavior.”
 
-## Misconception 2: "Framework default behavior is good enough."
-**Clarification:** Defaults vary across frameworks and versions; explicit platform policy is needed.
+**Reality:** **Practical** behavior is **framework** and **server** **specific**—**verify**, don’t assume.
 
-## Misconception 3: "WAF catches this class automatically."
-**Clarification:** If WAF and backend normalize differently, bypass remains possible.
+---
 
-## Misconception 4: "Only query strings are affected."
-**Clarification:** Conflicts can happen across query, form, JSON adapters, and gateway merge logic.
+## 2. “HPP is only a WAF problem.”
+
+**Reality:** **Application** **logic** and **caches** also **split** **views**.
+
+---
+
+## 3. “JSON can’t have duplicate keys.”
+
+**Reality:** **Many** **parsers** **accept** **dupes** with **last-wins**—still **dangerous** if **inconsistent** across services.
+
+---
+
+## 4. “URL encoding fixes HPP.”
+
+**Reality:** **Encoding** affects **tokenization**, not the **need** for a **single** **policy**.
+
+---
+
+## 5. “Browsers normalize duplicates away.”
+
+**Reality:** **XHR/fetch** can send **crafted** **bodies**; **server** must be **robust**.
+
+---
+
+## 6. “HPP equals HTTP smuggling.”
+
+**Reality:** **Different** mechanisms—**smuggling** is **message** **framing**; HPP is **duplicate** **key** **merging**.
+
+---
+
+## 7. “Rejecting all duplicates is always safe.”
+
+**Reality:** Some **legacy** clients **legitimately** repeat keys—**scope** **strictness** to **sensitive** **operations**.
+
+---
+
+## 8. “Cloud WAF solves HPP automatically.”
+
+**Reality:** **App** **must** **still** **canonicalize**; **WAF** **rules** **rot** and **miss** **variants**.

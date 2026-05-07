@@ -1,0 +1,37 @@
+name: Content CI
+
+on:
+  pull_request:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate topics contract
+        run: python3 interview/Scripts/check_topics_contract.py
+
+      - name: Validate topics JSON parse
+        run: python3 -c "import json;json.load(open('interview/Config/topics.json'))"
+
+      - name: Generate sitemap
+        run: python3 interview/Scripts/generate_sitemap.py
+
+      - name: Generate Interview Preparation index
+        run: python3 interview/Scripts/generate_interview_preparation.py
+
+      - name: Check markdown links
+        uses: lycheeverse/lychee-action@v1
+        with:
+          fail: true
+          args: --no-progress --verbose "./**/*.md"
+

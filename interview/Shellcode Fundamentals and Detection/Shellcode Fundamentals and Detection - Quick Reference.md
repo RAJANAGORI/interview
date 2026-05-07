@@ -1,26 +1,35 @@
-# Shellcode Fundamentals and Detection - Quick Reference
+# Shellcode Fundamentals and Detection — Quick Reference
 
-## 60-second definition
-- Shellcode behavior patterns and defender detection strategy.
+## Definitions
 
-## High-signal indicators
-- memory execution anomalies
-- suspicious process injection patterns
-- EDR alert clusters
+**PIC** · **stager/stageless** · **badchars** · **ROP** under **DEP**
 
-## Common failure patterns
-- single-signature detection dependence
-- ignoring benign false-positive paths
-- no behavior correlation
+---
 
-## Control priorities
-- behavioral detection rules
-- memory protection hardening
-- process ancestry anomaly monitoring
+## Detection signals
 
-## 2-minute answer skeleton
-- Definition + boundary
-- Failure mechanism
-- Impact chain
-- Mitigation plan
-- Verification criteria
+RWX / unexpected RX · **alloc→write→protect→thread** · **unbacked** memory · ETW/EDR **API** telemetry
+
+---
+
+## Mitigations
+
+DEP · ASLR · **CFG/ACG** · **CET** · fix the **vuln**
+
+---
+
+## Tools (examples)
+
+YARA · memory scanners · Sysmon · debuggers for **triage**
+
+---
+
+## Cross-read
+
+`Exploit Development` · `Windows Exploit Mitigations` · `EDR Evasion Awareness`
+
+---
+
+## One-liner
+
+“Shellcode is **small** **machine** **code** after a **primitive**; detect **memory** + **behavior**, **harden** with **mitigations**, **patch** the **bug**.”

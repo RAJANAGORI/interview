@@ -2,124 +2,131 @@
 
 ## At a glance
 
-This module is interview-focused depth on **coverage-guided and mutation-based fault discovery for security bugs**. It is written for AppSec/Product Security interviews where you are expected to explain both attacker mechanics and practical defensive engineering decisions.
+**Fuzzing** (fuzz testing) feeds **semi-random** or **mutated** inputs to a program to **trigger** crashes, hangs, or **logic** violations. For security, the goal is to find **memory corruption**, **assertion** failures, **parser** bugs, and **unexpected** states **before** attackers do. Modern fuzzing combines **coverage-guided** feedback (AFL++, libFuzzer, Honggfuzz), **sanitizers** (ASan, UBSan, MSan), and **orchestration** in CI.
+
+Aligned with **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**. Run fuzzers only on **systems and code you are authorized** to test.
 
 ---
 
 ## Learning outcomes
 
-After this module, you should be able to:
-
-- Explain the mechanism and trust boundaries for `fuzzing-security-testing` clearly in 2-3 minutes.
-- Identify high-signal attack/abuse indicators in real systems.
-- Propose mitigation strategy with rollout and verification steps.
-- Handle senior follow-up questions without switching to generic statements.
+- Contrast **dumb fuzzing**, **mutation-based**, and **coverage-guided** fuzzing.
+- Explain **instrumentation**: coverage edges, **sanitizers**, **timeouts**.
+- Describe **harness** design: **libFuzzer** `LLVMFuzzerTestOneInput`, **persistent** mode, **dictionaries**.
+- Map **outputs** to **[Crash Analysis for Security](../Crash%20Analysis%20for%20Security/)** and **[Security Bug Identification and Validation](../Security%20Bug%20Identification%20and%20Validation/)**.
 
 ---
 
-## What interviewers evaluate
+## Prerequisites
 
-Interviewers generally score this topic across four dimensions:
-
-1. **Technical correctness** - Do you explain the mechanism accurately?
-2. **Risk judgment** - Can you separate noisy issues from business-critical risk?
-3. **Implementation realism** - Are controls deployable in production constraints?
-4. **Verification maturity** - Do you describe how to prove controls actually work?
+- Basic **C/C++/Rust** build concepts (for native fuzzing).  
+- **Crash Analysis** · **Exploit Development** (mitigations context) · **Rapid Triage**
 
 ---
 
-## Threat model lens
+## L1 — Why fuzz?
 
-### High-signal indicators
-
-- parser-heavy components
-- input validators
-- serialization/deserialization logic
-
-### Typical failure patterns
-
-- random payload spam without corpus strategy
-- no crash triage process
-- missing sanitizer/instrumentation setup
-
-### Defensive control priorities
-
-- seed corpus and dictionary management
-- ASAN/UBSAN with dedup triage
-- CI-integrated fuzz budget
+- **Parsers** and **protocol** stacks are **bug-dense**.  
+- **Hand-written** tests miss **corner** cases fuzzers **explore** automatically.  
+- **Coverage-guided** fuzzing **prioritizes** inputs that **reach** **new** **code**.
 
 ---
 
-## Practical interview answer structure (90-150 seconds)
+## L2 — Fuzzer families
 
-Use this structure when asked open-ended questions:
+| Type | Idea |
+|------|------|
+| **Random / dumb** | Uniform random bytes—weak alone but **cheap** |
+| **Mutation** | Seed corpus + **bit** flips, splices, **havoc** |
+| **Generation** | Grammar or model **builds** valid structures, then **mutates** |
+| **Coverage-guided** | **Retain** inputs that **increase** **edge** **coverage** (AFL, libFuzzer) |
 
-1. **Definition + boundary:** one-sentence definition and where it appears.
-2. **Failure mechanism:** what check/control breaks and why.
-3. **Impact chain:** technical impact -> business impact.
-4. **Mitigation plan:** design-time control + runtime detection.
-5. **Verification:** test or telemetry proving fix effectiveness.
-
-This format is usually stronger than listing payload names or tool commands.
-
----
-
-## Scenario drills (interview-ready)
-
-### Scenario 1 - Discovery phase
-
-- You are asked to assess a production-like environment with limited time.
-- State your first 3 steps to scope and collect high-value evidence.
-- Explain what you will **not** do without explicit authorization.
-
-### Scenario 2 - Validation phase
-
-- A finding looks plausible but noisy.
-- Explain your reproducibility bar before raising severity.
-- Describe how you avoid false positives while keeping speed.
-
-### Scenario 3 - Remediation phase
-
-- Engineering requests a low-friction fix this sprint.
-- Provide short-term guardrails and long-term structural fix.
-- Include owner, verification metric, and rollback risk.
+**Interview phrase:** “Feedback loop: **coverage** **bitmap** drives **which** **mutations** **to** **keep**.”
 
 ---
 
-## Senior/Staff discussion points
+## L2 — Sanitizers (essential for security signal)
 
-Use these to stand out in experienced loops:
+- **ASan:** out-of-bounds, **UAF**, **double-free** (overhead ~2×).  
+- **UBSan:** undefined behavior (shift, overflow where enabled).  
+- **MSan:** uninitialized memory (expensive; **Linux** **focus**).
 
-- How this topic intersects with SDLC and platform standards.
-- How you measure trend reduction, not just one-off fixes.
-- How detection quality and remediation quality are linked.
-- How to run this safely under legal/compliance constraints.
-
----
-
-## Verification checklist
-
-- [ ] Reproduction path documented with stable steps.
-- [ ] Impact statement includes affected assets/users.
-- [ ] Mitigation includes design-time and runtime controls.
-- [ ] Verification includes objective success criteria.
-- [ ] Residual risk documented if full fix is deferred.
+Fuzz **with** sanitizers in **CI** or **nightly** **jobs** when feasible.
 
 ---
 
-## Interview follow-up prompts to practice
+## L2 — Harness design (libFuzzer sketch)
 
-- How do you prioritize fuzz findings for product teams?
-- How do you prevent flaky crash noise?
-- What trade-off would you accept if release deadlines are tight?
-- How would this topic change between startup and enterprise scale?
+```cpp
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+  ParseSomething(data, size);  // narrow API under test
+  return 0;
+}
+```
+
+**Good harness:** **minimal** **surface**, **reset** **state** each iteration, **no** **global** **leaks** **across** **runs** **without** **cleanup**.
+
+---
+
+## L3 — Campaign hygiene
+
+- **Seed** corpus from **valid** **samples** (small, **diverse**).  
+- **Timeout** per run; **detect** **hangs**.  
+- **Parallelize** **jobs**; **merge** **unique** **crashes**.  
+- **Track** **commit** **hash** and **dictionary** **version**.
+
+---
+
+## L3 — Limits and false sense of security
+
+- **Coverage** ≠ **all** **bugs** (logic, **crypto**, **timing**).  
+- **Closed-source** **without** **harness** **access** **fuzzes** **slower**.  
+- **API** **fuzzing** (REST) differs from **binary** **fuzzing** (OpenAPI-based generators, **RESTler**-class tools).
+
+---
+
+## Toolchain (examples)
+
+**AFL++**, **libFuzzer** (LLVM), **Honggfuzz**, **cargo fuzz**, **ClusterFuzz** / **OSS-Fuzz** (service model)
+
+---
+
+## Interview clusters
+
+### Junior
+
+- What is **coverage-guided** fuzzing?
+
+### Mid
+
+- Why use **ASan** **with** **libFuzzer**?
+
+### Senior
+
+- How do you **prevent** **fuzz** **jobs** from **flaking** **CI**?
+
+### Staff
+
+- **Org** **program**: **critical** **parsers** **inventory** + **SLO** for **fuzz** **uptime**
+
+---
+
+## Authoritative references
+
+- **LLVM** libFuzzer documentation  
+- **AFL++** readme (mutation strategies)  
+- **Google** OSS-Fuzz **practices** (for **scale** **patterns**)
 
 ---
 
 ## Cross-links
 
-- `Threat Modeling`
-- `Secure Source Code Review`
-- `Product Security Real-World Scenarios`
-- `Risk Prioritization and Security Metrics`
+`Crash Analysis` · `Fuzzing Methodology and Campaign Design` · `Exploit Development` · `Secure Source Code Review`
 
+---
+
+## Verification checklist
+
+- [ ] Write a **one-paragraph** **harness** **design** for a **parser** you know.  
+- [ ] Explain **why** **seeds** **matter**.  
+- [ ] Name **two** **sanitizers** and **what** **they** **catch**.

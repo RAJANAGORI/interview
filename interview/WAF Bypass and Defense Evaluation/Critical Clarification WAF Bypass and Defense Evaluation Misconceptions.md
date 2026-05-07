@@ -1,13 +1,47 @@
-# Critical Clarification WAF Bypass and Defense Evaluation Misconceptions
+# Critical Clarification — WAF Bypass and Defense Evaluation Misconceptions
 
-## Misconception 1: "Knowing tool tricks is enough for interviews."
-**Clarification:** Interviewers prioritize mechanism clarity, risk judgment, and remediation realism.
+## 1. “WAF = secure application.”
 
-## Misconception 2: "One observed signal proves exploitation."
-**Clarification:** Signals are hypotheses. You still need reproducibility and impact validation.
+**Reality:** WAF is **auxiliary**. **Parameterized** queries, **authZ**, and **safe** **parsing** remain mandatory.
 
-## Misconception 3: "Fix means patching one endpoint."
-**Clarification:** Durable fixes usually include architecture/policy controls plus monitoring.
+---
 
-## Misconception 4: "Verification is optional once code is merged."
-**Clarification:** Security quality requires post-fix validation and regression coverage.
+## 2. “If the WAF blocks sqlmap, we’re safe.”
+
+**Reality:** **Custom** encodings, **nested** parsers, and **alternate** **API** paths often **evade** **signature** sets.
+
+---
+
+## 3. “ML WAFs can’t be bypassed.”
+
+**Reality:** **Adaptive** attackers **probe** **blind spots**; **ML** also **drifts** with **traffic** **shifts**.
+
+---
+
+## 4. “We can skip code fixes because virtual patch exists.”
+
+**Reality:** **Virtual** patches **rot**, **fail-open**, or get **disabled** when **noisy**. **Root-cause** fix is **durable**.
+
+---
+
+## 5. “All traffic hits the WAF.”
+
+**Reality:** **Partner** links, **legacy** hostnames, **internal** meshes, and **mis-DNS** **bypass** **intended** **paths**.
+
+---
+
+## 6. “Blocking is always better than logging.”
+
+**Reality:** **Aggressive** block can **DoS** **legitimate** clients; **tuning** needs **FP** **budget** and **observability**.
+
+---
+
+## 7. “WAF eval = running a vendor scanner once.”
+
+**Reality:** **Real** eval needs **app-specific** **mutations**, **continuous** **regression** after **rule** **changes**, and **business** **traffic** **sampling**.
+
+---
+
+## 8. “HTTPS means the WAF can’t see payloads.”
+
+**Reality:** **Edge-terminated TLS** is common; **visibility** depends on **architecture**, not the **lock icon** alone.

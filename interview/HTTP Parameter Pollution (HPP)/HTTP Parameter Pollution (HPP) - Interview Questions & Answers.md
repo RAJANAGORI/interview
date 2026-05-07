@@ -1,46 +1,38 @@
 # HTTP Parameter Pollution (HPP) - Interview Questions & Answers
 
-## Core questions
+## 60-second answer
 
-### Q1: Give a concise explanation of this topic
+**Q: What is HTTP parameter pollution?**
 
-**Answer:** HTTP Parameter Pollution (HPP) concerns duplicate parameter parsing inconsistencies across request chain. In interviews, I explain the boundary, failure mechanism, impact chain, and verification approach rather than only naming techniques.
-
-### Q2: How do you separate real risk from noisy signals
-
-**Answer:** I require reproducibility, clear trust-boundary violation, and measurable impact. I avoid severity inflation and document confidence level explicitly.
-
-### Q3: What is your mitigation strategy style
-
-**Answer:** I pair **immediate containment** (guardrails, policy, monitoring) with **structural fixes** (architecture, parser/canonicalization, privilege model, or workflow controls).
-
-### Q4: How do you verify remediation quality
-
-**Answer:** I define objective checks before implementation: negative tests, telemetry expectations, and post-fix regression runs. Closure requires evidence, not assumption.
-
-### Q5: How do you communicate this to non-security stakeholders
-
-**Answer:** I translate technical findings into business outcomes, estimate likelihood + blast radius, and propose phased remediation with clear owner and timeline.
-
-## Advanced follow-ups
-
-### Q6: What does “interview-ready depth” look like here
-
-**Answer:** I can explain mechanism in under 2 minutes, handle edge cases/follow-ups, and map controls to production constraints.
-
-### Q7: What mistakes do candidates make
-
-**Answer:** Over-indexing on payload/tool trivia, skipping trust-boundary explanation, and not discussing verification.
-
-### Q8: What is your 7-day improvement plan for this topic
-
-**Answer:** Day 1-2 mechanism review, day 3 scenario drill, day 4 mock follow-ups, day 5 remediation patterns, day 6 verification patterns, day 7 timed answer rehearsal.
+**A:** It’s when a client sends **multiple** values for the **same** parameter name and **different** parts of the stack pick **first**, **last**, **concatenate**, or **array** forms **inconsistently**. That lets attackers **bypass** **WAFs** or **alter** **server** logic. Fix by **canonicalizing** at **one** layer—often **reject** duplicates on **security-sensitive** fields—and **schema-validate** APIs.
 
 ---
 
-## Depth: Interview follow-ups — HTTP Parameter Pollution (HPP)
+## Mechanics
 
-- How do you migrate safely to strict duplicate rejection?
-- What endpoints are most sensitive to HPP?
-- What telemetry would show prevention is failing?
-- What policy guardrail would you introduce at platform level?
+### Q: GET vs POST for HPP?
+
+**A:** Both can carry duplicates; **bodies** (`x-www-form-urlencoded`, **multipart**) are **common** in **app** **logic** bugs.
+
+### Q: Does HTTP/2 change this?
+
+**A:** **H2** **multiplexing** doesn’t remove **duplicate** **pseudo-header** vs **header** issues at **translation** layers—**normalization** still matters at **gateways**.
+
+---
+
+## Defense
+
+### Q: Quick policy for `return_url`?
+
+**A:** **Exactly** **one** parameter; **400** on duplicates; **server-side** **allow-list** hosts.
+
+---
+
+## Mock ladder
+
+| Level | Question |
+|-------|----------|
+| Junior | Define HPP |
+| Mid | First vs last |
+| Senior | Middleware design |
+| Staff | OpenAPI enforcement |

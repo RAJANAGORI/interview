@@ -1,26 +1,29 @@
-# Windows Security Boundaries - Quick Reference
+# Windows Security Boundaries — Quick Reference
 
-## 60-second definition
-- Windows trust boundaries and privilege transition security principles.
+## Boundaries
 
-## High-signal indicators
-- token/privilege escalation paths
-- service boundary assumptions
-- desktop/session isolation issues
+**Kernel** ↔ **user** · **Session** · **Integrity** **level** · **AppContainer** · **VBS** (HVCI, **Credential** Guard)
 
-## Common failure patterns
-- over-trusting local admin boundaries
-- misconfigured service permissions
-- legacy compatibility exceptions
+---
 
-## Control priorities
-- principle of least privilege
-- boundary-aware hardening baselines
-- periodic privilege path review
+## Enforcement levers
 
-## 2-minute answer skeleton
-- Definition + boundary
-- Failure mechanism
-- Impact chain
-- Mitigation plan
-- Verification criteria
+Token **privileges** · **ACLs** · **WDAC**/**AppLocker** · **hypervisor**-backed **CI**
+
+---
+
+## Interview facts
+
+UAC ≠ **strong** **boundary** · **Patch** **privesc** · **segment** **tier** **0**
+
+---
+
+## Cross-read
+
+`Windows Exploit Mitigations` · `EDR Evasion Awareness and Defense`
+
+---
+
+## One-liner
+
+“**Policy** lines on **objects** and **tokens**—**VBS** **hardens** **kernel** **trust**; **assume** **user** **code** **is** **hostile**.”

@@ -1,26 +1,41 @@
-# Server-Side Template Injection (SSTI) - Quick Reference
+# Server-Side Template Injection (SSTI) — Quick Reference
 
-## 60-second definition
-- Server template expression execution via user-controlled template source.
+## Rule
 
-## High-signal indicators
-- dynamic template render APIs
-- custom template preview features
-- runtime debug template errors
+**Never** concatenate user input into **template source** — use **context** **variables** only.
 
-## Common failure patterns
-- rendering user input as template code
-- sandbox/engine escape paths
-- dangerous helper exposure
+---
 
-## Control priorities
-- static templates + data binding only
-- disable dangerous engine features
-- least-privilege rendering runtime
+## Quick probe (authorized)
 
-## 2-minute answer skeleton
-- Definition + boundary
-- Failure mechanism
-- Impact chain
-- Mitigation plan
-- Verification criteria
+`{{7*7}}` · `${7*7}` · `<%= 7*7 %>` — **engine-specific**
+
+---
+
+## Engines (know names)
+
+Jinja2 · Twig · Freemarker · Velocity · ERB · Razor
+
+---
+
+## Fixes
+
+Static templates · **sandbox** + least privilege · **SAST** for `Template(` patterns · **remove** **debug** **render** endpoints
+
+---
+
+## Tools
+
+Burp · PortSwigger labs · semgrep/grep · tplmap (legacy)
+
+---
+
+## Cross-read
+
+`RCE` · `XSS` · `WAF Bypass`
+
+---
+
+## One-liner
+
+“User data is **data**, not **template** **code**—**bind** variables, **don’t** **compose** **source**.”

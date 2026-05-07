@@ -1,13 +1,47 @@
-# Critical Clarification Keylogger Architecture and Detection Misconceptions
+# Critical Clarification — Keylogger Architecture and Detection Misconceptions
 
-## Misconception 1: "Knowing tool tricks is enough for interviews."
-**Clarification:** Interviewers prioritize mechanism clarity, risk judgment, and remediation realism.
+## 1. “Antivirus always catches keyloggers.”
 
-## Misconception 2: "One observed signal proves exploitation."
-**Clarification:** Signals are hypotheses. You still need reproducibility and impact validation.
+**Reality:** **Signed** **or** **fileless** **variants** **evade** **static** **scans**.
 
-## Misconception 3: "Fix means patching one endpoint."
-**Clarification:** Durable fixes usually include architecture/policy controls plus monitoring.
+---
 
-## Misconception 4: "Verification is optional once code is merged."
-**Clarification:** Security quality requires post-fix validation and regression coverage.
+## 2. “Kernel loggers are extinct.”
+
+**Reality:** **Abused** where **drivers** **can** **load**; **policy** **matters**.
+
+---
+
+## 3. “HTTPS stops keyloggers.”
+
+**Reality:** **TLS** protects **network**; **keyloggers** read **before** **encryption**.
+
+---
+
+## 4. “Screen keyboards are always safe.”
+
+**Reality:** **OSK** can still be **scraped** or **clicked** by **malware** with **access**; **raises** **bar**, not **absolute**.
+
+---
+
+## 5. “Only malware uses keyboard hooks.”
+
+**Reality:** **Legit** **assistive** tech uses **same** **APIs**—**context** and **reputation** **matter**.
+
+---
+
+## 6. “macOS TCC blocks all capture.”
+
+**Reality:** **Users** **approve** **prompts**; **fatigue** and **bundled** **malware** **exist**.
+
+---
+
+## 7. “Hardware keyloggers are fiction.”
+
+**Reality:** **Rare** in **enterprise** but **real** in **physical** **access** **scenarios**.
+
+---
+
+## 8. “Keyloggers only steal passwords.”
+
+**Reality:** **Tokens**, **PII**, **2FA** **codes** typed as **SMS** **OTP**, and **clipboard** **sniffing** **expand** **impact**.

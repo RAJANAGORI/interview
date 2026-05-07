@@ -1,46 +1,50 @@
 # Server-Side Template Injection (SSTI) - Interview Questions & Answers
 
-## Core questions
+## 60-second answer
 
-### Q1: Give a concise explanation of this topic
+**Q: What is SSTI and how do you prevent it?**
 
-**Answer:** Server-Side Template Injection (SSTI) concerns server template expression execution via user-controlled template source. In interviews, I explain the boundary, failure mechanism, impact chain, and verification approach rather than only naming techniques.
-
-### Q2: How do you separate real risk from noisy signals
-
-**Answer:** I require reproducibility, clear trust-boundary violation, and measurable impact. I avoid severity inflation and document confidence level explicitly.
-
-### Q3: What is your mitigation strategy style
-
-**Answer:** I pair **immediate containment** (guardrails, policy, monitoring) with **structural fixes** (architecture, parser/canonicalization, privilege model, or workflow controls).
-
-### Q4: How do you verify remediation quality
-
-**Answer:** I define objective checks before implementation: negative tests, telemetry expectations, and post-fix regression runs. Closure requires evidence, not assumption.
-
-### Q5: How do you communicate this to non-security stakeholders
-
-**Answer:** I translate technical findings into business outcomes, estimate likelihood + blast radius, and propose phased remediation with clear owner and timeline.
-
-## Advanced follow-ups
-
-### Q6: What does “interview-ready depth” look like here
-
-**Answer:** I can explain mechanism in under 2 minutes, handle edge cases/follow-ups, and map controls to production constraints.
-
-### Q7: What mistakes do candidates make
-
-**Answer:** Over-indexing on payload/tool trivia, skipping trust-boundary explanation, and not discussing verification.
-
-### Q8: What is your 7-day improvement plan for this topic
-
-**Answer:** Day 1-2 mechanism review, day 3 scenario drill, day 4 mock follow-ups, day 5 remediation patterns, day 6 verification patterns, day 7 timed answer rehearsal.
+**A:** SSTI happens when **user input becomes part of the template program** a server engine evaluates—leading to **RCE** or **sensitive** **read** in bad cases. Prevention is **architectural**: **fixed** template files, **bind** user data only as **variables**, use **sandboxed** engines where needed, and **block** **string** **concat** into `Template(...)`. Detection in review means searching for **dynamic** template **construction** and **dangerous** **helpers**.
 
 ---
 
-## Depth: Interview follow-ups — Server-Side Template Injection (SSTI)
+## Basics
 
-- SSTI vs XSS in impact and mitigations?
-- How to secure tenant-customizable templates?
-- What telemetry would show prevention is failing?
-- What policy guardrail would you introduce at platform level?
+### Q: SSTI vs XSS?
+
+**A:** **XSS** executes in **victim** **browsers**; **SSTI** executes on the **server** during **render**—different **trust** boundaries and **fixes**.
+
+### Q: Quick test in a authorized assessment?
+
+**A:** Inject expressions like **`{{7*7}}`** / engine analogs; **49** in output implies **evaluation**—then **enumerate** engine via errors.
+
+---
+
+## Engineering
+
+### Q: Is auto-escaping enough?
+
+**A:** **No**—auto-escaping helps **HTML** **context** for **XSS**; **SSTI** is about **code** **evaluation** **before** **escaping**.
+
+### Q: Sandboxes solve everything?
+
+**A:** **Misconfigurations** and **gadgets** **break** **sandboxes**—**prefer** **no** **user** **logic** in templates.
+
+---
+
+## Senior
+
+### Q: How do you scale prevention across microservices?
+
+**A:** **Approved** template **libraries**, **SAST** rules, **code** **review** **checklist**, **central** **email/report** **service** with **hardened** **config**.
+
+---
+
+## Mock ladder
+
+| Level | Question |
+|-------|----------|
+| Junior | SSTI definition |
+| Mid | Safe Jinja2 |
+| Senior | Feature review |
+| Staff | Org guardrails |

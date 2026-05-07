@@ -1,26 +1,35 @@
-# HTTP Parameter Pollution (HPP) - Quick Reference
+# HTTP Parameter Pollution (HPP) — Quick Reference
 
-## 60-second definition
-- Duplicate parameter parsing inconsistencies across request chain.
+## Core idea
 
-## High-signal indicators
-- duplicate key handling differences
-- WAF/application precedence mismatch
-- query/body merge ambiguity
+**Duplicate** keys → **split** **parser** **behavior** → **filter** **bypass** / **logic** **bugs**
 
-## Common failure patterns
-- validate first value execute last value
-- inconsistent canonicalization
-- legacy parser edge behavior
+---
 
-## Control priorities
-- duplicate-key rejection for sensitive endpoints
-- edge canonicalization policy
-- parser parity contract tests
+## Common behaviors
 
-## 2-minute answer skeleton
-- Definition + boundary
-- Failure mechanism
-- Impact chain
-- Mitigation plan
-- Verification criteria
+First wins · last wins · concat · array — **check** **your** **stack**
+
+---
+
+## Fix
+
+**One** choke-point **normalization** · **reject** dupes on **sensitive** params · **OpenAPI** **strict**
+
+---
+
+## Test
+
+Burp **repeat** dupes · **curl** `-d` twice · **assert** **400** on **`return_url`**
+
+---
+
+## Cross-read
+
+`WAF Bypass` · `HTTP Request Smuggling` · `Open Redirect`
+
+---
+
+## One-liner
+
+“**Same** name, **many** values—**pick** **one** **policy** **everywhere** **or** **reject**.”

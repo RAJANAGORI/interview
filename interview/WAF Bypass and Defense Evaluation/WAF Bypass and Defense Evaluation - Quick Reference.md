@@ -1,26 +1,41 @@
-# WAF Bypass and Defense Evaluation - Quick Reference
+# WAF Bypass and Defense Evaluation — Quick Reference
 
-## 60-second definition
-- Evaluating waf efficacy and resilience against evasive payload techniques.
+## Model
 
-## High-signal indicators
-- managed WAF deployment
-- high web attack traffic
-- false positive/negative complaints
+Edge **inspection** → (optional TLS terminate) → **origin** (**authoritative** security)
 
-## Common failure patterns
-- signature-only confidence
-- no app-layer canonicalization
-- no post-bypass detection
+---
 
-## Control priorities
-- WAF + secure coding layered model
-- normalization parity checks
-- bypass simulation exercises
+## Bypass classes
 
-## 2-minute answer skeleton
-- Definition + boundary
-- Failure mechanism
-- Impact chain
-- Mitigation plan
-- Verification criteria
+Encoding nest · parser diff (JSON/XML) · **HPP** · multipart tricks · **smuggling-adjacent** normalization · **path** variants
+
+---
+
+## Eval recipe
+
+Baseline attacks · **mutation** matrix · **FP** on prod-like traffic · **log** proof · **latency** / **error** budget
+
+---
+
+## Mitigation stack
+
+**Fix app** → strict edge **normalization** → tuned **virtual patch** → **schema**/mTLS for APIs → **monitor** canaries
+
+---
+
+## Tools
+
+Burp · nuclei · ModSecurity/CRS · cloud WAF logs (AWS/CF/Akamai patterns)
+
+---
+
+## Cross-read
+
+`HTTP Request Smuggling` · `HTTP Parameter Pollution` · `SSRF`
+
+---
+
+## One-liner
+
+“Treat WAF as **parser differential** territory: **measure** FN/FP on **your** routes, **fix** the **app**, use WAF as **depth**.”

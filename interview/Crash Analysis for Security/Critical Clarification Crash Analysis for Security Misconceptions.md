@@ -1,13 +1,47 @@
-# Critical Clarification Crash Analysis for Security Misconceptions
+# Critical Clarification — Crash Analysis for Security Misconceptions
 
-## Misconception 1: "Knowing tool tricks is enough for interviews."
-**Clarification:** Interviewers prioritize mechanism clarity, risk judgment, and remediation realism.
+## 1. "If ASan says heap overflow, it’s always exploitable."
 
-## Misconception 2: "One observed signal proves exploitation."
-**Clarification:** Signals are hypotheses. You still need reproducibility and impact validation.
+**Reality:** **Sanitizer** **finds** **undefined** **behavior**; **exploitability** **needs** **control** **and** **reachability** **analysis**.
 
-## Misconception 3: "Fix means patching one endpoint."
-**Clarification:** Durable fixes usually include architecture/policy controls plus monitoring.
+---
 
-## Misconception 4: "Verification is optional once code is merged."
-**Clarification:** Security quality requires post-fix validation and regression coverage.
+## 2. "All crashes from fuzzing are security bugs."
+
+**Reality:** **OOM**, **timeouts**, and **logic** **asserts** **may** be **quality** **only**—**classify** **before** **CVE**.
+
+---
+
+## 3. "Stack trace alone is enough to close as duplicate."
+
+**Reality:** **Different** **inputs** **can** **hit** **same** **frame** **via** **different** **paths**—**verify** **root** **cause**.
+
+---
+
+## 4. "Production crashes are too noisy to use."
+
+**Reality:** **Sampling** + **symbolication** + **clustering** **surfaces** **real** **regressions**—**especially** **after** **releases**.
+
+---
+
+## 5. "Minimization is optional."
+
+**Reality:** **Without** **minimal** **repro**, **engineers** **can’t** **fix** **fast** **and** **regressions** **recur**.
+
+---
+
+## 6. "Debug build crash equals release crash."
+
+**Reality:** **Optimizations** **change** **layout**; **repro** **on** **release** **symbols** **when** **possible**.
+
+---
+
+## 7. "If we can’t exploit it, severity is Low."
+
+**Reality:** **DoS** **or** **privacy** **leaks** **may** **still** be **High**; **exploitability** **≠** **only** **metric**.
+
+---
+
+## 8. "Automated triage replaces humans."
+
+**Reality:** **Automation** **routes** **and** **clusters**; **judgment** **remains** **for** **edge** **cases**.

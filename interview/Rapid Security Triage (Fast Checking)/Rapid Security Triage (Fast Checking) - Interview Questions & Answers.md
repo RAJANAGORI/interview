@@ -1,46 +1,62 @@
 # Rapid Security Triage (Fast Checking) - Interview Questions & Answers
 
-## Core questions
+## 60-second answer
 
-### Q1: Give a concise explanation of this topic
+**Q: How do you triage security findings quickly without missing real issues?**
 
-**Answer:** Rapid Security Triage (Fast Checking) concerns high-speed signal triage to separate noise from actionable risk. In interviews, I explain the boundary, failure mechanism, impact chain, and verification approach rather than only naming techniques.
-
-### Q2: How do you separate real risk from noisy signals
-
-**Answer:** I require reproducibility, clear trust-boundary violation, and measurable impact. I avoid severity inflation and document confidence level explicitly.
-
-### Q3: What is your mitigation strategy style
-
-**Answer:** I pair **immediate containment** (guardrails, policy, monitoring) with **structural fixes** (architecture, parser/canonicalization, privilege model, or workflow controls).
-
-### Q4: How do you verify remediation quality
-
-**Answer:** I define objective checks before implementation: negative tests, telemetry expectations, and post-fix regression runs. Closure requires evidence, not assumption.
-
-### Q5: How do you communicate this to non-security stakeholders
-
-**Answer:** I translate technical findings into business outcomes, estimate likelihood + blast radius, and propose phased remediation with clear owner and timeline.
-
-## Advanced follow-ups
-
-### Q6: What does “interview-ready depth” look like here
-
-**Answer:** I can explain mechanism in under 2 minutes, handle edge cases/follow-ups, and map controls to production constraints.
-
-### Q7: What mistakes do candidates make
-
-**Answer:** Over-indexing on payload/tool trivia, skipping trust-boundary explanation, and not discussing verification.
-
-### Q8: What is your 7-day improvement plan for this topic
-
-**Answer:** Day 1-2 mechanism review, day 3 scenario drill, day 4 mock follow-ups, day 5 remediation patterns, day 6 verification patterns, day 7 timed answer rehearsal.
+**A:** I use a **consistent** pipeline: **normalize** the report (asset, version, environment), **dedupe** against known issues, set a **reproducibility** bar (confirmed vs likely vs speculative), then score **impact** with **business** context—not **CVSS** alone. I use **EPSS** and **KEV** to prioritize **CVE** noise, and I **route** to the right owner with a **clear** ask and **SLA**. I document **why** something is closed or deferred so we don’t re-litigate. Speed comes from **templates** and **criteria**, not from skipping **thinking**.
 
 ---
 
-## Depth: Interview follow-ups — Rapid Security Triage (Fast Checking)
+## Process
 
-- How do you protect speed without lowering quality?
-- Which metrics indicate triage health?
-- What telemetry would show prevention is failing?
-- What policy guardrail would you introduce at platform level?
+### Q: What is the difference between triage and root-cause analysis?
+
+**A:** **Triage** decides **priority**, **validity at high confidence**, and **routing**. **RCA** explains **why** code allowed the bug and **how** to prevent **recurrence**. Triage can **stop** at “valid, P2, AppSec queue”; RCA is **post-fix** or **parallel** for **severe** incidents.
+
+### Q: How do you handle contradictory scanner results?
+
+**A:** **Ground truth** on the **artifact** (image digest, **SBOM**, **running** binary). Scanners **false positive** on **version** detection; **verify** with **`--version`**, **package manager**, or **vendor** advisory applicability.
+
+---
+
+## Scoring & priority
+
+### Q: When would you not fix a Critical CVE immediately?
+
+**A:** **Not affected** (feature disabled), **compensating** control with **proof** (e.g. **no** egress for exploit), **vendor** **FP**, or **dependency** is **bundled** but **unreachable** **dead code**—**documented** with **risk acceptance**. **Rare**—must be **reviewed** by **security** + **owner**.
+
+### Q: Explain EPSS in one sentence.
+
+**A:** **EPSS** estimates **probability** a CVE will be exploited in the wild **soon**—useful for **ordering** **patch** work when **many** CVEs land at once; it does **not** measure **your** **data** impact.
+
+---
+
+## People & stakeholders
+
+### Q: Engineering says “won’t fix” for your Medium. What do you do?
+
+**A:** **Understand** **reason** (cost, legacy, **alternative** control). **Re-score** with **their** **context**; if still **risky**, **escalate** via **risk register** with **named** **acceptor** and **expiry** date—not **silent** **no**.
+
+### Q: How do you write a rejection to a bug bounty reporter?
+
+**A:** **Professional**, **specific**: “**Duplicate** of #123” or “**Works as designed**: [doc]; **out of scope**: [policy].” Avoid **argument**; offer **one** clarifying question if **borderline**.
+
+---
+
+## Depth: Follow-ups
+
+- Design **SLAs** by **severity** + **asset** **tier**.  
+- **Metrics** for triage team: **MTTA**, **false positive** rate, **reopen** rate.  
+- **Automation**: auto-close **unreachable** **deps**—**risks**?
+
+---
+
+## Mock ladder
+
+| Level | Prompt |
+|-------|--------|
+| Junior | Define triage. |
+| Mid | CVSS vs **environmental** score. |
+| Senior | **KEV** + **EPSS** + **internal** **exposure** matrix. |
+| Staff | **250** findings/day with **quality** gates. |

@@ -1,26 +1,46 @@
-# Insecure Deserialization - Quick Reference
+# Insecure Deserialization — Quick Reference
 
-## 60-second definition
-- Unsafe object reconstruction from untrusted serialized input.
+## Risk
 
-## High-signal indicators
-- pickle/java/.NET serializer use
-- signed session blobs
-- message-bus object payloads
+**Untrusted** **bytes** → **object** **graph** → **gadget** **chains** → **RCE** / **authz** **break**
 
-## Common failure patterns
-- deserializing untrusted bytes
-- unsafe polymorphic type binding
-- key misuse on signed blobs
+---
 
-## Control priorities
-- replace unsafe serializers
-- schema-validated formats
-- allowlisted concrete types
+## Sinks (examples)
 
-## 2-minute answer skeleton
-- Definition + boundary
-- Failure mechanism
-- Impact chain
-- Mitigation plan
-- Verification criteria
+| Lang | Avoid on untrusted input |
+|------|---------------------------|
+| Java | `ObjectInputStream`, **XMLDecoder** |
+| .NET | `BinaryFormatter`, `LosFormatter` |
+| Python | `pickle`, `marshal`, `yaml.load` |
+| PHP | `unserialize` |
+
+---
+
+## Fixes
+
+**JSON** + **DTO** · **protobuf** · **signed** **tokens** · **allowlist** **filters** · **patch** **gadget** **libs**
+
+---
+
+## CWE
+
+**CWE-502** — Deserialization of Untrusted Data
+
+---
+
+## Detection
+
+**SAST** **sinks** · **unexpected** **classes** · **process** **spawn** **post**-request
+
+---
+
+## Cross-read
+
+`RCE` · `Supply Chain` · `Secure Source Code Review`
+
+---
+
+## One-liner
+
+“**No** **native** **deser** **on** **untrusted** **data**; **schema**-bound **formats**; **sign** **and** **allowlist** **if** **unavoidable**.”

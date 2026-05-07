@@ -1,26 +1,47 @@
-# Crash Analysis for Security - Quick Reference
+# Crash Analysis for Security — Quick Reference
 
-## 60-second definition
-- Turning crashes into security hypotheses and triaged risk statements.
+## Workflow
 
-## High-signal indicators
-- fuzzer crash output
-- production crash telemetry
-- parser/library instability
+**Repro** → **minimize** → **root** **cause** → **security** **impact** → **dedupe** → **route**
 
-## Common failure patterns
-- no dedup or bucketing
-- missing root-cause tagging
-- crash severity overstatement
+---
 
-## Control priorities
-- crash bucketing + triage rubric
-- sanitizer-guided diagnosis
-- exploitability criteria checklist
+## Fault types (keywords)
 
-## 2-minute answer skeleton
-- Definition + boundary
-- Failure mechanism
-- Impact chain
-- Mitigation plan
-- Verification criteria
+**OOB** **read/write** · **UAF** · **double** **free** · **stack** **smash** · **null** **deref**
+
+---
+
+## Signals
+
+**ASan/UBSan** · **gdb/lldb** **bt** · **WinDbg** **!analyze** · **symbolicated** **mobile** **stacks**
+
+---
+
+## Exploitability (quick)
+
+**User** **control**? **Primitive** **strength**? **Reachable**? **Mitigations**?
+
+---
+
+## Dedupe
+
+**Stack** **signature** + **component** + **fault** **class** — **verify** **same** **fix**
+
+---
+
+## Tools
+
+**creduce** · **rr** · **symbol** **servers** · **issue** **tracker** **automation**
+
+---
+
+## Cross-read
+
+`Fuzzing` · `Exploit Development` · `Rapid Triage` · `Vuln Management`
+
+---
+
+## One-liner
+
+“**Repro** **reliably**, **minimize**, **read** **the** **sanitizer**, **assess** **control**, **dedupe**, **severity** **with** **evidence**.”

@@ -2,124 +2,137 @@
 
 ## At a glance
 
-This module is interview-focused depth on **redirect validation, OAuth callback safety, phishing-chain risk**. It is written for AppSec/Product Security interviews where you are expected to explain both attacker mechanics and practical defensive engineering decisions.
+An **open redirect** occurs when an application sends the **browser** to a **user-controlled** **URL** (or builds a **URL** from **untrusted** **parts**) **without** **strict** **validation**. Attackers abuse it for **phishing** (“trusted.com → evil.com”), **OAuth** / **SSO** **token** **theft** when **`redirect_uri`** **is** **misvalidated**, **chaining** to **XSS** or **filter** **bypass**, and **cache** **or** **SSRF** **helpers** in **some** **architectures**.
+
+**CWE-601:** URL Redirection to Untrusted Site (**Open Redirect**).
+
+Aligned with **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.
 
 ---
 
 ## Learning outcomes
 
-After this module, you should be able to:
-
-- Explain the mechanism and trust boundaries for `open-redirect` clearly in 2-3 minutes.
-- Identify high-signal attack/abuse indicators in real systems.
-- Propose mitigation strategy with rollout and verification steps.
-- Handle senior follow-up questions without switching to generic statements.
+- Explain **why** **redirect** **parameters** are **high** **abuse** **value** even if they look “low” **severity**.
+- Implement **allowlist**-based **fixes** (not **regex** **alone**).
+- Recognize **bypass** **patterns**: **protocol** **relative**, **backslash**, **unicode**, **double** **encoding**, **tab**/**CRLF** **in** **legacy** **parsers**.
+- Map to **OAuth** **`redirect_uri`** **validation** (see **OAuth** topic).
 
 ---
 
-## What interviewers evaluate
+## Prerequisites
 
-Interviewers generally score this topic across four dimensions:
-
-1. **Technical correctness** - Do you explain the mechanism accurately?
-2. **Risk judgment** - Can you separate noisy issues from business-critical risk?
-3. **Implementation realism** - Are controls deployable in production constraints?
-4. **Verification maturity** - Do you describe how to prove controls actually work?
+- **[HTTP Refresh verbs and status codes](../HTTP%20Refresh%20verbs%20and%20status%20codes/)**  
+- **[OAuth](../OAuth/)** · **[JWT](../JWT%20(JSON%20Web%20Token)/)**  
+- **[SSRF](../SSRF/)** (different primitive; **sometimes** **confused**)
 
 ---
 
-## Threat model lens
+## L1 — Mechanism
 
-### High-signal indicators
+Typical pattern:
 
-- unvalidated `next`/`returnUrl` parameters
-- redirect helper endpoints
-- OAuth redirect_uri parsing mismatches
+```
+GET /login?next=https://evil.com/phish
+→ 302 Location: https://evil.com/phish
+```
 
-### Typical failure patterns
-
-- prefix-only host checks
-- double-decoding bypasses
-- accepting protocol-relative URLs
-
-### Defensive control priorities
-
-- server-side route IDs over raw URLs
-- strict canonical URL parsing + exact allowlist
-- external redirect interstitial + logging
+User **trusts** the **first** **host**; **bar** **shows** **trusted** **domain** **until** **redirect** **lands** **phishing**.
 
 ---
 
-## Practical interview answer structure (90-150 seconds)
+## L2 — Attack outcomes
 
-Use this structure when asked open-ended questions:
-
-1. **Definition + boundary:** one-sentence definition and where it appears.
-2. **Failure mechanism:** what check/control breaks and why.
-3. **Impact chain:** technical impact -> business impact.
-4. **Mitigation plan:** design-time control + runtime detection.
-5. **Verification:** test or telemetry proving fix effectiveness.
-
-This format is usually stronger than listing payload names or tool commands.
+| Outcome | Notes |
+|---------|--------|
+| **Phishing** | **Harvest** **credentials** **with** **trusted** **brand** **entry** |
+| **OAuth** **mix-up** | **Steal** **code**/**token** **via** **attacker** **`redirect_uri`** |
+| **Malware** **delivery** | **Redirect** **to** **file** **download** |
+| **Filter** **bypass** | **Hop** **through** **open** **redirect** **to** **reach** **SSRF** **sink** (chain) |
 
 ---
 
-## Scenario drills (interview-ready)
+## L2 — Unsafe vs safer patterns
 
-### Scenario 1 - Discovery phase
+**Unsafe:** `Location: request.args['url']` **after** **weak** **`startswith`** **check**.
 
-- You are asked to assess a production-like environment with limited time.
-- State your first 3 steps to scope and collect high-value evidence.
-- Explain what you will **not** do without explicit authorization.
+**Safer:** **Allowlist** **exact** **paths** **or** **hosts**:
 
-### Scenario 2 - Validation phase
-
-- A finding looks plausible but noisy.
-- Explain your reproducibility bar before raising severity.
-- Describe how you avoid false positives while keeping speed.
-
-### Scenario 3 - Remediation phase
-
-- Engineering requests a low-friction fix this sprint.
-- Provide short-term guardrails and long-term structural fix.
-- Include owner, verification metric, and rollback risk.
+- **Relative** **redirects** **only**: `next=/dashboard` **where** **`/`** **is** **forced** **and** **path** **normalized**.
+- **Absolute** **URLs**: **match** **scheme** + **host** **against** **fixed** **set**; **reject** **everything** **else**.
+- Use framework URL parsers (`net/url` in Go, `urllib` in Python, etc.) and compare structured fields—not raw string `contains` checks.
 
 ---
 
-## Senior/Staff discussion points
+## L2 — Common bypass themes (interview)
 
-Use these to stand out in experienced loops:
+- **`//evil.com`** — **protocol-relative** **appears** **“relative”** **to** **naive** **checks**.  
+- **`https://trusted.com.evil.com`** — **subdomain** **tricks** **vs** **suffix** **checks**.  
+- **`\evil.com`** **(IE** **legacy)** / **unicode** **homoglyphs** — **parser** **dependent**.  
+- **Double** **encoding** **`https%253A//evil`**.
 
-- How this topic intersects with SDLC and platform standards.
-- How you measure trend reduction, not just one-off fixes.
-- How detection quality and remediation quality are linked.
-- How to run this safely under legal/compliance constraints.
-
----
-
-## Verification checklist
-
-- [ ] Reproduction path documented with stable steps.
-- [ ] Impact statement includes affected assets/users.
-- [ ] Mitigation includes design-time and runtime controls.
-- [ ] Verification includes objective success criteria.
-- [ ] Residual risk documented if full fix is deferred.
+**Defense:** **Parse** **URL**, **canonicalize**, **allowlist** **host** **(exact** **or** **registered** **suffix** **rules)**, **default** **deny**.
 
 ---
 
-## Interview follow-up prompts to practice
+## L3 — Detection
 
-- How would you safely support third-party redirect domains?
-- What should be logged to detect redirect abuse?
-- What trade-off would you accept if release deadlines are tight?
-- How would this topic change between startup and enterprise scale?
+- **Code** **review**: **`Location`**, **`redirect`**, **`returnUrl`**, **`next`**, **`url`**.  
+- **DAST**: **follow** **302** **chains** **with** **external** **host**.  
+- **OAuth** **reviews**: **`redirect_uri`** **exact** **match** **per** **RFC** **9700** **themes**.
+
+---
+
+## L3 — Severity debate
+
+- **Alone**: often **Medium** **(phishing)** **in** **bug** **bounties**—**context** **matters**.  
+- **With** **OAuth** **or** **admin** **flows**: **High**/**Critical**.  
+- **Chained** **to** **SSRF**: **follow** **chain** **severity**.
+
+---
+
+## Hands-on (authorized)
+
+- **PortSwigger** open redirect / **OAuth** labs.  
+- **OWASP** **Juice** **Shop** **redirect** **challenges**.
+
+---
+
+## Interview clusters
+
+### Junior
+
+- What is an **open** **redirect**?
+
+### Mid
+
+- **Allowlist** **vs** **blocklist** **for** **`next`** **param**?
+
+### Senior
+
+- **OAuth** **`redirect_uri`** **—** **exact** **match** **nuances**?
+
+### Staff
+
+- **Global** **SSO** **product** **—** **how** **to** **eliminate** **class** **across** **hundreds** **of** **apps**?
+
+---
+
+## Authoritative references
+
+- **CWE-601**  
+- **OWASP** Unvalidated Redirects and Forwards  
+- **RFC 9700** (OAuth security BCP—**redirect** **URI** **discipline**)
 
 ---
 
 ## Cross-links
 
-- `Threat Modeling`
-- `Secure Source Code Review`
-- `Product Security Real-World Scenarios`
-- `Risk Prioritization and Security Metrics`
+`OAuth` · `SSRF` · `XSS` · `Web Application Security Vulnerabilities` · `Penetration Testing`
 
+---
+
+## Verification checklist
+
+- [ ] **Explain** **`//evil`** **bypass** **and** **fix**.  
+- [ ] **One** **sentence** on **OAuth** **relationship**.  
+- [ ] **Write** **allowlist** **pseudocode**.

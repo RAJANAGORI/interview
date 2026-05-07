@@ -1,46 +1,50 @@
 # Fuzzing Security Testing - Interview Questions & Answers
 
-## Core questions
+## 60-second answer
 
-### Q1: Give a concise explanation of this topic
+**Q: What is fuzzing and how is it used in security testing?**
 
-**Answer:** Fuzzing Security Testing concerns coverage-guided and mutation-based fault discovery for security bugs. In interviews, I explain the boundary, failure mechanism, impact chain, and verification approach rather than only naming techniques.
-
-### Q2: How do you separate real risk from noisy signals
-
-**Answer:** I require reproducibility, clear trust-boundary violation, and measurable impact. I avoid severity inflation and document confidence level explicitly.
-
-### Q3: What is your mitigation strategy style
-
-**Answer:** I pair **immediate containment** (guardrails, policy, monitoring) with **structural fixes** (architecture, parser/canonicalization, privilege model, or workflow controls).
-
-### Q4: How do you verify remediation quality
-
-**Answer:** I define objective checks before implementation: negative tests, telemetry expectations, and post-fix regression runs. Closure requires evidence, not assumption.
-
-### Q5: How do you communicate this to non-security stakeholders
-
-**Answer:** I translate technical findings into business outcomes, estimate likelihood + blast radius, and propose phased remediation with clear owner and timeline.
-
-## Advanced follow-ups
-
-### Q6: What does “interview-ready depth” look like here
-
-**Answer:** I can explain mechanism in under 2 minutes, handle edge cases/follow-ups, and map controls to production constraints.
-
-### Q7: What mistakes do candidates make
-
-**Answer:** Over-indexing on payload/tool trivia, skipping trust-boundary explanation, and not discussing verification.
-
-### Q8: What is your 7-day improvement plan for this topic
-
-**Answer:** Day 1-2 mechanism review, day 3 scenario drill, day 4 mock follow-ups, day 5 remediation patterns, day 6 verification patterns, day 7 timed answer rehearsal.
+**A:** Fuzzing automatically **generates** and **mutates** inputs against an API or parser to **find** **crashes** and **undefined** behavior. **Coverage-guided** engines like **AFL++** and **libFuzzer** **keep** inputs that **explore** **new** **code** paths, which is far more effective than **pure** **random** bytes. We pair fuzzing with **AddressSanitizer** to **turn** **subtle** **memory** bugs into **clear** **failures**. **Outputs** go through **crash** **triage** to decide **security** **severity**. Fuzzing is **complementary** to **SAST**, **reviews**, and **formal** tests—not a **replacement**.
 
 ---
 
-## Depth: Interview follow-ups — Fuzzing Security Testing
+## Mechanics
 
-- How do you prioritize fuzz findings for product teams?
-- How do you prevent flaky crash noise?
-- What telemetry would show prevention is failing?
-- What policy guardrail would you introduce at platform level?
+### Q: Dumb vs coverage-guided?
+
+**A:** **Dumb** fuzzing **doesn’t** **learn** from **execution**—cheap but **shallow**. **Coverage-guided** uses **instrumentation** to **prefer** **mutations** that **hit** **new** **edges**—**much** **deeper** **bug** **discovery** **per** **CPU** **hour**.
+
+### Q: What makes a bad fuzz harness?
+
+**A:** **Too** **large** **surface** per **iteration**, **shared** **mutable** **state** **without** **reset**, **network** **I/O** **inside** **the** **loop**, or **timeouts** **too** **short** **so** **legit** **paths** **never** **complete**.
+
+---
+
+## Operations
+
+### Q: Where should fuzzing run?
+
+**A:** **Dedicated** **workers** or **nightly** **CI**—not **every** **PR** **if** **runtime** **is** **hours**; **gate** **releases** on **no** **new** **high** **severity** **crashes** **in** **main** **branch** **campaigns**.
+
+### Q: OSS-Fuzz—what is it?
+
+**A:** **Google**-operated **service** **pattern** for **open** **source**: **maintainers** **submit** **projects** with **harnesses**; **continuous** **fuzzing** **finds** **bugs** **early**.
+
+---
+
+## Depth: Follow-ups
+
+- **Grammar-based** vs **mutation** for **structured** **inputs**  
+- **Differential** fuzzing (compare **two** **implementations**)  
+- **Fuzzing** **WebAssembly** or **JIT** **edges** (advanced)
+
+---
+
+## Mock ladder
+
+| Level | Question |
+|-------|----------|
+| Junior | Define **coverage** **feedback** |
+| Mid | **ASan** + **fuzz** **why** |
+| Senior | **CI** **integration** **trade-offs** |
+| Staff | **Portfolio** **risk** **coverage** **metrics** |
