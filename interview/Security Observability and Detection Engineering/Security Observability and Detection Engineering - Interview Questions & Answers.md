@@ -120,7 +120,7 @@
 
 ## Depth: Interview follow-ups — Observability & Detection
 
-**Authoritative references:** [MITRE ATT&CK](https://attack.mitre.org/) for tactic and technique vocabulary; [NIST SP 800-61 Rev. 3](https://csrc.nist.gov/publications/detail/sp/800-61/rev-3/final) for incident handling alignment; cloud provider documentation for **AWS CloudTrail**, **Google Cloud Audit Logs**, and **Azure Monitor / Entra ID** auditing for control-plane telemetry accuracy.
+**Authoritative references:** [MITRE ATT&CK](https://attack.mitre.org/) for tactic and technique vocabulary; [NIST SP 800-61 Rev. 2](https://csrc.nist.gov/pubs/sp/800/61/r2/final) for incident handling alignment; cloud provider documentation for **AWS CloudTrail**, **Google Cloud Audit Logs**, and **Azure Monitor / Entra ID** auditing for control-plane telemetry accuracy.
 
 **Follow-ups interviewers often add:**
 

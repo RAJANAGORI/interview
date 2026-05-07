@@ -316,7 +316,7 @@ This document provides authoritative online references for all topics covered in
 
 ### **17. OWASP Path Traversal Cheat Sheet**
 
-**URL:** [https://cheatsheetseries.owasp.org/cheatsheets/Path_Traversal.html](https://cheatsheetseries.owasp.org/cheatsheets/Path_Traversal.html)
+**URL:** [https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html)
 
 **Topics Covered:**
 
@@ -371,9 +371,9 @@ This document provides authoritative online references for all topics covered in
 
 ---
 
-### **21. SANS Secure Coding Practices**
+### **21. OWASP Secure Coding Practices**
 
-**URL:** [https://www.sans.org/white-papers/secure-coding-practices/](https://www.sans.org/white-papers/secure-coding-practices/)
+**URL:** [https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/](https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/)
 
 **Topics Covered:**
 
@@ -385,16 +385,16 @@ This document provides authoritative online references for all topics covered in
 
 ---
 
-### **22. CERT Secure Coding Standards**
+### **22. CERT Secure Coding Standards (overview)**
 
-**URL:** [https://wiki.sei.cmu.edu/confluence/display/seccode/SEI+CERT+Coding+Standards](https://wiki.sei.cmu.edu/confluence/display/seccode/SEI+CERT+Coding+Standards)
+**URL:** [https://insights.sei.cmu.edu/](https://insights.sei.cmu.edu/)
 
 **Language-Specific Standards:**
 
-- C: [https://wiki.sei.cmu.edu/confluence/display/c/SEI+CERT+C+Coding+Standard](https://wiki.sei.cmu.edu/confluence/display/c/SEI+CERT+C+Coding+Standard)
-- C++: [https://wiki.sei.cmu.edu/confluence/display/cplusplus/SEI+CERT+C%2B%2B+Coding+Standard](https://wiki.sei.cmu.edu/confluence/display/cplusplus/SEI+CERT+C%2B%2B+Coding+Standard)
-- Java: [https://wiki.sei.cmu.edu/confluence/display/java/SEI+CERT+Oracle+Coding+Standard+for+Java](https://wiki.sei.cmu.edu/confluence/display/java/SEI+CERT+Oracle+Coding+Standard+for+Java)
-- Python: [https://wiki.sei.cmu.edu/confluence/display/python/SEI+CERT+Python+Coding+Standard](https://wiki.sei.cmu.edu/confluence/display/python/SEI+CERT+Python+Coding+Standard)
+- C: [https://cwe.mitre.org/](https://cwe.mitre.org/)
+- C++: [https://cwe.mitre.org/](https://cwe.mitre.org/)
+- Java: [https://cwe.mitre.org/](https://cwe.mitre.org/)
+- Python: [https://cwe.mitre.org/](https://cwe.mitre.org/)
 
 **Topics Covered:**
 
@@ -469,7 +469,7 @@ This document provides authoritative online references for all topics covered in
 
 ### **27. SonarQube Security Rules**
 
-**URL:** [https://rules.sonarsource.com/](https://rules.sonarsource.com/)
+**URL:** [https://www.sonarsource.com/products/sonarqube/](https://www.sonarsource.com/products/sonarqube/)
 
 **Topics Covered:**
 
@@ -519,7 +519,7 @@ This document provides authoritative online references for all topics covered in
 
 ### **31. CERT C Secure Coding: Memory Management**
 
-**URL:** [https://wiki.sei.cmu.edu/confluence/display/c/MEM00-C.+Allocate+and+free+memory+in+the+same+module%2C+at+the+same+level+of+abstraction](https://wiki.sei.cmu.edu/confluence/display/c/MEM00-C.+Allocate+and+free+memory+in+the+same+module%2C+at+the+same+level+of+abstraction)
+**URL:** [https://cwe.mitre.org/data/definitions/120.html](https://cwe.mitre.org/data/definitions/120.html)
 
 **Topics Covered:**
 

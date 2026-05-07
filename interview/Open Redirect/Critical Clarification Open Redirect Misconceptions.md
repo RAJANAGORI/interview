@@ -12,9 +12,9 @@
 
 ---
 
-## 3. "startswith('https://trusted.com') is enough."
+## 3. "startswith('trusted.example') is enough."
 
-**Reality:** **`https://trusted.com.evil.com`** **and** **encoding** **tricks** **bypass** **naive** **prefix** **checks**.
+**Reality:** **`https://trusted.example.evil.com`** **and** **encoding** **tricks** **bypass** **naive** **prefix** **checks**.
 
 ---
 

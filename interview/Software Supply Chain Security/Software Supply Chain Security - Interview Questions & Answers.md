@@ -8,7 +8,7 @@
 >
 > **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
 
-**References:** [SLSA](https://slsa.dev/); [Sigstore](https://www.sigstore.dev/); [OWASP Top 10 CI/CD Security Risks](https://owasp.org/www-project-top-10-ci-cd-security-risks/); SPDX and CycloneDX community specifications; [NIST SSDF SP 800-218](https://csrc.nist.gov/publications/detail/sp/800-218/final). Prefer official specs and project sites for version-sensitive details.
+**References:** [SLSA](https://github.com/slsa-framework/slsa); [Sigstore](https://www.sigstore.dev/); [OWASP Top 10 CI/CD Security Risks](https://owasp.org/www-project-top-10-ci-cd-security-risks/); SPDX and CycloneDX community specifications; [NIST SSDF SP 800-218](https://csrc.nist.gov/publications/detail/sp/800-218/final). Prefer official specs and project sites for version-sensitive details.
 
 ---
 
@@ -32,7 +32,7 @@ An SBOM is a **machine-readable inventory** of components, versions, licenses, a
 
 ## 4) How do SBOM, provenance, and SLSA differ?
 
-**SBOM** answers **what is inside** the deliverable. **Provenance** (via **attestations**) answers **how it was built**—source revision, builder identity, dependencies at build time. **SLSA** is a **framework of levels/tracks** that defines progressively stronger **build and source integrity** expectations; cite [slsa.dev](https://slsa.dev/) for current predicates rather than memorizing a static chart. In practice you want **inventory + signed provenance + verification at deploy**.
+**SBOM** answers **what is inside** the deliverable. **Provenance** (via **attestations**) answers **how it was built**—source revision, builder identity, dependencies at build time. **SLSA** is a **framework of levels/tracks** that defines progressively stronger **build and source integrity** expectations; cite the [SLSA project](https://github.com/slsa-framework/slsa) for current predicates rather than memorizing a static chart. In practice you want **inventory + signed provenance + verification at deploy**.
 
 ---
 

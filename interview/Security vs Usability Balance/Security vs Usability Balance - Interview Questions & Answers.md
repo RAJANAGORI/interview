@@ -150,7 +150,7 @@
 
 ## Depth: Interview follow-ups
 
-**Authoritative references:** NIST usable security resources ([NIST NICE / usable cybersecurity](https://www.nist.gov/itl/applied-cybersecurity/nice-resources/nice-framework-resources)); MFA guidance ([CISA MFA](https://www.cisa.gov/MFA)).
+**Authoritative references:** NIST usable security resources ([NIST NICE Framework](https://www.nist.gov/itl/applied-cybersecurity/nice)); MFA guidance ([CISA MFA](https://www.cisa.gov/MFA)).
 
 **Likely follow-ups:** step-up vs static MFA; **recovery** vs lockout; **passkeys / WebAuthn** deployment; **OAuth consent** UX; **session fixation** and logout; shadow IT when official tools are too painful.
 

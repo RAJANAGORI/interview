@@ -170,7 +170,7 @@ Use these as **illustrative**—verify versions when discussing a specific emplo
 - **PortSwigger Web Security Academy** — HTTP request smuggling modules (CL.TE, TE.CL, TE.TE, HTTP/2).
 - **Burp Suite** — **HTTP Request Smuggler** extension; **Turbo Intruder** for timing/reuse tests.
 
-**Payload references:** [PayloadsAllTheThings — HTTP Request Smuggling](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/HTTP%20Request%20Smuggling) (community-maintained; verify before use).
+**Payload references:** [PayloadsAllTheThings](https://github.com/swisskyrepo/PayloadsAllTheThings) (community-maintained; verify before use).
 
 ---
 

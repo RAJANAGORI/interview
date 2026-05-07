@@ -245,5 +245,5 @@ Pair this module with **Secrets Management**, **IAM and Least Privilege**, **Sof
 ## Primary references
 
 - [OWASP Top 10 CI/CD Security Risks](https://owasp.org/www-project-top-10-ci-cd-security-risks/) (v1.0)
-- [SLSA](https://slsa.dev/) — supply-chain integrity levels and provenance
+- [SLSA](https://github.com/slsa-framework/slsa) — supply-chain integrity levels and provenance
 - Cloud OIDC integration guides from **AWS**, **Google Cloud**, and **Microsoft Azure** for your chosen CI platform

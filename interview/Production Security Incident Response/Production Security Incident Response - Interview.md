@@ -134,7 +134,7 @@
 
 ## Depth: Interview follow-ups — Production Security Incident Response
 
-**Authoritative references:** [NIST SP 800-61 Rev. 3](https://csrc.nist.gov/publications/detail/sp/800-61/rev-3/final) (Computer Security Incident Handling—verify the revision your employer standardizes on); [FIRST](https://www.first.org/) CSIRT practices.
+**Authoritative references:** [NIST SP 800-61 Rev. 2](https://csrc.nist.gov/pubs/sp/800/61/r2/final) (Computer Security Incident Handling—verify the revision your employer standardizes on); [FIRST](https://www.first.org/) CSIRT practices.
 
 **Follow-ups interviewers often ask:**
 

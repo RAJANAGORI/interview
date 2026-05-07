@@ -148,7 +148,7 @@
 
 ## Depth: Interview Follow-ups — GraphQL and API Security
 
-**Authoritative references:** [OWASP API Security Top 10](https://owasp.org/www-project-api-security/); [GraphQL OWASP Cheat Sheet (draft/community)](https://cheatsheetseries.owasp.org/) — search "GraphQL" on OWASP cheat sheet index for latest; [CWE-400](https://cwe.mitre.org/data/definitions/400.html) (resource exhaustion); [Apollo Security Best Practices](https://www.apollographql.com/docs/apollo-server/security/); [GraphQL Specification](https://spec.graphql.org/).
+**Authoritative references:** [OWASP API Security Top 10](https://owasp.org/www-project-api-security/); [GraphQL OWASP Cheat Sheet (draft/community)](https://cheatsheetseries.owasp.org/) — search "GraphQL" on OWASP cheat sheet index for latest; [CWE-400](https://cwe.mitre.org/data/definitions/400.html) (resource exhaustion); [Apollo documentation](https://www.apollographql.com/docs/); [GraphQL Specification](https://spec.graphql.org/).
 
 **Follow-ups:**
 

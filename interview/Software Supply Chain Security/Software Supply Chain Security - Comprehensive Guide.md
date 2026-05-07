@@ -97,7 +97,7 @@ An **SBOM (Software Bill of Materials)** is a **machine-readable** list of compo
 
 **SLSA (Supply-chain Levels for Software Artifacts)** is a framework for **incremental assurance** on **how artifacts are produced** and protected from tampering. It organizes expectations into **tracks** (for example **Build** and **Source** tracks in current documentation) and **levels** that add requirements such as **scripted builds**, **isolated builders**, **hermetic or reproducible tendencies**, **provenance** with identified builder identity, and **consumer-side verification**.
 
-**Important interview nuance:** SLSA **predicates and requirements evolve**; cite [slsa.dev](https://slsa.dev/) for the current specification rather than memorizing a frozen level chart. The underlying story stays stable: **higher levels** mean **harder undetected tampering** between source and artifact, assuming you **verify at use time**.
+**Important interview nuance:** SLSA **predicates and requirements evolve**; cite the [SLSA project](https://github.com/slsa-framework/slsa) for the current specification rather than memorizing a frozen level chart. The underlying story stays stable: **higher levels** mean **harder undetected tampering** between source and artifact, assuming you **verify at use time**.
 
 **SLSA vs SBOM:** SBOM describes **contents**; SLSA-style provenance describes **provenance and build integrity**. They are **complementary**.
 

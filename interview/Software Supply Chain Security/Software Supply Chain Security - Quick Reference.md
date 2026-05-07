@@ -4,7 +4,7 @@
 
 | Topic | Where to point |
 |--------|----------------|
-| **Artifact integrity levels** | [SLSA](https://slsa.dev/) |
+| **Artifact integrity levels** | [SLSA](https://github.com/slsa-framework/slsa) |
 | **CI/CD attack surface** | [OWASP Top 10 CI/CD Security Risks](https://owasp.org/www-project-top-10-ci-cd-security-risks/) |
 | **SBOM formats** | SPDX · CycloneDX (community specs) |
 | **Signing / attestations** | [Sigstore](https://www.sigstore.dev/) · in-toto (supply-chain attestations) |

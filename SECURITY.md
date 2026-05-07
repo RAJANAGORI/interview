@@ -6,7 +6,7 @@ This repository contains **educational** interview preparation material (markdow
 
 If you discover a **security problem** related to this project—for example, accidentally committed secrets, malicious links in content, or a vulnerability in published static site configuration—please report it responsibly:
 
-- **Preferred:** Open a **private** security advisory on the GitHub repository (if enabled), or contact the maintainer via the contact methods listed on [rajanagori.in](https://rajanagori.in/).
+- **Preferred:** Open a **private** security advisory on the GitHub repository (if enabled), or contact the maintainer via the profile/contact links in [`social.html`](social.html).
 
 Include enough detail to reproduce or verify the issue (file path, commit, or URL).
 

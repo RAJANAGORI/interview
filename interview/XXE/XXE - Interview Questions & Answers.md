@@ -489,7 +489,7 @@ Remember: **XXE is prevented by using secure XML parsers with external entities
 
 ## Depth: Interview follow-ups — XXE
 
-**Authoritative references:** [OWASP XML External Entity (XXE)](https://owasp.org/www-community/vulnerabilities/XML_External_Entity_(XXE)); [CWE-611](https://cwe.mitre.org/data/definitions/611.html); [XML External Entity Prevention CS](https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html).
+**Authoritative references:** [OWASP XML External Entity Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html); [CWE-611](https://cwe.mitre.org/data/definitions/611.html); [OWASP cheat sheet index](https://cheatsheetseries.owasp.org/).
 
 **Follow-ups:**
 - **Blind XXE** exfiltration via out-of-band DNS/HTTP—how you’d detect in prod.

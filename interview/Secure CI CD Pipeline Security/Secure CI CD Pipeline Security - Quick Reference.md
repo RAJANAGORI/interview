@@ -21,7 +21,7 @@
 
 ## Related standards
 
-- **[SLSA](https://slsa.dev/)** — artifact/source integrity  
+- **[SLSA](https://github.com/slsa-framework/slsa)** — artifact/source integrity  
 - **[Sigstore](https://www.sigstore.dev/)** — signing for containers/attestations  
 
 ## One-liner

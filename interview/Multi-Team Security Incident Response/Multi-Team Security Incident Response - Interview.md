@@ -104,7 +104,7 @@
 
 ## Depth: Interview follow-ups — Multi-Team Incident Response
 
-**Authoritative references:** [NIST SP 800-61 Rev. 3](https://csrc.nist.gov/publications/detail/sp/800-61/rev-3/final) for incident handling lifecycle; your organization’s IR plan and on-call runbooks; incident command practices common in IT service management (compare internal policy to any vendor framework you cite in interviews).
+**Authoritative references:** [NIST SP 800-61 Rev. 2](https://csrc.nist.gov/pubs/sp/800/61/r2/final) for incident handling lifecycle; your organization’s IR plan and on-call runbooks; incident command practices common in IT service management (compare internal policy to any vendor framework you cite in interviews).
 
 **Follow-ups interviewers like:** RACI for customer comms; how severity maps to paging; how you document timelines for regulators; how postmortem actions are tracked to completion.
 

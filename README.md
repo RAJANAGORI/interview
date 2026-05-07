@@ -27,6 +27,6 @@ The aim is to keep this body of material honest, current enough to be useful, an
 
 Maintaining and extending this work takes sustained effort. If you find this repository useful in your preparation or your work, you can support continued development by [sponsoring on GitHub](https://github.com/sponsors/RAJANAGORI). Sponsorship is optional; the materials remain available regardless. Any support is appreciated and helps justify time spent improving and expanding the content.
 
-For context on the author and related work, see [rajanagori.in](https://rajanagori.in), [nightingale-security.com](https://nightingale-security.com/), and the links in [`social.html`](social.html).
+For context on the author and related work, see [GitHub profile](https://github.com/RAJANAGORI), [nightingale-security.com](https://nightingale-security.com/), and the links in [`social.html`](social.html).
 
 ---

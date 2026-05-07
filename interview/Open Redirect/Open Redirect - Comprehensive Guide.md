@@ -66,7 +66,7 @@ User **trusts** the **first** **host**; **bar** **shows** **trusted** **domain**
 ## L2 — Common bypass themes (interview)
 
 - **`//evil.com`** — **protocol-relative** **appears** **“relative”** **to** **naive** **checks**.  
-- **`https://trusted.com.evil.com`** — **subdomain** **tricks** **vs** **suffix** **checks**.  
+- **`https://trusted.example.evil.com`** — **subdomain** **tricks** **vs** **suffix** **checks**.
 - **`\evil.com`** **(IE** **legacy)** / **unicode** **homoglyphs** — **parser** **dependent**.  
 - **Double** **encoding** **`https%253A//evil`**.
 
