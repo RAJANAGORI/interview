@@ -16,7 +16,7 @@
 
 ### Q: Quick test in a authorized assessment?
 
-**A:** Inject expressions like **`{{7*7}}`** / engine analogs; **49** in output implies **evaluation**—then **enumerate** engine via errors.
+**A:** Inject expressions like **``&#123;&#123;7*7&#125;&#125;``** / engine analogs; **49** in output implies **evaluation**—then **enumerate** engine via errors.
 
 ---
 

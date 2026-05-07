@@ -189,7 +189,7 @@ session['csrf_token'] = csrf_token
 
 ```html
 <form action="/transfer" method="POST">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+  <input type="hidden" name="csrf_token" value="&#123;&#123; csrf_token &#125;&#125;" />
   <!-- ... -->
 </form>
 
@@ -586,7 +586,7 @@ response.set_cookie('csrf_token', token)
 
 ```html
 <form>
-  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+  <input type="hidden" name="csrf_token" value="&#123;&#123; csrf_token &#125;&#125;" />
 </form>
 
 ```

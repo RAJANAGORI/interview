@@ -256,7 +256,7 @@ session['csrf_token'] = csrf_token
 
 # Include in form
 <form action="/transfer" method="POST">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+  <input type="hidden" name="csrf_token" value="&#123;&#123; csrf_token &#125;&#125;" />
   <!-- ... -->
 </form>
 
@@ -393,7 +393,7 @@ response.set_cookie('csrf_token', token)
 
 # Include same token in form
 <form>
-  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+  <input type="hidden" name="csrf_token" value="&#123;&#123; csrf_token &#125;&#125;" />
 </form>
 
 # Validate
@@ -419,7 +419,7 @@ session['csrf_token'] = csrf_token
 
 # Include in form
 <form action="/transfer" method="POST">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+  <input type="hidden" name="csrf_token" value="&#123;&#123; csrf_token &#125;&#125;" />
   <!-- ... -->
 </form>
 

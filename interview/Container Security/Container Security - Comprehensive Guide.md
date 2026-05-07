@@ -578,11 +578,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build image
-      run: docker build -t myapp:${{ github.sha }} .
+      run: docker build -t myapp:$&#123;&#123; github.sha &#125;&#125; .
     - name: Scan image
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: myapp:${{ github.sha }}
+        image-ref: myapp:$&#123;&#123; github.sha &#125;&#125;
         format: 'sarif'
         output: 'trivy-results.sarif'
     - name: Upload results

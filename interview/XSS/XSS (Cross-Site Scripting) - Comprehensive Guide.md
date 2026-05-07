@@ -572,7 +572,7 @@ def show_user():
 
 ```html
 <!-- user.html -->
-<h1>Welcome, {{ username }}</h1>  <!-- Auto-escaped! -->
+<h1>Welcome, &#123;&#123; username &#125;&#125;</h1>  <!-- Auto-escaped! -->
 
 ```
 

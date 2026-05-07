@@ -422,7 +422,7 @@ url_safe = urllib.parse.quote(user_input, safe='')
 js_safe = json.dumps(user_input)  # Produces a safely quoted string
 
 # WRONG: Using HTML encoding in JavaScript context
-# <script>var name = '{{ html_escape(user_input) }}';</script>
+# <script>var name = '&#123;&#123; html_escape(user_input) &#125;&#125;';</script>
 # An attacker can break out with: ';alert(1);//
 ```
 
@@ -483,7 +483,7 @@ Modern frameworks provide automatic encoding by default:
 
 - **React:** Auto-escapes JSX expressions. Dangerous: `dangerouslySetInnerHTML`
 - **Angular:** Auto-sanitizes bindings. Dangerous: `bypassSecurityTrustHtml()`
-- **Vue:** Auto-escapes `{{ }}` interpolation. Dangerous: `v-html` directive
+- **Vue:** Auto-escapes ``&#123;&#123; &#125;&#125;`` interpolation. Dangerous: `v-html` directive
 
 ```jsx
 // React — safe by default
@@ -493,7 +493,7 @@ function Comment({ text }) {
 
 // React — explicitly dangerous
 function Comment({ htmlContent }) {
-    return <div dangerouslySetInnerHTML={{ __html: htmlContent }} />;  // XSS risk!
+    return <div dangerouslySetInnerHTML=&#123;&#123; __html: htmlContent &#125;&#125; />;  // XSS risk!
 }
 ```
 
@@ -544,7 +544,7 @@ def generate_csrf_token():
 
 # Template
 # <form method="POST" action="/transfer">
-#   <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+#   <input type="hidden" name="csrf_token" value="&#123;&#123; session.csrf_token &#125;&#125;">
 #   ...
 # </form>
 

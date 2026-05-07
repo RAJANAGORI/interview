@@ -759,7 +759,7 @@ Resources:
       SecretString: !Sub |
         {
           "username": "admin",
-          "password": "{{resolve:secretsmanager:database/password:SecretString:password}}"
+          "password": "&#123;&#123;resolve:secretsmanager:database/password:SecretString:password&#125;&#125;"
         }
 ```
 {% endraw %}

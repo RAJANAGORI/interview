@@ -631,7 +631,7 @@ def show_post(id):
 ```html
 <!-- post.html -->
 {% for comment in comments %}
-  <div class="comment">{{ comment.comment }}</div>  <!-- Auto-escaped! -->
+  <div class="comment">&#123;&#123; comment.comment &#125;&#125;</div>  <!-- Auto-escaped! -->
 {% endfor %}
 
 ```

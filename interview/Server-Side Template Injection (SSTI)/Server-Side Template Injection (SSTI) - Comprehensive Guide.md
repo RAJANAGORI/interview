@@ -42,8 +42,8 @@ Attacker input ──► interpolated into template string ──► server temp
 
 | Engine | Ecosystem hint | Discriminator |
 |--------|----------------|---------------|
-| **Jinja2** | Python / Flask | `{{` `}}`, filters, `config` leaks |
-| **Twig** | PHP / Symfony | `{{` `_self.env` patterns (legacy) |
+| **Jinja2** | Python / Flask | ``&#123;&#123;`` ``&#125;&#125;``, filters, `config` leaks |
+| **Twig** | PHP / Symfony | ``&#123;&#123;`` `_self.env` patterns (legacy) |
 | **Freemarker** | Java | `<#assign` / `${...}` RCE classes in unsafe configs |
 | **Velocity** | Java | `#set` / directive execution when unsafe |
 | **ERB** | Ruby | `<%= %>` evaluation |
@@ -60,14 +60,14 @@ Exact payloads differ by **version** and **sandbox**—**learn** **discovery** *
 ```python
 from jinja2 import Template
 def render(user_input):
-    return Template("Hello " + user_input).render()  # SSTI if user_input contains {{...}}
+    return Template("Hello " + user_input).render()  # SSTI if user_input contains &#123;&#123;...&#125;&#125;
 ```
 
 **Fixed:** static template, user data as **variable**.
 
 ```python
 from jinja2 import Environment, DictLoader
-env = Environment(loader=DictLoader({"tmpl": "Hello {{ name }}"}))
+env = Environment(loader=DictLoader({"tmpl": "Hello &#123;&#123; name &#125;&#125;"}))
 def render(user_input):
     return env.get_template("tmpl").render(name=user_input)
 ```
@@ -78,7 +78,7 @@ def render(user_input):
 
 ## L2 — Discovery methodology (authorized)
 
-1. **Fuzz** template metacharacters: `{{7*7}}`, `${7*7}`, `<%= 7*7 %>`.
+1. **Fuzz** template metacharacters: ``&#123;&#123;7*7&#125;&#125;``, `${7*7}`, `<%= 7*7 %>`.
 2. **Observe** **49** vs literal in **output** → evaluation confirmed.
 3. **Enumerate** engine via **errors** or **behavior**; escalate to **read**/**exec** primitives per **engine** docs.
 4. Prefer **OAST** (**Burp Collaborator**) for **blind** cases where output not returned.
@@ -95,7 +95,7 @@ def render(user_input):
 ## Detection
 
 - **App logs:** template **parse** errors with **user** **fragments**.
-- **WAF:** may catch **obvious** `{{` patterns; **easy** to **encode**—**fix** **code** first.
+- **WAF:** may catch **obvious** ``&#123;&#123;`` patterns; **easy** to **encode**—**fix** **code** first.
 - **Code review:** search for `Template(`, string **concat** before **render**, **eval** of user strings.
 
 ---

@@ -471,7 +471,7 @@ If a CSP allows a CDN that hosts Angular.js, an attacker can inject Angular temp
 {% raw %}
 ```html
 <div ng-app>
-  {{constructor.constructor('alert(1)')()}}
+  &#123;&#123;constructor.constructor('alert(1)')()&#125;&#125;
 </div>
 <script src="https://allowed-cdn.com/angular.min.js"></script>
 ```

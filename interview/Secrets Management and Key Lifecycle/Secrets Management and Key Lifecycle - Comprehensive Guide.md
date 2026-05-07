@@ -244,13 +244,13 @@ resource "vault_database_secret_backend_role" "app_readonly" {
   db_name = vault_database_secret_backend_connection.postgres.name
 
   creation_statements = [
-    "CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}';",
-    "GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"{{name}}\";"
+    "CREATE ROLE \"&#123;&#123;name&#125;&#125;\" WITH LOGIN PASSWORD '&#123;&#123;password&#125;&#125;' VALID UNTIL '&#123;&#123;expiration&#125;&#125;';",
+    "GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"&#123;&#123;name&#125;&#125;\";"
   ]
 
   revocation_statements = [
-    "REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM \"{{name}}\";",
-    "DROP ROLE IF EXISTS \"{{name}}\";"
+    "REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM \"&#123;&#123;name&#125;&#125;\";",
+    "DROP ROLE IF EXISTS \"&#123;&#123;name&#125;&#125;\";"
   ]
 
   default_ttl = "1h"
@@ -298,9 +298,9 @@ annotations:
   vault.hashicorp.com/role: "app-role"
   vault.hashicorp.com/agent-inject-secret-db-creds: "database/creds/app-readonly"
   vault.hashicorp.com/agent-inject-template-db-creds: |
-    {{- with secret "database/creds/app-readonly" -}}
-    postgresql://{{ .Data.username }}:{{ .Data.password }}@db:5432/app
-    {{- end }}
+    &#123;&#123;- with secret "database/creds/app-readonly" -&#125;&#125;
+    postgresql://&#123;&#123; .Data.username &#125;&#125;:&#123;&#123; .Data.password &#125;&#125;@db:5432/app
+    &#123;&#123;- end &#125;&#125;
 ```
 {% endraw %}
 

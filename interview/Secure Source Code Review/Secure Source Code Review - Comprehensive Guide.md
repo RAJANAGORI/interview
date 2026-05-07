@@ -1863,7 +1863,7 @@ function HelloWorld(message) {
   return (
     <div>
       <h1>Hello!</h1>
-      <p dangerouslySetInnerHTML={{ __html: message }} />;  <!-- DANGEROUS -->
+      <p dangerouslySetInnerHTML=&#123;&#123; __html: message &#125;&#125; />;  <!-- DANGEROUS -->
     </div>
   );
 }

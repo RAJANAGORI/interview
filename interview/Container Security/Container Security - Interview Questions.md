@@ -658,11 +658,11 @@ spec:
 - name: Scan image
   uses: aquasecurity/trivy-action@master
   with:
-    image-ref: myapp:${{ github.sha }}
+    image-ref: myapp:$&#123;&#123; github.sha &#125;&#125;
     format: 'sarif'
     output: 'trivy-results.sarif'
 - name: Generate SBOM
-  run: syft packages myapp:${{ github.sha }} -o spdx-json > sbom.json
+  run: syft packages myapp:$&#123;&#123; github.sha &#125;&#125; -o spdx-json > sbom.json
 ```
 
 ---

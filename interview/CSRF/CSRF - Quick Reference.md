@@ -51,7 +51,7 @@ csrf_token = secrets.token_urlsafe(32)
 session['csrf_token'] = csrf_token
 
 # Include in form
-<input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+<input type="hidden" name="csrf_token" value="&#123;&#123; csrf_token &#125;&#125;" />
 
 # Validate
 if request.form['csrf_token'] != session['csrf_token']:
