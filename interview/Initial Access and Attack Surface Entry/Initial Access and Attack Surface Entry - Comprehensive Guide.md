@@ -107,6 +107,49 @@ services:
 
 ---
 
+## L3 — Identity-plane initial access mechanics
+
+Modern initial access is often identity-first:
+
+- Session token theft (browser/session cookie replay).
+- OAuth consent abuse and malicious app registrations.
+- Legacy auth protocol fallback (IMAP/POP/basic auth) bypassing stronger controls.
+- Password reset/helpdesk workflows exploited via social engineering.
+
+Controls:
+
+- Phishing-resistant MFA + session binding to device/risk signals.
+- Strict app consent governance and tenant-wide risky app monitoring.
+- Disable legacy protocols and enforce conditional access globally.
+- Harden account recovery with high-assurance verification and audit trails.
+
+---
+
+## L4 — Exposure management and attack-path prioritization
+
+Not all internet-facing assets are equal; prioritize by path to business impact:
+
+1. Build external asset inventory (domains, APIs, VPN, IdP, admin planes, third-party integrations).  
+2. Score each entry point by exploitability, identity privilege reachable, and blast radius.  
+3. Map likely attack paths (entry -> privilege escalation -> data/production impact).  
+4. Drive remediation by path risk, not by scanner severity alone.
+
+Interview signal: strong candidates describe attack-surface reduction as a program with ownership and metrics.
+
+---
+
+## L4 — 48-hour containment vs 90-day structural fixes
+
+For a newly exposed initial-access vector (for example, edge auth bypass):
+
+- **First 48h:** isolate entry point, restrict access, patch/mitigate, reset risky credentials/sessions, increase detection sensitivity.
+- **First 2 weeks:** incident scoping, log review, forensic preservation, communication and customer/legal coordination if required.
+- **Within 90 days:** architecture hardening (segmentation, identity controls, patch SLAs, automated exposure discovery, runbook updates).
+
+This structure is commonly expected in senior/staff interview scenarios.
+
+---
+
 ## Labs
 
 - **TryHackMe** / **HTB** **attack** **surface** rooms (authorized).
@@ -150,4 +193,6 @@ services:
 ## Verification checklist
 
 - [ ] List **five** **internet** **exposures** you’d **ban** by policy.
-- [ ] Map **one** **real** **incident** to **TA0001** technique.
+- [ ] Map **one** **real** **incident** to **TA0001** technique.  
+- [ ] Explain one identity-plane initial access chain and prevention controls.  
+- [ ] Describe 48h containment vs 90-day fix plan for an edge entry incident.

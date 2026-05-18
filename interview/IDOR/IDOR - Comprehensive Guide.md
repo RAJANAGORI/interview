@@ -641,6 +641,46 @@ def upload_file():
 
 ---
 
+## **Architecture-Level IDOR Controls**
+
+### **1. Capability-style object references**
+
+For high-risk object access (exports, downloads, admin actions), use signed short-lived references instead of raw IDs:
+
+- Reference encodes object + actor/tenant scope + expiry
+- Signature prevents tampering
+- Verification happens before object fetch
+
+This does not replace authorization, but it reduces trivial enumeration and URL tampering paths.
+
+### **2. Centralized policy decisions without latency collapse**
+
+Large systems often centralize authZ (PDP/OPA/policy service). Common failure:
+
+- Teams bypass central policy checks on "internal" paths for performance
+- Resolver/service caches decisions too broadly and leaks cross-tenant access
+
+Safe pattern:
+
+1. Include subject, tenant, resource, and action in cache key.
+2. Keep short policy cache TTL for sensitive actions.
+3. Log policy decision inputs/outputs for audit and incident response.
+
+### **3. IDOR in async and read-model architectures**
+
+In event-driven systems, access control bugs appear when read models lag:
+
+- Permission revoked in source of truth, but stale projection still serves data.
+- Background export job resolves object by ID without re-checking current caller permissions.
+
+Mitigations:
+
+- Re-check authorization at time of access/download, not only at job creation.
+- Version permissions and reject stale authorization contexts.
+- Add invariant tests for revoke-then-access race windows.
+
+---
+
 ## **Testing Checklist**
 
 ### **Manual Testing**

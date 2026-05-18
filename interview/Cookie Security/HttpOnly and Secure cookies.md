@@ -887,6 +887,50 @@ Set-Cookie: __Secure-oauthState=xyz789; Secure; HttpOnly; SameSite=None; Path=/;
 
 ---
 
+## Advanced Cookie Topics (Interview Depth)
+
+### 1) Partitioned cookies (CHIPS) for embedded contexts
+
+Modern browsers support **partitioned cookies** for some third-party scenarios so state is isolated per top-level site.
+
+Example concept:
+
+```http
+Set-Cookie: __Secure-widgetSession=<token>; Secure; HttpOnly; SameSite=None; Partitioned; Path=/
+```
+
+Why this matters:
+
+- Reduces cross-site tracking and cross-tenant state bleed for embedded widgets
+- Safer than unrestricted third-party cookie behavior
+- Still requires strict server-side authZ and origin checks
+
+### 2) Cookie tossing and scope confusion
+
+Even with good flags, scope mistakes create risk:
+
+- Over-broad `Domain=.example.com` allows sibling subdomain influence
+- Multiple cookies with same name but different path/domain create precedence ambiguity
+- Reverse proxies/apps may parse duplicate cookies differently
+
+Defensive pattern:
+
+- Prefer `__Host-` for primary session cookie
+- Keep one authoritative session cookie name/path
+- Reject requests with duplicate security-sensitive cookie names
+
+### 3) Rotation and replay-aware session architecture
+
+Cookie flags protect transport and script access, but incident resilience needs rotation logic:
+
+- Rotate session IDs after login, privilege change, and sensitive account events
+- Rotate remember-me artifacts independently from active session cookie
+- Track token family and invalidate on suspicious reuse
+
+Interview shorthand: "Cookie attributes reduce theft probability; rotation and telemetry reduce replay impact."
+
+---
+
 ## Summary
 
 ### Essential Cookie Security Checklist

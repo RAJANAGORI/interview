@@ -265,6 +265,42 @@ This is not theoretical—**build-time** attacks are part of modern **supply-cha
 
 ---
 
+## 14. Identity propagation and confused deputy prevention
+
+In multi-hop service graphs, security failures often come from **identity mixing**:
+
+- Edge authenticates the user, but internal services trust unsigned forwarded headers.
+- A privileged service calls downstream APIs on behalf of a user without explicit delegation boundaries.
+- A downstream service treats "caller service identity" as equivalent to "end-user identity."
+
+Safe propagation model:
+
+1. Preserve **workload identity** (mTLS/SPIFFE) separately from **user identity**.
+2. Use short-lived, signed delegation tokens for user context at each hop.
+3. Bind token audience to the next hop service (no broad reuse).
+4. Enforce authZ on both dimensions: "which service is calling" and "for which subject/tenant."
+
+Interview shorthand: "mTLS proves service peer identity; delegation token proves user intent scope."
+
+---
+
+## 15. Long-lived streams and auth lifecycle
+
+Streaming sessions can outlive token validity and policy state:
+
+- Access token expires while bidi stream remains open.
+- User/role is revoked, but existing stream keeps receiving events.
+- Gateway rotates signing keys while downstream stream sessions still trust old claims.
+
+Controls:
+
+- Hard max stream lifetime shorter than token/session lifetime.
+- Mid-stream revalidation checkpoints for high-risk channels.
+- Disconnect or downgrade stream permissions on revocation events.
+- Versioned key rotation strategy with short overlap windows and explicit validation of `kid` + issuer metadata.
+
+---
+
 ## How it fails (quick reference)
 
 | Failure mode | What breaks | Mitigation theme |

@@ -895,6 +895,45 @@ Maintain a test suite that validates your SP against:
 
 ---
 
+## 19. Advanced hardening and failure modes
+
+### 19.1 RelayState integrity and redirect safety
+
+`RelayState` is frequently abused as an open redirect carrier after successful SSO.
+
+- Accept only relative paths or strict allowlisted destinations.
+- Bind `RelayState` to the AuthnRequest ID (or sign/encrypt it server-side).
+- Enforce length and character limits to prevent parser/log injection edge cases.
+
+### 19.2 Metadata trust and key rollover race windows
+
+Operational failures often happen during certificate rotation:
+
+- SP fetches stale metadata from cache while IdP has already switched certs.
+- Overlap windows are too short, creating intermittent signature failures.
+- Emergency rollback re-enables deprecated algorithms accidentally.
+
+Controls:
+
+- Signed metadata validation with explicit trust anchor pinning.
+- Two-cert overlap policy with monitored cutover checkpoints.
+- Automated expiry alerts plus dry-run validation before production activation.
+
+### 19.3 Golden SAML and assertion forgery detection posture
+
+If IdP signing keys are compromised, protocol-level validation can still pass.
+
+Detection strategy should include:
+
+- Behavioral anomaly detection (new geos/devices/impossible travel after SSO).
+- Sudden shifts in `Issuer` patterns, session volume, or role elevation rates.
+- Correlation between IdP admin actions (key changes, federation config edits) and SSO spikes.
+- Fast containment runbook: key rotation, trust reset, session invalidation, and high-risk action review.
+
+Staff-level interview point: protocol correctness is necessary, but identity infrastructure compromise requires layered detection and response beyond XML validation.
+
+---
+
 ## Interview clusters
 
 - **Fundamentals:** "Walk me through SP-initiated SSO flow." "What does the SP validate in a SAML Response?"

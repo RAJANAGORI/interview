@@ -149,7 +149,6 @@ Any software that installs a **custom trust anchor** or injects into the TLS sta
 | Rogue public CA cert | Silent HTTPS MITM | CT monitoring, CAA, short-lived certs, pinning (where justified) |
 | Enterprise inspect CA | Policy visibility | Governance, scoped trust, HSM, audit |
 
-
 ---
 
 ## 7. Enterprise control stack (defense in depth)
@@ -266,6 +265,23 @@ Correlate with **TLS alert** rates or **sudden** use of **weak** ciphers if a **
 
 ---
 
-## 17. Summary
+## 17. Certificate validation anti-patterns (where MITM survives TLS)
+
+TLS only works when endpoint identity checks are implemented correctly. Common failures:
+
+- **Mobile/backend clients disable certificate verification** for convenience in test code and accidentally ship it.
+- **Hostname validation skipped** while still validating certificate chain.
+- **Over-broad trust bundles** (accepting internal test roots in production apps).
+- **Pinned-key rollout mistakes** causing emergency bypass toggles that permanently weaken trust.
+
+Hardening:
+
+- Enforce verification in shared HTTP/TLS client libraries with no insecure toggle in production builds.
+- Gate CI on static checks for `verify=false`/`insecureSkipVerify`-style flags.
+- Separate dev/stage/prod trust anchors and automate trust-store hygiene with MDM/platform policies.
+
+---
+
+## 18. Summary
 
 MITM attacks exploit **path placement** (ARP, DNS, Wi‑Fi, routing) and **trust failures** (rogue CA, user-installed roots, SSL inspection, or stripping). **HSTS** fights downgrade; **mTLS** strengthens service identity; **enterprise** architectures combine **NAC**, **802.1X**, **MDM**, **monitoring**, and **TLS hygiene**. **CT monitoring** and **CAA** reduce silent public issuance surprises; **governance** around **SSL inspection** limits insider and operational risk. No single control is sufficient—layer **network integrity**, **cryptographic identity**, and **endpoint integrity** together, and instrument for **detection** when assumptions break.

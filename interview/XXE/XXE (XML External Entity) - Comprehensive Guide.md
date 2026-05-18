@@ -808,6 +808,42 @@ def validate_xml(xml_data):
 
 ---
 
+## **Parser Hardening Nuances (Senior+)**
+
+### **1. XXE-adjacent XML features to disable**
+
+Teams often disable external entities but forget related parser features:
+
+- **XInclude** processing
+- External schema/DTD resolution (`xsd:import`, remote schema fetch)
+- Entity expansion limits (DoS resilience)
+- Dangerous transformation engines with network/file access
+
+Interview point: "Disable DTD/entities" is necessary but not always sufficient.
+
+### **2. Parser configuration drift across services**
+
+Real systems parse XML in many places (API gateway, SAML library, document converter, background worker). Risk appears when one component is hardened and another is not.
+
+Operational controls:
+
+1. Maintain approved parser wrapper libraries per language/runtime.
+2. Ban direct parser construction in secure coding standards.
+3. Add SAST rules for unsafe parser instantiation APIs.
+4. Run integration tests that exercise every XML ingestion path.
+
+### **3. Egress controls as XXE blast-radius limiter**
+
+Even if parser hardening fails, network controls can prevent impact:
+
+- Block access to metadata/link-local/internal RFC1918 ranges from XML-processing workloads.
+- Restrict outbound DNS/HTTP to allowlisted destinations.
+- Alert on parser workloads initiating unexpected outbound connections.
+
+This converts potential full XXE compromise into contained, detectable behavior.
+
+---
+
 ## **SAST/DAST Detection**
 
 ### **SAST (Static Application Security Testing)**

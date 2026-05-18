@@ -114,6 +114,50 @@ Framework APIs differ—**principle** is **one** **policy** for duplicates.
 
 ---
 
+## L3 — Gateway/backend parser differential matrix
+
+HPP often appears when API gateway, WAF, and app framework disagree:
+
+| Layer | Typical duplicate handling risk | Result |
+|-------|----------------------------------|--------|
+| **Gateway** | Canonicalizes query order / may dedupe | Security checks see one value |
+| **WAF** | First-value inspection | Misses malicious second value |
+| **App framework** | Last-value wins or array merge | Business logic uses attacker value |
+| **Cache** | Key normalization mismatch | Wrong cache object reused |
+
+Interview framing: HPP is a distributed parsing bug, not just an app bug.
+
+---
+
+## L4 — JSON/body duplicate key edge cases
+
+Duplicate semantics are not limited to query strings:
+
+- Some JSON parsers keep last key, others first, some reject.
+- Transcoding layers (REST->RPC) can collapse duplicates differently.
+- Signature/verification middleware may hash one representation while app executes another.
+
+Hardening pattern:
+
+1. Reject duplicate keys at body parser level for security-sensitive endpoints.  
+2. Use canonical serialization before signature verification and business processing.  
+3. Keep parser behavior uniform across gateway and application services.
+
+---
+
+## L4 — Engineering controls and regression testing
+
+To prevent recurrence:
+
+- Define parameter uniqueness in API contracts (OpenAPI/schema policy checks).
+- Add unit/integration tests for duplicate-sensitive fields (`id`, `tenant`, `redirect`, `role`).
+- Include HPP payloads in WAF/edge regression suites.
+- Log and alarm on duplicate-key requests reaching sensitive handlers.
+
+This gives a measurable control loop instead of one-time remediation.
+
+---
+
 ## Labs
 
 - **PortSwigger** topics touching **HTTP** **parameter** **pollution** / **routing** anomalies.
@@ -157,4 +201,6 @@ Framework APIs differ—**principle** is **one** **policy** for duplicates.
 ## Verification checklist
 
 - [ ] Document your **framework’s** **duplicate** key behavior in **two** sentences.
-- [ ] Add a **test** that sends **two** `redirect` parameters and expects **400**.
+- [ ] Add a **test** that sends **two** `redirect` parameters and expects **400**.  
+- [ ] Explain one gateway/WAF/app parser mismatch chain.  
+- [ ] Define duplicate-key policy for query and JSON bodies.

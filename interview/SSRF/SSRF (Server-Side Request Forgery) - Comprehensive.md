@@ -872,6 +872,60 @@ test_payloads = [
 
 ---
 
+## **Cloud-Native SSRF Hardening**
+
+### **1. Metadata service hardening by cloud**
+
+Basic IP blocking is not enough for cloud workloads. Add platform controls:
+
+- **AWS**: Require **IMDSv2** tokens, disable IMDS where unnecessary, set restrictive hop limits.
+- **Azure**: Enforce metadata request header validation and block metadata routes from application egress paths.
+- **GCP**: Require metadata flavor headers and restrict service account scopes to least privilege.
+
+If metadata access is required, isolate it to dedicated components and monitor all metadata path requests.
+
+### **2. Egress segmentation and policy enforcement**
+
+Use network controls so app servers cannot reach arbitrary destinations:
+
+- Namespace/workload egress policies (Kubernetes NetworkPolicy / CNI policy).
+- Service mesh egress gateways with explicit domain allowlists.
+- Separate outbound proxies for high-risk fetch features (webhooks, URL preview, image fetchers).
+
+Design principle: even if URL validation fails, network policy should still block sensitive internal targets.
+
+### **3. URL parser and DNS TOCTOU safety**
+
+Validation must be done on canonicalized targets:
+
+1. Parse URL with a hardened library.  
+2. Resolve hostname once via trusted resolver.  
+3. Validate resolved IP against deny/allow policy.  
+4. Connect only to the validated IP (not a re-resolved hostname).  
+5. Re-validate every redirect hop.
+
+This reduces DNS rebinding and parser discrepancy bypasses.
+
+---
+
+## **Blind SSRF Detection and Response**
+
+Blind SSRF usually has weak direct response evidence, so telemetry matters:
+
+- Correlate outbound DNS/HTTP from app workers with inbound user requests.
+- Alert on requests to link-local, RFC1918, and cloud metadata address ranges.
+- Track unusual protocols (`gopher://`, `dict://`, `file://`) at parser and proxy layers.
+- Capture per-request egress decision logs (allowed domain, resolved IP, policy rule hit).
+
+Incident response playbook:
+
+1. Disable vulnerable fetch path or enforce emergency egress deny rules.
+2. Rotate potentially exposed credentials/tokens (especially cloud metadata-derived credentials).
+3. Review logs for lateral movement from compromised internal targets.
+4. Add regression tests for the exact bypass class used in the incident.
+
+---
+
 ## **Summary**
 
 SSRF is a critical vulnerability allowing attackers to make requests from the server. Key points:

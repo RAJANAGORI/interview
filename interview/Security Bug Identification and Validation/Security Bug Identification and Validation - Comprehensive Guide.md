@@ -72,6 +72,61 @@ Aligned with **[Content Mastery Framework](../Interview%20Preparation/Content%20
 
 ---
 
+## L3 — Deterministic repro engineering (senior expectation)
+
+Interviewers usually judge quality by whether your repro can survive handoff to an engineer on a different machine.
+
+- **Environment pinning:** capture image/tag, feature flags, seed data set, and commit SHA.
+- **Identity pinning:** record exact principal (`user`, `org`, `role`, `tenant`) and token scope used in repro.
+- **Time sensitivity:** note if exploitability depends on clock skew, race window, TTL, or async workers.
+- **Artifact bundle:** keep a minimal package (request collection, script, test account notes, expected response hashes).
+- **Stop condition:** include a deterministic "fixed" signal (status/behavior/log line), not only "no longer works for me".
+
+---
+
+## L3 — Differential validation patterns
+
+For many logic bugs, proof comes from demonstrating an unauthorized or invalid state transition, not from shell-level payloads.
+
+1. Define a **control case** (authorized/expected path).  
+2. Define an **attack case** that changes only one dimension (identity, object id, state order, timing).  
+3. Capture a **machine-verifiable diff** (response body hash, DB row delta, audit log event, queue event).  
+4. Repeat 3-5 times to show consistency and remove fluke arguments.
+
+Use this for IDOR, workflow bypass, race conditions, and quota abuse.
+
+---
+
+## L4 — Severity reasoning beyond base CVSS
+
+Treat CVSS as a baseline, then add exploitation reality and blast-radius context:
+
+| Dimension | Questions to answer in report |
+|----------|-------------------------------|
+| **Exploit maturity** | Is this theoretical, lab-only, or reproducible in prod-like conditions? |
+| **Privilege delta** | What new privilege is gained (none, horizontal, vertical, platform admin)? |
+| **Blast radius** | Single record, tenant-wide, environment-wide, or cross-region? |
+| **Detection latency** | Would controls detect in minutes, days, or never without manual review? |
+| **Recovery cost** | Can impact be rolled back easily, or does it require legal/IR/customer notifications? |
+
+This framing helps prevent both severity inflation and under-reporting.
+
+---
+
+## L4 — Validation quality metrics for AppSec programs
+
+Staff-level interviews often ask for measurable quality controls:
+
+- **Time to confirm (TTC):** intake to validated true-positive.
+- **Reopen rate:** issues marked fixed but failing retest.
+- **False-positive taxonomy:** tool noise, scope misunderstanding, duplicate, environmental mismatch.
+- **Evidence completeness score:** percentage of findings with deterministic repro + impact proof + fix criteria.
+- **Fix verification SLA:** median and p95 retest completion after engineering "done".
+
+Pair these with trend views per team/service to target coaching and tooling changes.
+
+---
+
 ## Interview clusters
 
 ### Junior
@@ -110,4 +165,6 @@ Aligned with **[Content Mastery Framework](../Interview%20Preparation/Content%20
 
 - [ ] **Write** **one** **minimal** **repro** **from** **scratch**.  
 - [ ] **Explain** **environmental** **CVSS** **in** **60** **seconds**.  
-- [ ] **Close** **one** **false** **positive** **with** **respectful** **language**.
+- [ ] **Close** **one** **false** **positive** **with** **respectful** **language**.  
+- [ ] Build one **control vs attack** differential proof with repeatable evidence.  
+- [ ] Define **TTC** and **reopen rate** for your current workflow.

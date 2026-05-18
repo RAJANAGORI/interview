@@ -776,6 +776,45 @@ Set-Cookie: sessionid=abc123; Secure; HttpOnly
 
 ---
 
+## **Advanced Session Defense Patterns**
+
+### **1. Sender-Constrained Sessions and Token Replay Resistance**
+
+Classic session cookies are bearer artifacts: anyone who gets the value can replay it. For higher assurance environments, add sender constraints:
+
+- **mTLS-bound access tokens** or **DPoP-like proof-of-possession** for API flows
+- **Refresh token rotation** with **reuse detection** (if old refresh token is reused, revoke token family)
+- Session binding to **device signals** (risk-based, not brittle hard lock to single IP)
+
+**Interview point:** this reduces the blast radius of cookie/token theft from "full account takeover" to "limited replay window with detection."
+
+### **2. Session Telemetry and Anomaly Detection**
+
+Detection controls matter as much as cookie flags:
+
+- Impossible travel / geo-velocity anomalies
+- Sudden user-agent or device fingerprint shifts
+- Parallel active sessions from abnormal networks
+- Privilege escalation shortly after new session issuance
+
+Operationally, maintain a session timeline (`issued_at`, `rotated_at`, `ip`, `device`, `auth_strength`) and alert on high-risk transitions.
+
+### **3. Distributed Revocation and Logout Semantics**
+
+In microservice and multi-region systems, revocation is often the weak link:
+
+- Logout in one service but stale session remains valid at another edge node
+- Cache propagation delay allows short replay window
+- "Log out all sessions" action misses long-lived refresh artifacts
+
+Robust model:
+
+1. Central revocation state with short cache TTLs.
+2. Session versioning (`session_version` / `token_version`) checked by all relying services.
+3. Explicit incident mode to force global re-auth for affected cohorts.
+
+---
+
 ## **Summary**
 
 ### **Key Points**

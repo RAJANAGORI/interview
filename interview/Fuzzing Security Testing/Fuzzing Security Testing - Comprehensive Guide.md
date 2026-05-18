@@ -77,6 +77,64 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 
 ---
 
+## L3 — Coverage internals and saturation
+
+Coverage-guided fuzzing keeps inputs that unlock new control-flow edges, but campaign quality depends on interpreting plateaus correctly.
+
+- **Early phase:** rapid edge discovery from broad mutations.
+- **Middle phase:** diminishing returns; dictionary and grammar hints matter more.
+- **Late phase:** plateau can mean "high coverage" or "poor harness reachability."
+
+Practical metric set:
+
+- New edges/hour
+- Unique crash signatures/hour
+- Corpus growth rate
+- Time since last meaningful coverage increase
+
+Use these to decide when to refocus harness scope instead of burning compute blindly.
+
+---
+
+## L3 — Corpus lifecycle and crash dedup
+
+Treat corpus management as engineering, not housekeeping:
+
+1. **Seed curation:** keep minimal, semantically diverse valid inputs.
+2. **Minimization:** prune redundant samples after each campaign.
+3. **Regression corpus:** preserve "interesting" non-crashing inputs that unlocked major coverage.
+4. **Crash dedup:** group by stack + faulting instruction + sanitizer class (single stack hash alone is often noisy).
+
+---
+
+## L4 — Sanitizer triage matrix
+
+Different sanitizer classes imply different validation urgency:
+
+| Signal | Typical issue class | Triage priority |
+|--------|----------------------|-----------------|
+| **ASan UAF/OOB write** | Memory corruption, often exploitable | Highest |
+| **ASan OOB read** | Info leak / stability risk | High |
+| **UBSan integer/shift UB** | May be benign or security-relevant depending on sink | Medium |
+| **MSan uninitialized read** | Dataflow quality issue; can still impact security logic | Medium |
+
+Always retest without sanitizer to confirm reproducibility and avoid overfitting to instrumentation artifacts.
+
+---
+
+## L4 — CI and productionization pattern
+
+For interview-ready depth, describe a two-lane program:
+
+- **PR lane (short):** smoke fuzz targets with tight time budget to catch regressions early.
+- **Nightly lane (deep):** longer campaigns on critical parsers/protocol handlers.
+- **Governance lane:** inventory targets, owner mapping, coverage SLOs, and stale-target alerts.
+- **Feedback lane:** auto-create issues with minimized repro artifacts and symbolized traces.
+
+This balances developer velocity with sustained bug discovery.
+
+---
+
 ## L3 — Limits and false sense of security
 
 - **Coverage** ≠ **all** **bugs** (logic, **crypto**, **timing**).  
@@ -129,4 +187,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 
 - [ ] Write a **one-paragraph** **harness** **design** for a **parser** you know.  
 - [ ] Explain **why** **seeds** **matter**.  
-- [ ] Name **two** **sanitizers** and **what** **they** **catch**.
+- [ ] Name **two** **sanitizers** and **what** **they** **catch**.  
+- [ ] Explain how you would detect **coverage saturation** in a campaign.  
+- [ ] Describe a **PR lane vs nightly lane** fuzzing strategy.

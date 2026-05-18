@@ -1254,6 +1254,42 @@ def sanitize_input(input_value):
 
 ```
 
+### **Safe Dynamic SQL for Identifiers (Advanced)**
+
+Parameterized queries protect values, but not dynamic identifiers like table/column/order clauses. Unsafe pattern:
+
+- User-controlled `sort` or `column` injected into `ORDER BY` / projection
+- Dynamic table name built from request parameter
+
+Safe pattern:
+
+1. Map user input to a strict allowlist of known identifiers.
+2. Build SQL from internal constants only.
+3. Reject unknown keys with explicit errors (no fallback to raw input).
+
+### **ORM/Query Builder Injection Pitfalls**
+
+ORMs reduce risk but do not eliminate it:
+
+- Raw query helpers (`raw`, `text`, `createNativeQuery`) bypass escaping guarantees.
+- String interpolation inside query-builder filters reintroduces SQLi.
+- Dynamic filter DSLs can pass attacker-controlled operators into raw fragments.
+
+Program control:
+
+- Ban raw SQL helpers except approved wrappers.
+- Code review checks for string interpolation in query construction.
+- Centralize complex query composition in vetted repository/service layer.
+
+### **Blast-Radius Reduction with Data-Layer Controls**
+
+Assume one query path eventually fails; limit consequence:
+
+- **Row-Level Security (RLS)** for tenant boundaries where supported.
+- Separate DB roles for read, write, admin, background jobs.
+- Disable dangerous DB capabilities (`COPY PROGRAM`, file writes, xp_cmdshell-like primitives) unless explicitly required.
+- Per-query timeouts and resource governor limits to reduce time-based extraction/DoS impact.
+
 ---
 
 ## **SAST/DAST Detection**

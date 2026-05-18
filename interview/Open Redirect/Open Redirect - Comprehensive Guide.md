@@ -90,6 +90,54 @@ User **trusts** the **first** **host**; **bar** **shows** **trusted** **domain**
 
 ---
 
+## L3 — OAuth and federation redirect pitfalls
+
+Open redirect risk increases sharply in auth ecosystems:
+
+- Weak `redirect_uri` matching (prefix/suffix/wildcard) lets attackers capture codes/tokens.
+- Shared callback endpoints with weak tenant/app binding create cross-client token delivery risks.
+- Post-login `next` parameters can bypass intended application landing restrictions.
+
+Safe auth redirect model:
+
+1. Pre-register exact callback URIs per client/app (no wildcards for production).  
+2. Bind redirect target to authenticated session + client id + anti-CSRF `state`.  
+3. Reject scheme changes and normalize host/port/path before comparison.  
+4. Use one-time redirect tokens mapped server-side instead of raw user-provided URLs.
+
+---
+
+## L4 — Canonicalization and parser mismatch hazards
+
+Naive string checks fail under URL parser differences:
+
+- Mixed slash/backslash normalization.
+- Punycode/IDN hostname confusion.
+- Double encoding and decode-order differences across middleware tiers.
+- Scheme-relative URLs treated as absolute by browsers.
+
+Defensive pattern:
+
+- Parse once with a trusted URL library.
+- Canonicalize and compare structured fields (`scheme`, `host`, `port`, `path`).
+- Enforce allowlist after canonicalization.
+- Store approved redirect destinations as internal route IDs where possible.
+
+---
+
+## L4 — Detection and governance at scale
+
+For larger products, treat redirects as a controlled security surface:
+
+- Inventory all redirect sinks (`next`, `returnUrl`, `redirect`, SSO relay fields).
+- Add centralized redirect utility and block direct framework redirect calls in code review rules.
+- Monitor outbound redirect destinations and alert on new external domains.
+- Add security tests for known bypass forms (`//`, encoded forms, unicode host variants).
+
+This turns open redirect from ad-hoc bug fixing into a reusable platform control.
+
+---
+
 ## Hands-on (authorized)
 
 - **PortSwigger** open redirect / **OAuth** labs.  
@@ -135,4 +183,6 @@ User **trusts** the **first** **host**; **bar** **shows** **trusted** **domain**
 
 - [ ] **Explain** **`//evil`** **bypass** **and** **fix**.  
 - [ ] **One** **sentence** on **OAuth** **relationship**.  
-- [ ] **Write** **allowlist** **pseudocode**.
+- [ ] **Write** **allowlist** **pseudocode**.  
+- [ ] Explain why exact `redirect_uri` matching matters for OAuth code flow.  
+- [ ] Describe one parser mismatch that breaks naive host checks.

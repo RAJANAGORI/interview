@@ -1211,6 +1211,41 @@ echo "All required security headers present"
 
 ---
 
+## Advanced Header Governance (Staff+)
+
+### Trusted Types + CSP for DOM XSS reduction
+
+CSP blocks many script execution paths, but DOM-based XSS can still occur through unsafe DOM sinks if application code writes attacker-controlled HTML/JS into the page.
+
+**Trusted Types** (supported in Chromium-based browsers) adds a second control layer:
+
+```http
+Content-Security-Policy: require-trusted-types-for 'script'; trusted-types app-sanitizer
+```
+
+This forces dangerous sinks (`innerHTML`, `insertAdjacentHTML`, script creation APIs) to accept only Trusted Types objects produced by approved sanitization policies.
+
+Interview-grade takeaway: CSP reduces script source risk; Trusted Types reduces unsafe DOM sink usage. Together they significantly shrink XSS exploitability.
+
+### Policy-as-code and drift prevention across edge tiers
+
+Security headers often drift between app, API gateway, CDN, and WAF layers:
+
+- App sends strict CSP, CDN overrides with weaker policy.
+- Error pages bypass middleware and ship without headers.
+- Canary environment uses different header profile than production.
+
+Program pattern:
+
+1. Define baseline headers as versioned policy artifacts.
+2. Validate in CI against representative route classes (HTML, API JSON, error pages, static assets).
+3. Enforce at the outermost tier (edge/CDN) and verify origin parity.
+4. Monitor runtime drift with scheduled header scans and alerting.
+
+This turns "header hardening" into repeatable platform governance rather than per-team manual tuning.
+
+---
+
 ## How Security Headers Fail
 
 Even correctly configured headers can fail in practice. Understanding failure modes is critical for senior/staff interviews.

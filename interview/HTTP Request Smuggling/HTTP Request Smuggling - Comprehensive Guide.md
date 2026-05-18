@@ -165,6 +165,45 @@ Use these as **illustrative**—verify versions when discussing a specific emplo
 
 ---
 
+## L3 — Queue poisoning chain anatomy
+
+A practical exploitation narrative often looks like:
+
+1. Desync is introduced on a reused front-end -> back-end connection.
+2. Attacker injects a prefix request that the back-end treats as the next victim request.
+3. Victim's legitimate request is partially interpreted as headers/body for attacker-controlled prefix.
+4. Result is credential/session confusion, cache poisoning, internal route access, or response queue desynchronization.
+
+This is why "works once in Repeater" is not enough; impact depends on connection reuse behavior under real traffic.
+
+---
+
+## L4 — HTTP/2 downgrade hardening checklist
+
+For edge stacks translating h2/h3 to h1:
+
+- Drop ambiguous framing headers before translation.
+- Generate a single authoritative framing model when forwarding to origin.
+- Canonicalize `Host`/`:authority` mapping with strict validation.
+- Disable legacy compatibility modes that accept malformed transfer encodings.
+- Keep downgrade components version-aligned with security patches.
+
+Interview signal: downgrade bridges are protocol translators and must be treated like parser code, not passive proxies.
+
+---
+
+## L4 — Proof-of-fix methodology (what senior interviewers expect)
+
+A credible remediation story includes:
+
+- **Pre-fix reproducibility:** controlled lab request pair that demonstrates parser disagreement.
+- **Patch intent:** exact edge/origin config or version change and expected parser behavior.
+- **Post-fix negative test:** same payload now rejected/normalized identically on both tiers.
+- **Regression suite:** automated desync probes in staging for CL/TE ambiguity and duplicate header handling.
+- **Canary telemetry:** monitor 4xx/5xx shifts and false-positive rate after strict rejection rollout.
+
+---
+
 ## Hands-on labs and references
 
 - **PortSwigger Web Security Academy** — HTTP request smuggling modules (CL.TE, TE.CL, TE.TE, HTTP/2).
@@ -238,4 +277,6 @@ Use these as **illustrative**—verify versions when discussing a specific emplo
 - [ ] Name **two** concrete **impacts** (not just “RCE”).  
 - [ ] List **three** edge controls (reject ambiguous, align parsers, connection hygiene).  
 - [ ] Complete **one** PortSwigger smuggling lab and **document** the parser difference.  
-- [ ] Trace **who** patches what in your **target** employer’s architecture (CDN vs SRE vs app).
+- [ ] Trace **who** patches what in your **target** employer’s architecture (CDN vs SRE vs app).  
+- [ ] Explain one queue-poisoning chain from desync to business impact.  
+- [ ] Describe a concrete pre-fix/post-fix validation workflow.

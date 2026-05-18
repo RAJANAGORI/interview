@@ -114,6 +114,28 @@ HMACSHA256(
 | **Memory** | ✅ Yes | ✅ Yes | ❌ Page refresh | Good for SPAs |
 
 ---
+## JWT vs OAuth 2.0 vs Session Cookies
+
+| Feature | JWT | OAuth 2.0 | Session Cookies |
+| --- | --- | --- | --- |
+| **What it is** | Token format | Authorization framework | State management |
+| **Primary use** | Authentication | Delegated authorization | Web app sessions |
+| **State** | Stateless | Usually stateful | Stateful |
+| **Revocation** | Hard | Possible (tokens) | Easy |
+| **Mobile support** | ✅ Excellent | ✅ Excellent | ⚠️ Limited |
+| **Third-party access** | ❌ No | ✅ Yes | ❌ No |
+| **Token size** | Medium | Medium (often JWT) | Small (session ID) |
+
+**Common confusion:** JWTs are often used as OAuth 2.0 access tokens, but they serve different purposes. 
+
+**Key difference:** JWTs are stateless, while session cookies are stateful.
+
+**When to use what:**
+
+- Use JWTs for API authentication and authorization
+- Use OAuth 2.0 for third-party authorization
+- Use session cookies for web app sessions
+---
 
 ## **Implementation Snippets**
 
@@ -337,6 +359,7 @@ openssl rand -hex 64  # 512 bits
 | `NotBeforeError` | Token not yet valid | Return 401 |
 | `TokenNotProvidedError` | No token in request | Return 401 |
 
+
 ### **Example Error Handling**
 
 ```jsx
@@ -354,10 +377,7 @@ try {
     return res.status(500).json({ error: 'Token verification failed' });
   }
 }
-
 ```
-
----
 
 ## **Attack Protection Matrix**
 
@@ -472,6 +492,19 @@ Before production deployment:
 - [ ]  Monitoring and logging implemented
 
 ---
+
+## **JWT Debugging & Troubleshooting**
+
+### Common Errors & Solutions
+
+| Error | Likely Cause | Solution |
+| --- | --- | --- |
+| `invalid signature` | Wrong secret/key | Check `SECRET` environment variable |
+| `jwt malformed` | Wrong token format | Check for extra spaces, line breaks |
+| `jwt expired` | Token past `exp` | Implement refresh token flow |
+| `invalid algorithm` | `alg` not whitelisted | Add algorithm to whitelist |
+| `invalid audience` | `aud` claim mismatch | Verify client ID configuration |
+
 
 ## **Quick Decision Tree**
 

@@ -80,6 +80,49 @@ You do not need to attempt forging or tampering with tokens in ways that bypass 
 
 ---
 
+## 4.5. Algorithm Confusion Testing
+
+In your controlled test environment, specifically test for algorithm confusion:
+
+- **RS256 to HS256 confusion:**
+  - Capture a token signed with RS256
+  - Change header `alg` from `RS256` to `HS256`
+  - Attempt to verify using the public key as HMAC secret
+  - Observe if the service accepts this manipulated token
+
+- **Algorithm 'none' testing:**
+  - Change header `alg` to `none`
+  - Remove signature (leave empty after second dot)
+  - Send token and observe if service rejects it
+
+- **Algorithm downgrade attacks:**
+  - Attempt to force weaker algorithms (HS256 → HS128 if supported)
+  - Verify service enforces minimum algorithm strength
+
+**Expected behavior:** Service rejects all manipulated tokens with appropriate error codes.
+
+## 4.6. Key Injection Testing (kid, jku, x5u)
+
+If tokens contain these header parameters, test for injection vulnerabilities:
+
+- **kid (Key ID) injection:**
+  - Attempt path traversal: `"kid": "../../../etc/passwd"`
+  - Attempt SQL injection: `"kid": "1' OR '1'='1"`
+  - Attempt command injection in key lookup logic
+
+- **jku (JWK Set URL) injection:**
+  - Point to attacker-controlled JWKS endpoint
+  - Attempt SSRF attacks with internal URLs
+  - Test if service caches external JWKS indefinitely
+
+- **Embedded jwk (JSON Web Key):**
+  - Attempt to inject attacker's public key directly in header
+  - Service should reject embedded keys unless explicitly configured
+
+**Expected behavior:** Service rejects tokens with untrusted key sources and validates all inputs.
+
+---
+
 ## 5. High‑Risk Scenarios
 
 Pay close attention to:
@@ -125,6 +168,23 @@ For each service consuming JWTs:
   - Ensure that error messages do not leak sensitive details about keys or configuration.
 
 Demonstrating that **obviously invalid tokens** are always rejected is often sufficient to build confidence in the implementation, alongside code/config review.
+
+## 7.5. Replay Attack Testing
+
+- **Token replay across endpoints:**
+  - Capture valid token for endpoint A
+  - Replay same token to endpoint B (different purpose)
+  - Verify token binding to intended audience/service
+
+- **Timing attacks:**
+  - Capture token at time T
+  - Replay token at T+5 minutes (within expiry)
+  - Replay token at T+20 minutes (past short expiry)
+  - Document token lifetime effectiveness
+
+- **Concurrent session replay:**
+  - Use same token from multiple IPs simultaneously
+  - Observe if service implements any anomaly detection
 
 ---
 

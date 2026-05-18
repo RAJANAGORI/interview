@@ -57,11 +57,65 @@ Application **reflects** **sensitive** **content** under a **path** that **looks
 
 ---
 
+## L3 — Edge/origin parser differential matrix
+
+Most high-impact cases come from **normalization mismatches** between CDN, reverse proxy, and origin app.
+
+| Input class | Edge behavior | Origin behavior | Risk |
+|-------------|---------------|-----------------|------|
+| **Duplicate headers** | Keeps first / merges | Keeps last | Cache key and rendered response diverge |
+| **Host variants** (`example.com.`, mixed case, port suffix) | Canonicalized | Treated distinct | Poisoning by host confusion |
+| **Path normalization** (`//`, `%2F`, dot segments) | Normalized | Not normalized (or opposite) | Deception and key bypass |
+| **Query normalization** (ordering, duplicate params) | Sorted/deduped | Preserves order/duplicates | Cache key collision |
+| **Hop-by-hop headers** forwarded accidentally | Ignored for key | Used in app logic | Unkeyed input exploitation |
+
+Testing strategy: build a request matrix and compare `Cache-Status`, response hash, and origin app behavior for each mutation.
+
+---
+
+## L3 — HTTP/2 and HTTP/3 nuances
+
+- **Pseudo-headers vs legacy headers:** translation layers (`:authority` to `Host`) can create inconsistencies.
+- **Connection coalescing:** shared cert/SAN can route multiple origins over one connection; misconfigured key policies can leak across tenants.
+- **Header compression effects:** not directly exploitable alone, but can hide high-cardinality key abuse unless logs preserve decompressed canonical values.
+- **Protocol downgrade boundaries:** h2/h3 at edge and h1 to origin means two parsers; keying must be explicit at the edge.
+
+---
+
+## L3 — CPDoS and cache key-space exhaustion
+
+Two operationally important abuse classes:
+
+1. **Cache poisoning DoS (CPDoS):** induce cache to store error pages for legitimate URLs.
+2. **Key-space explosion:** force near-zero hit rate by generating many cache-unique variants.
+
+Detection signals:
+
+- Sudden rise in `MISS` with stable request volume.
+- Spike in unique cache keys per route.
+- 4xx/5xx object caching where policy should bypass cache.
+
+---
+
 ## Detection
 
 - **CDN** **logs**: **same** **URL** **key** serving **different** **content** **hashes** to **different** **users** without **expected** **Vary**.  
 - **Security** **tests**: **param** **miner** **reports**, **diff** **responses** with **header** **mutations**.  
 - **Alerts** on **surge** in **cache** **MISS** **ratio** after **deploy**.
+
+---
+
+## L4 — Telemetry blueprint (what to log)
+
+For mature programs, keep structured fields at edge and origin:
+
+- **Request canonical form:** normalized host/path/query used for keying.
+- **Cache key id** (hash) and **cache status** (`HIT`, `MISS`, `BYPASS`, `STALE`).
+- **Vary decision inputs** actually used.
+- **Response body checksum** (short hash) for same key comparisons.
+- **Origin route id** and auth context flags (authenticated/anonymous).
+
+This makes anomaly queries straightforward and defensible during incident response.
 
 ---
 
@@ -117,4 +171,6 @@ Application **reflects** **sensitive** **content** under a **path** that **looks
 ## Verification checklist
 
 - [ ] Name **three** **inputs** that often **sit** **outside** **cache** **keys**.  
-- [ ] Explain **why** **`Vary: Cookie`** can **fix** or **break** **caching**.
+- [ ] Explain **why** **`Vary: Cookie`** can **fix** or **break** **caching**.  
+- [ ] Describe one **edge/origin normalization mismatch** and its impact.  
+- [ ] Explain CPDoS vs key-space exhaustion in under 60 seconds.

@@ -96,6 +96,60 @@ Aligned with **[Content Mastery Framework](../Interview%20Preparation/Content%20
 
 ---
 
+## L3 — Polyglot and parser differential defense
+
+A file can be valid for multiple parsers at once (polyglot), or one layer may treat bytes differently than another:
+
+- Browser sees **SVG/HTML** and executes script.
+- CDN/origin infers MIME differently.
+- AV scanner accepts file but downstream converter crashes/parses dangerous payloads.
+
+**Design rule:** validate for the exact processing chain, not for one isolated check.
+
+1. Identify every consumer (preview service, thumbnailer, OCR, AV, archive extractor, ML pipeline).  
+2. Define a strict accepted format per consumer.  
+3. Re-encode once in a hardened "normalization" tier and only pass normalized output downstream.  
+4. Reject files that cannot be deterministically normalized.
+
+---
+
+## L4 — Asynchronous scanning race conditions (TOCTOU)
+
+Many systems upload first and scan later; this creates a publication race:
+
+- Object is uploaded and immediately reachable via URL.
+- Malware verdict arrives seconds later.
+- Attack window exists for download/share before quarantine.
+
+Mitigation pattern:
+
+- Upload to **quarantine bucket/prefix** (non-public).
+- Run AV/CDR and policy checks.
+- Promote to **published bucket/prefix** only on clean verdict.
+- Keep immutable verdict metadata with object version ID.
+
+Interview phrasing: "Never serve newly uploaded bytes from the same path before security verdict finalization."
+
+---
+
+## L4 — Object storage and signed URL pitfalls
+
+In cloud-native systems, most failures are around policy, not extension checks:
+
+- Over-broad bucket policy (`GetObject` public on upload prefix).
+- Long-lived signed URLs that outlive business need.
+- Missing response header controls (`Content-Type`, `Content-Disposition`) on signed responses.
+- Direct browser upload keys allowing path traversal-like key prefixes.
+
+Hardening:
+
+- Strict key-prefix policy per tenant and per content class.
+- Short URL TTL + one-time token when feasible.
+- Force attachment download for untrusted file classes.
+- Prevent mixed trusted/untrusted content on same domain when possible.
+
+---
+
 ## Hands-on (authorized)
 
 - **PortSwigger** file upload labs; **OWASP** **WebGoat**; **DVWA**.  
@@ -143,4 +197,6 @@ Aligned with **[Content Mastery Framework](../Interview%20Preparation/Content%20
 
 - [ ] **Allowlist** + **magic** + **re-encode** explained **without** reading slides.  
 - [ ] **One** **ImageMagick** hardening **knob** named.  
-- [ ] **Zip-slip** safe extract **algorithm** sketched.
+- [ ] **Zip-slip** safe extract **algorithm** sketched.  
+- [ ] Describe the **quarantine -> scan -> publish** flow and TOCTOU risk.  
+- [ ] Explain one signed URL policy failure and mitigation.

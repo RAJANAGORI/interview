@@ -151,6 +151,56 @@ WHERE user_id = $2 AND balance >= $1;
 
 ---
 
+## L4 — Distributed races across regions/services
+
+When a workflow spans services (payments, inventory, loyalty), "one DB transaction" is no longer available.
+
+Common failure modes:
+
+- Two regions accept the same logical operation before replication converges.
+- Inventory is reserved in one service but payment retries replay stale reservation IDs.
+- Saga compensations race with forward actions, creating duplicate side effects.
+
+Practical controls:
+
+- Single-writer ownership per aggregate (per wallet/SKU shard).
+- Reservation + expiry model with unique reservation IDs.
+- Idempotency key propagation across all downstream calls, not just edge API.
+- Reconciliation jobs and invariant monitors for eventual-consistency drift.
+
+---
+
+## L4 — Idempotency design pitfalls
+
+Idempotency keys are powerful but easy to misuse:
+
+- Key scope too broad (different users collide on same key namespace).
+- Key TTL too short (late retries become duplicate business actions).
+- Response replay mismatch (same key but mutated request body still accepted).
+- Non-atomic key record write (race between business commit and key persistence).
+
+Robust pattern:
+
+1. Store key with request fingerprint + actor/tenant scope.
+2. Make key write and side effect commit atomic where possible.
+3. Return the original canonical response for duplicates.
+4. Expose metrics for duplicate-key hits and conflict rejects.
+
+---
+
+## L4 — Race testing strategy in CI/CD
+
+To make race testing practical:
+
+- Keep a deterministic lab harness with synchronized parallel start (barrier).
+- Run short "burst" race suites on high-risk mutations in CI.
+- Run longer stochastic contention tests nightly with invariant checks.
+- Capture timeline artifacts (request IDs, DB transaction IDs, event timestamps) for debugging.
+
+This turns race detection from one-off pentest work into repeatable engineering validation.
+
+---
+
 ## Hands-on practice (authorized)
 
 - Build a **toy** wallet API; hammer with **parallel** requests; observe **lost updates**.  
@@ -217,4 +267,6 @@ WHERE user_id = $2 AND balance >= $1;
 - [ ] Draw a **two-request** timeline for your **favorite** invariant.  
 - [ ] Write the **predicate UPDATE** pattern from memory.  
 - [ ] Explain **one** failure mode of **app-only** locks.  
-- [ ] Run a **parallel** test in a **lab** and capture **before/after** metrics.
+- [ ] Run a **parallel** test in a **lab** and capture **before/after** metrics.  
+- [ ] Explain one distributed race pattern and its mitigation strategy.  
+- [ ] Define safe idempotency key scope and replay behavior.

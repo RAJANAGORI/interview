@@ -1024,6 +1024,40 @@ if (complexity > MAX_COMPLEXITY) {
 
 ---
 
+## Advanced Production Pitfalls
+
+### DataLoader and authorization cache bleed
+
+DataLoader improves performance but can accidentally mix trust boundaries if cache keys are too coarse:
+
+- Caching by object ID without tenant/user scope can return cross-tenant data.
+- Reusing DataLoader instances across requests can leak previously authorized results.
+- Resolver-level auth checks that happen *after* cache fetch can return sensitive fields before redaction logic runs.
+
+Safe pattern: create request-scoped loaders and include tenant/subject context in cache keys for sensitive entities.
+
+### Persisted query registry abuse
+
+Persisted queries reduce arbitrary-query risk, but the registry itself becomes security-critical:
+
+- Unauthorized registration/update of query hashes can introduce privileged operations.
+- APQ fallback that accepts full query on cache miss can re-open arbitrary query execution.
+- Hash-only telemetry is weak for investigations if operation metadata is missing.
+
+Controls: strict CI-owned registration, signed deploy artifacts for query manifests, and production mode that rejects unknown hashes for public clients.
+
+### Subscription auth lifecycle gaps
+
+WebSocket subscriptions are long-lived and can outlast auth assumptions:
+
+- Token valid at connect time but expired/revoked later.
+- Role changes not reflected for existing subscriptions.
+- Tenant context swapped in reconnect flows without proper re-auth.
+
+Mitigate with periodic re-auth checks, bounded subscription lifetime, and forced disconnect on revocation events.
+
+---
+
 ## Operational Reality
 
 **Complexity scoring requires iteration:** Initial cost annotations will be wrong. Some fields are more expensive than expected (a "simple" field that triggers a service call), and some are less expensive (a field that's always cached). Plan for ongoing tuning based on production resolver metrics.

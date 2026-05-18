@@ -1242,6 +1242,46 @@ Access-Control-Allow-Methods: GET, POST
 
 ---
 
+## **Advanced CORS/SOP Edge Cases**
+
+### **1. Cache poisoning via missing Vary: Origin**
+
+If responses are cached but `Vary: Origin` is missing, one origin's CORS response can be reused for another origin.
+
+Mitigation:
+
+- Add `Vary: Origin` when `Access-Control-Allow-Origin` is dynamic.
+- Review CDN/proxy cache key configuration for origin-aware behavior.
+- Avoid caching credentialed cross-origin responses when unnecessary.
+
+### **2. Private Network Access (PNA) implications**
+
+Browsers are tightening controls for requests from public origins to private network targets. Misconfigured CORS at gateway layers can unintentionally expose internal APIs through browser-assisted pivots.
+
+Operational guidance:
+
+- Explicitly deny browser-originated cross-origin access to internal admin/private network routes.
+- Separate public and private API hostnames and policy stacks.
+- Monitor preflight failures/successes on sensitive internal paths.
+
+### **3. postMessage trust boundaries**
+
+`postMessage` is often used as a workaround for cross-origin communication, but it has its own origin validation risks:
+
+- Accepting messages from `*` or from loose suffix checks.
+- Missing schema validation on message payloads.
+- Trusting `event.source` without strict `event.origin` checks.
+
+Safe pattern:
+
+- Strict allowlist for `event.origin`.
+- Versioned message schema validation.
+- Minimal capability messages (avoid sending raw auth/session secrets).
+
+Interview-level point: CORS and postMessage are complementary controls; both can fail through weak origin validation.
+
+---
+
 ## **Summary**
 
 ### **Key Takeaways**

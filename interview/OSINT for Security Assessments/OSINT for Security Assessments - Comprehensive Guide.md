@@ -60,12 +60,68 @@ Aligned with **[Content Mastery Framework](../Interview%20Preparation/Content%20
 
 ---
 
+## L3 — Correlation graph method (high signal)
+
+Strong OSINT output is a graph, not a raw list:
+
+1. Build entities: **domains**, **subdomains**, **IPs**, **ASNs**, **cert fingerprints**, **repo orgs**, **vendor names**.  
+2. Add edges with evidence and timestamp (`observed_in`, `resolved_to`, `same_cert`, `mentions_vendor`).  
+3. Score confidence per edge (high = direct evidence, medium = inferred relation, low = weak heuristic).  
+4. Pivot from high-centrality nodes first (shared auth hosts, wildcard certs, legacy gateways).
+
+This makes attack-surface expansion defensible and reproducible across analysts.
+
+---
+
+## L3 — Source reliability and decay
+
+Not all sources age the same:
+
+| Source type | Typical freshness | Common failure mode |
+|-------------|-------------------|---------------------|
+| **CT logs** | Near real-time for cert issuance | Host is temporary or never publicly routable |
+| **Passive DNS** | Historical depth varies by provider | Stale mappings from recycled infrastructure |
+| **Search index** | Delayed snapshots | Removed pages still appear indexed |
+| **Code repositories** | Depends on mirror cadence | Fork noise and false ownership assumptions |
+| **Asset scanners** | Varies by scan frequency | Banner drift and spoofed service metadata |
+
+Interview edge: always pair source claim with observation date and confidence level.
+
+---
+
 ## L3 — Operational safety (consultant OPSEC)
 
 - **Dedicated** **VM** or **browser** profile; **avoid** **personal** **Google** **session** **bleed**.  
 - **Rate-limit**; **don’t** **crash** **third-party** **services**.  
 - **Tor** / **VPN** only if **legal** and **approved** (some clients **forbid**).  
 - **Document** **what** you **touched** for **chain** of custody.
+
+---
+
+## L4 — Automation architecture with auditability
+
+For recurring assessments, design an OSINT pipeline with controls:
+
+- **Ingestion layer:** API connectors with explicit per-source rate limits and legal tags.
+- **Normalization layer:** canonical domain/host parsing, timezone normalization, dedupe rules.
+- **Evidence store:** immutable records with source URL, retrieval time, analyst/tool id.
+- **Scoring layer:** configurable confidence and risk weighting (internet-facing auth > marketing microsite).
+- **Handoff layer:** export prioritized targets to testing tools with traceable lineage.
+
+This supports defensible reporting and reduces analyst-specific variance.
+
+---
+
+## L4 — Privacy and legal checkpoints
+
+Before collecting sensitive personal data or breach artifacts, define:
+
+- Necessity test (is this data required to answer the assessment objective?).
+- Minimization plan (redact/anonymize before broad distribution).
+- Retention limits and secure deletion dates.
+- Escalation path for accidental exposure of high-risk personal data.
+
+These controls matter in senior interviews because they show technical rigor with compliance reality.
 
 ---
 
@@ -124,4 +180,6 @@ Aligned with **[Content Mastery Framework](../Interview%20Preparation/Content%20
 
 - [ ] **One** **engagement** **story** with **clear** **RoE** **limits**.  
 - [ ] **Enumerate** **5** **passive** **sources** **from** **memory**.  
-- [ ] Explain **why** **Shodan** **queries** need **approval**.
+- [ ] Explain **why** **Shodan** **queries** need **approval**.  
+- [ ] Build a mini **entity graph** from one target domain with confidence labels.  
+- [ ] Explain one **source decay** pitfall (CT, passive DNS, search index, or repo intel).
