@@ -1,26 +1,59 @@
 # Critical Clarification — Serverless Security Misconceptions
 
-## 1. "No servers means no security responsibility."
-**Reality:** Identity, data, and app-layer controls remain your responsibility.
+## 1. "Serverless means no servers, so no patching needed — we're secure."
 
-## 2. "Function isolation is perfect."
-**Reality:** Misconfiguration and identity abuse can still pivot across services.
+**Wrong.** Provider patches the **runtime**; you still own **code, IAM, events, secrets, and dependencies**. Vulnerable **npm/pip** packages in your deployment bundle are still your RCE surface.
 
-## 3. "Short-lived functions cannot leak secrets."
-**Reality:** Logs, traces, and env vars can leak sensitive values.
+---
 
-## 4. "API gateway auth alone is enough."
-**Reality:** Downstream authorization must still be enforced.
+## 2. "One shared Lambda role simplifies operations."
 
-## 5. "Least privilege is too hard for functions."
-**Reality:** Function-per-purpose IAM scoping is a core security practice.
+**Wrong.** Shared roles create **blast-radius amplification**. Use **per-function or per-tier** roles with **resource-scoped** policies.
 
-## 6. "Cold starts are only a performance issue."
-**Reality:** They can change auth/session assumptions and timeout handling.
+---
 
-## 7. "Managed runtime means dependency risk is solved."
-**Reality:** Your package ecosystem remains a major risk vector.
+## 3. "Environment variables are fine for API keys if the console is locked down."
 
-## 8. "Event sources are always trusted."
-**Reality:** Event authenticity and replay protection are mandatory.
+**Wrong.** Env vars appear in **CloudFormation/SAM exports**, **CI logs**, **crash dumps**, and **console readers** with `lambda:GetFunctionConfiguration`. Use **Secrets Manager** with rotation and audit.
 
+---
+
+## 4. "Internal S3 triggers don't need validation."
+
+**Wrong.** Any **Principal** that can **PutObject** can **inject events**. Treat object content as **untrusted input**—malware, zip bombs, parser exploits.
+
+---
+
+## 5. "Lambda in a VPC is automatically isolated from the internet."
+
+**Wrong.** VPC attachment controls **network paths**, not **IAM**. Functions still need **egress rules**, **NAT**, and **endpoint policies**. Misconfigured SGs can expose internal services.
+
+---
+
+## 6. "Concurrency limits hurt availability so we leave them unlimited."
+
+**Wrong.** Unlimited concurrency enables **cost abuse** and **downstream overload**. Set **reserved/max concurrency** per critical functions with **alarms**.
+
+---
+
+## 7. "Function URLs are convenient and low risk for internal tools."
+
+**Wrong.** **Unauthenticated Function URLs** are a common **data leak** vector. Require **IAM auth**, **JWT**, or front with **API Gateway + WAF**.
+
+---
+
+## 8. "Cold starts don't matter for security."
+
+**Wrong.** Init-time **secret fetch**, **global variable** caching, and **race conditions** in warm containers affect **credential lifetime** and **tenant isolation** assumptions—document behavior.
+
+---
+
+## 9. "Serverless eliminates SSRF impact."
+
+**Wrong.** Functions often have **high IAM** and **outbound access**—SSRF can be **worse** than in a locked-down monolith if roles are over-privileged.
+
+---
+
+## 10. "Infrastructure-as-code review is optional for small functions."
+
+**Wrong.** **IAM and trigger misconfigurations** scale with **copy-paste IaC**—automate **policy-as-code** checks on every PR.

@@ -1,24 +1,30 @@
 # CVE Walk-Throughs — Quick Reference
 
-## Explain any CVE in 6 lines
+## Template
 
-Surface -> root cause -> exploit primitive -> impact -> detection -> durable fix
+Context → Root cause → Primitive → Chain → Detection → Remediation → Lessons
 
----
+## High-signal CVEs (study set)
 
-## Good examples to know
+| CVE | One-line |
+|-----|----------|
+| **Log4Shell** | Log4j JNDI in logs → RCE |
+| **Spring4Shell** | Spring binding + deployment → RCE |
+| **Heartbleed** | TLS heartbeat overread → rotate keys |
+| **Shellshock** | Bash env function → RCE |
+| **ProxyShell** | Exchange chain → pre-auth RCE |
+| **Citrix Bleed** | Token memory leak → session hijack |
+| **regreSSHion** | OpenSSH race → patch sshd |
+| **MOVEit** | SQLi → webshell → mass exfil |
 
-Log4Shell · Spring4Shell · Heartbleed · ProxyLogon/ProxyShell · Citrix Bleed
+## Prioritization
 
----
+**KEV + exposure + EPSS** → patch/isolate → hunt → rotate secrets
 
-## Prioritization triad
+## Interview trap
 
-Exposure + exploit evidence (KEV/EPSS) + business criticality
+Don't confuse **root cause** with full **kill chain** or **vendor marketing name**.
 
----
+## Cross-reads
 
-## Cross-read
-
-`Vulnerability Management Lifecycle` · `Risk Prioritization and Security Metrics`
-
+`RCE` · `Vulnerability Management Lifecycle` · `Production Security Incident Response`

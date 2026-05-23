@@ -323,3 +323,47 @@ Once you pick, I can take the first concrete step in the next turn.
 **P4 hygiene/automation follow-up done:** ✅ **2026-05-06** — retired **Zero-to-Hero** card from homepage and redirected `zerotohero/index.html`; redirected `threatmodel/index.html` and `source-code-review/index.html` to canonical `interview/` topics; added CI workflow `.github/workflows/content-ci.yml`; added `interview/Scripts/check_topics_contract.py`; deduped `.gitignore`; added `interview/Scripts/generate_interview_preparation.py`; refreshed generated `Interview Preparation.md` and `sitemap.xml`; improved `404.html` recovery links.
 
 **P5 done:** ✅ **2026-05-06** — added **Interview Preparation/Company-Specific Interview Tracks.md** (Amazon, Google, Meta, security vendors, fintech, startup tracks) and expanded **Story Library Template - Behavioral Interviews.md** with 8 worked STAR examples; linked company tracks from Role-Based Study Paths.
+
+---
+
+## Execution progress (Phases A–C depth expansion) — 2026-05-24
+
+**Phase A — thin P2 modules expanded to interview-grade depth:**
+
+| Topic | Status | Notes |
+|-------|--------|-------|
+| Mobile App Security | ✅ | Full rewrite (~15 KB comp. guide); iOS/Android, ATS, pinning, Frida, deep links |
+| Serverless Security | ✅ | IAM, event injection, cold-start, concurrency abuse |
+| PKI Program Design | ✅ | CA hierarchy, HSM, ACME/cert-manager, revocation |
+| System-design-for-security | ✅ | 10 prompts with worked design sketches + rubric |
+| WebSockets and SSE Security | ✅ | CSWSH, origin, message authZ, SSE |
+
+**Phase B — reference bar lift:**
+
+| Topic | Status | Notes |
+|-------|--------|-------|
+| Crypto Pitfalls in Practice | ✅ | AES modes, GCM nonce, KDF params, JWT pitfalls, CVE classes |
+| Remote Code Execution (RCE) | ✅ | Expanded CVE walkthroughs (Log4Shell, Spring4Shell), multi-language sinks |
+| Insecure Deserialization / SSTI / File Upload | ✅ | Already substantive; cross-linked from new practice modules |
+
+**Phase C — process modules + hands-on:**
+
+| Deliverable | Status |
+|-------------|--------|
+| Secure SDLC Walkthrough (4-file module) | ✅ |
+| Building an AppSec Program (4-file module) | ✅ |
+| False Positive Management and Tool Rationalization (4-file module) | ✅ |
+| Kubernetes Security Hardening (4-file module) | ✅ |
+| `Practice & Exercises/log-analysis/` (3 drills + answer keys) | ✅ |
+| `Practice & Exercises/code-challenges/` (15 challenges, 4 languages) | ✅ |
+| `topics.json` wired (+4 entries → 105 topics) | ✅ |
+
+**Polish pass — 2026-05-24 (continued):**
+
+| Deliverable | Status |
+|-------------|--------|
+| **CVE Walk-Throughs** — 8 full CVE deep dives (Log4Shell, Spring4Shell, Heartbleed, Shellshock, ProxyShell, Citrix Bleed, regreSSHion, MOVEit) | ✅ |
+| **EDR Evasion** — expanded (~12 KB): unhooking, direct syscalls, BYOVD, AMSI/ETW, detections | ✅ |
+| **MITRE ATT&CK Fluency** — technique table, kill chain narrative, cloud matrices, D3FEND, detection workflow | ✅ |
+| **Log analysis** — drills 4–7 (nginx, SIEM JSONL, syslog SSH, WAF) | ✅ |
+| Regenerated `sitemap.xml` + `Interview Preparation.md` | ✅ |

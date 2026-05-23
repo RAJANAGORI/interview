@@ -28,6 +28,16 @@ Topic-to-lab mapping for deliberate, authorized practice.
 | Cloud Attack Paths | CloudGoat-style scenarios, CSP IAM drills |
 | Serverless Security | Event validation and least-privileged function role labs |
 | Web Cache Poisoning/Deception | Cache key and unkeyed-input practice labs |
+| Kubernetes Security Hardening | kube-bench, Kind + Kyverno policy labs |
+| Mobile App Security | DVIA, InsecureBankv2, OWASP MSTG crackmes |
+
+## Hands-on in this repo
+
+| Resource | Path |
+|----------|------|
+| **Code challenges** (15 snippets) | [code-challenges/README.md](code-challenges/README.md) |
+| **Log analysis drills** (3 scenarios) | [log-analysis/README.md](log-analysis/README.md) |
+| **Vulnerable/fixed pairs** | `interview/examples/` (SQLi, XSS, SSRF, file-upload) |
 
 ## Notes
 
