@@ -63,7 +63,7 @@ SUPP = {
 **Cross-read:** IAM, Zero Trust, Container Security, Secrets Management.""",
     "container-security": """## Depth: Interview follow-ups — Container Security
 
-**Authoritative references:** [NIST SP 800-190](https://csrc.nist.gov/publications/detail/sp/800-190/final) (container security guide); [CIS Docker Benchmark](https://www.cisecurity.org/benchmark/docker) / [CIS Kubernetes Benchmark](https://www.cisecurity.org/benchmark/kubernetes) (verify access).
+**Authoritative references:** [NIST SP 800-190](https://csrc.nist.gov/publications/detail/sp/800-190/final) (container security guide); [CIS Docker Benchmark](https://www.cisecurity.org/benchmark/docker) / [CIS Kubernetes Benchmark](https://www.cisecurity.org/cis-benchmarks) (verify access).
 
 **Follow-ups:**
 - **Root in container / privileged flags** — escape risk.

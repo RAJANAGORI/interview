@@ -305,7 +305,7 @@ if (data != null && !allowedHosts.contains(data.getHost())) {
 
 ## Hands-on references
 
-- **OWASP MASVS / MASTG** — [mobile-appsec.github.io](https://mobile-appsec.github.io/)
+- **OWASP MASVS / MASTG** — [mas.owasp.org](https://mas.owasp.org/)
 - **OWASP Mobile Top 10**
 - **PortSwigger:** mobile API testing overlaps (Burp + rooted device or pinning bypass lab)
 - **HackTricks:** Android/iOS pentesting chapters

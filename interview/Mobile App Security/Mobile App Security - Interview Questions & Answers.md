@@ -78,8 +78,8 @@
 
 ## Authoritative references
 
-- [OWASP MASVS](https://mobile-appsec.github.io/MASVS/)
-- [OWASP MASTG](https://mobile-appsec.github.io/MASTG/)
+- [OWASP MASVS](https://mas.owasp.org/MASVS/)
+- [OWASP MASTG](https://mas.owasp.org/MASTG/)
 - [RFC 8252 — OAuth 2.0 for Native Apps](https://datatracker.ietf.org/doc/html/rfc8252)
 - [Apple ATS](https://developer.apple.com/documentation/bundleresources/information_property_list/nsapptransportsecurity)
 - [Android App Links](https://developer.android.com/training/app-links)

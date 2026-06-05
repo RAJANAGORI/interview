@@ -67,4 +67,4 @@
 
 - [AWS Lambda security](https://docs.aws.amazon.com/lambda/latest/dg/lambda-security.html)
 - [OWASP Serverless Top 10](https://owasp.org/www-project-serverless-top-10/)
-- [CIS AWS Foundations Benchmark](https://www.cisecurity.org/benchmark/amazon_web_services)
+- [CIS AWS Foundations Benchmark](https://www.cisecurity.org/cis-benchmarks)

@@ -14,10 +14,10 @@
 
 | # | Folder | Bug class | Language |
 |---|--------|-----------|----------|
-| 1 | [sql-concat](../examples/sql-injection/) | SQL injection | Python |
-| 2 | [xss-innerhtml](../examples/xss/) | DOM XSS | JavaScript |
-| 3 | [ssrf-fetch](../examples/ssrf/) | SSRF | Python |
-| 4 | [upload-path](../examples/file-upload/) | Unrestricted upload | Python |
+| 1 | [sql-concat](../../examples/sql-injection/) | SQL injection | Python |
+| 2 | [xss-innerhtml](../../examples/xss/) | DOM XSS | JavaScript |
+| 3 | [ssrf-fetch](../../examples/ssrf/) | SSRF | Python |
+| 4 | [upload-path](../../examples/file-upload/) | Unrestricted upload | Python |
 | 5 | [cmd-injection](cmd-injection/) | OS command injection | Python |
 | 6 | [deser-pickle](deser-pickle/) | Insecure deserialization | Python |
 | 7 | [jwt-none](jwt-none/) | JWT alg bypass | JavaScript |

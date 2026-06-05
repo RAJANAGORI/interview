@@ -21,7 +21,7 @@ This guide follows the **[Content Mastery Framework](../Interview%20Preparation/
 ## Prerequisites
 
 - **[Authorization and Authentication](../Authorization%20and%20Authentication/)**
-- **[CORS](../CORS/)** and browser same-origin policy
+- **[CORS and SOP](../CORS%20and%20SOP/)** and browser same-origin policy
 - **[Rate Limiting and Abuse Prevention](../Rate%20Limiting%20and%20Abuse%20Prevention/)**
 - **[XSS](../XSS/)** — stolen tokens on WS connections
 
