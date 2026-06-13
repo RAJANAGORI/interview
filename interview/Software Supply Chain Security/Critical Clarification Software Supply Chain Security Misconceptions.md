@@ -1,5 +1,3 @@
----
-
 # Critical Clarification — Software Supply Chain Security Misconceptions
 
 > **Purpose:** This page corrects the most common illusions interviewers hear — and helps you avoid the trap of shallow answers. For each misconception, we show the **real control chain** and where verification must actually live.

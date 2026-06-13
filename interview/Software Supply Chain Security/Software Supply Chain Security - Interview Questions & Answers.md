@@ -1,5 +1,3 @@
----
-
 # Software Supply Chain Security – Interview Questions & Answers (Enhanced)
 
 <!-- interview-module:v1 -->
