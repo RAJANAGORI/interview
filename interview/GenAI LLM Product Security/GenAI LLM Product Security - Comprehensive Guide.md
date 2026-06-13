@@ -4,7 +4,7 @@
 
 Large language model (LLM) features add a **new trust boundary**: **untrusted natural language and documents** flow through a **non-deterministic model** that may invoke **tools**, query **retrieval stores**, and produce **outputs** consumed by people and systems. Product security means **explicit authorization outside the model**, **tenant-safe data paths**, **safe handling of model output**, and **continuous evaluation** when prompts, weights, corpora, and vendors change every release.
 
-**Primary taxonomy:** [OWASP Top 10 for LLM Applications (2025)](https://genai.owasp.org/llm-top-10/) from the OWASP GenAI Security Project. Cite the **2025** edition in interviews; older material remains useful for historical comparison at [LLM Top 10 2023/24](https://genai.owasp.org/llm-top-10-2023-24/).
+**Primary taxonomy:** [OWASP Top 10 for LLM Applications (2025)](https://genai.owasp.org/llm-top-10/) from the OWASP GenAI Security Project. Cite the **2025** edition in interviews; older material remains useful for historical comparison on the [OWASP LLM Top 10 project page](https://owasp.org/www-project-top-10-for-large-language-model-applications/).
 
 ---
 

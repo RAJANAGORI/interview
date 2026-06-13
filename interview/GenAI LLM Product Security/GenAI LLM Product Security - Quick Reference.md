@@ -2,7 +2,7 @@
 
 ## Canonical taxonomy
 
-**[OWASP Top 10 for LLM Applications (2025)](https://genai.owasp.org/llm-top-10/)** — use this for interviews; prior editions: [2023/24](https://genai.owasp.org/llm-top-10-2023-24/).
+**[OWASP Top 10 for LLM Applications (2025)](https://genai.owasp.org/llm-top-10/)** — use this for interviews; prior editions: [OWASP LLM Top 10 project page](https://owasp.org/www-project-top-10-for-large-language-model-applications/).
 
 ## 2025 Top 10 (memorize IDs)
 
