@@ -387,7 +387,7 @@ This document provides authoritative online references for all topics covered in
 
 ### **22. CERT Secure Coding Standards (overview)**
 
-**URL:** [https://insights.sei.cmu.edu/](https://insights.sei.cmu.edu/)
+**URL:** [https://cmu-sei.github.io/secure-coding-standards/](https://cmu-sei.github.io/secure-coding-standards/)
 
 **Language-Specific Standards:**
 
