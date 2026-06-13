@@ -12,6 +12,8 @@
 
 ---
 
+## Fundamentals
+
 ### 1) In one paragraph, what is software supply chain security?
 
 **Answer:** It is the set of **people, process, and technical controls** that ensure **software you build, buy, and run** matches **intended source, build steps, and distribution**: third‑party **dependencies**, **package registries**, **CI/CD** automation (including **plugins**), **build caches**, **signed artifacts**, **provenance**, **SBOM + VEX**, **IaC modules**, and **deployment** paths. The goal is **integrity and accountability** across that chain — not only finding CVEs in a scanner report.
