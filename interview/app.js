@@ -501,13 +501,13 @@ function renderDashboard() {
       const p = v.total ? Math.round((v.done / v.total) * 100) : 0;
       return { topic: t, pct: p, done: v.done, total: v.total };
     })
-    .filter((r) => r.total > 0 && r.done === r.total)
-    .sort((a, b) => a.topic.name.localeCompare(b.topic.name));
+    .filter((r) => r.done > 0)
+    .sort((a, b) => b.pct - a.pct || a.topic.name.localeCompare(b.topic.name));
 
   els.topicProgressTable.innerHTML = "";
   if (!rows.length) {
     els.topicProgressTable.innerHTML =
-      `<p class="kpi-sub">No completed topics yet. Mark all modules in a topic to see it here.</p>`;
+      `<p class="kpi-sub">No progress yet. Mark a module complete while studying to see it here.</p>`;
     return;
   }
   for (const r of rows) {
