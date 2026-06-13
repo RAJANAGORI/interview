@@ -200,13 +200,131 @@ function setContentTypes(topic) {
   els.completionCheckbox.disabled = true;
 }
 
+let scrollTopButton = null;
+let scrollTopHandler = null;
+
+function slugifyHeading(text) {
+  const slug = text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+  return slug || "section";
+}
+
+function removeScrollTopButton() {
+  if (scrollTopHandler) {
+    window.removeEventListener("scroll", scrollTopHandler);
+    scrollTopHandler = null;
+  }
+  if (scrollTopButton) {
+    scrollTopButton.remove();
+    scrollTopButton = null;
+  }
+}
+
+function enhanceMarkdownDocument(container) {
+  const h1 = container.querySelector("h1");
+  if (!h1) return;
+
+  if (!h1.id) {
+    h1.id = "doc-top";
+  }
+
+  const usedIds = new Set([h1.id]);
+  container.querySelectorAll("h2, h3").forEach((heading) => {
+    let id = slugifyHeading(heading.textContent);
+    const base = id;
+    let n = 2;
+    while (usedIds.has(id)) {
+      id = `${base}-${n++}`;
+    }
+    heading.id = id;
+    usedIds.add(id);
+  });
+
+  const h2s = container.querySelectorAll("h2");
+  const tocHeadings = h2s.length ? { type: "h2", nodes: h2s } : { type: "h3", nodes: container.querySelectorAll("h3") };
+
+  if (tocHeadings.nodes.length) {
+    const toc = document.createElement("nav");
+    toc.className = "doc-toc";
+    toc.setAttribute("aria-label", "Table of contents");
+    toc.innerHTML = `<p class="doc-toc-title">On this page</p><ol></ol>`;
+    const ol = toc.querySelector("ol");
+
+    if (tocHeadings.type === "h2") {
+      h2s.forEach((h2) => {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = `#${h2.id}`;
+        a.textContent = h2.textContent.trim();
+        li.appendChild(a);
+
+        const h3s = [];
+        let el = h2.nextElementSibling;
+        while (el && el.tagName !== "H2") {
+          if (el.tagName === "H3") h3s.push(el);
+          el = el.nextElementSibling;
+        }
+        if (h3s.length) {
+          const subOl = document.createElement("ol");
+          h3s.forEach((h3) => {
+            const subLi = document.createElement("li");
+            const subA = document.createElement("a");
+            subA.href = `#${h3.id}`;
+            subA.textContent = h3.textContent.trim();
+            subLi.appendChild(subA);
+            subOl.appendChild(subLi);
+          });
+          li.appendChild(subOl);
+        }
+        ol.appendChild(li);
+      });
+    } else {
+      tocHeadings.nodes.forEach((h3) => {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = `#${h3.id}`;
+        a.textContent = h3.textContent.trim();
+        li.appendChild(a);
+        ol.appendChild(li);
+      });
+    }
+
+    h1.insertAdjacentElement("afterend", toc);
+  }
+
+  removeScrollTopButton();
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "scroll-top-btn";
+  btn.setAttribute("aria-label", "Back to title");
+  btn.textContent = "↑ Top";
+  btn.addEventListener("click", () => {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    h1.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+  });
+  document.body.appendChild(btn);
+  scrollTopButton = btn;
+
+  scrollTopHandler = () => {
+    btn.classList.toggle("visible", window.scrollY > 400);
+  };
+  window.addEventListener("scroll", scrollTopHandler, { passive: true });
+  scrollTopHandler();
+}
+
 async function loadMarkdown(path) {
+  removeScrollTopButton();
   try {
     const response = await fetch(toAbsolute(path));
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const markdown = await response.text();
     els.markdownContent.innerHTML = marked.parse(markdown);
-    document.querySelectorAll("pre code").forEach((block) => hljs.highlightElement(block));
+    document.querySelectorAll("#markdownContent pre code").forEach((block) => hljs.highlightElement(block));
+    enhanceMarkdownDocument(els.markdownContent);
   } catch (error) {
     els.markdownContent.innerHTML = `<p>Unable to load content from <code>${path}</code>.</p>`;
   }
@@ -298,6 +416,7 @@ function setView(view) {
   els.topicsView.classList.toggle("hidden", !isTopics);
   els.dashboardView.classList.toggle("hidden", isTopics);
   if (!isTopics) {
+    removeScrollTopButton();
     renderDashboard();
     scrollPanelIntoView(els.dashboardView);
   } else {
