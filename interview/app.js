@@ -224,6 +224,13 @@ function removeScrollTopButton() {
   }
 }
 
+function tocLabel(text) {
+  return text
+    .trim()
+    .replace(/^Q\d+:\s*/i, "")
+    .replace(/^\d+[\).]\s+/, "");
+}
+
 function enhanceMarkdownDocument(container) {
   const h1 = container.querySelector("h1");
   if (!h1) return;
@@ -259,7 +266,7 @@ function enhanceMarkdownDocument(container) {
         const li = document.createElement("li");
         const a = document.createElement("a");
         a.href = `#${h2.id}`;
-        a.textContent = h2.textContent.trim();
+        a.textContent = tocLabel(h2.textContent);
         li.appendChild(a);
 
         const h3s = [];
@@ -274,7 +281,7 @@ function enhanceMarkdownDocument(container) {
             const subLi = document.createElement("li");
             const subA = document.createElement("a");
             subA.href = `#${h3.id}`;
-            subA.textContent = h3.textContent.trim();
+            subA.textContent = tocLabel(h3.textContent);
             subLi.appendChild(subA);
             subOl.appendChild(subLi);
           });
@@ -287,7 +294,7 @@ function enhanceMarkdownDocument(container) {
         const li = document.createElement("li");
         const a = document.createElement("a");
         a.href = `#${h3.id}`;
-        a.textContent = h3.textContent.trim();
+        a.textContent = tocLabel(h3.textContent);
         li.appendChild(a);
         ol.appendChild(li);
       });
