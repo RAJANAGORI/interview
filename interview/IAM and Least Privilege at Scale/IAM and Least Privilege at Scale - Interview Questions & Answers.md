@@ -140,7 +140,7 @@ This requires both immediate technical remediation and organizational change man
 
 ## Depth: Interview Follow-ups
 
-**Authoritative references:** [NIST AC family](https://csrc.nist.gov/Projects/risk-management/sp800-53-controls/release-search#!/controls?version=5.1&family=AC) (access control); [AWS IAM best practices](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html); [Azure RBAC](https://learn.microsoft.com/en-us/azure/role-based-access-control/overview); [GCP IAM](https://cloud.google.com/iam/docs/overview); [SPIFFE specification](https://spiffe.io/docs/latest/spiffe-about/overview/); [Google Zanzibar paper](https://research.google/pubs/pub48190/).
+**Authoritative references:** [NIST AC family](https://csrc.nist.gov/Projects/risk-management/sp800-53-controls/release-search#!/controls?version=5.1&family=AC) (access control); [AWS IAM best practices](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html); [Azure RBAC](https://learn.microsoft.com/en-us/azure/role-based-access-control/overview); [GCP IAM](https://cloud.google.com/iam/docs/overview); [SPIFFE](https://spiffe.io/); [Google Zanzibar paper](https://research.google/pubs/pub48190/).
 
 **Common follow-up threads:**
 - **Standing privilege vs JIT** — operational trade-offs: latency during incidents, approval chain availability, developer friction, measuring adoption.
