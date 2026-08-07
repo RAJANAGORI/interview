@@ -102,7 +102,8 @@ body::before {
   font-size: clamp(1.1rem, 4vw, 1.35rem);
 }
 
-.app-header p {
+.app-header p,
+.header-subtitle {
   margin: 0.25rem 0 0;
   color: var(--muted);
 }
@@ -112,6 +113,14 @@ body::before {
   gap: 0.5rem;
   align-items: center;
   flex-shrink: 0;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+.sidebar-drawer-header {
+  display: none;
 }
 
 .btn {
@@ -306,6 +315,24 @@ body::before {
   word-break: break-word;
 }
 
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.35rem 0;
+}
+
+.empty-state p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 28rem;
+}
+
+.empty-state .btn {
+  align-self: flex-start;
+}
+
 .markdown-content h1,
 .markdown-content h2,
 .markdown-content h3 {
@@ -495,27 +522,111 @@ body::before {
   white-space: nowrap;
 }
 
-/* Tablet and below: single column */
+/* Tablet and below: content-first + topic drawer */
 @media (max-width: 900px) {
-  .app-layout {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "sidebar"
-      "main";
-    min-height: auto;
-    align-content: start;
+  .header-subtitle {
+    display: none;
   }
 
   /*
-   * Sidebar needs a definite height: with height:auto, flex:1 on .topic-list
-   * gets zero free space and the list collapses to invisible.
-   * Clip overflow so the list scrolls inside instead of covering the reader.
+   * Do not trap the fixed drawer inside .app-layout's stacking context
+   * (z-index: 1), or the footer/backdrop paint above it and block taps.
    */
+  .app-layout {
+    display: block;
+    min-height: auto;
+    position: static;
+    z-index: auto;
+  }
+
+  .content {
+    z-index: auto;
+  }
+
+  .app-header {
+    z-index: 60;
+  }
+
+  .site-footer {
+    z-index: 0;
+  }
+
+  body.sidebar-open .site-footer {
+    pointer-events: none;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgba(0, 0, 0, 0.55);
+    border: 0;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+  }
+
+  body.sidebar-open .sidebar-backdrop {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
   .sidebar {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-    height: clamp(200px, 42vh, 360px);
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 50;
+    width: min(92vw, 340px);
+    max-width: 100%;
+    height: 100%;
+    height: 100dvh;
+    border-right: 1px solid var(--border);
+    border-bottom: none;
+    padding:
+      calc(0.85rem + var(--safe-top))
+      0.85rem
+      calc(0.85rem + var(--safe-bottom));
     overflow: hidden;
+    transform: translateX(-105%);
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform 0.22s ease, visibility 0.22s ease;
+    box-shadow: none;
+  }
+
+  body.sidebar-open .sidebar {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.45);
+  }
+
+  .sidebar-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .sidebar-drawer-title {
+    margin: 0;
+    font-family: "Fraunces", Georgia, "Times New Roman", serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .sidebar-close {
+    flex-shrink: 0;
+    padding: 0.45rem 0.7rem;
+    min-height: 44px;
   }
 
   .topic-list {
@@ -523,6 +634,10 @@ body::before {
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
+  }
+
+  body.sidebar-open {
+    overflow: hidden;
   }
 
   /* Stack title + controls; keep heading from growing (no vertical flex gap). */
@@ -560,17 +675,29 @@ body::before {
 /* Narrow phones */
 @media (max-width: 480px) {
   .header-row {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+  }
+
+  .header-title {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .header-title h1 {
+    font-size: 1.05rem;
   }
 
   .header-actions {
-    width: 100%;
-    justify-content: stretch;
+    width: auto;
+    flex-shrink: 0;
   }
 
   .header-actions .btn {
-    flex: 1;
+    flex: 0 0 auto;
+    padding: 0.5rem 0.7rem;
     text-align: center;
   }
 

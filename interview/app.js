@@ -28,6 +28,11 @@ const els = {
   dashboardView: document.getElementById("dashboardView"),
   resetProgress: document.getElementById("resetProgress"),
 
+  sidebar: document.getElementById("topicSidebar"),
+  sidebarBackdrop: document.getElementById("sidebarBackdrop"),
+  closeSidebar: document.getElementById("closeSidebar"),
+  openTopicsCta: document.getElementById("openTopicsCta"),
+
   overallPct: document.getElementById("overallPct"),
   overallCount: document.getElementById("overallCount"),
   overallChart: document.getElementById("overallChart"),
@@ -42,6 +47,47 @@ const mqMobile = window.matchMedia("(max-width: 900px)");
 
 function isMobileLayout() {
   return mqMobile.matches;
+}
+
+function isSidebarOpen() {
+  return document.body.classList.contains("sidebar-open");
+}
+
+function setSidebarOpen(open) {
+  const shouldOpen = !!open && isMobileLayout();
+  document.body.classList.toggle("sidebar-open", shouldOpen);
+
+  if (els.navTopics) {
+    els.navTopics.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+  }
+  if (els.sidebar) {
+    els.sidebar.setAttribute("aria-hidden", shouldOpen || !isMobileLayout() ? "false" : "true");
+  }
+  if (els.sidebarBackdrop) {
+    els.sidebarBackdrop.setAttribute("aria-hidden", shouldOpen ? "false" : "true");
+  }
+
+  if (shouldOpen && els.search) {
+    requestAnimationFrame(() => {
+      try {
+        els.search.focus({ preventScroll: true });
+      } catch {
+        els.search.focus();
+      }
+    });
+  }
+}
+
+function openSidebar() {
+  setSidebarOpen(true);
+}
+
+function closeSidebar() {
+  setSidebarOpen(false);
+}
+
+function toggleSidebar() {
+  setSidebarOpen(!isSidebarOpen());
 }
 
 function scrollPanelIntoView(el) {
@@ -386,6 +432,9 @@ function selectTopic(topic, opts = {}) {
   els.topicTitle.textContent = topic.name;
   setContentTypes(topic);
   renderTopicList();
+  if (isMobileLayout()) {
+    closeSidebar();
+  }
   scrollPanelIntoView(els.topicsView);
   if (!opts.fromQuery) {
     updateTopicQuery();
@@ -423,12 +472,33 @@ function setView(view) {
   els.topicsView.classList.toggle("hidden", !isTopics);
   els.dashboardView.classList.toggle("hidden", isTopics);
   if (!isTopics) {
+    closeSidebar();
     removeScrollTopButton();
     renderDashboard();
     scrollPanelIntoView(els.dashboardView);
   } else {
     scrollPanelIntoView(els.topicsView);
   }
+}
+
+function onTopicsNavClick() {
+  if (state.view !== "topics") {
+    setView("topics");
+  }
+  if (isMobileLayout()) {
+    toggleSidebar();
+  } else {
+    closeSidebar();
+  }
+}
+
+function onMobileBreakpointChange() {
+  if (!isMobileLayout()) {
+    closeSidebar();
+  } else {
+    setSidebarOpen(false);
+  }
+  if (state.view === "dashboard") renderDashboard();
 }
 
 function drawProgressBar(canvas, pct) {
@@ -537,13 +607,40 @@ const onResizeCharts = debounce(() => {
 
 window.addEventListener("resize", onResizeCharts);
 if (typeof mqMobile.addEventListener === "function") {
-  mqMobile.addEventListener("change", onResizeCharts);
+  mqMobile.addEventListener("change", onMobileBreakpointChange);
 } else if (typeof mqMobile.addListener === "function") {
-  mqMobile.addListener(onResizeCharts);
+  mqMobile.addListener(onMobileBreakpointChange);
 }
 
-els.navTopics.addEventListener("click", () => setView("topics"));
+els.navTopics.addEventListener("click", onTopicsNavClick);
 els.navDashboard.addEventListener("click", () => setView("dashboard"));
+
+if (els.closeSidebar) {
+  els.closeSidebar.addEventListener("click", closeSidebar);
+}
+if (els.sidebarBackdrop) {
+  els.sidebarBackdrop.addEventListener("click", closeSidebar);
+}
+if (els.openTopicsCta) {
+  els.openTopicsCta.addEventListener("click", () => {
+    if (state.view !== "topics") setView("topics");
+    if (isMobileLayout()) {
+      openSidebar();
+    } else if (els.search) {
+      try {
+        els.search.focus({ preventScroll: true });
+      } catch {
+        els.search.focus();
+      }
+    }
+  });
+}
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && isSidebarOpen()) {
+    closeSidebar();
+  }
+});
 
 els.resetProgress.addEventListener("click", () => {
   try {
@@ -560,6 +657,8 @@ async function init() {
   if (els.copyrightYear) {
     els.copyrightYear.textContent = new Date().getFullYear();
   }
+
+  setSidebarOpen(false);
 
   try {
     const response = await fetch(toAbsolute("Config/topics.json"));
