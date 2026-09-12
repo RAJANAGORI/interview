@@ -4,7 +4,7 @@
 
 > **How to use this interview module**
 >
-> **Practice:** Cover each answer, then explain it aloud in **60–120 seconds**. Add **one concrete example** from work or a lab.
+> **Practice:** Cover each answer, then explain it aloud in **60-120 seconds**. Add **one concrete example** from work or a lab.
 >
 > **Pair with:** the **Comprehensive Guide** and **Critical Clarification** for this topic (if present).
 
@@ -349,7 +349,7 @@ def test_idor_protection():
 
 **Answer:**
 
-**IDOR is part of A01:2021 – Broken Access Control:**
+**IDOR is part of A01:2021 - Broken Access Control:**
 - Missing authorization checks
 - Insecure object references
 - Privilege escalation
@@ -490,13 +490,13 @@ def download_file(file_token):
 
 ---
 
-## Depth: Interview follow-ups — IDOR
+## Depth: Interview follow-ups - IDOR
 
-**Authoritative references:** [OWASP IDOR](https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/05-Authorization_Testing/04-Testing_for_Insecure_Direct_Object_References); [CWE-639](https://cwe.mitre.org/data/definitions/639.html).
+**Authoritative references:** [OWASP IDOR (WSTG)](https://owasp.github.io/www-project-web-security-testing-guide/v42/4-Web_Application_Security_Testing/05-Authorization_Testing/04-Testing_for_Insecure_Direct_Object_References); [CWE-639](https://cwe.mitre.org/data/definitions/639.html).
 
 **Follow-ups:**
-- **Horizontal vs vertical** IDOR—testing matrix.
-- **Predictable IDs / UUIDs** don’t fix missing authZ.
+- **Horizontal vs vertical** IDOR-testing matrix.
+- **Predictable IDs / UUIDs** don't fix missing authZ.
 - **Mass assignment** adjacent issues.
 
 **Production verification:** Integration tests per role; object-level policy tests; logging of denied access.
@@ -507,7 +507,7 @@ def download_file(file_token):
 
 ---
 
-## Flagship Mock Question Ladder — IDOR (Insecure Direct Object Reference)
+## Flagship Mock Question Ladder - IDOR (Insecure Direct Object Reference)
 
 **Primary competency axis:** object-level authorization and tenant isolation.
 

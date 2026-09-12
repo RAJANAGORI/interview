@@ -176,7 +176,7 @@ mindmap
 ### 1 XXE (XML External Entity) injection
 - Attack: A malicious SAML Response includes an entity declaration that references an external resource:
 - Impact: Server-side file read, SSRF to internal services, denial of service.
-- Java: factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+- Java: `factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)`
 - Python (lxml): parser = etree.XMLParser(resolve_entities=False, no_network=True)
 - .NET: XmlReaderSettings.DtdProcessing = DtdProcessing.Prohibit
 
@@ -335,7 +335,7 @@ mindmap
 - IdPs control which attributes are released to which SPs. Security-conscious IdPs implement attribute release policies:
 - Minimum necessary: Only release attributes the SP needs (email, name, groups-not SSN, home address).
 - Consent: Some federations require user consent before releasing attributes.
-- Attribute naming: No universal standard. One IdP sends http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress, another sends email, another sends mail. SPs must maintain per-IdP attribute mappings.
+- Attribute naming: No universal standard. One IdP sends `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress`, another sends email, another sends mail. SPs must maintain per-IdP attribute mappings.
 
 ### 2 Just-In-Time (JIT) provisioning
 - When a user authenticates via SAML for the first time, the SP automatically creates a local account using attributes from the assertion.

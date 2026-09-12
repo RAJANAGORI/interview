@@ -296,7 +296,7 @@ mindmap
 ### Clickjacking attack explained
 - Clickjacking (UI redressing) tricks a user into clicking something they didn't intend to by overlaying a transparent iframe of a target site over a decoy page:
 - Attacker creates a page with a button: "Click here to win a prize!"
-- The attacker overlays a transparent of https://bank.com/transfer?to=attacker&amount=10000 positioned so the "Confirm Transfer" button aligns with the "win a prize" button.
+- The attacker overlays a transparent of `https://bank.com/transfer?to=attacker&amount=10000` positioned so the "Confirm Transfer" button aligns with the "win a prize" button.
 - The user clicks what they think is the prize button but actually clicks the bank's transfer button.
 - Because the user is logged into the bank, the request succeeds with their session cookie.
 

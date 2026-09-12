@@ -94,7 +94,7 @@ mindmap
 
 ### SSRF (Server-Side Request Forgery)
 - Description: Attacker makes the server perform HTTP requests to internal or external resources.
-- Result: Server makes HTTP request to http://internal-server:8080/admin
+- Result: Server makes HTTP request to `http://internal-server:8080/admin`
 
 ### Blind XXE (Out-of-Band)
 - Description: Attacker extracts data indirectly via external servers, when file contents aren't returned directly.

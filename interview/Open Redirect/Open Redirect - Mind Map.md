@@ -33,7 +33,7 @@ mindmap
 
 ## L2 - Common bypass themes (interview)
 - //evil.com - protocol-relative appears "relative" to naive checks.
-- https://trusted.example.evil.com - subdomain tricks vs suffix checks.
+- `https://trusted.example.evil.com` - subdomain tricks vs suffix checks.
 - \evil.com (IE legacy) / unicode homoglyphs - parser dependent.
 - Double encoding https%253A//evil.
 
@@ -138,7 +138,7 @@ mindmap
 - Reality: Attacker can use https:// or scheme-relative //.
 
 ## "startswith('trusted.example') is enough."
-- Reality: https://trusted.example.evil.com and encoding tricks bypass naive prefix checks.
+- Reality: `https://trusted.example.evil.com` and encoding tricks bypass naive prefix checks.
 
 ## "Client-side redirect validation is sufficient."
 - Reality: Attacker calls server directly with malicious parameter-validate server-side.

@@ -83,10 +83,10 @@ mindmap
 
 ### Internal SSRF
 - Description: Attacker targets resources accessible only from internal network.
-- Internal APIs (http://localhost:8080/admin)
-- Internal services (http://192.168.1.1:3306)
-- Cloud metadata APIs (http://169.254.169.254)
-- Internal file system (file:///etc/passwd)
+- Internal APIs (`http://localhost:8080/admin`)
+- Internal services (`http://192.168.1.1:3306`)
+- Cloud metadata APIs (`http://169.254.169.254`)
+- Internal file system (`file:///etc/passwd`)
 
 ### External SSRF
 - Description: Attacker targets external resources using server IP to bypass restrictions.
@@ -124,9 +124,9 @@ mindmap
 - Read files from server filesystem
 - Access configuration files
 - Extract sensitive data
-- file:///etc/passwd
-- file:///var/www/config.php
-- file:///proc/self/environ
+- `file:///etc/passwd`
+- `file:///var/www/config.php`
+- `file:///proc/self/environ`
 
 ### Port Scanning
 - Scan internal network ports
@@ -186,10 +186,10 @@ mindmap
 ## Advanced Exploitation Techniques
 
 ### IP Encoding Bypasses
-- Decimal encoding: http://2130706433/ (127.0.0.1)
+- Decimal encoding: `http://2130706433/` (127.0.0.1)
 - Hex encoding: http://0x7f.0x00.0x00.0x01/
 - Octal encoding: http://0177.0.0.1/
-- IPv6: http://[::1]/ or http://[::ffff:127.0.0.1]/
+- IPv6: `http://[::1]/` or `http://[::ffff:127.0.0.1]/`
 - Always resolve hostnames and validate IPs
 - Block all private IP ranges regardless of encoding
 
@@ -372,7 +372,7 @@ mindmap
 - Follow redirects and validate each hop
 
 ## IP Encoding Bypasses
-- Decimal: http://2130706433/ (127.0.0.1)
+- Decimal: `http://2130706433/` (127.0.0.1)
 - Hex: http://0x7f.0x00.0x00.0x01/
 - Octal: http://0177.0.0.1/
 - IPv6: http://[::1]/
