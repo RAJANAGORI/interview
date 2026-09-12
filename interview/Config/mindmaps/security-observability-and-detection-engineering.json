@@ -1,0 +1,1820 @@
+{
+  "id": "nda2af167bf6f03e",
+  "title": "Security Observability and Detection Engineering",
+  "markdown": "**Security observability** is the practice of making security-relevant behavior **visible, attributable, and measurable** across infrastructure and applications. **Detection engineering** turns that visibility into **testable hypotheses** expressed as rules, queries, and models, with explicit **ownership**, **tuning**, and **retirement**. Mature programs treat detections like product features: requirements, data contracts, release discipline, and metrics-not permanent piles of regex in a SIEM.\n\nThis guide connects **telemetry design**, **SIEM and data platforms**, **detection-as-code**, **MITRE ATT&CK** for coverage thinking, **alert quality** (including MTTD and MTTR), **cloud audit logs**, **application-level signals**, and a **tooling landscape** you can discuss in staff-level interviews.",
+  "notes": "Security observability is the practice of making security-relevant behavior visible, attributable, and measurable across infrastructure and applications. Detection engineering turns that visibility into testable hypotheses expressed as rules, queries, and models, with explicit ownership, tuning, and retirement. Mature programs treat detections like product features: requirements, data contracts, release discipline, and metrics-not permanent piles of regex in a SIEM.\n\nThis guide connects telemetry design, SIEM and data platforms, detection-as-code, MITRE ATT&CK for coverage thinking, alert quality (including MTTD and MTTR), cloud audit logs, application-level signals, and a tooling landscape you can discuss in staff-level interviews.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "n839d0502743af1e",
+      "title": "Concept",
+      "markdown": "",
+      "notes": "",
+      "expanded": true,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nbed71eac22f6966",
+          "title": "At a glance",
+          "markdown": "**Security observability** is the practice of making security-relevant behavior **visible, attributable, and measurable** across infrastructure and applications. **Detection engineering** turns that visibility into **testable hypotheses** expressed as rules, queries, and models, with explicit **ownership**, **tuning**, and **retirement**. Mature programs treat detections like product features: requirements, data contracts, release discipline, and metrics-not permanent piles of regex in a SIEM.\n\nThis guide connects **telemetry design**, **SIEM and data platforms**, **detection-as-code**, **MITRE ATT&CK** for coverage thinking, **alert quality** (including MTTD and MTTR), **cloud audit logs**, **application-level signals**, and a **tooling landscape** you can discuss in staff-level interviews.",
+          "notes": "Security observability is the practice of making security-relevant behavior visible, attributable, and measurable across infrastructure and applications. Detection engineering turns that visibility into testable hypotheses expressed as rules, queries, and models, with explicit ownership, tuning, and retirement. Mature programs treat detections like product features: requirements, data contracts, release discipline, and metrics-not permanent piles of regex in a SIEM.\n\nThis guide connects telemetry design, SIEM and data platforms, detection-as-code, MITRE ATT&CK for coverage thinking, alert quality (including MTTD and MTTR), cloud audit logs, application-level signals, and a tooling landscape you can discuss in staff-level interviews.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Security observability is the practice of making security-relevant behavior...",
+          "expanded": false
+        },
+        {
+          "id": "n240ced9244484dc",
+          "title": "Core vocabulary",
+          "markdown": "| Term | Meaning |\n|------|---------|\n| **Telemetry** | Structured or semi-structured records of activity (logs, metrics, traces, audit events) with enough context to reason about intent and impact. |\n| **Detection** | A rule, query, statistical model, or graph pattern that evaluates telemetry and emits an **alert**, **finding**, or **automated response**. |\n| **Signal** | A detection output that correlates with real malicious or abusive behavior (true positive) or benign activity (false positive). |\n| **Triage** | The process of validating, enriching, prioritizing, and routing detection output. |\n| **Coverage** | For a given threat model, the extent to which important tactics and techniques are observable and detectable with acceptable risk of blind spots. |",
+          "notes": "| Term | Meaning |\n|------|---------|\n| Telemetry | Structured or semi-structured records of activity (logs, metrics, traces, audit events) with enough context to reason about intent and impact. |\n| Detection | A rule, query, statistical model, or graph pattern that evaluates telemetry and emits an alert, finding, or automated response. |\n| Signal | A detection output that correlates with real malicious or abusive behavior (true positive) or benign activity (false positive). |\n| Triage | The process of validating, enriching, prioritizing, and routing detection output. |\n| Coverage | For a given threat model, the extent to which important tactics and techniques are observable and detectable with acceptable risk of blind spots. |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Term | Meaning | |------|---------| | Telemetry | Structured or...",
+          "expanded": false
+        },
+        {
+          "id": "nc62496055c5bf08",
+          "title": "Tooling landscape (vendor-neutral overview)",
+          "markdown": "No single tool wins every environment. Typical categories:\n\n| Category | Role | Examples (illustrative) |\n|----------|------|-------------------------|\n| **SIEM / UEBA** | Analyst workflows, correlation, case management | Splunk ES, Microsoft Sentinel, Chronicle SIEM, Elastic Security, Sumo Logic Cloud SIEM |\n| **EDR / XDR** | Endpoint execution, persistence, lateral movement | CrowdStrike, SentinelOne, Microsoft Defender for Endpoint, various cloud workload agents |\n| **CSPM / CWPP** | Cloud misconfiguration and workload posture | Prisma Cloud, Wiz, Orca, cloud-native Security Hub / Defender CSPM patterns |\n| **Data platforms** | Cheap retention, custom analytics | Snowflake, BigQuery, Databricks, OpenSearch |\n| **SOAR** | Playbook automation | Splunk SOAR, Palo Alto XSOAR, Torq, cloud-native automation |\n| **CIEM** | Cloud entitlement risk | Specialized vendors; also emerging native cloud features |\n| **Open detection formats** | Interoperability | Sigma (signatures), OCSF (schema), ECS (Elastic Common Schema) |\n\nChoose tooling based on **data gravity** (where logs already live), **skill sets**, **latency requirements**, and **regulatory constraints**-not magazine quadrants.",
+          "notes": "No single tool wins every environment. Typical categories:\n\n| Category | Role | Examples (illustrative) |\n|----------|------|-------------------------|\n| SIEM / UEBA | Analyst workflows, correlation, case management | Splunk ES, Microsoft Sentinel, Chronicle SIEM, Elastic Security, Sumo Logic Cloud SIEM |\n| EDR / XDR | Endpoint execution, persistence, lateral movement | CrowdStrike, SentinelOne, Microsoft Defender for Endpoint, various cloud workload agents |\n| CSPM / CWPP | Cloud misconfiguration and workload posture | Prisma Cloud, Wiz, Orca, cloud-native Security Hub / Defender CSPM patterns |\n| Data platforms | Cheap retention, custom analytics | Snowflake, BigQuery, Databricks, OpenSearch |\n| SOAR | Playbook automation | Splunk SOAR, Palo Alto XSOAR, Torq, cloud-native automation |\n| CIEM | Cloud entitlement risk | Specialized vendors; also emerging native cloud features |\n| Open detection formats | Interoperability | Sigma (signatures), OCSF (schema), ECS (Elastic Common Schema) |\n\nChoose tooling based on data gravity (where logs already live), skill sets, latency requirements, and regulatory constraints-not magazine quadrants.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n4271e40cef345bc",
+              "title": "Open formats and portability",
+              "markdown": "**Sigma** rules describe log-source-agnostic signatures that compile to vendor-specific queries-useful for sharing community content and keeping logic portable until you outgrow abstraction limits. **OCSF** (Open Cybersecurity Schema Framework) and **ECS** (Elastic Common Schema) reduce friction when the same event traverses SIEM, lake, and streaming engines. Interview credibility comes from admitting trade-offs: universal schemas lag edge-case fields your product needs; portable rules still require **field mapping** work per backend.",
+              "notes": "Sigma rules describe log-source-agnostic signatures that compile to vendor-specific queries-useful for sharing community content and keeping logic portable until you outgrow abstraction limits. OCSF (Open Cybersecurity Schema Framework) and ECS (Elastic Common Schema) reduce friction when the same event traverses SIEM, lake, and streaming engines. Interview credibility comes from admitting trade-offs: universal schemas lag edge-case fields your product needs; portable rules still require field mapping work per backend.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Sigma rules describe log-source-agnostic signatures that compile to...",
+              "expanded": false
+            }
+          ],
+          "blurb": "No single tool wins every environment.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes At a glance"
+    },
+    {
+      "id": "n234440e9e2bdcbb",
+      "title": "Detection engineering lifecycle",
+      "markdown": "Treat each detection as a **mini product** with a lifecycle:",
+      "notes": "Treat each detection as a mini product with a lifecycle:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n7286734a7bdce84",
+          "title": "Threat modeling and hypothesis",
+          "markdown": "Start from **abuse cases** and **attack paths**, not from available log fields. Example hypothesis: \"Attackers enumerate tenant resources via sequential IDs after stealing a low-privilege session token.\"",
+          "notes": "Start from abuse cases and attack paths, not from available log fields. Example hypothesis: \"Attackers enumerate tenant resources via sequential IDs after stealing a low-privilege session token.\"",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Start from abuse cases and attack paths, not from available log fields.",
+          "expanded": false
+        },
+        {
+          "id": "n3ddbdc7d29eb005",
+          "title": "Data readiness assessment",
+          "markdown": "Verify fields exist, are populated consistently, and have acceptable **latency** from event to searchable storage. If data is missing, file **engineering tickets** with explicit schema proposals-detection engineers are often the first to discover broken instrumentation.",
+          "notes": "Verify fields exist, are populated consistently, and have acceptable latency from event to searchable storage. If data is missing, file engineering tickets with explicit schema proposals-detection engineers are often the first to discover broken instrumentation.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Verify fields exist, are populated consistently, and have acceptable latency...",
+          "expanded": false
+        },
+        {
+          "id": "n97a79cb798413fd",
+          "title": "Prototype detection",
+          "markdown": "Author a **query or rule** with documented assumptions: population baseline, seasonality, expected benign sources (scanners, health checks).",
+          "notes": "Author a query or rule with documented assumptions: population baseline, seasonality, expected benign sources (scanners, health checks).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Author a query or rule with documented assumptions: population baseline,...",
+          "expanded": false
+        },
+        {
+          "id": "n8a2244b87bfef63",
+          "title": "Tuning and suppression",
+          "markdown": "Add **allowlists** with owners and expiry dates (never permanent \"mute all\"). Use **risk-based thresholds** (stricter on admin paths, looser on read-only public content). Prefer **multi-signal** logic (rate plus diversity plus outcome) over single-threshold noise.",
+          "notes": "Add allowlists with owners and expiry dates (never permanent \"mute all\"). Use risk-based thresholds (stricter on admin paths, looser on read-only public content). Prefer multi-signal logic (rate plus diversity plus outcome) over single-threshold noise.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Add allowlists with owners and expiry dates (never permanent \"mute all\").",
+          "expanded": false
+        },
+        {
+          "id": "nd68afcbe089f5f8",
+          "title": "Response design",
+          "markdown": "Every high-severity detection needs a **playbook**: validate, contain, escalate, communicate. If the only step is \"page someone,\" the detection is not finished.",
+          "notes": "Every high-severity detection needs a playbook: validate, contain, escalate, communicate. If the only step is \"page someone,\" the detection is not finished.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Every high-severity detection needs a playbook: validate, contain, escalate,...",
+          "expanded": false
+        },
+        {
+          "id": "n6ddb1399b4ed5e3",
+          "title": "Release and change control",
+          "markdown": "Use the same rigor as code: **peer review**, **versioning**, **rollback**, and **staged rollout** (shadow mode, canary tenants).",
+          "notes": "Use the same rigor as code: peer review, versioning, rollback, and staged rollout (shadow mode, canary tenants).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Use the same rigor as code: peer review, versioning, rollback, and staged...",
+          "expanded": false
+        },
+        {
+          "id": "n1d276ba2f081abd",
+          "title": "Measurement and review",
+          "markdown": "Track **precision**, **volume**, **MTTD** for representative scenarios, **time to tune** after environment changes, and **business impact** (fraud $, customer churn linked to abuse). **Retire** detections that no longer match architecture or threat model.",
+          "notes": "Track precision, volume, MTTD for representative scenarios, time to tune after environment changes, and business impact (fraud $, customer churn linked to abuse). Retire detections that no longer match architecture or threat model.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Track precision, volume, MTTD for representative scenarios, time to tune...",
+          "expanded": false
+        },
+        {
+          "id": "na1052baca25f7d2",
+          "title": "Purple team and continuous validation",
+          "markdown": "Run **atomic tests** or **purple team** exercises to confirm **end-to-end** behavior: telemetry emitted, detection fires, ticket fields populate, runbook steps work. Log **detection drift** when services refactor and stop emitting fields.",
+          "notes": "Run atomic tests or purple team exercises to confirm end-to-end behavior: telemetry emitted, detection fires, ticket fields populate, runbook steps work. Log detection drift when services refactor and stop emitting fields.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Run atomic tests or purple team exercises to confirm end-to-end behavior:...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Treat each detection as a mini product with a lifecycle:",
+      "expanded": true
+    },
+    {
+      "id": "nbc1c809fbe42113",
+      "title": "Cloud audit logs and control-plane telemetry",
+      "markdown": "Cloud environments generate rich **management event** streams. These are foundational for **misconfiguration**, **persistence**, and **credential abuse** in the control plane.",
+      "notes": "Cloud environments generate rich management event streams. These are foundational for misconfiguration, persistence, and credential abuse in the control plane.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n93ce17fdfb0ca37",
+          "title": "AWS",
+          "markdown": "**CloudTrail** records API activity across accounts. Organization trails with **multi-region** aggregation are standard. Important nuances:",
+          "notes": "CloudTrail records API activity across accounts. Organization trails with multi-region aggregation are standard. Important nuances:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n837941a288ca7ad",
+              "title": "Management vs. data events (S3 object-level logging is optional and costly-select bucket",
+              "markdown": "- Management vs. data events (S3 object-level logging is optional and costly-select bucket",
+              "notes": "Management vs. data events (S3 object-level logging is optional and costly-select bucket",
+              "blurb": "",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5cb6ba0e360f076",
+              "title": "Integrity: log file validation, immutable storage (S3 Object Lock), separate security ac",
+              "markdown": "- Integrity: log file validation, immutable storage (S3 Object Lock), separate security ac",
+              "notes": "Integrity: log file validation, immutable storage (S3 Object Lock), separate security ac",
+              "blurb": "Integrity: log file validation, immutable storage (S3 Object Lock), separate...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd53940f0f9b9926",
+              "title": "Integrate CloudTrail with GuardDuty and Security Hub where used for managed detections.",
+              "markdown": "- Integrate CloudTrail with GuardDuty and Security Hub where used for managed detections.",
+              "notes": "Integrate CloudTrail with GuardDuty and Security Hub where used for managed detections.",
+              "blurb": "Integrate CloudTrail with GuardDuty and Security Hub where used for managed...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "CloudTrail records API activity across accounts.",
+          "expanded": false
+        },
+        {
+          "id": "ne5aa549674d0850",
+          "title": "Google Cloud",
+          "markdown": "**Cloud Audit Logs** include **Admin Activity**, **Data Access**, and **System Event** logs. **Log sinks** export to BigQuery or Pub/Sub for SIEM ingestion. Pay attention to **IAM policy changes**, **service account key** operations, and **VPC** changes.",
+          "notes": "Cloud Audit Logs include Admin Activity, Data Access, and System Event logs. Log sinks export to BigQuery or Pub/Sub for SIEM ingestion. Pay attention to IAM policy changes, service account key operations, and VPC changes.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Cloud Audit Logs include Admin Activity, Data Access, and System Event logs.",
+          "expanded": false
+        },
+        {
+          "id": "nf6810a7fc4f34a7",
+          "title": "Microsoft Azure",
+          "markdown": "**Azure Activity Log** covers subscription-level resource operations; **Azure AD** sign-in and audit logs are essential for identity-based attacks. Stream to **Log Analytics**, **Event Hub**, or **SIEM** with consistent **tenant** and **subscription** scoping.",
+          "notes": "Azure Activity Log covers subscription-level resource operations; Azure AD sign-in and audit logs are essential for identity-based attacks. Stream to Log Analytics, Event Hub, or SIEM with consistent tenant and subscription scoping.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Azure Activity Log covers subscription-level resource operations; Azure AD...",
+          "expanded": false
+        },
+        {
+          "id": "n4534a3fca10f62e",
+          "title": "Cross-cloud themes",
+          "markdown": "Assume breach of admin roles-monitor role assignment, federation trust, and key lifecycle events aggressively.",
+          "notes": "Assume breach of admin roles-monitor role assignment, federation trust, and key lifecycle events aggressively.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n48af3976c87daa9",
+              "title": "Assume breach of admin roles-monitor role assignment, federation trust, and key lifecycl",
+              "markdown": "- Assume breach of admin roles-monitor role assignment, federation trust, and key lifecycl",
+              "notes": "Assume breach of admin roles-monitor role assignment, federation trust, and key lifecycl",
+              "blurb": "Assume breach of admin roles-monitor role assignment, federation trust, and...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6d10000b1c476fc",
+              "title": "Data exfiltration often involves storage APIs-tune data access logging where risk warran",
+              "markdown": "- Data exfiltration often involves storage APIs-tune data access logging where risk warran",
+              "notes": "Data exfiltration often involves storage APIs-tune data access logging where risk warran",
+              "blurb": "Data exfiltration often involves storage APIs-tune data access logging where...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n82c97e6b4a7d63c",
+              "title": "Cross-account and peering changes are high-signal graph edges for lateral movement.",
+              "markdown": "- Cross-account and peering changes are high-signal graph edges for lateral movement.",
+              "notes": "Cross-account and peering changes are high-signal graph edges for lateral movement.",
+              "blurb": "Cross-account and peering changes are high-signal graph edges for lateral...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Assume breach of admin roles-monitor role assignment, federation trust, and...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Cloud environments generate rich management event streams.",
+      "expanded": true
+    },
+    {
+      "id": "nd31d2fcb0db9ea2",
+      "title": "Detection & ops",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n00e1c161ff8955e",
+          "title": "Telemetry: the contract under every detection",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n16045875cb39baf",
+              "title": "Facts before hypotheses",
+              "markdown": "Detections are only as good as the **data contract** they rely on. Interview answers should separate:",
+              "notes": "Detections are only as good as the data contract they rely on. Interview answers should separate:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n732448045edd211",
+                  "title": "What happened (action, outcome, resource touched).",
+                  "markdown": "- What happened (action, outcome, resource touched).",
+                  "notes": "What happened (action, outcome, resource touched).",
+                  "blurb": "What happened (action, outcome, resource touched).",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n60d40d830e1cf32",
+                  "title": "Who did it (human account, service principal, workload identity).",
+                  "markdown": "- Who did it (human account, service principal, workload identity).",
+                  "notes": "Who did it (human account, service principal, workload identity).",
+                  "blurb": "Who did it (human account, service principal, workload identity).",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ndf1490a8d4ad4d5",
+                  "title": "From where (IP, device, geolocation hints-not perfect, but useful).",
+                  "markdown": "- From where (IP, device, geolocation hints-not perfect, but useful).",
+                  "notes": "From where (IP, device, geolocation hints-not perfect, but useful).",
+                  "blurb": "From where (IP, device, geolocation hints-not perfect, but useful).",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n66b7f7c23f0592f",
+                  "title": "In what context (tenant, environment, session, trace identifiers for correlation).",
+                  "markdown": "- In what context (tenant, environment, session, trace identifiers for correlation).",
+                  "notes": "In what context (tenant, environment, session, trace identifiers for correlation).",
+                  "blurb": "In what context (tenant, environment, session, trace identifiers for...",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Detections are only as good as the data contract they rely on.",
+              "expanded": false
+            },
+            {
+              "id": "nc2c7ef0bf324299",
+              "title": "Minimum useful security event schema (application layer)",
+              "markdown": "Product and platform teams should converge on a **canonical audit event** shape for security-sensitive operations. A practical baseline:",
+              "notes": "Product and platform teams should converge on a canonical audit event shape for security-sensitive operations. A practical baseline:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "ndeac6b59aec5f4a",
+                  "title": "Identity: actor_id, actor_type (user, service, system), auth_method, session_id or devic",
+                  "markdown": "- Identity: actor_id, actor_type (user, service, system), auth_method, session_id or devic",
+                  "notes": "Identity: actor_id, actor_type (user, service, system), auth_method, session_id or devic",
+                  "blurb": "Identity: actorid, actortype (user, service, system), authmethod, sessionid...",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n137c4df223d73ee",
+                  "title": "Authorization: decision (allow/deny), policy_id or role_snapshot, resource_type, resourc",
+                  "markdown": "- Authorization: decision (allow/deny), policy_id or role_snapshot, resource_type, resourc",
+                  "notes": "Authorization: decision (allow/deny), policy_id or role_snapshot, resource_type, resourc",
+                  "blurb": "Authorization: decision (allow/deny), policyid or rolesnapshot,...",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ne38dad39e64db21",
+                  "title": "Request: http_method, route or RPC name, client_ip, user_agent, api_version.",
+                  "markdown": "- Request: http_method, route or RPC name, client_ip, user_agent, api_version.",
+                  "notes": "Request: http_method, route or RPC name, client_ip, user_agent, api_version.",
+                  "blurb": "Request: httpmethod, route or RPC name, clientip, useragent, apiversion.",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nbebb7c8e2357902",
+                  "title": "Outcome: status_code, error_code, reason (stable machine-readable codes, not free-text s",
+                  "markdown": "- Outcome: status_code, error_code, reason (stable machine-readable codes, not free-text s",
+                  "notes": "Outcome: status_code, error_code, reason (stable machine-readable codes, not free-text s",
+                  "blurb": "Outcome: statuscode, errorcode, reason (stable machine-readable codes, not...",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n9401bfbc0a13e34",
+                  "title": "Risk and abuse: optional risk_score, challenge_outcome, rate_limit_bucket when your plat",
+                  "markdown": "- Risk and abuse: optional risk_score, challenge_outcome, rate_limit_bucket when your plat",
+                  "notes": "Risk and abuse: optional risk_score, challenge_outcome, rate_limit_bucket when your plat",
+                  "blurb": "Risk and abuse: optional riskscore, challengeoutcome, ratelimitbucket when...",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n696baefc11da868",
+                  "title": "Correlation: request_id, trace_id, span_id, deployment_id, region.",
+                  "markdown": "- Correlation: request_id, trace_id, span_id, deployment_id, region.",
+                  "notes": "Correlation: request_id, trace_id, span_id, deployment_id, region.",
+                  "blurb": "Correlation: requestid, traceid, spanid, deploymentid, region.",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Product and platform teams should converge on a canonical audit event shape...",
+              "expanded": false
+            },
+            {
+              "id": "n2493f81c33f363c",
+              "title": "Enrichment and entity resolution",
+              "markdown": "Raw events rarely stand alone. Production detection pipelines **enrich** with:",
+              "notes": "Raw events rarely stand alone. Production detection pipelines enrich with:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "nfcf98e6604c0086",
+                  "title": "Asset and service inventory (owner, tier, internet exposure).",
+                  "markdown": "- Asset and service inventory (owner, tier, internet exposure).",
+                  "notes": "Asset and service inventory (owner, tier, internet exposure).",
+                  "blurb": "Asset and service inventory (owner, tier, internet exposure).",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n83c300e58047192",
+                  "title": "Identity lifecycle state (terminated employee, newly created admin).",
+                  "markdown": "- Identity lifecycle state (terminated employee, newly created admin).",
+                  "notes": "Identity lifecycle state (terminated employee, newly created admin).",
+                  "blurb": "Identity lifecycle state (terminated employee, newly created admin).",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd64548c87fcbd06",
+                  "title": "Geo-ASN and threat intelligence (use carefully; false positives abound).",
+                  "markdown": "- Geo-ASN and threat intelligence (use carefully; false positives abound).",
+                  "notes": "Geo-ASN and threat intelligence (use carefully; false positives abound).",
+                  "blurb": "Geo-ASN and threat intelligence (use carefully; false positives abound).",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nb5ddb49d7c09da5",
+                  "title": "Business context (customer tier, fraud risk segment).",
+                  "markdown": "- Business context (customer tier, fraud risk segment).",
+                  "notes": "Business context (customer tier, fraud risk segment).",
+                  "blurb": "Business context (customer tier, fraud risk segment).",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Raw events rarely stand alone.",
+              "expanded": false
+            },
+            {
+              "id": "nbfd42c7bd4e95af",
+              "title": "Application-level signals high-value for product security",
+              "markdown": "Beyond infrastructure logs, prioritize instrumenting:",
+              "notes": "Beyond infrastructure logs, prioritize instrumenting:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "na4832f502926bcc",
+                  "title": "Authentication anomalies: impossible travel signals, new device, refresh-token abuse, cr",
+                  "markdown": "- Authentication anomalies: impossible travel signals, new device, refresh-token abuse, cr",
+                  "notes": "Authentication anomalies: impossible travel signals, new device, refresh-token abuse, cr",
+                  "blurb": "Authentication anomalies: impossible travel signals, new device,...",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n591f37c6b9129c7",
+                  "title": "Authorization probing: bursts of 403/404 on object APIs, cross-tenant access attempts, r",
+                  "markdown": "- Authorization probing: bursts of 403/404 on object APIs, cross-tenant access attempts, r",
+                  "notes": "Authorization probing: bursts of 403/404 on object APIs, cross-tenant access attempts, r",
+                  "blurb": "Authorization probing: bursts of 403/404 on object APIs, cross-tenant access...",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n49f59d6b62daaa3",
+                  "title": "Privileged and break-glass usage: admin consoles, policy editors, key management operati",
+                  "markdown": "- Privileged and break-glass usage: admin consoles, policy editors, key management operati",
+                  "notes": "Privileged and break-glass usage: admin consoles, policy editors, key management operati",
+                  "blurb": "Privileged and break-glass usage: admin consoles, policy editors, key...",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n2ef3102a939be21",
+                  "title": "Data exfiltration patterns: bulk export, unusual query shapes, large result pagination,",
+                  "markdown": "- Data exfiltration patterns: bulk export, unusual query shapes, large result pagination,",
+                  "notes": "Data exfiltration patterns: bulk export, unusual query shapes, large result pagination,",
+                  "blurb": "Data exfiltration patterns: bulk export, unusual query shapes, large result...",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nba7d0c7fc0848c2",
+                  "title": "Integration abuse: OAuth consent changes, webhook registration spikes, API key creation",
+                  "markdown": "- Integration abuse: OAuth consent changes, webhook registration spikes, API key creation",
+                  "notes": "Integration abuse: OAuth consent changes, webhook registration spikes, API key creation",
+                  "blurb": "Integration abuse: OAuth consent changes, webhook registration spikes, API...",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Beyond infrastructure logs, prioritize instrumenting:",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Facts before hypotheses",
+          "expanded": false
+        },
+        {
+          "id": "n0b3a1bd35b5b939",
+          "title": "Detection-as-code",
+          "markdown": "**Detection-as-code** applies software engineering practices to detection content:",
+          "notes": "Detection-as-code applies software engineering practices to detection content:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "na218f09ed8ab312",
+              "title": "Version control (Git) as source of truth; no editing rules only in a UI without export.",
+              "markdown": "- Version control (Git) as source of truth; no editing rules only in a UI without export.",
+              "notes": "Version control (Git) as source of truth; no editing rules only in a UI without export.",
+              "blurb": "Version control (Git) as source of truth; no editing rules only in a UI...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n16a4d6d39dfd43c",
+              "title": "Pull requests with reviewers who understand both threat and data.",
+              "markdown": "- Pull requests with reviewers who understand both threat and data.",
+              "notes": "Pull requests with reviewers who understand both threat and data.",
+              "blurb": "Pull requests with reviewers who understand both threat and data.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n1bc607713782ada",
+              "title": "Continuous integration jobs that compile content (where supported), validate syntax, run",
+              "markdown": "- Continuous integration jobs that compile content (where supported), validate syntax, run",
+              "notes": "Continuous integration jobs that compile content (where supported), validate syntax, run",
+              "blurb": "Continuous integration jobs that compile content (where supported), validate...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8c9d6f621010272",
+              "title": "Promotion pipelines: dev -> staging -> production with approval gates.",
+              "markdown": "- Promotion pipelines: dev -> staging -> production with approval gates.",
+              "notes": "Promotion pipelines: dev -> staging -> production with approval gates.",
+              "blurb": "Promotion pipelines: dev -> staging -> production with approval gates.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ne654a149b77b855",
+              "title": "Metadata: owner, severity, MITRE mapping, data dependencies, runbook link, SLA for tunin",
+              "markdown": "- Metadata: owner, severity, MITRE mapping, data dependencies, runbook link, SLA for tunin",
+              "notes": "Metadata: owner, severity, MITRE mapping, data dependencies, runbook link, SLA for tunin",
+              "blurb": "Metadata: owner, severity, MITRE mapping, data dependencies, runbook link,...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Detection-as-code applies software engineering practices to detection content:",
+          "expanded": false
+        },
+        {
+          "id": "n95027d4bc3d2daa",
+          "title": "MITRE ATT&CK for detection coverage (practical use)",
+          "markdown": "[MITRE ATT&CK](https://attack.mitre.org/) is a knowledge base of adversary **tactics** and **techniques**. Use it as a **structured checklist against your threat model**, not as a scorecard to maximize technique count.",
+          "notes": "MITRE ATT&CK is a knowledge base of adversary tactics and techniques. Use it as a structured checklist against your threat model, not as a scorecard to maximize technique count.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n3e46630c8ae992f",
+              "title": "How to use ATT&CK well",
+              "markdown": "Map telemetry sources to techniques they can support (e.g., CloudTrail for T1078 valid accounts misuse at the control plane; EDR for T1059 execution on endpoints).",
+              "notes": "Map telemetry sources to techniques they can support (e.g., CloudTrail for T1078 valid accounts misuse at the control plane; EDR for T1059 execution on endpoints).",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n8af1d0c44f15b60",
+                  "title": "Map telemetry sources to techniques they can support (e.g., CloudTrail for T1078 valid a",
+                  "markdown": "- Map telemetry sources to techniques they can support (e.g., CloudTrail for T1078 valid a",
+                  "notes": "Map telemetry sources to techniques they can support (e.g., CloudTrail for T1078 valid a",
+                  "blurb": "Map telemetry sources to techniques they can support (e.g., CloudTrail for...",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd622634d4422300",
+                  "title": "Identify gaps honestly: techniques with no plausible data source need instrumentation in",
+                  "markdown": "- Identify gaps honestly: techniques with no plausible data source need instrumentation in",
+                  "notes": "Identify gaps honestly: techniques with no plausible data source need instrumentation in",
+                  "blurb": "Identify gaps honestly: techniques with no plausible data source need...",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd5c7b9bd00a561a",
+                  "title": "Distinguish detection from hunting: ATT&CK also guides proactive queries that do not pag",
+                  "markdown": "- Distinguish detection from hunting: ATT&CK also guides proactive queries that do not pag",
+                  "notes": "Distinguish detection from hunting: ATT&CK also guides proactive queries that do not pag",
+                  "blurb": "Distinguish detection from hunting: ATT&CK also guides proactive queries...",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nc6ff36158c2e86b",
+                  "title": "Align red team scenarios to specific technique chains your product faces (SaaS account t",
+                  "markdown": "- Align red team scenarios to specific technique chains your product faces (SaaS account t",
+                  "notes": "Align red team scenarios to specific technique chains your product faces (SaaS account t",
+                  "blurb": "Align red team scenarios to specific technique chains your product faces...",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Map telemetry sources to techniques they can support (e.g., CloudTrail for...",
+              "expanded": false
+            },
+            {
+              "id": "n8b5de1aed9bee8c",
+              "title": "Common interview framing",
+              "markdown": "\"We prioritize coverage for **initial access** and **credential access** paths that match our SaaS abuse model; we accept more residual risk on **lateral movement** inside managed endpoints because EDR covers that layer.\"",
+              "notes": "\"We prioritize coverage for initial access and credential access paths that match our SaaS abuse model; we accept more residual risk on lateral movement inside managed endpoints because EDR covers that layer.\"",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "\"We prioritize coverage for initial access and credential access paths that...",
+              "expanded": false
+            }
+          ],
+          "blurb": "MITRE ATT&CK is a knowledge base of adversary tactics and techniques.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Telemetry: the contract under every detection"
+    },
+    {
+      "id": "nb10d05b81367b35",
+      "title": "SIEM and the analytics landscape",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nb5c7712bae45e7b",
+          "title": "What a SIEM is actually for",
+          "markdown": "A **Security Information and Event Management** system historically combined **log aggregation**, **search**, **correlation rules**, **case management**, and **workflow**. In modern architectures, those functions often **split**:",
+          "notes": "A Security Information and Event Management system historically combined log aggregation, search, correlation rules, case management, and workflow. In modern architectures, those functions often split:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n6ed15747cf9b9a3",
+              "title": "Central log store (often cloud-native: OpenSearch, BigQuery, Snowflake, Data Explorer).",
+              "markdown": "- Central log store (often cloud-native: OpenSearch, BigQuery, Snowflake, Data Explorer).",
+              "notes": "Central log store (often cloud-native: OpenSearch, BigQuery, Snowflake, Data Explorer).",
+              "blurb": "Central log store (often cloud-native: OpenSearch, BigQuery, Snowflake, Data...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n39f8078ef49d18f",
+              "title": "Stream processing (Flink, Spark Streaming, cloud-native stream analytics).",
+              "markdown": "- Stream processing (Flink, Spark Streaming, cloud-native stream analytics).",
+              "notes": "Stream processing (Flink, Spark Streaming, cloud-native stream analytics).",
+              "blurb": "Stream processing (Flink, Spark Streaming, cloud-native stream analytics).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n2ea85d5e57d3e1a",
+              "title": "Detection content expressed as scheduled queries, streaming rules, or detection-as-code",
+              "markdown": "- Detection content expressed as scheduled queries, streaming rules, or detection-as-code",
+              "notes": "Detection content expressed as scheduled queries, streaming rules, or detection-as-code",
+              "blurb": "Detection content expressed as scheduled queries, streaming rules, or...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n939599cd56c1106",
+              "title": "SOAR or ticketing for orchestration.",
+              "markdown": "- SOAR or ticketing for orchestration.",
+              "notes": "SOAR or ticketing for orchestration.",
+              "blurb": "SOAR or ticketing for orchestration.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "A Security Information and Event Management system historically combined log...",
+          "expanded": false
+        },
+        {
+          "id": "nef19216c7ae83f1",
+          "title": "SIEM strengths and failure modes",
+          "markdown": "**Strengths:**",
+          "notes": "Strengths:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nd9a4f21e7e0bbbf",
+              "title": "Single pane for analyst investigation with timelines and entity views.",
+              "markdown": "- Single pane for analyst investigation with timelines and entity views.",
+              "notes": "Single pane for analyst investigation with timelines and entity views.",
+              "blurb": "Single pane for analyst investigation with timelines and entity views.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n1c922e98ba8eeea",
+              "title": "Mature content ecosystems (useful for commodity malware and Windows-centric enterprises)",
+              "markdown": "- Mature content ecosystems (useful for commodity malware and Windows-centric enterprises)",
+              "notes": "Mature content ecosystems (useful for commodity malware and Windows-centric enterprises)",
+              "blurb": "Mature content ecosystems (useful for commodity malware and Windows-centric...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc3676de9de37289",
+              "title": "Retention and legal hold features aligned with investigations.",
+              "markdown": "- Retention and legal hold features aligned with investigations.",
+              "notes": "Retention and legal hold features aligned with investigations.",
+              "blurb": "Retention and legal hold features aligned with investigations.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n4b57b2eac3df742",
+              "title": "Schema soup from uncontrolled log formats-joins and aggregations become unreliable.",
+              "markdown": "- Schema soup from uncontrolled log formats-joins and aggregations become unreliable.",
+              "notes": "Schema soup from uncontrolled log formats-joins and aggregations become unreliable.",
+              "blurb": "Schema soup from uncontrolled log formats-joins and aggregations become...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n33a3399d69df333",
+              "title": "Cost explosion when everything is indexed hot forever.",
+              "markdown": "- Cost explosion when everything is indexed hot forever.",
+              "notes": "Cost explosion when everything is indexed hot forever.",
+              "blurb": "Cost explosion when everything is indexed hot forever.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n25bb945476ec3f6",
+              "title": "Rule sprawl without owners-thousands of brittle correlations nobody trusts.",
+              "markdown": "- Rule sprawl without owners-thousands of brittle correlations nobody trusts.",
+              "notes": "Rule sprawl without owners-thousands of brittle correlations nobody trusts.",
+              "blurb": "Rule sprawl without owners-thousands of brittle correlations nobody trusts.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ncbf254df2c24910",
+              "title": "Cloud blind spots if you only ingest traditional OS and network logs without cloud contr",
+              "markdown": "- Cloud blind spots if you only ingest traditional OS and network logs without cloud contr",
+              "notes": "Cloud blind spots if you only ingest traditional OS and network logs without cloud contr",
+              "blurb": "Cloud blind spots if you only ingest traditional OS and network logs without...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Single pane for analyst investigation with timelines and entity views",
+          "expanded": false
+        },
+        {
+          "id": "n8f83345f5b045a5",
+          "title": "Correlation without magical thinking",
+          "markdown": "Effective correlation chains **explicit keys** and **time bounds**: same `session_id` within 15 minutes, same `actor_id` across `CloudTrail` and app audit, same `trace_id` across microservices. Avoid unbounded \"OR of 200 conditions\" rules that page on any busy day.",
+          "notes": "Effective correlation chains explicit keys and time bounds: same sessionid within 15 minutes, same actorid across CloudTrail and app audit, same traceid across microservices. Avoid unbounded \"OR of 200 conditions\" rules that page on any busy day.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Effective correlation chains explicit keys and time bounds: same sessionid...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes What a SIEM is actually for",
+      "expanded": false
+    },
+    {
+      "id": "n739ed78d439f891",
+      "title": "Alert quality, MTTD, and MTTR",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n532a83b5af0c868",
+          "title": "Precision, recall, and business tolerance",
+          "markdown": "Precision (true positives \u00f7 all alerts) drives analyst trust.",
+          "notes": "Precision (true positives \u00f7 all alerts) drives analyst trust.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nbb1fb7f317ecd01",
+              "title": "Precision (true positives \u00f7 all alerts) drives analyst trust. Low precision burns capaci",
+              "markdown": "- Precision (true positives \u00f7 all alerts) drives analyst trust. Low precision burns capaci",
+              "notes": "Precision (true positives \u00f7 all alerts) drives analyst trust. Low precision burns capaci",
+              "blurb": "Precision (true positives \u00f7 all alerts) drives analyst trust.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na5351f134903ae8",
+              "title": "Recall (true positives \u00f7 all real incidents) captures missed attacks. Perfect recall is",
+              "markdown": "- Recall (true positives \u00f7 all real incidents) captures missed attacks. Perfect recall is",
+              "notes": "Recall (true positives \u00f7 all real incidents) captures missed attacks. Perfect recall is",
+              "blurb": "Recall (true positives \u00f7 all real incidents) captures missed attacks.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc913fb52753fe58",
+              "title": "Tier 0: potential business-critical compromise-tight tuning, 24/7 response, higher cost",
+              "markdown": "- Tier 0: potential business-critical compromise-tight tuning, 24/7 response, higher cost",
+              "notes": "Tier 0: potential business-critical compromise-tight tuning, 24/7 response, higher cost",
+              "blurb": "Tier 0: potential business-critical compromise-tight tuning, 24/7 response,...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n2e356aee043ddde",
+              "title": "Tier 1: significant risk-business-hours or follow-the-sun with defined SLAs.",
+              "markdown": "- Tier 1: significant risk-business-hours or follow-the-sun with defined SLAs.",
+              "notes": "Tier 1: significant risk-business-hours or follow-the-sun with defined SLAs.",
+              "blurb": "Tier 1: significant risk-business-hours or follow-the-sun with defined SLAs.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd22dc328171be88",
+              "title": "Tier 2: hunting and hygiene-may feed dashboards, not pages.",
+              "markdown": "- Tier 2: hunting and hygiene-may feed dashboards, not pages.",
+              "notes": "Tier 2: hunting and hygiene-may feed dashboards, not pages.",
+              "blurb": "Tier 2: hunting and hygiene-may feed dashboards, not pages.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Precision (true positives \u00f7 all alerts) drives analyst trust.",
+          "expanded": false
+        },
+        {
+          "id": "n2a914149e05402a",
+          "title": "Mean time to detect (MTTD)",
+          "markdown": "Define **MTTD** relative to an **anchor event**: time from **first attacker-controlled action** (hard) or **first observable indicator** (practical) to **detection fired** or **incident opened**. Consistent definitions matter more than the exact number.\n\nImprove MTTD with **lower ingestion latency**, **high-signal chokepoint logging** (IdP, SSO, admin APIs), **correlation across layers**, and **behavioral baselines** where statistically sound.",
+          "notes": "Define MTTD relative to an anchor event: time from first attacker-controlled action (hard) or first observable indicator (practical) to detection fired or incident opened. Consistent definitions matter more than the exact number.\n\nImprove MTTD with lower ingestion latency, high-signal chokepoint logging (IdP, SSO, admin APIs), correlation across layers, and behavioral baselines where statistically sound.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Define MTTD relative to an anchor event: time from first attacker-controlled...",
+          "expanded": false
+        },
+        {
+          "id": "n87021d7cbaead21",
+          "title": "Mean time to respond (MTTR)",
+          "markdown": "**MTTR** spans **triage**, **containment**, **eradication**, and **recovery**. Detections affect MTTR by shipping **enriched context** (what was touched, blast radius estimates) and **safe automation** (disable user, revoke tokens, isolate workload) with guardrails.",
+          "notes": "MTTR spans triage, containment, eradication, and recovery. Detections affect MTTR by shipping enriched context (what was touched, blast radius estimates) and safe automation (disable user, revoke tokens, isolate workload) with guardrails.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "MTTR spans triage, containment, eradication, and recovery.",
+          "expanded": false
+        },
+        {
+          "id": "nfeaebb066770275",
+          "title": "Operational metrics that complement alert rates",
+          "markdown": "Alerts per analyst hour and queue age (fatigue proxies).",
+          "notes": "Alerts per analyst hour and queue age (fatigue proxies).",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n4c2c9bd52760723",
+              "title": "Alerts per analyst hour and queue age (fatigue proxies).",
+              "markdown": "- Alerts per analyst hour and queue age (fatigue proxies).",
+              "notes": "Alerts per analyst hour and queue age (fatigue proxies).",
+              "blurb": "Alerts per analyst hour and queue age (fatigue proxies).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n84bfffef0f12f57",
+              "title": "Time in backlog for severity 1-2.",
+              "markdown": "- Time in backlog for severity 1-2.",
+              "notes": "Time in backlog for severity 1-2.",
+              "blurb": "Time in backlog for severity 1-2.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ne920f2c9bce3e56",
+              "title": "Percentage of alerts with linked playbook execution.",
+              "markdown": "- Percentage of alerts with linked playbook execution.",
+              "notes": "Percentage of alerts with linked playbook execution.",
+              "blurb": "Percentage of alerts with linked playbook execution.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ne4f64a79907d3e6",
+              "title": "Repeat false positive rate after tuning (signals stale logic or drifting data).",
+              "markdown": "- Repeat false positive rate after tuning (signals stale logic or drifting data).",
+              "notes": "Repeat false positive rate after tuning (signals stale logic or drifting data).",
+              "blurb": "Repeat false positive rate after tuning (signals stale logic or drifting...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ncc2cd32edbeadb5",
+              "title": "Coverage notes for top-tier scenarios with \"no automated detection-manual hunt only.\"",
+              "markdown": "- Coverage notes for top-tier scenarios with \"no automated detection-manual hunt only.\"",
+              "notes": "Coverage notes for top-tier scenarios with \"no automated detection-manual hunt only.\"",
+              "blurb": "Coverage notes for top-tier scenarios with \"no automated detection-manual...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Alerts per analyst hour and queue age (fatigue proxies).",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Precision, recall, and business tolerance",
+      "expanded": false
+    },
+    {
+      "id": "n6d35b8a3a86171f",
+      "title": "Data pipelines: ingestion, latency, and trust",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n8263dd50f7378fb",
+          "title": "Pipeline stages",
+          "markdown": "Typical flow: **agent or API** -> **buffer** (Kafka, Kinesis, Event Hub) -> **parse and normalize** -> **enrich** -> **index or warehouse** -> **detection engine** (scheduled or streaming) -> **alerting and ticketing**.\n\nEach stage introduces **delay**. Near-real-time detections need **streaming** or **short poll intervals**; forensic questions may tolerate **batch** loads into a lake with **hourly** freshness.",
+          "notes": "Typical flow: agent or API -> buffer (Kafka, Kinesis, Event Hub) -> parse and normalize -> enrich -> index or warehouse -> detection engine (scheduled or streaming) -> alerting and ticketing.\n\nEach stage introduces delay. Near-real-time detections need streaming or short poll intervals; forensic questions may tolerate batch loads into a lake with hourly freshness.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Typical flow: agent or API -> buffer (Kafka, Kinesis, Event Hub) -> parse...",
+          "expanded": false
+        },
+        {
+          "id": "ne3ce53a05264297",
+          "title": "Schema registry and contracts",
+          "markdown": "Treat log schemas like API contracts: **versioned** documents, **compatibility rules**, and **breaking change** processes. Security champions in platform teams should review changes that drop security fields or rename join keys.",
+          "notes": "Treat log schemas like API contracts: versioned documents, compatibility rules, and breaking change processes. Security champions in platform teams should review changes that drop security fields or rename join keys.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Treat log schemas like API contracts: versioned documents, compatibility...",
+          "expanded": false
+        },
+        {
+          "id": "n55e2a9acd83677b",
+          "title": "Integrity and tampering resistance",
+          "markdown": "Attackers target logs. Mitigations include **WORM** or **object-lock** storage for audit trails, **separate security account** or **project** for log sinks, **MFA** on administrative log configuration, and **cryptographic** options where offered (e.g., signed delivery, immutable journals). No silver bullet-**out-of-band** evidence (IdP logs, billing anomalies) still matters when primary logs are suspect.",
+          "notes": "Attackers target logs. Mitigations include WORM or object-lock storage for audit trails, separate security account or project for log sinks, MFA on administrative log configuration, and cryptographic options where offered (e.g., signed delivery, immutable journals). No silver bullet-out-of-band evidence (IdP logs, billing anomalies) still matters when primary logs are suspect.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Attackers target logs.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Pipeline stages",
+      "expanded": false
+    },
+    {
+      "id": "n872ff8c4dd65c49",
+      "title": "SOC collaboration and operating model",
+      "markdown": "Detection engineering sits between **product/platform engineering** and **security operations**. Clear interfaces help:",
+      "notes": "Detection engineering sits between product/platform engineering and security operations. Clear interfaces help:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n6174acb106f4a7e",
+          "title": "Service-level objectives for log delivery and search uptime.",
+          "markdown": "- Service-level objectives for log delivery and search uptime.",
+          "notes": "Service-level objectives for log delivery and search uptime.",
+          "blurb": "Service-level objectives for log delivery and search uptime.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n5f818b7d49948f2",
+          "title": "Tier definitions aligned to paging policy and response hours.",
+          "markdown": "- Tier definitions aligned to paging policy and response hours.",
+          "notes": "Tier definitions aligned to paging policy and response hours.",
+          "blurb": "Tier definitions aligned to paging policy and response hours.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nf15f16e2b175f6e",
+          "title": "Handoff artifacts: every alert template includes entity links, recommended queries, and",
+          "markdown": "- Handoff artifacts: every alert template includes entity links, recommended queries, and",
+          "notes": "Handoff artifacts: every alert template includes entity links, recommended queries, and",
+          "blurb": "Handoff artifacts: every alert template includes entity links, recommended...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n9c5098db7ebfb7b",
+          "title": "Feedback loop: analysts tag false positive reasons in structured fields so engineers can",
+          "markdown": "- Feedback loop: analysts tag false positive reasons in structured fields so engineers can",
+          "notes": "Feedback loop: analysts tag false positive reasons in structured fields so engineers can",
+          "blurb": "Feedback loop: analysts tag false positive reasons in structured fields so...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Detection engineering sits between product/platform engineering and security...",
+      "expanded": false
+    },
+    {
+      "id": "n443ecbdf04fa444",
+      "title": "Anti-patterns (name them in interviews)",
+      "markdown": "\"Log everything.\" Without schema and retention strategy, you get expensive darkness.",
+      "notes": "\"Log everything.\" Without schema and retention strategy, you get expensive darkness.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n73ff55ebaff0bb4",
+          "title": "\"Log everything.\" Without schema and retention strategy, you get expensive darkness.",
+          "markdown": "- \"Log everything.\" Without schema and retention strategy, you get expensive darkness.",
+          "notes": "\"Log everything.\" Without schema and retention strategy, you get expensive darkness.",
+          "blurb": "\"Log everything.\" Without schema and retention strategy, you get expensive...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n861103f6a0cbd3b",
+          "title": "Undocumented allowlists that silently expire security value.",
+          "markdown": "- Undocumented allowlists that silently expire security value.",
+          "notes": "Undocumented allowlists that silently expire security value.",
+          "blurb": "Undocumented allowlists that silently expire security value.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n9df91191c6a3a26",
+          "title": "Pager as dump for informational detections.",
+          "markdown": "- Pager as dump for informational detections.",
+          "notes": "Pager as dump for informational detections.",
+          "blurb": "Pager as dump for informational detections.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n13263d6882b9730",
+          "title": "SIEM-only strategy for pure SaaS abuse that manifests in application logs.",
+          "markdown": "- SIEM-only strategy for pure SaaS abuse that manifests in application logs.",
+          "notes": "SIEM-only strategy for pure SaaS abuse that manifests in application logs.",
+          "blurb": "SIEM-only strategy for pure SaaS abuse that manifests in application logs.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n6dfe9de147b0bba",
+          "title": "ATT&CK bingo-mapping hundreds of low-value rules to look mature.",
+          "markdown": "- ATT&CK bingo-mapping hundreds of low-value rules to look mature.",
+          "notes": "ATT&CK bingo-mapping hundreds of low-value rules to look mature.",
+          "blurb": "ATT&CK bingo-mapping hundreds of low-value rules to look mature.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nb776bf493d17c0d",
+          "title": "No owner for detections; rot when the author leaves.",
+          "markdown": "- No owner for detections; rot when the author leaves.",
+          "notes": "No owner for detections; rot when the author leaves.",
+          "blurb": "No owner for detections; rot when the author leaves.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "\"Log everything.\" Without schema and retention strategy, you get expensive...",
+      "expanded": false
+    },
+    {
+      "id": "n71443c51eee9b94",
+      "title": "Verification and governance",
+      "markdown": "Tabletop each tier-0 detection annually-validate data, runbook, and comms.",
+      "notes": "Tabletop each tier-0 detection annually-validate data, runbook, and comms.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n491cd283f95ee8d",
+          "title": "Tabletop each tier-0 detection annually-validate data, runbook, and comms.",
+          "markdown": "- Tabletop each tier-0 detection annually-validate data, runbook, and comms.",
+          "notes": "Tabletop each tier-0 detection annually-validate data, runbook, and comms.",
+          "blurb": "Tabletop each tier-0 detection annually-validate data, runbook, and comms.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n8b91a6c7539eb60",
+          "title": "Sampling reviews of closed alerts to estimate precision and find logic bugs.",
+          "markdown": "- Sampling reviews of closed alerts to estimate precision and find logic bugs.",
+          "notes": "Sampling reviews of closed alerts to estimate precision and find logic bugs.",
+          "blurb": "Sampling reviews of closed alerts to estimate precision and find logic bugs.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n983c65505638203",
+          "title": "Detection unit tests with representative logs for regressions.",
+          "markdown": "- Detection unit tests with representative logs for regressions.",
+          "notes": "Detection unit tests with representative logs for regressions.",
+          "blurb": "Detection unit tests with representative logs for regressions.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ne4f450a4912e98c",
+          "title": "SLOs for log pipeline lag and search availability-silent pipelines are silent failures.",
+          "markdown": "- SLOs for log pipeline lag and search availability-silent pipelines are silent failures.",
+          "notes": "SLOs for log pipeline lag and search availability-silent pipelines are silent failures.",
+          "blurb": "SLOs for log pipeline lag and search availability-silent pipelines are...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Tabletop each tier-0 detection annually-validate data, runbook, and comms.",
+      "expanded": false
+    },
+    {
+      "id": "nd1c9ab4366b72eb",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nc0e3ffeb70c0335",
+          "title": "Pipeline mental model",
+          "markdown": "**Generate** telemetry -> **normalize** (ECS/OTel) -> **retain** by tier -> **detect** (rules/ML) -> **respond** (SOAR/runbooks) -> **learn** (postmortems -> new content)",
+          "notes": "Generate telemetry -> normalize (ECS/OTel) -> retain by tier -> detect (rules/ML) -> respond (SOAR/runbooks) -> learn (postmortems -> new content)",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Generate telemetry -> normalize (ECS/OTel) -> retain by tier -> detect...",
+          "expanded": false
+        },
+        {
+          "id": "n7f8960654a48486",
+          "title": "Event fields that pay rent (examples)",
+          "markdown": "`actor.user.id` \u00b7 `src.ip` / `http.request_id` \u00b7 `process.executable` \u00b7 `cloud.region` \u00b7 `auth.mfa` **bool** \u00b7 **normalized** **outcome** (`allow`/`deny`)",
+          "notes": "actor.user.id \u00b7 src.ip / http.requestid \u00b7 process.executable \u00b7 cloud.region \u00b7 auth.mfa bool \u00b7 normalized outcome (allow/deny)",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "actor.user.id \u00b7 src.ip / http.requestid \u00b7 process.executable \u00b7 cloud.region...",
+          "expanded": false
+        },
+        {
+          "id": "nd22375517153022",
+          "title": "Detection priorities (order of thinking)",
+          "markdown": "Crown-jewel paths (admin, money, data export, secret read)",
+          "notes": "Crown-jewel paths (admin, money, data export, secret read)",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n7b122a6f2715f4d",
+              "title": "Crown-jewel paths (admin, money, data export, secret read)",
+              "markdown": "- Crown-jewel paths (admin, money, data export, secret read)",
+              "notes": "Crown-jewel paths (admin, money, data export, secret read)",
+              "blurb": "Crown-jewel paths (admin, money, data export, secret read)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ndb257a6528556d7",
+              "title": "Identity abuse (impossible travel, new device, OAuth consent spam)",
+              "markdown": "- Identity abuse (impossible travel, new device, OAuth consent spam)",
+              "notes": "Identity abuse (impossible travel, new device, OAuth consent spam)",
+              "blurb": "Identity abuse (impossible travel, new device, OAuth consent spam)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n1f9be1ea5597de0",
+              "title": "Host persistence and lateral movement primitives",
+              "markdown": "- Host persistence and lateral movement primitives",
+              "notes": "Host persistence and lateral movement primitives",
+              "blurb": "Host persistence and lateral movement primitives",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6ca72418ed5f2f5",
+              "title": "App-layer abuse (rate spikes, coupon abuse signals)",
+              "markdown": "- App-layer abuse (rate spikes, coupon abuse signals)",
+              "notes": "App-layer abuse (rate spikes, coupon abuse signals)",
+              "blurb": "App-layer abuse (rate spikes, coupon abuse signals)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Crown-jewel paths (admin, money, data export, secret read)",
+          "expanded": false
+        },
+        {
+          "id": "n03b10fae51b636d",
+          "title": "Metrics to quote in interviews",
+          "markdown": "**MTTD** / **MTTR** \u00b7 **true** **positive** **rate** \u00b7 **rule** **coverage** vs **ATT&CK** **techniques** (honest gaps) \u00b7 **backlog** **age** for **tuning** tickets",
+          "notes": "MTTD / MTTR \u00b7 true positive rate \u00b7 rule coverage vs ATT&CK techniques (honest gaps) \u00b7 backlog age for tuning tickets",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "MTTD / MTTR \u00b7 true positive rate \u00b7 rule coverage vs ATT&CK techniques...",
+          "expanded": false
+        },
+        {
+          "id": "nb2b42b9215075a0",
+          "title": "Tooling buckets (examples)",
+          "markdown": "**SIEM** (Splunk, Chronicle, Sentinel) \u00b7 **EDR** telemetry \u00b7 **NDR** \u00b7 **cloud** **audit** (CloudTrail/AAD/GCP audit logs) \u00b7 **detection-as-code** (Sigma, KQL, SPL)",
+          "notes": "SIEM (Splunk, Chronicle, Sentinel) \u00b7 EDR telemetry \u00b7 NDR \u00b7 cloud audit (CloudTrail/AAD/GCP audit logs) \u00b7 detection-as-code (Sigma, KQL, SPL)",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "SIEM (Splunk, Chronicle, Sentinel) \u00b7 EDR telemetry \u00b7 NDR \u00b7 cloud audit...",
+          "expanded": false
+        },
+        {
+          "id": "n133d71b71cd8319",
+          "title": "Quality bar for a new rule",
+          "markdown": "**Test** with **red** **atomics** / **replay** \u00b7 **estimate** **FP** **rate** \u00b7 **owner** \u00b7 **version** \u00b7 **deprecation** **date** if **seasonal**",
+          "notes": "Test with red atomics / replay \u00b7 estimate FP rate \u00b7 owner \u00b7 version \u00b7 deprecation date if seasonal",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Test with red atomics / replay \u00b7 estimate FP rate \u00b7 owner \u00b7 version \u00b7...",
+          "expanded": false
+        },
+        {
+          "id": "nc7d044c7ac09c1c",
+          "title": "Cross-read",
+          "markdown": "`Risk Prioritization and Security Metrics` \u00b7 `Windows Security Boundaries` (for host signals) \u00b7 `IAM and Least Privilege at Scale`",
+          "notes": "Risk Prioritization and Security Metrics \u00b7 Windows Security Boundaries (for host signals) \u00b7 IAM and Least Privilege at Scale",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Risk Prioritization and Security Metrics \u00b7 Windows Security Boundaries (for...",
+          "expanded": false
+        },
+        {
+          "id": "n9d89cf92143f326",
+          "title": "One-liner",
+          "markdown": "\"**Signal** over **noise**: **schema-first** logs, **prioritized** **detections**, **continuous** **purple** **validation**.\"",
+          "notes": "\"Signal over noise: schema-first logs, prioritized detections, continuous purple validation.\"",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "\"Signal over noise: schema-first logs, prioritized detections, continuous...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Pipeline mental model"
+    },
+    {
+      "id": "n53c2465f7357325",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n93da94fc7708d94",
+          "title": "\u201cMore logs means better security.\u201d",
+          "markdown": "**Reality:** **Unstructured** **volume** **drowns** **analysts**; **taxonomy**, **retention** **tiers**, and **parsing** **quality** **determine** **value**.",
+          "notes": "Reality: Unstructured volume drowns analysts; taxonomy, retention tiers, and parsing quality determine value.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Unstructured volume drowns analysts; taxonomy, retention tiers, and...",
+          "expanded": false
+        },
+        {
+          "id": "nfda513c95915f9e",
+          "title": "\u201cSIEM go-live equals detection maturity.\u201d",
+          "markdown": "**Reality:** **Maturity** is **measured** by **coverage** of **attack** **paths**, **tuning** **cycles**, and **purple** **validation**-not **ingestion** **TB/day**.",
+          "notes": "Reality: Maturity is measured by coverage of attack paths, tuning cycles, and purple validation-not ingestion TB/day.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Maturity is measured by coverage of attack paths, tuning cycles,...",
+          "expanded": false
+        },
+        {
+          "id": "n9d7be1e79452de1",
+          "title": "\u201cLow false positives prove good detections.\u201d",
+          "markdown": "**Reality:** **Precision** without **recall** **misses** **real** **attacks**-**track** **blind** **spots** and **adversary** **simulation** **gaps**.",
+          "notes": "Reality: Precision without recall misses real attacks-track blind spots and adversary simulation gaps.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Precision without recall misses real attacks-track blind spots and...",
+          "expanded": false
+        },
+        {
+          "id": "n67a0e3b79f21712",
+          "title": "\u201cWe can buy detections out of the box.\u201d",
+          "markdown": "**Reality:** **Vendor** rules need **environment** **baselines**, **allow-lists**, and **correlation** with **identity** **context**-**tuning** is **mandatory**.",
+          "notes": "Reality: Vendor rules need environment baselines, allow-lists, and correlation with identity context-tuning is mandatory.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Vendor rules need environment baselines, allow-lists, and...",
+          "expanded": false
+        },
+        {
+          "id": "n4d8dd7c62b1c116",
+          "title": "\u201cDetection engineering is just writing Sigma rules.\u201d",
+          "markdown": "**Reality:** **Data** **model** design, **on-call** **runbooks**, **metrics**, **false** **negative** **postmortems**, and **stakeholder** **communication** are **core** **work**.",
+          "notes": "Reality: Data model design, on-call runbooks, metrics, false negative postmortems, and stakeholder communication are core work.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Data model design, on-call runbooks, metrics, false negative...",
+          "expanded": false
+        },
+        {
+          "id": "n23c5ffa394c6248",
+          "title": "\u201cEDR alerts replace network visibility.\u201d",
+          "markdown": "**Reality:** **Host** and **network** **telemetry** are **complementary**; **each** **blinds** **to** **some** **behaviors** (e.g., **cross-VPC** **east-west**).",
+          "notes": "Reality: Host and network telemetry are complementary; each blinds to some behaviors (e.g., cross-VPC east-west).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Host and network telemetry are complementary; each blinds to some...",
+          "expanded": false
+        },
+        {
+          "id": "n42baedd9a2bda8d",
+          "title": "\u201cWe should detect everything MITRE lists.\u201d",
+          "markdown": "**Reality:** **Prioritize** **techniques** **relevant** to **your** **threat** **model** and **data** **assets**-**breadth** without **depth** **burns** **teams**.",
+          "notes": "Reality: Prioritize techniques relevant to your threat model and data assets-breadth without depth burns teams.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Prioritize techniques relevant to your threat model and data...",
+          "expanded": false
+        },
+        {
+          "id": "n2ca6f3e02ba5edc",
+          "title": "\u201cRetention forever helps investigations.\u201d",
+          "markdown": "**Reality:** **Cost**, **privacy**, and **legal** **hold** **processes** **require** **tiered** **retention**-**not** **infinite** **storage**.",
+          "notes": "Reality: Cost, privacy, and legal hold processes require tiered retention-not infinite storage.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Cost, privacy, and legal hold processes require tiered...",
+          "expanded": false
+        },
+        {
+          "id": "n7d4da9e121f82ec",
+          "title": "\u201cIf SOC didn\u2019t alert, the activity didn\u2019t happen.\u201d",
+          "markdown": "**Reality:** **Absence** of **alerts** often means **evasion**, **misconfig**, or **wrong** **hypothesis**-**assume** **sensor** **gaps**.",
+          "notes": "Reality: Absence of alerts often means evasion, misconfig, or wrong hypothesis-assume sensor gaps.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Absence of alerts often means evasion, misconfig, or wrong...",
+          "expanded": false
+        },
+        {
+          "id": "n7d29bd810655ff8",
+          "title": "\u201cAutomation will eliminate analysts.\u201d",
+          "markdown": "**Reality:** **Automation** **handles** **volume**; **judgment**, **novel** **attacks**, and **cross-domain** **correlation** **stay** **human**-**in**-**the** **loop** for **years**.",
+          "notes": "Reality: Automation handles volume; judgment, novel attacks, and cross-domain correlation stay human-in-the loop for years.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Automation handles volume; judgment, novel attacks, and...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \u201cMore logs means better security.\u201d"
+    },
+    {
+      "id": "n4d99c0112218417",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n56cfd3941e7a9a1",
+          "title": "How do you distinguish security observability from \u201cordinary\u201d...",
+          "markdown": "**Answer:** Ordinary observability optimizes **reliability and performance**: latency, errors, saturation, and traces for engineering troubleshooting. Security observability optimizes **attribution, abuse visibility, and investigative depth** for potentially adversarial behavior. The overlap is real-both need structured events and correlation IDs-but security observability insists on **identity, authorization decisions, resource scope, and stable outcome codes** for sensitive actions, not only RED metrics. A service can be healthy while attackers slowly enumerate tenants; your security telemetry must surface **who touched what, whether access was denied, and which session or workload identity was involved**. In practice, I align with platform SREs on **trace IDs** and **deployment metadata**, then add **audit events** for security chokepoints (login, token issuance, admin APIs, data export) that SRE dashboards never needed.",
+          "notes": "Answer: Ordinary observability optimizes reliability and performance: latency, errors, saturation, and traces for engineering troubleshooting. Security observability optimizes attribution, abuse visibility, and investigative depth for potentially adversarial behavior. The overlap is real-both need structured events and correlation IDs-but security observability insists on identity, authorization decisions, resource scope, and stable outcome codes for sensitive actions, not only RED metrics. A service can be healthy while attackers slowly enumerate tenants; your security telemetry must surface who touched what, whether access was denied, and which session or workload identity was involved. In practice, I align with platform SREs on trace IDs and deployment metadata, then add audit events for security chokepoints (login, token issuance, admin APIs, data export) that SRE dashboards never needed.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: Ordinary observability optimizes reliability and performance:...",
+          "expanded": false
+        },
+        {
+          "id": "n18e86dd867d63c1",
+          "title": "What is the difference between telemetry and a detection?",
+          "markdown": "**Answer:** **Telemetry** is the **evidence stream**: facts recorded about activity (logs, audit events, metrics, traces). A **detection** is a **testable hypothesis** implemented as a rule, query, model, or graph pattern that evaluates telemetry and produces an **alert**, **finding**, or **automated response**. Telemetry can exist without detections (you might ingest for hunting later); detections without trustworthy telemetry **false positive or false negative blindly**. Strong answers name **data readiness** as the bridge: before shipping a detection, I verify fields are populated, latency from event to searchable store meets the SLA, and join keys match across sources.",
+          "notes": "Answer: Telemetry is the evidence stream: facts recorded about activity (logs, audit events, metrics, traces). A detection is a testable hypothesis implemented as a rule, query, model, or graph pattern that evaluates telemetry and produces an alert, finding, or automated response. Telemetry can exist without detections (you might ingest for hunting later); detections without trustworthy telemetry false positive or false negative blindly. Strong answers name data readiness as the bridge: before shipping a detection, I verify fields are populated, latency from event to searchable store meets the SLA, and join keys match across sources.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: Telemetry is the evidence stream: facts recorded about activity...",
+          "expanded": false
+        },
+        {
+          "id": "nd55bce0f64b40f6",
+          "title": "Walk through your end-to-end detection engineering lifecycle.",
+          "markdown": "**Answer:** I start from **threat modeling** or abuse cases, not from whatever logs are convenient. Then: **data readiness** (schema, latency, sampling gaps); **prototype** rule with documented assumptions and baseline; **peer review**; **shadow or low-noise rollout**; **tuning** with allowlists that have owners and expiry; **playbook** design with responders; **production release** via change control; **continuous measurement** of precision, volume, and time-to-triage; **purple team or atomic testing** to validate end-to-end behavior; and **retirement** when the architecture or threat model moves on. **Ownership** and **quarterly review** are non-negotiable-unowned rules rot when teams reorganize or microservices rename fields.",
+          "notes": "Answer: I start from threat modeling or abuse cases, not from whatever logs are convenient. Then: data readiness (schema, latency, sampling gaps); prototype rule with documented assumptions and baseline; peer review; shadow or low-noise rollout; tuning with allowlists that have owners and expiry; playbook design with responders; production release via change control; continuous measurement of precision, volume, and time-to-triage; purple team or atomic testing to validate end-to-end behavior; and retirement when the architecture or threat model moves on. Ownership and quarterly review are non-negotiable-unowned rules rot when teams reorganize or microservices rename fields.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: I start from threat modeling or abuse cases, not from whatever logs...",
+          "expanded": false
+        },
+        {
+          "id": "ncb10f0064789142",
+          "title": "What role does a SIEM play in a modern cloud-native architecture?",
+          "markdown": "**Answer:** A SIEM is still valuable as an **analyst workbench**: search, timeline, entity-centric investigation, case management, and sometimes managed content. In many organizations the **raw storage and compute** have shifted to **cloud data platforms** or **OpenSearch-class** clusters, with SIEM features layered on top. I explain trade-offs honestly: hot indexed search is expensive-**not everything belongs in SIEM forever**-but investigations need **interactive latency** and **consistent schemas**. The anti-pattern is treating SIEM as a dumping ground without **governance**, so I pair SIEM with **tiered retention**, **normalized schemas**, and **detection-as-code** pipelines that deploy rules like software.",
+          "notes": "Answer: A SIEM is still valuable as an analyst workbench: search, timeline, entity-centric investigation, case management, and sometimes managed content. In many organizations the raw storage and compute have shifted to cloud data platforms or OpenSearch-class clusters, with SIEM features layered on top. I explain trade-offs honestly: hot indexed search is expensive-not everything belongs in SIEM forever-but investigations need interactive latency and consistent schemas. The anti-pattern is treating SIEM as a dumping ground without governance, so I pair SIEM with tiered retention, normalized schemas, and detection-as-code pipelines that deploy rules like software.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: A SIEM is still valuable as an analyst workbench: search, timeline,...",
+          "expanded": false
+        },
+        {
+          "id": "n2b679b85d42cf61",
+          "title": "Explain detection-as-code and why it matters.",
+          "markdown": "**Answer:** **Detection-as-code** stores rules, queries, and metadata in **Git**, reviewed in **pull requests**, tested in **CI**, and promoted through **pipelines** to production SIEM or analytics engines. It adds **auditability, rollback, and ownership** that UI-only editing loses. I attach **metadata**: severity, MITRE mapping, data dependencies, runbook links, and **false positive categories** analysts should use. The trade-off is tooling maturity-some vendors make export painful-so I might use **APIs**, **Terraform**, or **generated artifacts** from Sigma-like sources. Interviewers want to hear that **tests** exist: fixture logs proving a rule fires on malicious samples and stays quiet on known benign paths.",
+          "notes": "Answer: Detection-as-code stores rules, queries, and metadata in Git, reviewed in pull requests, tested in CI, and promoted through pipelines to production SIEM or analytics engines. It adds auditability, rollback, and ownership that UI-only editing loses. I attach metadata: severity, MITRE mapping, data dependencies, runbook links, and false positive categories analysts should use. The trade-off is tooling maturity-some vendors make export painful-so I might use APIs, Terraform, or generated artifacts from Sigma-like sources. Interviewers want to hear that tests exist: fixture logs proving a rule fires on malicious samples and stays quiet on known benign paths.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: Detection-as-code stores rules, queries, and metadata in Git,...",
+          "expanded": false
+        },
+        {
+          "id": "n325ccbd43ced658",
+          "title": "How do you use MITRE ATT&CK without turning it into a checkbox exercise?",
+          "markdown": "**Answer:** I use ATT&CK to **structure coverage conversations** against our **actual** threat model: which **tactics** matter for a SaaS product (initial access, credential access, collection) versus a data center estate (lateral movement, execution on hosts). I map **telemetry sources** to techniques they can support-**CloudTrail** for control-plane abuse, **IdP logs** for credential attacks, **EDR** for endpoint execution-not to maximize technique count. I explicitly document **gaps**: techniques we cannot see without new instrumentation or compensating controls. Red and purple exercises validate **chains**, not isolated alerts. The failure mode is **ATT&CK bingo**: hundreds of brittle rules that map to techniques but never fire correctly in production.",
+          "notes": "Answer: I use ATT&CK to structure coverage conversations against our actual threat model: which tactics matter for a SaaS product (initial access, credential access, collection) versus a data center estate (lateral movement, execution on hosts). I map telemetry sources to techniques they can support-CloudTrail for control-plane abuse, IdP logs for credential attacks, EDR for endpoint execution-not to maximize technique count. I explicitly document gaps: techniques we cannot see without new instrumentation or compensating controls. Red and purple exercises validate chains, not isolated alerts. The failure mode is ATT&CK bingo: hundreds of brittle rules that map to techniques but never fire correctly in production.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: I use ATT&CK to structure coverage conversations against our actual...",
+          "expanded": false
+        },
+        {
+          "id": "neac0f89de93839a",
+          "title": "How do you measure alert quality, and what targets do you use?",
+          "markdown": "**Answer:** I measure **precision** (true positives divided by all alerts in a sample window), **alert volume per analyst hour**, **queue age** by severity, **repeat false-positive rate** after tuning, and **time-to-first-action** in the runbook. Targets depend on **tier**: tier-zero detections for critical compromise should have **high precision** even if that means accepting some **false negatives** with documented risk; lower tiers can explore broader recall for hunting. I avoid vanity metrics like \"number of rules\" and instead report **health**: rules with owners, last validation date, linked playbooks, and **precision trend** after major product launches.",
+          "notes": "Answer: I measure precision (true positives divided by all alerts in a sample window), alert volume per analyst hour, queue age by severity, repeat false-positive rate after tuning, and time-to-first-action in the runbook. Targets depend on tier: tier-zero detections for critical compromise should have high precision even if that means accepting some false negatives with documented risk; lower tiers can explore broader recall for hunting. I avoid vanity metrics like \"number of rules\" and instead report health: rules with owners, last validation date, linked playbooks, and precision trend after major product launches.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: I measure precision (true positives divided by all alerts in a...",
+          "expanded": false
+        },
+        {
+          "id": "ne1532e4b14c8177",
+          "title": "Define MTTD and MTTR in a way leadership can trust.",
+          "markdown": "**Answer:** **Mean time to detect** needs an **anchor**: I define it as elapsed time from the **first observable indicator we agree matters** (first malicious API call, first suspicious CloudTrail event) to **detection fired** or **incident ticket opened**, whichever is the contract. **Mean time to respond** spans **triage, containment, eradication, and recovery**; detections improve MTTR by shipping **enriched context** (blast radius, affected tenants, session IDs) and **safe automation** with guardrails. Leadership distrusts metrics that redefine themselves each quarter, so I document **measurement boundaries** and show **trends** with cohorts (e.g., cloud control-plane incidents vs. application abuse).",
+          "notes": "Answer: Mean time to detect needs an anchor: I define it as elapsed time from the first observable indicator we agree matters (first malicious API call, first suspicious CloudTrail event) to detection fired or incident ticket opened, whichever is the contract. Mean time to respond spans triage, containment, eradication, and recovery; detections improve MTTR by shipping enriched context (blast radius, affected tenants, session IDs) and safe automation with guardrails. Leadership distrusts metrics that redefine themselves each quarter, so I document measurement boundaries and show trends with cohorts (e.g., cloud control-plane incidents vs. application abuse).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: Mean time to detect needs an anchor: I define it as elapsed time...",
+          "expanded": false
+        },
+        {
+          "id": "n0bc515ae17eda27",
+          "title": "What cloud audit logs do you prioritize, and what attacks do they catch?",
+          "markdown": "**Answer:** I prioritize **identity and access changes** (role assignments, federation trust, service account keys, policy bindings), **network perimeter changes** (security groups, firewalls, peering), **data plane exposure** (public buckets, anonymous access, snapshot sharing), and **logging configuration tampering**. On AWS that is **CloudTrail** organization trails with **multi-region** aggregation and integrity controls; on GCP **Admin Activity** and selective **Data Access** sinks; on Azure **Activity Log** plus **Entra ID** sign-in and audit streams. These catch **persistence**, **privilege escalation**, **exfiltration setup**, and **defense evasion** in the control plane. They rarely replace **application** logs for **tenant logic abuse**, so I treat cloud audit as **one layer** in depth.",
+          "notes": "Answer: I prioritize identity and access changes (role assignments, federation trust, service account keys, policy bindings), network perimeter changes (security groups, firewalls, peering), data plane exposure (public buckets, anonymous access, snapshot sharing), and logging configuration tampering. On AWS that is CloudTrail organization trails with multi-region aggregation and integrity controls; on GCP Admin Activity and selective Data Access sinks; on Azure Activity Log plus Entra ID sign-in and audit streams. These catch persistence, privilege escalation, exfiltration setup, and defense evasion in the control plane. They rarely replace application logs for tenant logic abuse, so I treat cloud audit as one layer in depth.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: I prioritize identity and access changes (role assignments,...",
+          "expanded": false
+        },
+        {
+          "id": "nddf759160e68003",
+          "title": "What application-level signals are highest value for detecting abuse...",
+          "markdown": "**Answer:** High-value signals include **authentication anomalies** (credential stuffing velocity, impossible travel with caveats, refresh-token replay patterns), **authorization probing** (bursts of 403/404 across object IDs, cross-tenant identifiers in requests), **admin and support actions** (role grants, impersonation, policy exports), **bulk data access** (large exports, unusual query shapes, pagination abuse), and **integration misuse** (OAuth consent changes, webhook storms, API key creation from new devices). These reveal **business-logic** and **isolation** failures that **VPC flow logs** will not show. I insist on **correlation IDs** tying app events to **gateway** and **identity** logs for end-to-end timelines.",
+          "notes": "Answer: High-value signals include authentication anomalies (credential stuffing velocity, impossible travel with caveats, refresh-token replay patterns), authorization probing (bursts of 403/404 across object IDs, cross-tenant identifiers in requests), admin and support actions (role grants, impersonation, policy exports), bulk data access (large exports, unusual query shapes, pagination abuse), and integration misuse (OAuth consent changes, webhook storms, API key creation from new devices). These reveal business-logic and isolation failures that VPC flow logs will not show. I insist on correlation IDs tying app events to gateway and identity logs for end-to-end timelines.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: High-value signals include authentication anomalies (credential...",
+          "expanded": false
+        },
+        {
+          "id": "nf9b6db52e022daf",
+          "title": "How do you reduce alert fatigue without silently increasing false...",
+          "markdown": "**Answer:** I use **tiered severity** tied to response expectations, **multi-signal** logic (rate plus diversity of targets plus outcome), **risk-based thresholds** (stricter on admin paths), **scoped allowlists** with owners and **expiration**, **routing** so informational findings hit dashboards-not pages-and **continuous review** of top noisy rules. I measure **analyst hours consumed** per rule class. When stakeholders want fewer pages, I require an explicit **risk statement**: which scenarios may be missed longer, and what **compensating** hunt or control covers the gap. Silent false-negative increases happen when teams only **suppress** without documenting risk- I avoid that.",
+          "notes": "Answer: I use tiered severity tied to response expectations, multi-signal logic (rate plus diversity of targets plus outcome), risk-based thresholds (stricter on admin paths), scoped allowlists with owners and expiration, routing so informational findings hit dashboards-not pages-and continuous review of top noisy rules. I measure analyst hours consumed per rule class. When stakeholders want fewer pages, I require an explicit risk statement: which scenarios may be missed longer, and what compensating hunt or control covers the gap. Silent false-negative increases happen when teams only suppress without documenting risk- I avoid that.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: I use tiered severity tied to response expectations, multi-signal...",
+          "expanded": false
+        },
+        {
+          "id": "na8f042a2fa4f970",
+          "title": "What fields belong in a canonical security audit event for...",
+          "markdown": "**Answer:** At minimum: **actor** (`actor_id`, `actor_type`, auth method), **decision** (allow/deny with stable reason codes), **resource** (`resource_type`, `resource_id`, tenant or org scope), **request context** (route or RPC name, method, API version, client IP, user agent where appropriate), **outcome** (`status_code`, `error_code`), and **correlation** (`request_id`, `trace_id`, `service`, `environment`, `region`). Optional but valuable: **risk scores**, **rate-limit bucket**, **device binding**. I emphasize **stable codes** over prose in primary fields so detections do not break on reworded errors, and **join keys** that match **API gateway** and **identity provider** logs.",
+          "notes": "Answer: At minimum: actor (actorid, actortype, auth method), decision (allow/deny with stable reason codes), resource (resourcetype, resourceid, tenant or org scope), request context (route or RPC name, method, API version, client IP, user agent where appropriate), outcome (statuscode, errorcode), and correlation (requestid, traceid, service, environment, region). Optional but valuable: risk scores, rate-limit bucket, device binding. I emphasize stable codes over prose in primary fields so detections do not break on reworded errors, and join keys that match API gateway and identity provider logs.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: At minimum: actor (actorid, actortype, auth method), decision...",
+          "expanded": false
+        },
+        {
+          "id": "n7a20967db8e00dc",
+          "title": "How do you validate that detections still work after a platform...",
+          "markdown": "**Answer:** I use **detection unit tests** with fixture logs, **atomic red-team scripts** or **purple team** exercises that replay adversary techniques safely, and **shadow mode** comparisons when rewriting rules. Engineering change notices should flag **schema migrations** that touch security fields; I add **CI checks** that fail if required fields disappear from sampled logs. I also monitor **alert volume baselines**-a sudden drop can mean **silent breakage** rather than a peaceful world.",
+          "notes": "Answer: I use detection unit tests with fixture logs, atomic red-team scripts or purple team exercises that replay adversary techniques safely, and shadow mode comparisons when rewriting rules. Engineering change notices should flag schema migrations that touch security fields; I add CI checks that fail if required fields disappear from sampled logs. I also monitor alert volume baselines-a sudden drop can mean silent breakage rather than a peaceful world.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: I use detection unit tests with fixture logs, atomic red-team...",
+          "expanded": false
+        },
+        {
+          "id": "ndca571e11bee7b9",
+          "title": "What correlation keys do you standardize across layers, and why?",
+          "markdown": "**Answer:** I standardize **trace or request IDs** across gateways and services, **session or device IDs** for user journeys, **subject identifiers** aligned with IdP `sub` or corporate IDs (with privacy review), and **cloud resource ARNs** or equivalent stable IDs for infrastructure timelines. Correlation fails when services generate **new opaque IDs** at every hop or rename fields during deployments. Time bounds matter: joins should use **windows** (e.g., 15-60 minutes) to avoid unbounded graph explosions.",
+          "notes": "Answer: I standardize trace or request IDs across gateways and services, session or device IDs for user journeys, subject identifiers aligned with IdP sub or corporate IDs (with privacy review), and cloud resource ARNs or equivalent stable IDs for infrastructure timelines. Correlation fails when services generate new opaque IDs at every hop or rename fields during deployments. Time bounds matter: joins should use windows (e.g., 15-60 minutes) to avoid unbounded graph explosions.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: I standardize trace or request IDs across gateways and services,...",
+          "expanded": false
+        },
+        {
+          "id": "nd7b4fefc4644325",
+          "title": "When would you choose a data lake or warehouse over traditional SIEM...",
+          "markdown": "**Answer:** When **volume and retention** dominate cost, **analysts** are comfortable with **SQL** workflows, and **batch or near-batch** detections (hourly rules, anomaly detection over weeks) suffice. Lakes excel at **long-term hunting**, **joining business tables** (subscriptions, payments), and **ML feature stores**. They are weaker for **sub-minute interactive investigation** unless paired with fast indexes or BI tools. Hybrid is common: **hot SIEM** for SOC triage, **cold lake** for retrospectives and training data-**with synchronized schema** so the same detection logic can be replayed.",
+          "notes": "Answer: When volume and retention dominate cost, analysts are comfortable with SQL workflows, and batch or near-batch detections (hourly rules, anomaly detection over weeks) suffice. Lakes excel at long-term hunting, joining business tables (subscriptions, payments), and ML feature stores. They are weaker for sub-minute interactive investigation unless paired with fast indexes or BI tools. Hybrid is common: hot SIEM for SOC triage, cold lake for retrospectives and training data-with synchronized schema so the same detection logic can be replayed.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: When volume and retention dominate cost, analysts are comfortable...",
+          "expanded": false
+        },
+        {
+          "id": "n774e551541f2063",
+          "title": "How do EDR and SIEM detections complement each other?",
+          "markdown": "**Answer:** **EDR** excels at **process execution**, **persistence**, **credential theft from endpoints**, and **lateral movement** on managed hosts. **SIEM** correlates **EDR** with **cloud control plane**, **network**, **IdP**, and **application** events for **cross-layer** stories (stolen session token plus suspicious EC2 API calls plus data access). Neither replaces the other in mixed estates: containers and serverless reduce classic EDR visibility, pushing more burden to **cloud audit** and **runtime security** signals. I design **detection graphs** that know which layer is authoritative for each technique.",
+          "notes": "Answer: EDR excels at process execution, persistence, credential theft from endpoints, and lateral movement on managed hosts. SIEM correlates EDR with cloud control plane, network, IdP, and application events for cross-layer stories (stolen session token plus suspicious EC2 API calls plus data access). Neither replaces the other in mixed estates: containers and serverless reduce classic EDR visibility, pushing more burden to cloud audit and runtime security signals. I design detection graphs that know which layer is authoritative for each technique.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: EDR excels at process execution, persistence, credential theft from...",
+          "expanded": false
+        },
+        {
+          "id": "nd50c06fea55fff5",
+          "title": "Describe the tooling landscape at a high level and how you would...",
+          "markdown": "**Answer:** Typical categories: **SIEM/UEBA** for analyst workflows; **EDR/XDR** for endpoints and workloads; **CSPM/CWPP** for cloud posture signals; **SOAR** for playbook automation; **data platforms** (BigQuery, Snowflake, OpenSearch) for scale analytics; **streaming** stacks (Kafka plus Flink or cloud equivalents) for low-latency rules. Selection follows **data gravity** (where logs already land), **latency needs**, **team skills**, and **regulatory residency**. I avoid tool-chasing: **schema discipline** and **process** beat a shiny SIEM with garbage ingest.",
+          "notes": "Answer: Typical categories: SIEM/UEBA for analyst workflows; EDR/XDR for endpoints and workloads; CSPM/CWPP for cloud posture signals; SOAR for playbook automation; data platforms (BigQuery, Snowflake, OpenSearch) for scale analytics; streaming stacks (Kafka plus Flink or cloud equivalents) for low-latency rules. Selection follows data gravity (where logs already land), latency needs, team skills, and regulatory residency. I avoid tool-chasing: schema discipline and process beat a shiny SIEM with garbage ingest.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: Typical categories: SIEM/UEBA for analyst workflows; EDR/XDR for...",
+          "expanded": false
+        },
+        {
+          "id": "n4cc9887ec50a20c",
+          "title": "What metrics would you present to engineering leadership to justify...",
+          "markdown": "**Answer:** I show **MTTD/MTTR trends** with stable definitions, **precision and volume** for tiered detections, **pipeline SLOs** (ingest lag, dropped events), **coverage notes** for top abuse scenarios (including explicit gaps), **incidents prevented or contained faster** with before/after stories, and **cost of false positives** in engineer and analyst hours. I tie investment to **concrete deliverables**: canonical audit schema adoption, detection-as-code CI, purple-team cadence-not vague \"more logging.\"",
+          "notes": "Answer: I show MTTD/MTTR trends with stable definitions, precision and volume for tiered detections, pipeline SLOs (ingest lag, dropped events), coverage notes for top abuse scenarios (including explicit gaps), incidents prevented or contained faster with before/after stories, and cost of false positives in engineer and analyst hours. I tie investment to concrete deliverables: canonical audit schema adoption, detection-as-code CI, purple-team cadence-not vague \"more logging.\"",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: I show MTTD/MTTR trends with stable definitions, precision and...",
+          "expanded": false
+        },
+        {
+          "id": "na93df621a39f1ce",
+          "title": "Depth: Interview follow-ups \u2014 Observability & Detection",
+          "markdown": "**Authoritative references:** [MITRE ATT&CK](https://attack.mitre.org/) for tactic and technique vocabulary; [NIST SP 800-61 Rev. 2](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-61r2.pdf) for incident handling alignment; cloud provider documentation for **AWS CloudTrail**, **Google Cloud Audit Logs**, and **Azure Monitor / Entra ID** auditing for control-plane telemetry accuracy.\n\n**Follow-ups interviewers often add:**",
+          "notes": "Authoritative references: MITRE ATT&CK for tactic and technique vocabulary; NIST SP 800-61 Rev. 2 for incident handling alignment; cloud provider documentation for AWS CloudTrail, Google Cloud Audit Logs, and Azure Monitor / Entra ID auditing for control-plane telemetry accuracy.\n\nFollow-ups interviewers often add:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ncecd1db9307b4c8",
+              "title": "Signal quality vs. noise - how you tune without hiding true attacks; role of analyst fee",
+              "markdown": "- Signal quality vs. noise - how you tune without hiding true attacks; role of analyst fee",
+              "notes": "Signal quality vs. noise - how you tune without hiding true attacks; role of analyst fee",
+              "blurb": "Signal quality vs.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n13e89af7ab05ca4",
+              "title": "Detection-as-code maturity - CI tests, promotion gates, and rollback stories when a rule",
+              "markdown": "- Detection-as-code maturity - CI tests, promotion gates, and rollback stories when a rule",
+              "notes": "Detection-as-code maturity - CI tests, promotion gates, and rollback stories when a rule",
+              "blurb": "Detection-as-code maturity - CI tests, promotion gates, and rollback stories...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n584d0e1f18d32b2",
+              "title": "Coverage and purple teaming - mapping exercises to ATT&CK techniques your product actual",
+              "markdown": "- Coverage and purple teaming - mapping exercises to ATT&CK techniques your product actual",
+              "notes": "Coverage and purple teaming - mapping exercises to ATT&CK techniques your product actual",
+              "blurb": "Coverage and purple teaming - mapping exercises to ATT&CK techniques your...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6ca6d62a8b4c608",
+              "title": "Privacy and compliance - minimizing PII in security logs while preserving investigative",
+              "markdown": "- Privacy and compliance - minimizing PII in security logs while preserving investigative",
+              "notes": "Privacy and compliance - minimizing PII in security logs while preserving investigative",
+              "blurb": "Privacy and compliance - minimizing PII in security logs while preserving...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Authoritative references: MITRE ATT&CK for tactic and technique vocabulary;...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes How do you distinguish security observability from \u201cordinary\u201d..."
+    }
+  ],
+  "topicId": "security-observability-and-detection-engineering",
+  "name": "Security Observability and Detection Engineering",
+  "structure": "logic-right",
+  "blurb": "Security observability is the practice of making security-relevant behavior..."
+}

@@ -1,0 +1,168 @@
+{
+  "otmVersion": "0.2.0",
+  "id": "saas-microservices",
+  "title": "SaaS microservices auth and data plane",
+  "blurb": "User auth service, product API, analytics pipeline, and shared identity. STRIDE-friendly system interview.",
+  "difficulty": "advanced",
+  "minutes": 14,
+  "relatedTopicIds": ["threat-modeling", "secure-microservices-communication", "oauth"],
+  "project": {
+    "name": "Cloud-native SaaS platform",
+    "id": "saas-platform-v1",
+    "description": "Multi-tenant SaaS with OAuth login, product API, and analytics export."
+  },
+  "trustZones": [
+    { "id": "tz-public", "name": "Public edge", "risk": "high" },
+    { "id": "tz-services", "name": "Service mesh", "risk": "medium" },
+    { "id": "tz-data", "name": "Tenant data plane", "risk": "high" },
+    { "id": "tz-analytics", "name": "Analytics VPC", "risk": "medium" }
+  ],
+  "components": [
+    { "id": "comp-user", "name": "End user", "type": "actor", "trustZone": "tz-public" },
+    { "id": "comp-edge", "name": "API gateway", "type": "process", "trustZone": "tz-public" },
+    { "id": "comp-auth", "name": "Auth service (OAuth)", "type": "process", "trustZone": "tz-services" },
+    { "id": "comp-product", "name": "Product API", "type": "process", "trustZone": "tz-services" },
+    { "id": "comp-db", "name": "Tenant database", "type": "data-store", "trustZone": "tz-data" },
+    { "id": "comp-analytics", "name": "Analytics exporter", "type": "process", "trustZone": "tz-analytics" }
+  ],
+  "assets": [
+    { "id": "asset-identity", "name": "User identity and sessions", "type": "data", "sensitivity": "high", "storedIn": ["comp-auth"] },
+    { "id": "asset-tenant", "name": "Tenant business data", "type": "data", "sensitivity": "high", "storedIn": ["comp-db"] },
+    { "id": "asset-tokens", "name": "Access and refresh tokens", "type": "secret", "sensitivity": "critical", "storedIn": ["comp-auth", "comp-edge"] }
+  ],
+  "dataflows": [
+    {
+      "id": "flow-login",
+      "name": "Login / token issue",
+      "source": "comp-user",
+      "destination": "comp-auth",
+      "assets": ["asset-identity", "asset-tokens"],
+      "crosses": ["tz-public", "tz-services"],
+      "protocol": "HTTPS"
+    },
+    {
+      "id": "flow-api",
+      "name": "Authenticated product call",
+      "source": "comp-user",
+      "destination": "comp-product",
+      "assets": ["asset-tokens", "asset-tenant"],
+      "crosses": ["tz-public", "tz-services"],
+      "protocol": "HTTPS"
+    },
+    {
+      "id": "flow-read",
+      "name": "Product API reads tenant DB",
+      "source": "comp-product",
+      "destination": "comp-db",
+      "assets": ["asset-tenant"],
+      "crosses": ["tz-services", "tz-data"],
+      "protocol": "TLS"
+    },
+    {
+      "id": "flow-export",
+      "name": "Analytics export",
+      "source": "comp-db",
+      "destination": "comp-analytics",
+      "assets": ["asset-tenant"],
+      "crosses": ["tz-data", "tz-analytics"],
+      "protocol": "TLS"
+    },
+    {
+      "id": "flow-s2s",
+      "name": "Product API validates token with auth",
+      "source": "comp-product",
+      "destination": "comp-auth",
+      "assets": ["asset-tokens"],
+      "crosses": ["tz-services"],
+      "protocol": "mTLS"
+    }
+  ],
+  "threats": [
+    {
+      "id": "threat-cross-tenant",
+      "name": "Cross-tenant data access",
+      "description": "Broken object-level auth lets tenant A read tenant B records.",
+      "categories": ["Elevation of Privilege", "Information Disclosure"],
+      "cwes": ["CWE-639"],
+      "targets": ["comp-product", "comp-db"],
+      "risk": { "likelihood": 45, "impact": 95 }
+    },
+    {
+      "id": "threat-token-theft",
+      "name": "Token theft and replay",
+      "description": "Stolen bearer token used from another client to call product APIs.",
+      "categories": ["Spoofing"],
+      "cwes": ["CWE-613"],
+      "targets": ["comp-edge", "asset-tokens"],
+      "risk": { "likelihood": 50, "impact": 80 }
+    },
+    {
+      "id": "threat-analytics-leak",
+      "name": "Over-broad analytics export",
+      "description": "Exporter copies PII or secrets into a lower-trust analytics store.",
+      "categories": ["Information Disclosure"],
+      "cwes": ["CWE-359"],
+      "targets": ["comp-analytics", "flow-export"],
+      "risk": { "likelihood": 40, "impact": 70 }
+    },
+    {
+      "id": "threat-lateral",
+      "name": "Lateral movement between services",
+      "description": "Compromised product API calls auth or other services with overly broad mesh identity.",
+      "categories": ["Elevation of Privilege"],
+      "cwes": ["CWE-250"],
+      "targets": ["comp-product", "flow-s2s"],
+      "risk": { "likelihood": 35, "impact": 85 }
+    }
+  ],
+  "mitigations": [
+    {
+      "id": "mit-bola",
+      "name": "Tenant-bound authorization",
+      "description": "Enforce tenant id from the token on every object access; deny cross-tenant identifiers.",
+      "riskReduction": 85,
+      "threats": ["threat-cross-tenant"]
+    },
+    {
+      "id": "mit-tokens",
+      "name": "Short-lived tokens and binding",
+      "description": "Short access TTL, refresh rotation, audience restriction; consider DPoP/mTLS for high-risk clients.",
+      "riskReduction": 70,
+      "threats": ["threat-token-theft"]
+    },
+    {
+      "id": "mit-export",
+      "name": "Minimized export schemas",
+      "description": "Allowlisted fields, tokenization of PII, separate analytics keys, and access reviews.",
+      "riskReduction": 75,
+      "threats": ["threat-analytics-leak"]
+    },
+    {
+      "id": "mit-mesh",
+      "name": "mTLS and least-privilege service identity",
+      "description": "Service mesh mTLS, explicit allow policies per RPC, no cluster-wide credentials.",
+      "riskReduction": 80,
+      "threats": ["threat-lateral"]
+    }
+  ],
+  "prompts": [
+    {
+      "id": "p-stride",
+      "title": "Run a quick STRIDE pass on the Product API. Name one threat per letter that fits this model.",
+      "seconds": 150,
+      "answerMarkdown": "Spoofing: stolen bearer token at the edge. Tampering: request body that changes another tenant's object id. Repudiation: missing audit on admin exports. Information disclosure: verbose errors or analytics over-export. DoS: unauthenticated expensive search on the gateway. Elevation: product service identity that can call auth admin APIs. Tie each to a component or flow in the model."
+    },
+    {
+      "id": "p-tenant",
+      "title": "How do you prove multi-tenant isolation is real, not just a middleware claim?",
+      "seconds": 120,
+      "answerMarkdown": "Show object-level checks tied to tenant claim, negative tests for cross-tenant ids, storage keys partitioned by tenant where required, and support/admin impersonation controls. Mention logs that do not leak cross-tenant identifiers casually. Verification: automated BOLA tests in CI plus production canaries."
+    },
+    {
+      "id": "p-export",
+      "title": "The analytics export is new. What do you challenge in a design review?",
+      "seconds": 120,
+      "answerMarkdown": "What fields leave the data plane, who can query the sink, retention, legal basis, and whether secrets/tokens can appear. Demand a schema allowlist, encryption, and an owner. Ask how a tenant deletion or export request propagates. Residual risk: analytics VPC is still a high-value store."
+    }
+  ]
+}

@@ -4,3 +4,5 @@
 - [Interview Questions & Answers](GenAI%20LLM%20Product%20Security%20-%20Interview%20Questions%20%26%20Answers.md)
 - [Critical Clarification](Critical%20Clarification%20GenAI%20LLM%20Product%20Security%20Misconceptions.md)
 - [Quick Reference](GenAI%20LLM%20Product%20Security%20-%20Quick%20Reference.md)
+
+[**GenAI LLM Product Security - Mind Map**](GenAI%20LLM%20Product%20Security%20-%20Mind%20Map.md)

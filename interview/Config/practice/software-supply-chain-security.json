@@ -1,0 +1,210 @@
+{
+  "topicId": "software-supply-chain-security",
+  "name": "Software Supply Chain Security",
+  "source": "Software Supply Chain Security/Software Supply Chain Security - Interview Questions & Answers.md",
+  "prompts": [
+    {
+      "id": "p174e64c858326c",
+      "cluster": "Fundamentals",
+      "title": "In one paragraph, what is software supply chain security?",
+      "seconds": 120,
+      "answerMarkdown": "It is the set of **people, process, and technical controls** that ensure **software you build, buy, and run** matches **intended source, build steps, and distribution**: third\u2011party **dependencies**, **package registries**, **CI/CD** automation (including **plugins**), **build caches**, **signed artifacts**, **provenance**, **SBOM + VEX**, **IaC modules**, and **deployment** paths. The goal is **integrity and accountability** across that chain - not only finding CVEs in a scanner report.\n\n```\n Mini mental model:  Source \u2192 Build \u2192 Artifact \u2192 Registry \u2192 Deploy \u2192 Runtime\n Each arrow is a trust boundary that must be verified, not assumed.\n```\n\n---"
+    },
+    {
+      "id": "pa5986765d7be9d",
+      "cluster": "Fundamentals",
+      "title": "How do package managers decide which package gets installed, and where does trust actually sit?",
+      "seconds": 120,
+      "answerMarkdown": "Resolvers map **name + version constraints** to concrete artifacts using **registry metadata** (and lockfiles where present). Trust sits in **whose registry you query**, **whether lockfiles pin hashes**, **scopes and private feeds** that route internal names correctly, and **organizational policy** (approved upstreams, proxies). A secure manifest on disk means little if CI can still resolve against an **unexpected public namespace** or a **misconfigured** default registry.\n\n```\n Manifest \u2192 Resolver \u2192 Registry A? Registry B? \u2192 Lockfile? \u2192 Package bits\n Control points: 1) which registry, 2) lockfile hash pinning, 3) proxy cache integrity\n```\n\n---"
+    },
+    {
+      "id": "p752307f9bea19d",
+      "cluster": "Fundamentals",
+      "title": "What is an SBOM, and what is it *not*?",
+      "seconds": 90,
+      "answerMarkdown": "An SBOM is a **machine\u2011readable inventory** of components, versions, licenses, and relationships - commonly **SPDX** or **CycloneDX**. It is **not** a patch, a guarantee of safety, or a substitute for **ownership** and **remediation workflows**. Value appears when SBOMs are **stored with releases**, joined to **vuln and license policy**, and routed to **accountable teams**. Without VEX, SBOM + scanner = a flood of uncurated alerts.\n\n```\n SBOM (\"what's inside\") + Scanner (\"what's vulnerable\") \u2192 VEX (\"but is it exploitable here?\")\n VEX is the filter that turns noise into action.\n```\n\n---"
+    },
+    {
+      "id": "pab433a112d44ff",
+      "cluster": "Fundamentals",
+      "title": "How do SBOM, provenance, VEX, and SLSA differ?",
+      "seconds": 90,
+      "answerMarkdown": "- **SBOM**: *What is inside?* (component inventory)\n- **Provenance** (via attestations): *Who built it, how, from what?* (build integrity chain)\n- **VEX**: *Is the vulnerability actually exploitable in this product?* (context)\n- **SLSA**: A *framework* for incremental assurance on how artifacts are produced, with levels defining build isolation, provenance, and verification.\n\n```\n SBOM \u2500\u2500\u25ba Provenance \u2500\u2500\u25ba VEX\n  \u2502           \u2502             \u2502\n  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n              \u25bc\n          SLSA levels (how hard is it to tamper?)\n```\n\n---"
+    },
+    {
+      "id": "p9887fcecb43575",
+      "cluster": "Fundamentals",
+      "title": "What is typosquatting, and how do you reduce risk?",
+      "seconds": 90,
+      "answerMarkdown": "Typosquatting publishes packages with **deceptively similar names** (misspellings, homoglyphs). Reduce risk with **code review** for new dependencies, **private registries** with allowlists, **automated PR checks** flagging novel packages, **pinning**, and **security awareness** for developers installing CLI tools and IDE extensions.\n\n```\n Attacker: \"reqeusts\" (typo of \"requests\") \u2192 developer mistypes install \u2192 malicious code in build\n Mitigation chain: Lockfile \u2192 private mirror \u2192 allowed registry scoping \u2192 CI policy review.\n```\n\n---"
+    },
+    {
+      "id": "p8480a824379c5b",
+      "cluster": "Fundamentals",
+      "title": "Explain dependency confusion and how organizations prevent it.",
+      "seconds": 90,
+      "answerMarkdown": "Dependency confusion happens when a build resolves an **internal package name** from a **public registry** because routing is wrong. A malicious actor publishes that name publicly with a higher version, and the resolver picks it.\n\n```\n Internal package \"my-auth-lib\":\n   Build \u2192 checks public registry first \u2192 sees public \"my-auth-lib\" v99.9.9 \u2192 installs attacker version\n Prevention:\n   - Configure CI with private registry priority (scoped registries)\n   - Block public egress from CI\n   - Own namespace on public registry (if applicable)\n   - Use explicit upstream allowlists in proxies\n```\n\n---"
+    },
+    {
+      "id": "p7931cf9910376d",
+      "cluster": "Fundamentals",
+      "title": "Why are lockfiles (and image digests) a supply chain control?",
+      "seconds": 90,
+      "answerMarkdown": "Lockfiles record the **resolved dependency graph** and often **integrity hashes**, making builds **repeatable** and PRs reviewable for **unexpected resolution drift**. Container **digests** immutably identify image **bits**; `:latest` is a mutable pointer. Pin versions where appropriate, commit lockfiles, and reference images by digest in production promotion.\n\n```\n manifest \u2192 lockfile (pins exact version + hash) \u2192 reproducible build\n image: myapp@sha256:abc... not myapp:latest\n```\n\n---"
+    },
+    {
+      "id": "pfe63e77702756c",
+      "cluster": "Fundamentals",
+      "title": "Where should signature and provenance verification happen, and why not only in CI?",
+      "seconds": 90,
+      "answerMarkdown": "Verification must occur at **artifact promotion** and **deploy** (including **Kubernetes admission**), because threats include **replacement after CI**: compromised object storage, insider steps, or untrusted mirrors. CI\u2011only checks leave the final deploy gate blind.\n\n```\n Build \u2192 sign \u2192 registry \u2192 deploy gate (verify signature + provenance) \u2192 run\n If verification only happens during build, an attacker can swap the artifact before deployment.\n```\n\n---"
+    },
+    {
+      "id": "p9bed4e43f60e69",
+      "cluster": "Fundamentals",
+      "title": "What is Sigstore, and how do cosign, Fulcio, and Rekor fit together?",
+      "seconds": 90,
+      "answerMarkdown": "**Sigstore** is an ecosystem for **signing and verifying** artifacts with **short\u2011lived keys** tied to identity. **cosign** is the CLI for images/attestations. **Fulcio** issues short\u2011lived certificates via OIDC; **Rekor** provides a **transparency log** for detecting inconsistent or mis\u2011issued signatures over time.\n\n```\n CI (OIDC identity) \u2192 Fulcio (cert) \u2192 cosign sign \u2192 Rekor (log)\n At deploy: cosign verify \u2192 check Rekor entry \u2192 policy enforcement\n```\n\n---"
+    },
+    {
+      "id": "p82e41f662e7ccb",
+      "cluster": "Fundamentals",
+      "title": "How are vendor CI plugins and marketplace actions a supply chain risk?",
+      "seconds": 90,
+      "answerMarkdown": "They execute **third\u2011party code** inside pipelines holding **repo tokens, cloud credentials, and secrets**. Risks: compromised plugins, typosquatted action names, over\u2011broad permissions.\n\n```\n Control: allowlist + pin to commit SHA + fork critical actions + least privilege (OIDC, not PATs) + review extensions like app deps\n```\n\n---"
+    },
+    {
+      "id": "p67c6128f3285aa",
+      "cluster": "Fundamentals",
+      "title": "A malicious version of a popular library is published. What do you do first?",
+      "seconds": 90,
+      "answerMarkdown": "**Contain** (block version at proxy, inventory consumers via SBOMs/lockfiles), **assess** (did it execute install scripts? access tokens?), **remediate** (rollback to known\u2011good, rebuild/redeploy, rotate exposed creds), **communicate** (customers/regulators), **post\u2011incident** (tighten review/auto\u2011merge policies).\n\n```\n Incident timeline workflow:\n Alert \u2192 Block at proxy \u2192 Query SBOM for affected images \u2192 Rebuild safe versions \u2192 Rollout \u2192 Rotate secrets \u2192 Postmortem\n```\n\n---"
+    },
+    {
+      "id": "p67920daf92ca51",
+      "cluster": "Fundamentals",
+      "title": "What does \u201creachability\u201d mean when triaging dependency CVEs?",
+      "seconds": 90,
+      "answerMarkdown": "Reachability asks whether vulnerable code is **actually used** (via static call paths, runtime profiling, or feature flags) - not just present in the transitive graph. It prevents CVSS\u2011only panic and focuses effort on exposed, exploitable paths.\n\n```\n CVE in library X \u2192 static analysis: is function called? \u2192 if not, VEX \"not_affected\" \u2192 ignore\n```\n\n---"
+    },
+    {
+      "id": "pd95a927717a542",
+      "cluster": "Fundamentals",
+      "title": "How would you design registry strategy for a polyglot company?",
+      "seconds": 90,
+      "answerMarkdown": "Use **central private registries/proxies** (Artifactory, Nexus) with consistent policy: approved upstreams, caching, license/vuln gates, ecosystem\u2011specific routing so internal names cannot accidentally resolve publicly. Document onboarding per language so teams don't bypass with personal tokens.\n\n```\n Polyglot flow:\n   npm, Maven, PyPI, Go modules, OCI \u2192 all go through central proxy with allowlists\n   CI firewall: only allowed to reach internal proxy, not public internet.\n```\n\n---"
+    },
+    {
+      "id": "p4b662772f9e564",
+      "cluster": "Fundamentals",
+      "title": "What SBOM fields or practices matter most for procurement and compliance?",
+      "seconds": 90,
+      "answerMarkdown": "Supplier identity, license data, dependency relationships, and identifiers (PURLs, CPEs). SBOMs must be **per released artifact**, immutably associated with version/digest, and consumed in a workflow that tracks exceptions with owners.\n\n```\n Required: component name + version + license + supplier + dependency links\n```\n\n---"
+    },
+    {
+      "id": "p2c27f61c382a59",
+      "cluster": "Fundamentals",
+      "title": "Why prefer OIDC federation for CI over long\u2011lived cloud keys?",
+      "seconds": 90,
+      "answerMarkdown": "Static keys are high\u2011value targets; leakage yields durable access. OIDC lets CI assume **short\u2011lived, scoped roles** per workflow, reducing blast radius and rotation pain - critical for the automation that builds and signs software.\n\n```\n CI job \u2192 OIDC exchange \u2192 cloud IAM role (temp) \u2192 no static secrets\n```\n\n---"
+    },
+    {
+      "id": "p771324d585bbc2",
+      "cluster": "Fundamentals",
+      "title": "What is build cache poisoning, and why does it belong in this conversation?",
+      "seconds": 90,
+      "answerMarkdown": "Remote build caches / layer caches can be poisoned; downstream builds reuse tampered intermediates even when source is clean. Mitigations: access controls, integrity checks, tenant isolation, and cache invalidation after incidents.\n\n```\n Developer push \u2192 build pulls cached layer (poisoned) \u2192 output binary backdoored\n```\n\n---"
+    },
+    {
+      "id": "p2e54ac6804d092",
+      "cluster": "Fundamentals",
+      "title": "What metrics would you show leadership for supply chain security?",
+      "seconds": 90,
+      "answerMarkdown": "Outcome metrics: % of production deploys with verified signatures/provenance, SBOM coverage with policy evaluation, age of tier\u20110 dependency issues by asset tier, mean time to remediate, repeat incident counts, and governed exception backlog - not raw scan volume.\n\n```\n Dashboard: Verified deploy %, SBOM compliance %, critical vuln age, exception count trend.\n```\n\n---"
+    },
+    {
+      "id": "pf5ca2bfbb1e014",
+      "cluster": "Fundamentals",
+      "title": "How does NIST SSDF relate to supply chain security programs?",
+      "seconds": 90,
+      "answerMarkdown": "NIST SSDF (SP 800\u2011218) organizes secure SDLC practices: protecting tools, producing well\u2011secured software, and responding to vulnerabilities. Supply chain controls map to \"protect the pipeline\" and \"verify third\u2011party components,\" making SBOMs and signatures **evidence** of those practices, not checkbox artifacts.\n\n```\n SSDF practice \u2192 supply chain control (e.g., \"verify 3rd party code\" \u2192 SBOM + VEX + signature verification)\n```\n\n---"
+    },
+    {
+      "id": "pa6ed661df7fc97",
+      "cluster": "Fundamentals",
+      "title": "Compare \u201csigning a container image\u201d with \u201cshipping an SBOM\u201d for the same release.",
+      "seconds": 90,
+      "answerMarkdown": "Signing asserts **cryptographic identity and integrity** of the image bits; SBOM lists **contents and licenses**. Together they provide **what's inside and proof it wasn't tampered with**. Mature pipelines attach both: signed provenance attestation + SBOM (as an OCI artifact), then enforce policy on the combination at deploy.\n\n```\n image@sha256:...  \u2192 cosign sign (provenance attestation) \u2192 SBOM attachment \u2192 deploy gate checks all\n```\n\n---"
+    },
+    {
+      "id": "pecb7e87e3d4e8a",
+      "cluster": "Staff & Senior Add\u2011On Questions (New)",
+      "title": "How do you secure the container image supply chain beyond scanning?",
+      "seconds": 120,
+      "answerMarkdown": "Implement a full chain:\n- **Base image lifecycle**: automated updates (Renovate) for base image digests, rebuild on new CVE fixes.\n- **Golden image pipelines**: organization\u2011approved hardened base images (non\u2011root, minimal, CIS\u2011aligned).\n- **Build cache integrity**: use content\u2011addressed caches, sign cache entries, or disable remote caching in high\u2011security contexts.\n- **Admission control**: verify image signatures, provenance, and vulnerability threshold (with VEX for exceptions) at deploy.\n\n```\n Base image update \u2192 PR with new digest \u2192 CI rebuild \u2192 test \u2192 sign \u2192 push \u2192 admission checks (sig + vuln + VEX)\n```\n\n---"
+    },
+    {
+      "id": "p8f26b3dd75035b",
+      "cluster": "Staff & Senior Add\u2011On Questions (New)",
+      "title": "Explain VEX and its role in vulnerability management for supply chain.",
+      "seconds": 90,
+      "answerMarkdown": "VEX (Vulnerability Exploitability eXchange) is a **machine\u2011readable statement** that tells consumers whether a specific CVE is **exploitable** in a given product. Without VEX, SBOM + scanner yields an uncurated flood of alerts. With VEX, you can mark \"not_affected,\" \"fixed,\" or \"under_investigation,\" turning noise into actionable findings.\n\n```\n SBOM \u2192 vuln scan \u2192 reachability analysis \u2192 VEX document (status per CVE) \u2192 deploy gate uses VEX to allow/deny\n```\n\n---"
+    },
+    {
+      "id": "p8326c15081a952",
+      "cluster": "Staff & Senior Add\u2011On Questions (New)",
+      "title": "How do you integrate VEX into deployment gates?",
+      "seconds": 90,
+      "answerMarkdown": "- VEX document is generated and signed alongside SBOM, stored in the OCI registry.\n- At deploy time, admission controller (e.g., Kyverno) checks image vulnerabilities. If a CVE is found, it looks for a valid VEX statement that declares \"not_affected\" with a justification and a valid signature.\n- If VEX covers the CVE and is current, deployment proceeds; otherwise, blocked.\n\n```\n Image pull \u2192 vuln report \u2192 admission checks VEX for known CVEs \u2192 if VEX states \"not_affected\" and signed \u2192 allow\n```\n\n---"
+    },
+    {
+      "id": "p99ed2015262f51",
+      "cluster": "Staff & Senior Add\u2011On Questions (New)",
+      "title": "How would you design an automated dependency update strategy with trust signals?",
+      "seconds": 90,
+      "answerMarkdown": "Use Renovate/Dependabot with tiered policies:\n- **Patch updates**: auto\u2011merge if CI passes (tests + lint + security).\n- **Minor updates**: require human review.\n- **Major updates**: require security review and canary rollout.\n- **Before adoption**: new direct dependencies must pass **OpenSSF Scorecard** threshold (active maintenance, signed releases, good practices). Add Scorecard check as a CI gate on PRs that introduce new packages.\n\n```\n New dependency PR \u2192 CI runs Scorecard \u2192 if score < threshold, auto\u2011block; else proceed to scan/test.\n```\n\n---"
+    },
+    {
+      "id": "p2eac41bd4a48f9",
+      "cluster": "Staff & Senior Add\u2011On Questions (New)",
+      "title": "How do you securely onboard a vendor\u2011supplied binary or container that you can\u2019t rebuild?",
+      "seconds": 90,
+      "answerMarkdown": "- Require vendor to provide an SBOM and signature (if possible).\n- Generate your own SBOM from the image.\n- Scan for vulnerabilities and produce a VEX for any un\u2011exploitable findings.\n- Sign the image with your own Cosign key to indicate \"approved for internal use.\"\n- Set an expiration date and review cycle; the exception is tracked in a governance system.\n\n```\n Vendor image \u2192 scan \u2192 SBOM + VEX \u2192 internal cosign sign \u2192 stored in internal registry with expiry metadata \u2192 admission policy enforces internal signature.\n```\n\n---"
+    },
+    {
+      "id": "pc5d158a206347f",
+      "cluster": "Staff & Senior Add\u2011On Questions (New)",
+      "title": "What is exception governance in supply chain, and why does it matter?",
+      "seconds": 90,
+      "answerMarkdown": "Exception governance manages waivers when a supply chain control cannot be met (e.g., unsigned legacy image). It includes: owner, justification, compensating controls, expiry date, and periodic review. Tracking exception debt (count and age) prevents security drift and shows program maturity.\n\n```\n Exception workflow: request \u2192 review \u2192 approval + compensating controls \u2192 register in inventory \u2192 automatic review reminder before expiry.\n```\n\n---"
+    },
+    {
+      "id": "p63cc6009c6fcde",
+      "cluster": "Staff & Senior Add\u2011On Questions (New)",
+      "title": "How do you secure Infrastructure as Code (IaC) dependencies like Terraform modules and Helm charts?",
+      "seconds": 90,
+      "answerMarkdown": "- **Terraform**: Pin modules to exact commit SHAs; use a private registry proxy; enable provider checksum lock files; scan configurations with Checkov/tfsec.\n- **Helm**: Store charts in private OCI repos; sign with `helm package --sign`; verify signatures before deploy; enforce chart source in GitOps (ArgoCD/Flux).\n- Treat these as supply chain artifacts just like containers: verify provenance and integrity at deploy time.\n\n```\n Terraform module source = git::https://...?ref=abc123 (pinned)\n Helm chart: push to OCI, cosign sign, admission enforces signature on deploy.\n```\n\n---"
+    },
+    {
+      "id": "p10fd0b5a3526f0",
+      "cluster": "Staff & Senior Add\u2011On Questions (New)",
+      "title": "How does the AI/ML model supply chain differ from traditional software supply chain?",
+      "seconds": 90,
+      "answerMarkdown": "The model supply chain includes **training code, datasets, model weights**, and **serialisation formats** that can execute arbitrary code (e.g., pickle). Controls include: signing model artifacts, generating SBOMs for training environments, using safe serialisation formats (safetensors), and verifying data provenance. Model provenance attestations link the model to exact code + dataset hashes, enabling verification similar to SLSA for ML.\n\n```\n Training pipeline \u2192 signed model + SBOM \u2192 provenance (code + data) \u2192 model registry \u2192 deploy gate verifies signature.\n```\n\n---"
+    },
+    {
+      "id": "pf372438a7d1d8a",
+      "cluster": "Staff & Senior Add\u2011On Questions (New)",
+      "title": "Walk through an incident narrative for a compromised signing key or package.",
+      "seconds": 120,
+      "answerMarkdown": "- **Detection**: Anomaly in Rekor log or unexpected signature appears on an image that was not built by CI.\n- **Containment**: Revoke the compromised key/identity; update key authorities in admission controllers.\n- **Inventory**: Query all artifacts signed with that key; identify deployed instances.\n- **Remediation**: Re\u2011sign with a new key from a clean build; redeploy all affected services; rotate any secrets that could have been exposed.\n- **Post\u2011incident**: Strengthen identity federation (OIDC, short\u2011lived keys), add monitoring on Rekor, and review who can trigger signing.\n\n```\n Detection \u2192 revoke key \u2192 inventory via Rekor/SBOM \u2192 rebuild & re\u2011sign \u2192 redeploy \u2192 rotate secrets \u2192 postmortem.\n```\n\n---"
+    },
+    {
+      "id": "p0040a936ef947e",
+      "cluster": "Staff & Senior Add\u2011On Questions (New)",
+      "title": "What does a good supply chain security program look like end\u2011to\u2011end? (Staff)",
+      "seconds": 120,
+      "answerMarkdown": "It weaves controls through the entire lifecycle:\n\n```\n Developer \u2192 code review + dependency hygiene (lockfile, private proxy)\n            \u2193\n CI/CD \u2192 OIDC, ephemeral runners, no secrets, build SBOM, scan, sign (cosign), generate VEX\n            \u2193\n Registry \u2192 private, immutably tagged, continuous scan, SBOM + attestation attached\n            \u2193\n Deploy \u2192 admission verifies signature, provenance, vuln threshold, VEX, allowed registries\n            \u2193\n Runtime \u2192 continuous monitoring (Falco), SBOM stored with release, auto\u2011rollback on policy violation\n            \u2193\n Governance \u2192 automated updates with Scorecard gating, exception workflow, metrics dashboard\n```\n\nA staff candidate should be able to draw this and explain the trust boundaries at each step.\n\n---\n\n**Cross\u2011read:** Secure CI/CD Pipeline Security, Container Security, Kubernetes Security Hardening, Secrets Management and Key Lifecycle, Vulnerability Management Lifecycle."
+    }
+  ]
+}

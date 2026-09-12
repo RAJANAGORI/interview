@@ -7,3 +7,5 @@
 [**Critical Clarification: System vs Personal API Tokens Misconceptions**](Critical%20Clarification%20System%20vs%20Personal%20API%20Toke.md)
 
 [**System vs Personal API Tokens - Quick Reference**](System%20vs%20Personal%20API%20Tokens%20-%20Quick%20Reference.md)
+
+[**System vs Personal API Tokens - Mind Map**](System%20vs%20Personal%20API%20Tokens%20-%20Mind%20Map.md)

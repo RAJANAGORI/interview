@@ -1,0 +1,112 @@
+{
+  "topicId": "container-security",
+  "name": "Container Security",
+  "source": "Container Security/Container Security - Interview Questions.md",
+  "prompts": [
+    {
+      "id": "p306ccaf850429c",
+      "cluster": "Fundamental Questions",
+      "title": "Explain the 4 C's of cloud-native security.",
+      "seconds": 120,
+      "answerMarkdown": "The 4 C's represent security layers in cloud-native applications:\n\n1. **Code:**\n   - Application code security\n   - Secure coding practices\n   - Dependency management\n   - Static analysis\n\n2. **Container:**\n   - Image security\n   - Runtime security\n   - Base image selection\n   - Vulnerability scanning\n\n3. **Cluster:**\n   - Kubernetes security\n   - RBAC\n   - Network policies\n   - API server security\n\n4. **Cloud:**\n   - Infrastructure security\n   - Network security\n   - IAM\n   - Data protection\n\n**Key Principle:** Security must be implemented at each layer. A vulnerability in one layer can compromise the entire stack.\n\n**Example:**\n```\nCode: SQL injection vulnerability\n  \u2193\nContainer: Runs with root privileges\n  \u2193\nCluster: Overly permissive RBAC\n  \u2193\nCloud: Public S3 bucket\nResult: Complete system compromise\n```\n\n---"
+    },
+    {
+      "id": "pcf92411bcaf952",
+      "cluster": "Fundamental Questions",
+      "title": "How do you secure a Docker image?",
+      "seconds": 120,
+      "answerMarkdown": "**Image Security Measures:**\n\n1. **Base Image Selection:**\n   - Use minimal base images (Alpine)\n   - Prefer official images\n   - Regularly update base images\n   - Avoid images with known vulnerabilities\n\n2. **Dockerfile Best Practices:**\n   ```dockerfile\n   # Good: Minimal, non-root, specific version\n   FROM alpine:3.18\n   RUN addgroup -g 1000 appuser && \\\n       adduser -D -u 1000 -G appuser appuser\n   WORKDIR /app\n   COPY --chown=appuser:appuser app /app\n   USER appuser\n   CMD [\"./app\"]\n\n   # Bad: Full OS, root user, latest tag\n   FROM ubuntu:latest\n   COPY app /app\n   CMD [\"./app\"]\n   ```\n\n3. **Image Scanning:**\n   - Scan before deployment\n   - Use Trivy, Clair, Snyk\n   - Block vulnerable images\n   - Integrate into CI/CD\n\n4. **Image Signing:**\n   - Sign images cryptographically\n   - Verify signatures before pull\n   - Use Docker Content Trust\n   - Implement Notary\n\n5. **Multi-Stage Builds:**\n   - Reduce image size\n   - Remove build dependencies\n   - Minimize attack surface\n\n---"
+    },
+    {
+      "id": "pf237d703321400",
+      "cluster": "Fundamental Questions",
+      "title": "What are the security risks of running containers as root?",
+      "seconds": 120,
+      "answerMarkdown": "**Risks:**\n\n1. **Container Escape:**\n   - If container is compromised, attacker has root\n   - Potential host system access\n   - Privilege escalation\n\n2. **Host File System Access:**\n   - Root in container may access host files\n   - If volumes mounted, can modify host files\n   - Security context matters\n\n3. **Resource Exhaustion:**\n   - Root can consume unlimited resources\n   - No resource limits enforced\n   - DoS attacks\n\n4. **Network Privileges:**\n   - Root can bind to privileged ports (< 1024)\n   - Can modify network configuration\n   - Potential network attacks\n\n**Mitigation:**\n\n```dockerfile\n# Run as non-root user\nFROM alpine:3.18\nRUN addgroup -g 1000 appuser && \\\n    adduser -D -u 1000 -G appuser appuser\nUSER appuser\n```\n\n```yaml\n# Kubernetes security context\nsecurityContext:\n  runAsNonRoot: true\n  runAsUser: 1000\n  allowPrivilegeEscalation: false\n```\n\n---"
+    },
+    {
+      "id": "p82e214289ca73e",
+      "cluster": "Fundamental Questions",
+      "title": "How do you implement network security in Kubernetes?",
+      "seconds": 120,
+      "answerMarkdown": "**Network Security Measures:**\n\n1. **Network Policies:**\n   - Control pod-to-pod communication\n   - Default deny all traffic\n   - Allow only necessary communication\n   - Namespace isolation\n\n   ```yaml\n   # Default deny all ingress\n   apiVersion: networking.k8s.io/v1\n   kind: NetworkPolicy\n   metadata:\n     name: default-deny-ingress\n   spec:\n     podSelector: {}\n     policyTypes:\n     - Ingress\n\n   # Allow specific traffic\n   apiVersion: networking.k8s.io/v1\n   kind: NetworkPolicy\n   metadata:\n     name: allow-frontend-backend\n   spec:\n     podSelector:\n       matchLabels:\n         app: backend\n     ingress:\n     - from:\n       - podSelector:\n           matchLabels:\n             app: frontend\n       ports:\n       - protocol: TCP\n         port: 8080\n   ```\n\n2. **Service Mesh:**\n   - Mutual TLS (mTLS) for service-to-service\n   - Traffic policies\n   - Access control\n   - Observability\n\n3. **Ingress Security:**\n   - TLS/SSL termination\n   - WAF at ingress\n   - Rate limiting\n   - DDoS protection\n\n4. **Network Segmentation:**\n   - Separate namespaces\n   - Use network policies\n   - Isolate sensitive workloads\n\n---"
+    },
+    {
+      "id": "p4cb1bb7ecb345d",
+      "cluster": "Fundamental Questions",
+      "title": "Explain RBAC in Kubernetes.",
+      "seconds": 120,
+      "answerMarkdown": "**Role-Based Access Control (RBAC):**\n\nRBAC controls access to Kubernetes resources through roles and role bindings.\n\n**Components:**\n\n1. **Role/ClusterRole:**\n   - Defines permissions (verbs + resources)\n   - Role: Namespace-scoped\n   - ClusterRole: Cluster-scoped\n\n2. **RoleBinding/ClusterRoleBinding:**\n   - Binds role to subjects (users, groups, service accounts)\n   - RoleBinding: Namespace-scoped\n   - ClusterRoleBinding: Cluster-scoped\n\n**Example:**\n\n```yaml\n# Role\napiVersion: rbac.authorization.k8s.io/v1\nkind: Role\nmetadata:\n  name: pod-reader\n  namespace: default\nrules:\n- apiGroups: [\"\"]\n  resources: [\"pods\"]\n  verbs: [\"get\", \"watch\", \"list\"]\n\n# RoleBinding\napiVersion: rbac.authorization.k8s.io/v1\nkind: RoleBinding\nmetadata:\n  name: read-pods\n  namespace: default\nsubjects:\n- kind: User\n  name: jane\n  apiGroup: rbac.authorization.k8s.io\nroleRef:\n  kind: Role\n  name: pod-reader\n  apiGroup: rbac.authorization.k8s.io\n```\n\n**Best Practices:**\n- Follow least privilege\n- Use namespaces for isolation\n- Regular access reviews\n- Separate cluster and namespace roles\n- Use service accounts for applications\n\n---"
+    },
+    {
+      "id": "p49457ed98ca378",
+      "cluster": "Docker-Specific Questions",
+      "title": "How do you secure the Docker daemon?",
+      "seconds": 120,
+      "answerMarkdown": "**Docker Daemon Security:**\n\n1. **TLS Configuration:**\n   ```bash\n   # Enable TLS\n   dockerd \\\n     --tlsverify \\\n     --tlscacert=ca.pem \\\n     --tlscert=server-cert.pem \\\n     --tlskey=server-key.pem \\\n     -H=0.0.0.0:2376\n   ```\n\n2. **User Namespaces:**\n   ```json\n   // /etc/docker/daemon.json\n   {\n     \"userns-remap\": \"default\"\n   }\n   ```\n\n3. **Rootless Docker:**\n   - Run Docker without root\n   - Uses user namespaces\n   - Reduces attack surface\n\n4. **Network Restrictions:**\n   - Bind to specific interface\n   - Use firewall rules\n   - Restrict API access\n\n5. **Logging and Monitoring:**\n   - Enable audit logging\n   - Monitor daemon access\n   - Alert on suspicious activity\n\n---"
+    },
+    {
+      "id": "p2bffb210d621f3",
+      "cluster": "Docker-Specific Questions",
+      "title": "What is Docker Content Trust and how does it work?",
+      "seconds": 120,
+      "answerMarkdown": "**Docker Content Trust (DCT):**\n\nDCT provides cryptographic signing and verification of images.\n\n**How it Works:**\n\n1. **Image Signing:**\n   - Publisher signs image with private key\n   - Signature stored in Notary\n   - Public key used for verification\n\n2. **Image Verification:**\n   - Client verifies signature before pull\n   - Ensures image integrity\n   - Prevents tampering\n\n**Usage:**\n\n```bash\n# Enable DCT\nexport DOCKER_CONTENT_TRUST=1\n\n# Push signed image\ndocker push myregistry/myapp:latest\n\n# Pull verifies signature\ndocker pull myregistry/myapp:latest\n```\n\n**Benefits:**\n- Ensures image authenticity\n- Prevents tampering\n- Builds trust in image registry\n- Required for production\n\n---"
+    },
+    {
+      "id": "pfa81814763e073",
+      "cluster": "Kubernetes-Specific Questions",
+      "title": "How do you manage secrets in Kubernetes?",
+      "seconds": 120,
+      "answerMarkdown": "**Secrets Management:**\n\n1. **Kubernetes Secrets:**\n   - Base64 encoded (not encrypted by default)\n   - Stored in etcd\n   - Use for non-sensitive data only\n\n   ```yaml\n   apiVersion: v1\n   kind: Secret\n   metadata:\n     name: db-credentials\n   type: Opaque\n   stringData:\n     username: admin\n     password: secretpassword\n   ```\n\n2. **External Secret Management:**\n   - HashiCorp Vault\n   - AWS Secrets Manager\n   - Azure Key Vault\n   - GCP Secret Manager\n\n3. **Best Practices:**\n   - Use external secret management for production\n   - Rotate secrets regularly\n   - Use service accounts\n   - Implement workload identity\n   - Encrypt etcd at rest\n\n**Example - Vault Integration:**\n\n```yaml\napiVersion: external-secrets.io/v1beta1\nkind: ExternalSecret\nmetadata:\n  name: vault-secret\nspec:\n  secretStoreRef:\n    name: vault-backend\n  target:\n    name: db-credentials\n  data:\n  - secretKey: password\n    remoteRef:\n      key: secret/database\n      property: password\n```\n\n---"
+    },
+    {
+      "id": "p498b3a868624a5",
+      "cluster": "Kubernetes-Specific Questions",
+      "title": "What are Pod Security Standards?",
+      "seconds": 120,
+      "answerMarkdown": "**Pod Security Standards (PSS):**\n\nPSS replace Pod Security Policies (deprecated) and provide three security levels:\n\n1. **Privileged:**\n   - Unrestricted\n   - Allows all features\n   - Use for system workloads\n\n2. **Baseline:**\n   - Minimal restrictions\n   - Prevents known privilege escalations\n   - Good default for most workloads\n\n3. **Restricted:**\n   - Maximum restrictions\n   - Hardens pod security\n   - Use for sensitive workloads\n\n**Enforcement:**\n\n```yaml\napiVersion: v1\nkind: Namespace\nmetadata:\n  name: production\n  labels:\n    pod-security.kubernetes.io/enforce: restricted\n    pod-security.kubernetes.io/audit: restricted\n    pod-security.kubernetes.io/warn: restricted\n```\n\n**Requirements (Restricted):**\n- Run as non-root\n- Drop all capabilities\n- Read-only root filesystem\n- No privilege escalation\n- Seccomp profile required\n\n---"
+    },
+    {
+      "id": "pef30d7fcb6f95c",
+      "cluster": "Kubernetes-Specific Questions",
+      "title": "How do you implement admission control in Kubernetes?",
+      "seconds": 120,
+      "answerMarkdown": "**Admission Controllers:**\n\nAdmission controllers validate and mutate resources before they're stored in etcd.\n\n**Types:**\n\n1. **Validating Admission Webhooks:**\n   - Validate resources\n   - Can reject requests\n   - Use OPA Gatekeeper, Kyverno\n\n2. **Mutating Admission Webhooks:**\n   - Modify resources\n   - Add defaults\n   - Use for automatic security hardening\n\n**Example - OPA Gatekeeper:**\n\n```yaml\napiVersion: templates.gatekeeper.sh/v1beta1\nkind: ConstraintTemplate\nmetadata:\n  name: k8srequiredlabels\nspec:\n  crd:\n    spec:\n      names:\n        kind: K8sRequiredLabels\n  targets:\n    - target: admission.k8s.gatekeeper.sh\n      rego: |\n        package k8srequiredlabels\n        violation[{\"msg\": msg}] {\n          required := input.parameters.labels\n          provided := input.review.object.metadata.labels\n          missing := required[_]\n          not provided[missing]\n          msg := sprintf(\"Missing required label: %v\", [missing])\n        }\n```\n\n**Use Cases:**\n- Enforce security policies\n- Require specific labels\n- Block privileged containers\n- Enforce resource limits\n\n---"
+    },
+    {
+      "id": "p6f2cab8b5f17fb",
+      "cluster": "Runtime Security Questions",
+      "title": "How do you detect container runtime threats?",
+      "seconds": 120,
+      "answerMarkdown": "**Runtime Threat Detection:**\n\n1. **Falco:**\n   - Monitors system calls\n   - Detects anomalous behavior\n   - Custom rules\n   - Real-time alerts\n\n   ```yaml\n   # Falco rule example\n   - rule: Write below binary dir\n     desc: Detect writes to binary directories\n     condition: >\n       bin_dir and evt.dir = < and open_write\n     output: >\n       File below binary directory opened for writing\n     priority: ERROR\n   ```\n\n2. **Behavioral Analysis:**\n   - Monitor container behavior\n   - Baseline normal activity\n   - Detect deviations\n   - Machine learning models\n\n3. **Network Monitoring:**\n   - Monitor pod-to-pod communication\n   - Detect lateral movement\n   - Unusual traffic patterns\n   - Service mesh telemetry\n\n4. **File System Monitoring:**\n   - Monitor file access\n   - Detect sensitive file reads\n   - Unauthorized modifications\n   - Integrity checks\n\n---"
+    },
+    {
+      "id": "pb62499e1b4fc61",
+      "cluster": "Runtime Security Questions",
+      "title": "What is a service mesh and how does it improve security?",
+      "seconds": 120,
+      "answerMarkdown": "**Service Mesh:**\n\nA service mesh provides secure service-to-service communication in microservices.\n\n**Security Benefits:**\n\n1. **Mutual TLS (mTLS):**\n   - Encrypts all service-to-service traffic\n   - Automatic certificate management\n   - No code changes required\n\n2. **Access Control:**\n   - Fine-grained policies\n   - Service-level authorization\n   - Identity-based access\n\n3. **Traffic Policies:**\n   - Rate limiting\n   - Circuit breakers\n   - Retry policies\n\n4. **Observability:**\n   - Request tracing\n   - Metrics collection\n   - Security event logging\n\n**Example - Istio:**\n\n```yaml\n# Enable mTLS\napiVersion: security.istio.io/v1beta1\nkind: PeerAuthentication\nmetadata:\n  name: default\nspec:\n  mtls:\n    mode: STRICT\n\n# Authorization policy\napiVersion: security.istio.io/v1beta1\nkind: AuthorizationPolicy\nmetadata:\n  name: allow-frontend\nspec:\n  selector:\n    matchLabels:\n      app: backend\n  action: ALLOW\n  rules:\n  - from:\n    - source:\n        principals: [\"cluster.local/ns/default/sa/frontend\"]\n```\n\n---"
+    },
+    {
+      "id": "p78ba4cda0a4be0",
+      "cluster": "Supply Chain Security",
+      "title": "How do you secure the container supply chain?",
+      "seconds": 120,
+      "answerMarkdown": "**Supply Chain Security:**\n\n1. **Image Registry:**\n   - Use private registries\n   - Implement access controls\n   - Scan images in registry\n   - Enable image signing\n\n2. **CI/CD Pipeline:**\n   - Scan dependencies\n   - Build from trusted sources\n   - Sign artifacts\n   - Secure build secrets\n\n3. **SBOM (Software Bill of Materials):**\n   - Generate SBOM for containers\n   - Track all dependencies\n   - Use SPDX or CycloneDX\n   - Store with images\n\n4. **Dependency Scanning:**\n   - Scan application dependencies\n   - Block vulnerable packages\n   - Regular updates\n   - Automated scanning\n\n**Example - CI/CD Security:**\n\n```yaml\n# GitHub Actions\n- name: Scan image\n  uses: aquasecurity/trivy-action@master\n  with:\n    image-ref: myapp:$&#123;&#123; github.sha &#125;&#125;\n    format: 'sarif'\n    output: 'trivy-results.sarif'\n- name: Generate SBOM\n  run: syft packages myapp:$&#123;&#123; github.sha &#125;&#125; -o spdx-json > sbom.json\n```\n\n---"
+    },
+    {
+      "id": "p4254ba38111783",
+      "cluster": "Scenario-Based Questions",
+      "title": "You discover a container running as root. What do you do?",
+      "seconds": 120,
+      "answerMarkdown": "**Immediate Actions:**\n\n1. **Assess Risk:**\n   - Determine if container is compromised\n   - Check for suspicious activity\n   - Review logs\n\n2. **Containment:**\n   - Isolate container if compromised\n   - Revoke network access\n   - Consider stopping container\n\n3. **Remediation:**\n   - Update Dockerfile to use non-root user\n   - Rebuild and redeploy image\n   - Update security context in Kubernetes\n\n4. **Prevention:**\n   - Implement admission controller\n   - Use Pod Security Standards\n   - Add security scanning\n   - Review all containers\n\n**Example Fix:**\n\n```dockerfile\n# Before\nFROM ubuntu:latest\nCMD [\"./app\"]\n\n# After\nFROM alpine:3.18\nRUN addgroup -g 1000 appuser && \\\n    adduser -D -u 1000 -G appuser appuser\nUSER appuser\nCMD [\"./app\"]\n```\n\n---"
+    },
+    {
+      "id": "p8de7d6ab55368c",
+      "cluster": "Scenario-Based Questions",
+      "title": "How would you design a secure Kubernetes cluster?",
+      "seconds": 120,
+      "answerMarkdown": "**Cluster Security Design:**\n\n1. **API Server:**\n   - Enable RBAC\n   - Use TLS\n   - Restrict network access\n   - Enable audit logging\n\n2. **etcd:**\n   - Encrypt at rest\n   - Use TLS\n   - Restrict access\n   - Regular backups\n\n3. **Node Security:**\n   - Harden OS\n   - Regular patching\n   - Use CIS benchmarks\n   - Enable SELinux/AppArmor\n\n4. **Network:**\n   - Network policies (default deny)\n   - Service mesh for mTLS\n   - Ingress with TLS\n   - Network segmentation\n\n5. **Access Control:**\n   - RBAC with least privilege\n   - Pod Security Standards\n   - Admission controllers\n   - Regular access reviews\n\n6. **Secrets:**\n   - External secret management\n   - Encrypt etcd\n   - Rotate secrets\n   - Workload identity\n\n7. **Monitoring:**\n   - Runtime security (Falco)\n   - Audit logging\n   - Security scanning\n   - Incident response\n\n---"
+    }
+  ]
+}

@@ -1,0 +1,132 @@
+{
+  "otmVersion": "0.2.0",
+  "id": "payment-processing",
+  "title": "Payment processing microservice",
+  "blurb": "Internet-facing payment API, card data store, and external gateway. Classic product-security whiteboard.",
+  "difficulty": "intermediate",
+  "minutes": 12,
+  "relatedTopicIds": ["threat-modeling", "business-logic-abuse-and-fraud-threats"],
+  "project": {
+    "name": "Payment Processing System",
+    "id": "payment-system-v2",
+    "description": "Secure payment processing microservice for a multi-tenant SaaS checkout."
+  },
+  "trustZones": [
+    { "id": "tz-internet", "name": "Internet", "risk": "high" },
+    { "id": "tz-app", "name": "Application VPC", "risk": "medium" },
+    { "id": "tz-data", "name": "Data plane", "risk": "high" },
+    { "id": "tz-external", "name": "Payment gateway (external)", "risk": "medium" }
+  ],
+  "components": [
+    { "id": "comp-browser", "name": "Checkout browser", "type": "actor", "trustZone": "tz-internet" },
+    { "id": "comp-api", "name": "Payment API", "type": "process", "trustZone": "tz-app" },
+    { "id": "comp-db", "name": "Payment database", "type": "data-store", "trustZone": "tz-data" },
+    { "id": "comp-gateway", "name": "Payment gateway", "type": "external", "trustZone": "tz-external" }
+  ],
+  "assets": [
+    { "id": "asset-card", "name": "Cardholder data", "type": "data", "sensitivity": "critical", "storedIn": ["comp-db"] },
+    { "id": "asset-txn", "name": "Transaction records", "type": "data", "sensitivity": "high", "storedIn": ["comp-db"] },
+    { "id": "asset-api-keys", "name": "Gateway API credentials", "type": "secret", "sensitivity": "critical", "storedIn": ["comp-api"] }
+  ],
+  "dataflows": [
+    {
+      "id": "flow-checkout",
+      "name": "Checkout request",
+      "source": "comp-browser",
+      "destination": "comp-api",
+      "assets": ["asset-card", "asset-txn"],
+      "crosses": ["tz-internet", "tz-app"],
+      "protocol": "HTTPS"
+    },
+    {
+      "id": "flow-persist",
+      "name": "Persist transaction",
+      "source": "comp-api",
+      "destination": "comp-db",
+      "assets": ["asset-txn"],
+      "crosses": ["tz-app", "tz-data"],
+      "protocol": "TLS"
+    },
+    {
+      "id": "flow-gateway",
+      "name": "Authorize with gateway",
+      "source": "comp-api",
+      "destination": "comp-gateway",
+      "assets": ["asset-card", "asset-api-keys"],
+      "crosses": ["tz-app", "tz-external"],
+      "protocol": "HTTPS"
+    }
+  ],
+  "threats": [
+    {
+      "id": "threat-tamper-1",
+      "name": "Payment amount tampering",
+      "description": "Attacker modifies payment amount in the client or a replayed request.",
+      "categories": ["Tampering"],
+      "cwes": ["CWE-345"],
+      "targets": ["comp-api", "flow-checkout"],
+      "risk": { "likelihood": 50, "impact": 100 }
+    },
+    {
+      "id": "threat-theft-1",
+      "name": "Payment data theft",
+      "description": "Attacker steals cardholder data from the API, logs, or database.",
+      "categories": ["Information Disclosure"],
+      "cwes": ["CWE-200"],
+      "targets": ["comp-db", "comp-api"],
+      "risk": { "likelihood": 40, "impact": 95 }
+    },
+    {
+      "id": "threat-spoof-1",
+      "name": "Gateway credential abuse",
+      "description": "Stolen gateway credentials let an attacker charge or refund without authorization.",
+      "categories": ["Spoofing", "Elevation of Privilege"],
+      "cwes": ["CWE-798"],
+      "targets": ["comp-api", "asset-api-keys"],
+      "risk": { "likelihood": 35, "impact": 90 }
+    }
+  ],
+  "mitigations": [
+    {
+      "id": "mitigation-validate-1",
+      "name": "Server-side amount validation",
+      "description": "Recompute payable amount from authoritative cart/pricing; never trust client totals.",
+      "riskReduction": 80,
+      "threats": ["threat-tamper-1"]
+    },
+    {
+      "id": "mitigation-encrypt-1",
+      "name": "Encryption and tokenization",
+      "description": "TLS in transit; tokenize PAN; encrypt residual sensitive fields at rest with KMS.",
+      "riskReduction": 85,
+      "threats": ["threat-theft-1"]
+    },
+    {
+      "id": "mitigation-secrets-1",
+      "name": "Short-lived secrets and least privilege",
+      "description": "Store gateway credentials in a secrets manager; rotate; scope keys; audit gateway calls.",
+      "riskReduction": 75,
+      "threats": ["threat-spoof-1"]
+    }
+  ],
+  "prompts": [
+    {
+      "id": "p-boundaries",
+      "title": "Walk the trust boundaries in this model. Which crossings matter most and why?",
+      "seconds": 120,
+      "answerMarkdown": "Name the zones: Internet, Application VPC, Data plane, External gateway. Highest-risk crossings are browser → Payment API (untrusted input, card data in flight) and API → gateway (credentials + card data leave your boundary). Persist to DB is still sensitive but usually inside stronger controls. Interview move: pick one crossing, name the asset on the wire, and say the control that must sit on that edge."
+    },
+    {
+      "id": "p-tamper",
+      "title": "How would you mitigate payment amount tampering end to end?",
+      "seconds": 120,
+      "answerMarkdown": "Never trust client totals. Reprice server-side from cart/SKU rules, bind the payable amount to a signed server order id, and verify the gateway authorization amount matches that order. Log mismatches. Add idempotency keys so replays cannot double-charge. Mention integrity of webhooks from the gateway as a follow-up."
+    },
+    {
+      "id": "p-pci",
+      "title": "What would you say about PCI scope reduction for this architecture?",
+      "seconds": 150,
+      "answerMarkdown": "Prefer tokenization / hosted fields so PAN never hits your app or DB. If you must touch card data, isolate the payment service, encrypt at rest with KMS, minimize logs, and network-segment the data plane. Map assets: cardholder data vs transaction metadata. State residual risk and who owns the compensating control."
+    }
+  ]
+}

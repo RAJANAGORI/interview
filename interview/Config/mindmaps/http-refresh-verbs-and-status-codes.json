@@ -1,0 +1,1372 @@
+{
+  "id": "na4eaff81f2138d9",
+  "title": "HTTP Refresh, verbs and status codes",
+  "markdown": "**HTTP semantics** (methods, safety, idempotency, status codes, and redirect behavior) shape how browsers, caches, proxies, and APIs interpret a single request. Misunderstandings here cause **authorization bugs**, **cache confusion**, **CSRF**-friendly designs, **open redirects**, and **client-side redirect abuse** via the **`Refresh`** response header and **`<meta http-equiv=\"refresh\">`**. This guide ties those mechanics to **product security reviews**, **API hardening**, and common **interview traps**.\n\n**Primary references:** [RFC 9110 - HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110); [RFC 9111 - HTTP Caching](https://www.rfc-editor.org/rfc/rfc9111); [RFC 9113 - HTTP/2](https://www.rfc-editor.org/rfc/rfc9113); [MDN - HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP).",
+  "notes": "HTTP semantics (methods, safety, idempotency, status codes, and redirect behavior) shape how browsers, caches, proxies, and APIs interpret a single request. Misunderstandings here cause authorization bugs, cache confusion, CSRF-friendly designs, open redirects, and client-side redirect abuse via the Refresh response header and <meta http-equiv=\"refresh\">. This guide ties those mechanics to product security reviews, API hardening, and common interview traps.\n\nPrimary references: RFC 9110 - HTTP Semantics; RFC 9111 - HTTP Caching; RFC 9113 - HTTP/2; MDN - HTTP.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "n8c2162ef0ae435d",
+      "title": "At a glance",
+      "markdown": "**HTTP semantics** (methods, safety, idempotency, status codes, and redirect behavior) shape how browsers, caches, proxies, and APIs interpret a single request. Misunderstandings here cause **authorization bugs**, **cache confusion**, **CSRF**-friendly designs, **open redirects**, and **client-side redirect abuse** via the **`Refresh`** response header and **`<meta http-equiv=\"refresh\">`**. This guide ties those mechanics to **product security reviews**, **API hardening**, and common **interview traps**.\n\n**Primary references:** [RFC 9110 - HTTP Semantics](https://www.rfc-editor.org/rfc/rfc9110); [RFC 9111 - HTTP Caching](https://www.rfc-editor.org/rfc/rfc9111); [RFC 9113 - HTTP/2](https://www.rfc-editor.org/rfc/rfc9113); [MDN - HTTP](https://developer.mozilla.org/en-US/docs/Web/HTTP).",
+      "notes": "HTTP semantics (methods, safety, idempotency, status codes, and redirect behavior) shape how browsers, caches, proxies, and APIs interpret a single request. Misunderstandings here cause authorization bugs, cache confusion, CSRF-friendly designs, open redirects, and client-side redirect abuse via the Refresh response header and <meta http-equiv=\"refresh\">. This guide ties those mechanics to product security reviews, API hardening, and common interview traps.\n\nPrimary references: RFC 9110 - HTTP Semantics; RFC 9111 - HTTP Caching; RFC 9113 - HTTP/2; MDN - HTTP.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "HTTP semantics (methods, safety, idempotency, status codes, and redirect...",
+      "expanded": false
+    },
+    {
+      "id": "ne129646502b6e58",
+      "title": "Request and response anatomy (review)",
+      "markdown": "An **HTTP request** has a **request line** (method, target, protocol version), **header fields**, and an optional **body**. An **HTTP response** has a **status line** (version, **status code**, optional reason phrase in HTTP/1.1), **header fields**, and an optional **body**.\n\nSecurity reviews should treat the **entire message** as attacker-influenced: unexpected **methods**, duplicated **Host**/`Content-Length` edge cases at gateways, **header injection** into redirect targets, and **error bodies** that leak implementation detail.",
+      "notes": "An HTTP request has a request line (method, target, protocol version), header fields, and an optional body. An HTTP response has a status line (version, status code, optional reason phrase in HTTP/1.1), header fields, and an optional body.\n\nSecurity reviews should treat the entire message as attacker-influenced: unexpected methods, duplicated Host/Content-Length edge cases at gateways, header injection into redirect targets, and error bodies that leak implementation detail.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "An HTTP request has a request line (method, target, protocol version),...",
+      "expanded": false
+    },
+    {
+      "id": "n08fcc8e73dda90d",
+      "title": "HTTP methods (verbs): intent and semantics",
+      "markdown": "RFC 9110 defines a method's semantics: what the request is *trying* to do to a resource. Frameworks and APIs sometimes diverge-**test behavior**, not names.",
+      "notes": "RFC 9110 defines a method's semantics: what the request is trying to do to a resource. Frameworks and APIs sometimes diverge-test behavior, not names.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n991fbba4a332b0d",
+          "title": "Common methods (typical REST-ish usage)",
+          "markdown": "| Method | Typical intent | Safe? | Idempotent? |\n|--------|----------------|-------|-------------|\n| **GET** | Retrieve representation | Yes | Yes |\n| **HEAD** | Same as GET, no body | Yes | Yes |\n| **OPTIONS** | Discover capabilities / CORS preflight | Yes | Yes |\n| **POST** | Process data, create resource, non-idempotent actions | No | No (by default) |\n| **PUT** | Replace resource (whole representation) | No | Yes (when implemented that way) |\n| **PATCH** | Partial update | No | **Depends on implementation** |\n| **DELETE** | Delete resource | No | Yes (when repeated delete is a no-op) |\n\n**Safe methods** should not change server state in ways that matter to the client's security assumptions. Violating safety on **GET** is a classic source of **CSRF** (the browser may follow links and load images without user intent) and **cache poisoning** surprises.\n\n**Idempotent methods**: repeating the request should not **compound** effects beyond the first successful application. This matters for **automatic retries** (clients, libraries, intermediaries) and **resend** UX-non-idempotent **POST** duplicated by a retry can create **double charges**, **duplicate records**, or **duplicate side effects** unless you use **idempotency keys** at the application layer.",
+          "notes": "| Method | Typical intent | Safe? | Idempotent? |\n|--------|----------------|-------|-------------|\n| GET | Retrieve representation | Yes | Yes |\n| HEAD | Same as GET, no body | Yes | Yes |\n| OPTIONS | Discover capabilities / CORS preflight | Yes | Yes |\n| POST | Process data, create resource, non-idempotent actions | No | No (by default) |\n| PUT | Replace resource (whole representation) | No | Yes (when implemented that way) |\n| PATCH | Partial update | No | Depends on implementation |\n| DELETE | Delete resource | No | Yes (when repeated delete is a no-op) |\n\nSafe methods should not change server state in ways that matter to the client's security assumptions. Violating safety on GET is a classic source of CSRF (the browser may follow links and load images without user intent) and cache poisoning surprises.\n\nIdempotent methods: repeating the request should not compound effects beyond the first successful application. This matters for automatic retries (clients, libraries, intermediaries) and resend UX-non-idempotent POST duplicated by a retry can create double charges, duplicate records, or duplicate side effects unless you use idempotency keys at the application layer.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "| Method | Typical intent | Safe?",
+          "expanded": false
+        },
+        {
+          "id": "n95f0a55d6c491d6",
+          "title": "PUT vs PATCH (interview nuance)",
+          "markdown": "**PUT** is often documented as \"replace.\" If the server interprets missing fields as **nulls**, partial PUTs become **destructive**. **PATCH** can be JSON Merge Patch, JSON Patch, or bespoke-**document the contract**. Authorization bugs appear when **object-level checks** assume \"PATCH is low risk\" but the handler can escalate privileges or overwrite protected fields.",
+          "notes": "PUT is often documented as \"replace.\" If the server interprets missing fields as nulls, partial PUTs become destructive. PATCH can be JSON Merge Patch, JSON Patch, or bespoke-document the contract. Authorization bugs appear when object-level checks assume \"PATCH is low risk\" but the handler can escalate privileges or overwrite protected fields.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "PUT is often documented as \"replace.\" If the server interprets missing...",
+          "expanded": false
+        },
+        {
+          "id": "nba43368324ac8e4",
+          "title": "OPTIONS and TRACE",
+          "markdown": "**OPTIONS** appears constantly in **CORS** discussions: browsers may send a **preflight** OPTIONS request. Misconfigured **Access-Control-Allow-Origin** with **credentials** is a recurring vulnerability class (not identical to method semantics, but tightly coupled in interviews).\n\n**TRACE** is uncommon in production; when enabled, it can assist **cross-site tracing** / header echo attacks in legacy stacks. Most hardening guides recommend **disabling** it.",
+          "notes": "OPTIONS appears constantly in CORS discussions: browsers may send a preflight OPTIONS request. Misconfigured Access-Control-Allow-Origin with credentials is a recurring vulnerability class (not identical to method semantics, but tightly coupled in interviews).\n\nTRACE is uncommon in production; when enabled, it can assist cross-site tracing / header echo attacks in legacy stacks. Most hardening guides recommend disabling it.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "OPTIONS appears constantly in CORS discussions: browsers may send a...",
+          "expanded": false
+        }
+      ],
+      "blurb": "RFC 9110 defines a method's semantics: what the request is trying to do to a...",
+      "expanded": true
+    },
+    {
+      "id": "n8d080d48aa87897",
+      "title": "Safety, idempotency, caching, and CSRF",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n38c65bbe134a147",
+          "title": "Caching interactions",
+          "markdown": "**Safe** responses are more eligible for **heuristic caching** and **shared caches** depending on **response headers** (`Cache-Control`, `Expires`, `Vary`). **Unsafe** methods generally should not be satisfied from cache (`POST` responses are typically not cacheable unless explicitly marked with great care).\n\n**Interview trap:** teams treat **301** as \"just a redirect\" without noticing **cache longevity**-clients and CDNs may pin the redirect mapping for a long time, making **rollback** and **incident response** painful.",
+          "notes": "Safe responses are more eligible for heuristic caching and shared caches depending on response headers (Cache-Control, Expires, Vary). Unsafe methods generally should not be satisfied from cache (POST responses are typically not cacheable unless explicitly marked with great care).\n\nInterview trap: teams treat 301 as \"just a redirect\" without noticing cache longevity-clients and CDNs may pin the redirect mapping for a long time, making rollback and incident response painful.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Safe responses are more eligible for heuristic caching and shared caches...",
+          "expanded": false
+        },
+        {
+          "id": "n8ff50e632a46555",
+          "title": "CSRF relevance",
+          "markdown": "Browsers historically sent **cookies** on cross-site **GET** navigations and many **POST** form submissions. If **state changes** ride on GET or on POST endpoints that lack **CSRF tokens**, **SameSite** cookies, or **custom headers** + CORS discipline, attackers can trigger unwanted actions.\n\n**Design rule:** **GET/HEAD/OPTIONS** must not alter protected state; **state changes** require explicit, intent-bearing requests and consistent **authorization** checks on every method.",
+          "notes": "Browsers historically sent cookies on cross-site GET navigations and many POST form submissions. If state changes ride on GET or on POST endpoints that lack CSRF tokens, SameSite cookies, or custom headers + CORS discipline, attackers can trigger unwanted actions.\n\nDesign rule: GET/HEAD/OPTIONS must not alter protected state; state changes require explicit, intent-bearing requests and consistent authorization checks on every method.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Browsers historically sent cookies on cross-site GET navigations and many...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Caching interactions",
+      "expanded": true
+    },
+    {
+      "id": "n4751ba09c2f40df",
+      "title": "Status code families (security lens)",
+      "markdown": "Rather than memorizing every code, reviewers bucket by **client vs server responsibility** and **information disclosure**.",
+      "notes": "Rather than memorizing every code, reviewers bucket by client vs server responsibility and information disclosure.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nb90f970c38d395b",
+          "title": "1xx \u2014 Informational",
+          "markdown": "Rare in many app stacks. **103 Early Hints** can preload resources; ensure hints do not **amplify** tracking or leak **authorization-gated** assets to the wrong session.",
+          "notes": "Rare in many app stacks. 103 Early Hints can preload resources; ensure hints do not amplify tracking or leak authorization-gated assets to the wrong session.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Rare in many app stacks.",
+          "expanded": false
+        },
+        {
+          "id": "n525a1dbb6374fc5",
+          "title": "2xx \u2014 Success",
+          "markdown": "Success responses still need **authorization** review: **200** with empty body vs **204**, **201** with `Location` of created resource, and **206** partial content for **range** abuse (expensive byte serving, cache complexity).\n\n**Leakage:** verbose **200** bodies on \"error\" paths (inconsistent API design) train clients to scrape details attackers love.",
+          "notes": "Success responses still need authorization review: 200 with empty body vs 204, 201 with Location of created resource, and 206 partial content for range abuse (expensive byte serving, cache complexity).\n\nLeakage: verbose 200 bodies on \"error\" paths (inconsistent API design) train clients to scrape details attackers love.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Success responses still need authorization review: 200 with empty body vs...",
+          "expanded": false
+        },
+        {
+          "id": "n904eea55f24b60c",
+          "title": "3xx \u2014 Redirection",
+          "markdown": "High-value for security interviews: **open redirects**, **header injection**, **cache pinning**, and **downgrade** flows if **http://** targets appear.",
+          "notes": "High-value for security interviews: open redirects, header injection, cache pinning, and downgrade flows if http:// targets appear.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "High-value for security interviews: open redirects, header injection, cache...",
+          "expanded": false
+        },
+        {
+          "id": "nb284ad8956fe27a",
+          "title": "4xx \u2014 Client errors",
+          "markdown": "**401** vs **403** confusion is a perennial interview topic (see below). **404 vs 403**: choosing **404** for unauthorized resources can reduce **enumeration**; choosing **403** can aid UX-threat model decides.\n\n**429** signals **rate limiting**; pair with **`Retry-After`** and monitor **retry storms** from naive clients.",
+          "notes": "401 vs 403 confusion is a perennial interview topic (see below). 404 vs 403: choosing 404 for unauthorized resources can reduce enumeration; choosing 403 can aid UX-threat model decides.\n\n429 signals rate limiting; pair with Retry-After and monitor retry storms from naive clients.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "401 vs 403 confusion is a perennial interview topic (see below).",
+          "expanded": false
+        },
+        {
+          "id": "n8ba9d7d4ad1187e",
+          "title": "5xx \u2014 Server errors",
+          "markdown": "**500** bodies often leak **stack traces**, **SQL fragments**, and **internal hostnames**. Harden **error pages** at the edge and in frameworks. **502/503/504** at gateways may surface **backend** topology-still worth scrubbing.",
+          "notes": "500 bodies often leak stack traces, SQL fragments, and internal hostnames. Harden error pages at the edge and in frameworks. 502/503/504 at gateways may surface backend topology-still worth scrubbing.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "500 bodies often leak stack traces, SQL fragments, and internal hostnames.",
+          "expanded": false
+        },
+        {
+          "id": "ne9a47094280921f",
+          "title": "425 Too Early (replay-sensitive operations)",
+          "markdown": "**425** appears when a server rejects a request that might be **replayable** on an early connection (historically tied to **0-RTT** data on resumed TLS sessions). For APIs that move money, mint tokens, or create irreversible side effects, **425** is a signal that clients should **retry after** full handshake confirmation. Interview talking point: connect transport **early data** policy to **application idempotency**.",
+          "notes": "425 appears when a server rejects a request that might be replayable on an early connection (historically tied to 0-RTT data on resumed TLS sessions). For APIs that move money, mint tokens, or create irreversible side effects, 425 is a signal that clients should retry after full handshake confirmation. Interview talking point: connect transport early data policy to application idempotency.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "425 appears when a server rejects a request that might be replayable on an...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Rather than memorizing every code, reviewers bucket by client vs server...",
+      "expanded": true
+    },
+    {
+      "id": "n27f2fde6783b782",
+      "title": "Conditional requests, ETags, and security reviews",
+      "markdown": "**If-None-Match**, **If-Match**, **ETag**, and **Last-Modified** enable efficient caching and optimistic concurrency. Security angles:",
+      "notes": "If-None-Match, If-Match, ETag, and Last-Modified enable efficient caching and optimistic concurrency. Security angles:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "ndc5bf7fbd728e69",
+          "title": "ETag generation must not encode secrets (some frameworks accidentally fingerprint users",
+          "markdown": "- ETag generation must not encode secrets (some frameworks accidentally fingerprint users",
+          "notes": "ETag generation must not encode secrets (some frameworks accidentally fingerprint users",
+          "blurb": "ETag generation must not encode secrets (some frameworks accidentally...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n07bb875bb6b79e4",
+          "title": "412 Precondition Failed and 428 Precondition Required appear in concurrency and draft wo",
+          "markdown": "- 412 Precondition Failed and 428 Precondition Required appear in concurrency and draft wo",
+          "notes": "412 Precondition Failed and 428 Precondition Required appear in concurrency and draft wo",
+          "blurb": "412 Precondition Failed and 428 Precondition Required appear in concurrency...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n13f9de6f38f8b48",
+          "title": "Range requests (206) can amplify work if ranges are enormous or pathological-pair with l",
+          "markdown": "- Range requests (206) can amplify work if ranges are enormous or pathological-pair with l",
+          "notes": "Range requests (206) can amplify work if ranges are enormous or pathological-pair with l",
+          "blurb": "Range requests (206) can amplify work if ranges are enormous or...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "If-None-Match, If-Match, ETag, and Last-Modified enable efficient caching...",
+      "expanded": false
+    },
+    {
+      "id": "na75a548d1281dbf",
+      "title": "Redirects deep dive: 301, 302, 303, 307, 308",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n356b8436d35c1b0",
+          "title": "What clients actually do (simplified)",
+          "markdown": "Historically, some clients treated **302** like **303** for **non-GET** requests (follow-up with **GET**). That legacy behavior is why **307** and **308** exist: they clarify **method preservation** expectations in modern HTTP.\n\n| Code | Typical meaning | Method on follow-up (modern intent) | Cache notes |\n|------|-----------------|-------------------------------------|-------------|\n| **301** | Moved **permanently** | May change to GET in practice for some clients/history; treat as **permanent** mapping | Often cached hard-long rollback tail |\n| **302** | Found / temporary (legacy ambiguous) | Ambiguity is the problem | Often not cached like 301, but products vary |\n| **303** | See **Other** | Follow-up should be **GET** | Useful after POST (\"PRG\" pattern) |\n| **307** | Temporary redirect | **Preserve method** | Temporary |\n| **308** | Permanent redirect | **Preserve method** | Permanent + method/body semantics clarified |\n\n**Interview answer that scores well:** explain **temporary vs permanent** for **caching** and **SEO**, then explain **303 vs 307** as \"**POST+GET** vs **POST+POST**,\" and mention **308** as **permanent** + **method preserved** (useful for APIs that must not downgrade verbs).",
+          "notes": "Historically, some clients treated 302 like 303 for non-GET requests (follow-up with GET). That legacy behavior is why 307 and 308 exist: they clarify method preservation expectations in modern HTTP.\n\n| Code | Typical meaning | Method on follow-up (modern intent) | Cache notes |\n|------|-----------------|-------------------------------------|-------------|\n| 301 | Moved permanently | May change to GET in practice for some clients/history; treat as permanent mapping | Often cached hard-long rollback tail |\n| 302 | Found / temporary (legacy ambiguous) | Ambiguity is the problem | Often not cached like 301, but products vary |\n| 303 | See Other | Follow-up should be GET | Useful after POST (\"PRG\" pattern) |\n| 307 | Temporary redirect | Preserve method | Temporary |\n| 308 | Permanent redirect | Preserve method | Permanent + method/body semantics clarified |\n\nInterview answer that scores well: explain temporary vs permanent for caching and SEO, then explain 303 vs 307 as \"POST+GET vs POST+POST,\" and mention 308 as permanent + method preserved (useful for APIs that must not downgrade verbs).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Historically, some clients treated 302 like 303 for non-GET requests...",
+          "expanded": false
+        },
+        {
+          "id": "n7b5da6b02ae2b15",
+          "title": "Open redirect vulnerabilities",
+          "markdown": "An **open redirect** accepts **user-controlled** input (query parameter, path segment, `returnUrl`, `next`, `continue`) and reflects it into a **`Location`** header, **`Refresh`** header, or client-side redirect without **validation**.\n\n**Why it matters:** attackers use trusted domains as **phishing launchpads** (\"login on trusted.site then bounce to evil.com\"), **OAuth**/`SAML` **redirect_uri** confusion in adjacent flows, and **filter bypasses** where redirect endpoints are allowlisted incorrectly.\n\n**Mitigations:**",
+          "notes": "An open redirect accepts user-controlled input (query parameter, path segment, returnUrl, next, continue) and reflects it into a Location header, Refresh header, or client-side redirect without validation.\n\nWhy it matters: attackers use trusted domains as phishing launchpads (\"login on trusted.site then bounce to evil.com\"), OAuth/SAML redirecturi confusion in adjacent flows, and filter bypasses where redirect endpoints are allowlisted incorrectly.\n\nMitigations:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n77351252f990186",
+              "title": "Allowlist exact redirect targets or signed, short-lived tokens mapping to destinations.",
+              "markdown": "- Allowlist exact redirect targets or signed, short-lived tokens mapping to destinations.",
+              "notes": "Allowlist exact redirect targets or signed, short-lived tokens mapping to destinations.",
+              "blurb": "Allowlist exact redirect targets or signed, short-lived tokens mapping to...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n1d2e8d587f3a1b8",
+              "title": "Prefer relative redirects (Location: /app/home) when possible.",
+              "markdown": "- Prefer relative redirects (Location: /app/home) when possible.",
+              "notes": "Prefer relative redirects (Location: /app/home) when possible.",
+              "blurb": "Prefer relative redirects (Location: /app/home) when possible.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc1304cef27112e8",
+              "title": "Normalize URLs carefully: //evil.com is absolute; \\evil tricks; https:evil.com parsing o",
+              "markdown": "- Normalize URLs carefully: //evil.com is absolute; \\evil tricks; https:evil.com parsing o",
+              "notes": "Normalize URLs carefully: //evil.com is absolute; \\evil tricks; https:evil.com parsing o",
+              "blurb": "Normalize URLs carefully: //evil.com is absolute; \\evil tricks;...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3a0b712e2fec511",
+              "title": "Log and alert on redirect parameter tampering spikes.",
+              "markdown": "- Log and alert on redirect parameter tampering spikes.",
+              "notes": "Log and alert on redirect parameter tampering spikes.",
+              "blurb": "Log and alert on redirect parameter tampering spikes.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "An open redirect accepts user-controlled input (query parameter, path...",
+          "expanded": false
+        },
+        {
+          "id": "n29a74306da18b55",
+          "title": "303 and the Post/Redirect/Get (PRG) pattern",
+          "markdown": "After a **POST** that changes state, respond **303 See Other** with **`Location`** to a **GET** page. This reduces **duplicate submission** on refresh and plays nicely with browser history. Security win: fewer accidental **double writes** when users mash reload (still not a substitute for **idempotency keys**).",
+          "notes": "After a POST that changes state, respond 303 See Other with Location to a GET page. This reduces duplicate submission on refresh and plays nicely with browser history. Security win: fewer accidental double writes when users mash reload (still not a substitute for idempotency keys).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "After a POST that changes state, respond 303 See Other with Location to a...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes What clients actually do (simplified)",
+      "expanded": false
+    },
+    {
+      "id": "ncd64d0e024ab7f3",
+      "title": "The Refresh response header and meta refresh",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n3d470d1647ea4d8",
+          "title": "Refresh header",
+          "markdown": "The **`Refresh`** header (non-standard but widely supported) can look like:",
+          "notes": "The Refresh header (non-standard but widely supported) can look like:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nf7901fdf4b7c7ce",
+              "title": "Refresh: 5 - reload after 5 seconds",
+              "markdown": "- Refresh: 5 - reload after 5 seconds",
+              "notes": "Refresh: 5 - reload after 5 seconds",
+              "blurb": "Refresh: 5 - reload after 5 seconds",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n4feb413ffa64e0d",
+              "title": "Refresh: 0; url=https://example.com/ - immediate navigation",
+              "markdown": "- Refresh: 0; url=https://example.com/ - immediate navigation",
+              "notes": "Refresh: 0; url=https://example.com/ - immediate navigation",
+              "blurb": "Refresh: 0; url=https://example.com/ - immediate navigation",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf0e6c5d2f1ff338",
+              "title": "Open redirect equivalent if url= is attacker-controlled.",
+              "markdown": "- Open redirect equivalent if url= is attacker-controlled.",
+              "notes": "Open redirect equivalent if url= is attacker-controlled.",
+              "blurb": "Open redirect equivalent if url= is attacker-controlled.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na57601312f5c82a",
+              "title": "UX phishing timed hops that obscure the true destination.",
+              "markdown": "- UX phishing timed hops that obscure the true destination.",
+              "notes": "UX phishing timed hops that obscure the true destination.",
+              "blurb": "UX phishing timed hops that obscure the true destination.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0e1716604b63285",
+              "title": "Interaction with caching and analytics that assume only Location redirects.",
+              "markdown": "- Interaction with caching and analytics that assume only Location redirects.",
+              "notes": "Interaction with caching and analytics that assume only Location redirects.",
+              "blurb": "Interaction with caching and analytics that assume only Location redirects.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "The Refresh header (non-standard but widely supported) can look like:",
+          "expanded": false
+        },
+        {
+          "id": "n1ddf940e8d61c2a",
+          "title": "Meta refresh ( )",
+          "markdown": "The browser parses HTML and may navigate without a full HTTP redirect. Abuse patterns mirror **open redirects** when `url` is **user-controlled** in profiles, themes, or CMS content.\n\n**Mitigations:** sanitize HTML aggressively, use **CSP** to restrict **navigation** and **inline** behavior where possible (`Content-Security-Policy` with appropriate directives for your threat model), and avoid reflecting user URLs into **refresh** targets.\n\n**Note:** CSP is not a universal \"redirect firewall,\" but it reduces several **client-side** execution and **navigation** classes when rolled out carefully.",
+          "notes": "The browser parses HTML and may navigate without a full HTTP redirect. Abuse patterns mirror open redirects when url is user-controlled in profiles, themes, or CMS content.\n\nMitigations: sanitize HTML aggressively, use CSP to restrict navigation and inline behavior where possible (Content-Security-Policy with appropriate directives for your threat model), and avoid reflecting user URLs into refresh targets.\n\nNote: CSP is not a universal \"redirect firewall,\" but it reduces several client-side execution and navigation classes when rolled out carefully.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "The browser parses HTML and may navigate without a full HTTP redirect.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Refresh header",
+      "expanded": false
+    },
+    {
+      "id": "n090aebf2437d3f9",
+      "title": "Caching tie-in (redirects and sensitive responses)",
+      "markdown": "[RFC 9111](https://www.rfc-editor.org/rfc/rfc9111) governs caching behavior. Practical security takeaways:",
+      "notes": "RFC 9111 governs caching behavior. Practical security takeaways:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n1a05c87d56405a9",
+          "title": "Private responses (Cache-Control: private) vs public-mis-tagging authenticated pages as",
+          "markdown": "- Private responses (Cache-Control: private) vs public-mis-tagging authenticated pages as",
+          "notes": "Private responses (Cache-Control: private) vs public-mis-tagging authenticated pages as",
+          "blurb": "Private responses (Cache-Control: private) vs public-mis-tagging...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nb7fb0da906e450a",
+          "title": "Vary: incorrect Vary can cause cache mix-ups between users or content negotiation surpri",
+          "markdown": "- Vary: incorrect Vary can cause cache mix-ups between users or content negotiation surpri",
+          "notes": "Vary: incorrect Vary can cause cache mix-ups between users or content negotiation surpri",
+          "blurb": "Vary: incorrect Vary can cause cache mix-ups between users or content...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nf8743a78ad794a3",
+          "title": "Heuristic caching of 200 responses without explicit Cache-Control still happens in some",
+          "markdown": "- Heuristic caching of 200 responses without explicit Cache-Control still happens in some",
+          "notes": "Heuristic caching of 200 responses without explicit Cache-Control still happens in some",
+          "blurb": "Heuristic caching of 200 responses without explicit Cache-Control still...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nd0b5d8424dc2693",
+          "title": "301 permanence can stick in caches-treat 301 as a long-lived commitment unless you contr",
+          "markdown": "- 301 permanence can stick in caches-treat 301 as a long-lived commitment unless you contr",
+          "notes": "301 permanence can stick in caches-treat 301 as a long-lived commitment unless you contr",
+          "blurb": "301 permanence can stick in caches-treat 301 as a long-lived commitment...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "RFC 9111 governs caching behavior.",
+      "expanded": false
+    },
+    {
+      "id": "n510a2ab9e2e23e3",
+      "title": "Security headers that intersect HTTP semantics",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "ne0f4eae50e70191",
+          "title": "Strict-Transport-Security (HSTS)",
+          "markdown": "HSTS reduces **sslstrip** and **mixed-content** downgrade pressure. It does not replace **correct redirect** targets-you still must not redirect users to **`http://`** first if avoidable.",
+          "notes": "HSTS reduces sslstrip and mixed-content downgrade pressure. It does not replace correct redirect targets-you still must not redirect users to http:// first if avoidable.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "HSTS reduces sslstrip and mixed-content downgrade pressure.",
+          "expanded": false
+        },
+        {
+          "id": "naa9b7517fa60cc4",
+          "title": "Content-Security-Policy (CSP)",
+          "markdown": "CSP primarily addresses **content execution** risks. It can still matter adjacent to **meta refresh** / **inline** navigation patterns and **third-party** script inclusion that manipulates location.",
+          "notes": "CSP primarily addresses content execution risks. It can still matter adjacent to meta refresh / inline navigation patterns and third-party script inclusion that manipulates location.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "CSP primarily addresses content execution risks.",
+          "expanded": false
+        },
+        {
+          "id": "n9024ce58d743cb7",
+          "title": "Referrer-Policy",
+          "markdown": "Redirects and cross-site navigations leak **`Referer`** details unless constrained-useful when URLs contain **tokens** or **PII** in query strings (better: remove secrets from URLs entirely).",
+          "notes": "Redirects and cross-site navigations leak Referer details unless constrained-useful when URLs contain tokens or PII in query strings (better: remove secrets from URLs entirely).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Redirects and cross-site navigations leak Referer details unless...",
+          "expanded": false
+        },
+        {
+          "id": "ndc66d47942d42d9",
+          "title": "Clear-Site-Data",
+          "markdown": "On **logout** or **compromise recovery**, selective **`Clear-Site-Data`** can reduce residual client state-orthogonal to status codes but often discussed alongside **401/403** session semantics.",
+          "notes": "On logout or compromise recovery, selective Clear-Site-Data can reduce residual client state-orthogonal to status codes but often discussed alongside 401/403 session semantics.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "On logout or compromise recovery, selective Clear-Site-Data can reduce...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Strict-Transport-Security (HSTS)",
+      "expanded": false
+    },
+    {
+      "id": "n45cedd3dff5e452",
+      "title": "HTTP/2 and HTTP/3: what changes, what does not",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n3c225f0f190ea43",
+          "title": "HTTP/2 framing (RFC 9113)",
+          "markdown": "HTTP/2 multiplexes many streams over one connection, compresses headers with **HPACK**, and uses binary frames. **Semantically**, methods, status codes, and header fields remain HTTP-**RFC 9110** semantics still apply.\n\n**Security differences (high level):**",
+          "notes": "HTTP/2 multiplexes many streams over one connection, compresses headers with HPACK, and uses binary frames. Semantically, methods, status codes, and header fields remain HTTP-RFC 9110 semantics still apply.\n\nSecurity differences (high level):",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n17969bbce030c05",
+              "title": "HPACK history motivated compression attack research; implementations mitigated over time",
+              "markdown": "- HPACK history motivated compression attack research; implementations mitigated over time",
+              "notes": "HPACK history motivated compression attack research; implementations mitigated over time",
+              "blurb": "HPACK history motivated compression attack research; implementations...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n655da5e1c48f48e",
+              "title": "Fingerprinting: request patterns differ from HTTP/1.1 pipelining; security tooling must",
+              "markdown": "- Fingerprinting: request patterns differ from HTTP/1.1 pipelining; security tooling must",
+              "notes": "Fingerprinting: request patterns differ from HTTP/1.1 pipelining; security tooling must",
+              "blurb": "Fingerprinting: request patterns differ from HTTP/1.1 pipelining; security...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb2f1e253374c3a7",
+              "title": "Server push: was touted for performance; many deployments disabled it due to complexity",
+              "markdown": "- Server push: was touted for performance; many deployments disabled it due to complexity",
+              "notes": "Server push: was touted for performance; many deployments disabled it due to complexity",
+              "blurb": "Server push: was touted for performance; many deployments disabled it due to...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "HTTP/2 multiplexes many streams over one connection, compresses headers with...",
+          "expanded": false
+        },
+        {
+          "id": "n19f2f1d768ec489",
+          "title": "HTTP/3 (QUIC)",
+          "markdown": "HTTP/3 changes transport to **QUIC**; HTTP semantics remain familiar to reviewers at the application layer. Interview answers should separate **transport** (TLS 1.3 integration, connection migration) from **resource** semantics (methods/status).\n\n**Operational note:** HTTP/3 can change **IP** attachment during migration; IP-based **risk scoring** and **geo** logic should treat **session** identity as **application-layer** (tokens, cookies) rather than assuming **stable 5-tuples**.",
+          "notes": "HTTP/3 changes transport to QUIC; HTTP semantics remain familiar to reviewers at the application layer. Interview answers should separate transport (TLS 1.3 integration, connection migration) from resource semantics (methods/status).\n\nOperational note: HTTP/3 can change IP attachment during migration; IP-based risk scoring and geo logic should treat session identity as application-layer (tokens, cookies) rather than assuming stable 5-tuples.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "HTTP/3 changes transport to QUIC; HTTP semantics remain familiar to...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes HTTP/2 framing (RFC 9113)",
+      "expanded": false
+    },
+    {
+      "id": "ne66afe268665d6b",
+      "title": "Proxies, gateways, and status-code distortion",
+      "markdown": "Intermediaries may **normalize** status codes, **strip** headers, or **replace** bodies (compression, antivirus, \"friendly error pages\"). For APIs:",
+      "notes": "Intermediaries may normalize status codes, strip headers, or replace bodies (compression, antivirus, \"friendly error pages\"). For APIs:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n5bbd1b4f7e79397",
+          "title": "Clients should not depend on exact reason phrases (HTTP/2+ often omits them on the wire",
+          "markdown": "- Clients should not depend on exact reason phrases (HTTP/2+ often omits them on the wire",
+          "notes": "Clients should not depend on exact reason phrases (HTTP/2+ often omits them on the wire",
+          "blurb": "Clients should not depend on exact reason phrases (HTTP/2+ often omits them...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n6079d9808b27cbd",
+          "title": "502/504 might mean origin failure or middlebox timeout-retry policies should be cautious",
+          "markdown": "- 502/504 might mean origin failure or middlebox timeout-retry policies should be cautious",
+          "notes": "502/504 might mean origin failure or middlebox timeout-retry policies should be cautious",
+          "blurb": "502/504 might mean origin failure or middlebox timeout-retry policies should...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n81be1a8337f5ba6",
+          "title": "Via, Forwarded, and X-Forwarded-* influence URL reconstruction behind TLS terminators-op",
+          "markdown": "- Via, Forwarded, and X-Forwarded-* influence URL reconstruction behind TLS terminators-op",
+          "notes": "Via, Forwarded, and X-Forwarded-* influence URL reconstruction behind TLS terminators-op",
+          "blurb": "Via, Forwarded, and X-Forwarded- influence URL reconstruction behind TLS...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Intermediaries may normalize status codes, strip headers, or replace bodies...",
+      "expanded": false
+    },
+    {
+      "id": "n86942a71f2d8e5d",
+      "title": "API design traps (401 vs 403 and consistency)",
+      "markdown": "**De facto industry usage:**",
+      "notes": "De facto industry usage:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n71de5892db5770e",
+          "title": "401 Unauthorized: \"who are you?\" - authentication missing/invalid.",
+          "markdown": "- 401 Unauthorized: \"who are you?\" - authentication missing/invalid.",
+          "notes": "401 Unauthorized: \"who are you?\" - authentication missing/invalid.",
+          "blurb": "401 Unauthorized: \"who are you?\" - authentication missing/invalid.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n2535c4c5ba9deb8",
+          "title": "403 Forbidden: \"I know who you are; you may not\" - authorization failure.",
+          "markdown": "- 403 Forbidden: \"I know who you are; you may not\" - authorization failure.",
+          "notes": "403 Forbidden: \"I know who you are; you may not\" - authorization failure.",
+          "blurb": "403 Forbidden: \"I know who you are; you may not\" - authorization failure.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n7a20031beb5b3f6",
+          "title": "Consistent mapping across endpoints (no 200 with error JSON on auth failures unless care",
+          "markdown": "- Consistent mapping across endpoints (no 200 with error JSON on auth failures unless care",
+          "notes": "Consistent mapping across endpoints (no 200 with error JSON on auth failures unless care",
+          "blurb": "Consistent mapping across endpoints (no 200 with error JSON on auth failures...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n50bc4ccd66d6c75",
+          "title": "No sensitive payload differences that enable account enumeration (unless accepted risk).",
+          "markdown": "- No sensitive payload differences that enable account enumeration (unless accepted risk).",
+          "notes": "No sensitive payload differences that enable account enumeration (unless accepted risk).",
+          "blurb": "No sensitive payload differences that enable account enumeration (unless...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n8d129743e409e9f",
+          "title": "WWW-Authenticate for 401 in standards-forward APIs when using HTTP authentication scheme",
+          "markdown": "- WWW-Authenticate for 401 in standards-forward APIs when using HTTP authentication scheme",
+          "notes": "WWW-Authenticate for 401 in standards-forward APIs when using HTTP authentication scheme",
+          "blurb": "WWW-Authenticate for 401 in standards-forward APIs when using HTTP...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "De facto industry usage:",
+      "expanded": false
+    },
+    {
+      "id": "n484b72f3061cea5",
+      "title": "Interview traps (quick list)",
+      "markdown": "\"GET is always safe\" - only true if your app honors semantics; GET that deletes data is",
+      "notes": "\"GET is always safe\" - only true if your app honors semantics; GET that deletes data is",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n23492404d8c1db5",
+          "title": "\"GET is always safe\" - only true if your app honors semantics; GET that deletes data is",
+          "markdown": "- \"GET is always safe\" - only true if your app honors semantics; GET that deletes data is",
+          "notes": "\"GET is always safe\" - only true if your app honors semantics; GET that deletes data is",
+          "blurb": "\"GET is always safe\" - only true if your app honors semantics; GET that...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nfe4a1b89e8d1692",
+          "title": "\"302 is temporary so it's fine\" - still powers open redirects; temporality \u2260 trust.",
+          "markdown": "- \"302 is temporary so it's fine\" - still powers open redirects; temporality \u2260 trust.",
+          "notes": "\"302 is temporary so it's fine\" - still powers open redirects; temporality \u2260 trust.",
+          "blurb": "\"302 is temporary so it's fine\" - still powers open redirects; temporality \u2260...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n3a340e5b9c36a2c",
+          "title": "\"301 and 308 are interchangeable\" - method preservation and client ecosystems disagree;",
+          "markdown": "- \"301 and 308 are interchangeable\" - method preservation and client ecosystems disagree;",
+          "notes": "\"301 and 308 are interchangeable\" - method preservation and client ecosystems disagree;",
+          "blurb": "\"301 and 308 are interchangeable\" - method preservation and client...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nae589290ac62e96",
+          "title": "\"Idempotent means identical response body\" - idempotency is about effects, not byte-iden",
+          "markdown": "- \"Idempotent means identical response body\" - idempotency is about effects, not byte-iden",
+          "notes": "\"Idempotent means identical response body\" - idempotency is about effects, not byte-iden",
+          "blurb": "\"Idempotent means identical response body\" - idempotency is about effects,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ne42c8407ffe04d7",
+          "title": "\"POST is never cached\" - uncommon but not impossible; don't rely on \"POST uncached\" as a",
+          "markdown": "- \"POST is never cached\" - uncommon but not impossible; don't rely on \"POST uncached\" as a",
+          "notes": "\"POST is never cached\" - uncommon but not impossible; don't rely on \"POST uncached\" as a",
+          "blurb": "\"POST is never cached\" - uncommon but not impossible; don't rely on \"POST...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nc1bff2ace278c6d",
+          "title": "\"Redirects are server-side only\" - meta refresh and Refresh reintroduce client-side redi",
+          "markdown": "- \"Redirects are server-side only\" - meta refresh and Refresh reintroduce client-side redi",
+          "notes": "\"Redirects are server-side only\" - meta refresh and Refresh reintroduce client-side redi",
+          "blurb": "\"Redirects are server-side only\" - meta refresh and Refresh reintroduce...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n0d3de81ebd8a06a",
+          "title": "\"HTTP/2 changes REST\" - framing changes; semantic rules still apply.",
+          "markdown": "- \"HTTP/2 changes REST\" - framing changes; semantic rules still apply.",
+          "notes": "\"HTTP/2 changes REST\" - framing changes; semantic rules still apply.",
+          "blurb": "\"HTTP/2 changes REST\" - framing changes; semantic rules still apply.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n50aa41de77d1a8f",
+          "title": "\"404 is more secure than 403\" - sometimes; but inconsistent timing and body differences",
+          "markdown": "- \"404 is more secure than 403\" - sometimes; but inconsistent timing and body differences",
+          "notes": "\"404 is more secure than 403\" - sometimes; but inconsistent timing and body differences",
+          "blurb": "\"404 is more secure than 403\" - sometimes; but inconsistent timing and body...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "\"GET is always safe\" - only true if your app honors semantics; GET that...",
+      "expanded": false
+    },
+    {
+      "id": "n2e24e7bbf19421e",
+      "title": "Production verification checklist",
+      "markdown": "Method policy: state-changing routes reject GET; OPTIONS responses accurate and minimal.",
+      "notes": "Method policy: state-changing routes reject GET; OPTIONS responses accurate and minimal.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n2adf524ccb6adab",
+          "title": "Method policy: state-changing routes reject GET; OPTIONS responses accurate and minimal.",
+          "markdown": "- Method policy: state-changing routes reject GET; OPTIONS responses accurate and minimal.",
+          "notes": "Method policy: state-changing routes reject GET; OPTIONS responses accurate and minimal.",
+          "blurb": "Method policy: state-changing routes reject GET; OPTIONS responses accurate...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n195008c653672e6",
+          "title": "Redirect endpoints: centralized validation; unit tests for //, unicode homoglyphs, and s",
+          "markdown": "- Redirect endpoints: centralized validation; unit tests for //, unicode homoglyphs, and s",
+          "notes": "Redirect endpoints: centralized validation; unit tests for //, unicode homoglyphs, and s",
+          "blurb": "Redirect endpoints: centralized validation; unit tests for //, unicode...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nb0fa5037bb14ff0",
+          "title": "Error hygiene: 4xx/5xx bodies scrubbed; correlation IDs instead of stack traces for clie",
+          "markdown": "- Error hygiene: 4xx/5xx bodies scrubbed; correlation IDs instead of stack traces for clie",
+          "notes": "Error hygiene: 4xx/5xx bodies scrubbed; correlation IDs instead of stack traces for clie",
+          "blurb": "Error hygiene: 4xx/5xx bodies scrubbed; correlation IDs instead of stack...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nd497c0eea142424",
+          "title": "Cache headers: authenticated routes explicit Cache-Control: no-store (or justified excep",
+          "markdown": "- Cache headers: authenticated routes explicit Cache-Control: no-store (or justified excep",
+          "notes": "Cache headers: authenticated routes explicit Cache-Control: no-store (or justified excep",
+          "blurb": "Cache headers: authenticated routes explicit Cache-Control: no-store (or...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n778b3775fded635",
+          "title": "Legacy headers: Refresh absent or strictly controlled; HTML sanitization blocks meta ref",
+          "markdown": "- Legacy headers: Refresh absent or strictly controlled; HTML sanitization blocks meta ref",
+          "notes": "Legacy headers: Refresh absent or strictly controlled; HTML sanitization blocks meta ref",
+          "blurb": "Legacy headers: Refresh absent or strictly controlled; HTML sanitization...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Method policy: state-changing routes reject GET; OPTIONS responses accurate...",
+      "expanded": false
+    },
+    {
+      "id": "n5842fe63059f70f",
+      "title": "Cross-reads in this repo",
+      "markdown": "Pair this topic with **CORS**, **CSRF**, **Security Headers**, **TLS/HSTS**, **Rate Limiting**, and **REST/GraphQL API** hardening notes-interviews love **end-to-end** stories from **verb choice** to **browser policy** to **CDN behavior**.",
+      "notes": "Pair this topic with CORS, CSRF, Security Headers, TLS/HSTS, Rate Limiting, and REST/GraphQL API hardening notes-interviews love end-to-end stories from verb choice to browser policy to CDN behavior.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Pair this topic with CORS, CSRF, Security Headers, TLS/HSTS, Rate Limiting,...",
+      "expanded": false
+    },
+    {
+      "id": "nf271e4687fac497",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nb20aef1bdff8070",
+          "title": "Safe vs unsafe (RFC 9110 mindset)",
+          "markdown": "| Method | Safe | Idempotent (ideal) |\n|--------|------|---------------------|\n| GET / HEAD / OPTIONS | Yes | Yes |\n| PUT / DELETE | No | Yes |\n| POST | No | No (unless designed) |\n| PATCH | No | **Sometimes** |",
+          "notes": "| Method | Safe | Idempotent (ideal) |\n|--------|------|---------------------|\n| GET / HEAD / OPTIONS | Yes | Yes |\n| PUT / DELETE | No | Yes |\n| POST | No | No (unless designed) |\n| PATCH | No | Sometimes |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Method | Safe | Idempotent (ideal) |...",
+          "expanded": false
+        },
+        {
+          "id": "n8e127e3e857559f",
+          "title": "Status codes (high-signal buckets)",
+          "markdown": "| Range | Meaning | Security note |\n|-------|---------|----------------|\n| **2xx** | Success | **201/204** semantics differ for **caches** |\n| **3xx** | Redirection | **Open** **redirect** **hunt** on **302/303/307/308** |\n| **4xx** | Client fault | **401** vs **403** **split** **authN**/**authZ** |\n| **5xx** | Server fault | **Retry** **storms** **risk** |",
+          "notes": "| Range | Meaning | Security note |\n|-------|---------|----------------|\n| 2xx | Success | 201/204 semantics differ for caches |\n| 3xx | Redirection | Open redirect hunt on 302/303/307/308 |\n| 4xx | Client fault | 401 vs 403 split authN/authZ |\n| 5xx | Server fault | Retry storms risk |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Range | Meaning | Security note | |-------|---------|----------------| |...",
+          "expanded": false
+        },
+        {
+          "id": "n6df3d148516f44e",
+          "title": "Redirect semantics (simplified)",
+          "markdown": "301/308 - permanent; 308 preserves method - 302 - historically ambiguous; many stacks treat like 303 - 303 - see other; GET follow-up after POST - 307 - temporary; preserve method",
+          "notes": "301/308 - permanent; 308 preserves method - 302 - historically ambiguous; many stacks treat like 303 - 303 - see other; GET follow-up after POST - 307 - temporary; preserve method",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n9a99d88b4a5b498",
+              "title": "301/308 - permanent; 308 preserves method",
+              "markdown": "- 301/308 - permanent; 308 preserves method",
+              "notes": "301/308 - permanent; 308 preserves method",
+              "blurb": "301/308 - permanent; 308 preserves method",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n95c898dfe766034",
+              "title": "302 - historically ambiguous; many stacks treat like 303",
+              "markdown": "- 302 - historically ambiguous; many stacks treat like 303",
+              "notes": "302 - historically ambiguous; many stacks treat like 303",
+              "blurb": "302 - historically ambiguous; many stacks treat like 303",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0011bf15a8deffe",
+              "title": "303 - see other; GET follow-up after POST",
+              "markdown": "- 303 - see other; GET follow-up after POST",
+              "notes": "303 - see other; GET follow-up after POST",
+              "blurb": "303 - see other; GET follow-up after POST",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc525edffe15b537",
+              "title": "307 - temporary; preserve method",
+              "markdown": "- 307 - temporary; preserve method",
+              "notes": "307 - temporary; preserve method",
+              "blurb": "307 - temporary; preserve method",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "301/308 - permanent; 308 preserves method - 302 - historically ambiguous;...",
+          "expanded": false
+        },
+        {
+          "id": "n3cec1adb7b19875",
+          "title": "Headers to pair with redirects",
+          "markdown": "`Location` (absolute **URI** **preferred**) \u00b7 **Cache-Control** on **sensitive** **responses** \u00b7 **SameSite** cookies on **cross-site** **flows**",
+          "notes": "Location (absolute URI preferred) \u00b7 Cache-Control on sensitive responses \u00b7 SameSite cookies on cross-site flows",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Location (absolute URI preferred) \u00b7 Cache-Control on sensitive responses \u00b7...",
+          "expanded": false
+        },
+        {
+          "id": "ne16dff6fdcedd7a",
+          "title": "Spec anchor",
+          "markdown": "**RFC 9110** (HTTP semantics) obsoletes **7231** for **method**/**status** **definitions** (keep **\"check** **current** **RFC\"** **habit**).",
+          "notes": "RFC 9110 (HTTP semantics) obsoletes 7231 for method/status definitions (keep \"check current RFC\" habit).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "RFC 9110 (HTTP semantics) obsoletes 7231 for method/status definitions (keep...",
+          "expanded": false
+        },
+        {
+          "id": "n7adfcc69a95fc96",
+          "title": "Cross-read",
+          "markdown": "`Open Redirect` \u00b7 `HTTP Request Smuggling` \u00b7 `HTTP Parameter Pollution`",
+          "notes": "Open Redirect \u00b7 HTTP Request Smuggling \u00b7 HTTP Parameter Pollution",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Open Redirect \u00b7 HTTP Request Smuggling \u00b7 HTTP Parameter Pollution",
+          "expanded": false
+        },
+        {
+          "id": "n016e3920d700e31",
+          "title": "One-liner",
+          "markdown": "\"**Match** **method** **safety** to **caching** and **CSRF** **policy**; **treat** **redirects** as **auth** **surface**.\"",
+          "notes": "\"Match method safety to caching and CSRF policy; treat redirects as auth surface.\"",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "\"Match method safety to caching and CSRF policy; treat redirects as auth...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Safe vs unsafe (RFC 9110 mindset)"
+    },
+    {
+      "id": "n0c9bbfa277d555f",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n33d4d9a0a531d80",
+          "title": "\u201cGET never changes server state.\u201d",
+          "markdown": "**Reality:** **RFC** **semantics** say **GET** should be **safe**, but **bugs** and **side** **effects** **abound**; **defense** uses **authZ** on **every** **method**.",
+          "notes": "Reality: RFC semantics say GET should be safe, but bugs and side effects abound; defense uses authZ on every method.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: RFC semantics say GET should be safe, but bugs and side effects...",
+          "expanded": false
+        },
+        {
+          "id": "n5a24f80c76db01b",
+          "title": "\u201c302 and 303 are interchangeable.\u201d",
+          "markdown": "**Reality:** **303** **See** **Other** **forces** **GET** on **redirect** **target** after **POST**; **302** **history** is **messier**-**use** **303/307** **intentionally**.",
+          "notes": "Reality: 303 See Other forces GET on redirect target after POST; 302 history is messier-use 303/307 intentionally.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: 303 See Other forces GET on redirect target after POST; 302 history...",
+          "expanded": false
+        },
+        {
+          "id": "n0725dbd8092330c",
+          "title": "\u201c204 means success like 200.\u201d",
+          "markdown": "**Reality:** **204** **No** **Content** **must** **not** include a **body**-**clients** and **caches** **handle** it **differently** than **200** **with** **empty** body.",
+          "notes": "Reality: 204 No Content must not include a body-clients and caches handle it differently than 200 with empty body.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: 204 No Content must not include a body-clients and caches handle it...",
+          "expanded": false
+        },
+        {
+          "id": "n4e764531ba82bcd",
+          "title": "\u201c401 vs 403 is pedantic.\u201d",
+          "markdown": "**Reality:** **401** **Unauthorized** (often **authN** **missing**/invalid) vs **403** **Forbidden** (**authZ** **deny**) **guides** **client** **behavior** and **monitoring**.",
+          "notes": "Reality: 401 Unauthorized (often authN missing/invalid) vs 403 Forbidden (authZ deny) guides client behavior and monitoring.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: 401 Unauthorized (often authN missing/invalid) vs 403 Forbidden...",
+          "expanded": false
+        },
+        {
+          "id": "n1ea2b404d71e85e",
+          "title": "\u201c5xx always means retry.\u201d",
+          "markdown": "**Reality:** Blind **retries** **amplify** **DoS**; **use** **idempotency** **keys** and **backoff** **only** where **safe**.",
+          "notes": "Reality: Blind retries amplify DoS; use idempotency keys and backoff only where safe.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Blind retries amplify DoS; use idempotency keys and backoff only...",
+          "expanded": false
+        },
+        {
+          "id": "n2689c488864ef8a",
+          "title": "\u201cMeta refresh and 301 are equivalent for security.\u201d",
+          "markdown": "**Reality:** **Open** **redirect** **bugs** appear in **both** **patterns**; **Location** **header** **validation** **still** **matters**.",
+          "notes": "Reality: Open redirect bugs appear in both patterns; Location header validation still matters.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Open redirect bugs appear in both patterns; Location header...",
+          "expanded": false
+        },
+        {
+          "id": "n3d5853708ea033b",
+          "title": "\u201cHEAD can be skipped in security testing.\u201d",
+          "markdown": "**Reality:** **Authorization** **bugs** sometimes **expose** **metadata** via **HEAD** **differently** than **GET**.",
+          "notes": "Reality: Authorization bugs sometimes expose metadata via HEAD differently than GET.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Authorization bugs sometimes expose metadata via HEAD differently...",
+          "expanded": false
+        },
+        {
+          "id": "nb2d1fb0b339cbb0",
+          "title": "\u201cPATCH is always partial JSON merge.\u201d",
+          "markdown": "**Reality:** **Semantics** are **application-defined** (**JSON** **Merge** **Patch** vs **JSON** **Patch** vs **custom**); **don't** **assume** **idempotency**.",
+          "notes": "Reality: Semantics are application-defined (JSON Merge Patch vs JSON Patch vs custom); don't assume idempotency.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Semantics are application-defined (JSON Merge Patch vs JSON Patch...",
+          "expanded": false
+        },
+        {
+          "id": "ncb01d1c85981d91",
+          "title": "\u201cHTTP/2 removed status code importance.\u201d",
+          "markdown": "**Reality:** **Same** **codes**, **different** **framing**; **application** **meaning** **unchanged**.",
+          "notes": "Reality: Same codes, different framing; application meaning unchanged.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Same codes, different framing; application meaning unchanged.",
+          "expanded": false
+        },
+        {
+          "id": "n97f4069e6ef98fe",
+          "title": "\u201c418 I\u2019m a teapot matters in prod.\u201d",
+          "markdown": "**Reality:** **Treat** as **easter** **egg** in **spec** **lore**-**not** a **control** **or** **interoperability** **requirement**.",
+          "notes": "Reality: Treat as easter egg in spec lore-not a control or interoperability requirement.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Treat as easter egg in spec lore-not a control or interoperability...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \u201cGET never changes server state.\u201d"
+    },
+    {
+      "id": "n77a29d74357a39d",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nefe6d2f1f8d5de5",
+          "title": "What are the main parts of an HTTP request and response?",
+          "markdown": "**Answer:** A **request** has a **request line** (method, target, HTTP version), **header fields**, and an optional **body**. A **response** has a **status line** (version, **numeric status code**, and in HTTP/1.1 a **reason phrase**), **header fields**, and an optional **body**. Security reviews treat all of these as potentially attacker-controlled: unexpected methods, duplicated or injected headers, and bodies that leak errors or secrets.",
+          "notes": "Answer: A request has a request line (method, target, HTTP version), header fields, and an optional body. A response has a status line (version, numeric status code, and in HTTP/1.1 a reason phrase), header fields, and an optional body. Security reviews treat all of these as potentially attacker-controlled: unexpected methods, duplicated or injected headers, and bodies that leak errors or secrets.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: A request has a request line (method, target, HTTP version), header...",
+          "expanded": false
+        },
+        {
+          "id": "n6add2cc2d6279b4",
+          "title": "What does \u201csafe\u201d mean for an HTTP method? Which methods are safe?",
+          "markdown": "**Answer:** A **safe** method should not change server state in a way that matters for security assumptions about the request-primarily **GET**, **HEAD**, and **OPTIONS** when implemented correctly. Violating safety on **GET** is dangerous because browsers, prefetchers, and caches may trigger GET without strong user intent, increasing **CSRF**-like risk and cache surprises.",
+          "notes": "Answer: A safe method should not change server state in a way that matters for security assumptions about the request-primarily GET, HEAD, and OPTIONS when implemented correctly. Violating safety on GET is dangerous because browsers, prefetchers, and caches may trigger GET without strong user intent, increasing CSRF-like risk and cache surprises.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: A safe method should not change server state in a way that matters...",
+          "expanded": false
+        },
+        {
+          "id": "n6bc91b6f4476673",
+          "title": "What is idempotency? Which methods are typically idempotent?",
+          "markdown": "**Answer:** An **idempotent** method means that making the **same request more than once** has the **same net effect** as making it once (for server-side state). **GET**, **HEAD**, **OPTIONS**, **PUT**, and **DELETE** are idempotent in well-designed APIs; **POST** is **not** idempotent by default. **PATCH** is **implementation-dependent**. Idempotency matters because **retries**, **intermediaries**, and **user double-clicks** can duplicate requests-use **idempotency keys** for non-idempotent business operations like payments.",
+          "notes": "Answer: An idempotent method means that making the same request more than once has the same net effect as making it once (for server-side state). GET, HEAD, OPTIONS, PUT, and DELETE are idempotent in well-designed APIs; POST is not idempotent by default. PATCH is implementation-dependent. Idempotency matters because retries, intermediaries, and user double-clicks can duplicate requests-use idempotency keys for non-idempotent business operations like payments.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: An idempotent method means that making the same request more than...",
+          "expanded": false
+        },
+        {
+          "id": "nff89f77a10c8410",
+          "title": "Why must state-changing operations avoid GET?",
+          "markdown": "**Answer:** **GET** is defined to be **safe** and is commonly prefetched, cached, and triggered via **links** and **images**. Putting deletes, transfers, or configuration changes on GET invites **CSRF** and accidental execution. The fix is to use **POST**/**PUT**/**PATCH**/**DELETE** (or other explicit unsafe methods) plus **authorization**, **CSRF defenses** (tokens, **SameSite** cookies, or header-based API patterns), and consistent **session** handling.\n\n**Defense in depth:** even with **SameSite=Lax** cookies, do not rely on browser policy alone-**defense layers** include **explicit user intent** for destructive actions, **re-auth** for sensitive operations, and **monitoring** for anomalous **GET** patterns on historically static routes.",
+          "notes": "Answer: GET is defined to be safe and is commonly prefetched, cached, and triggered via links and images. Putting deletes, transfers, or configuration changes on GET invites CSRF and accidental execution. The fix is to use POST/PUT/PATCH/DELETE (or other explicit unsafe methods) plus authorization, CSRF defenses (tokens, SameSite cookies, or header-based API patterns), and consistent session handling.\n\nDefense in depth: even with SameSite=Lax cookies, do not rely on browser policy alone-defense layers include explicit user intent for destructive actions, re-auth for sensitive operations, and monitoring for anomalous GET patterns on historically static routes.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: GET is defined to be safe and is commonly prefetched, cached, and...",
+          "expanded": false
+        },
+        {
+          "id": "n26bcb5d08b22d31",
+          "title": "Compare PUT and PATCH from a security review perspective.",
+          "markdown": "**Answer:** **PUT** usually **replaces** a full resource representation; partial or mistaken PUTs can **wipe fields** if the server treats missing keys as nulls. **PATCH** applies a **partial** update but varies by format (JSON Merge Patch, JSON Patch, custom). Authorization bugs happen when reviewers assume PATCH is \"low impact\" but handlers can change **roles**, **ownership**, or **sensitive flags**. Review **object-level checks** for both, not just the method name.",
+          "notes": "Answer: PUT usually replaces a full resource representation; partial or mistaken PUTs can wipe fields if the server treats missing keys as nulls. PATCH applies a partial update but varies by format (JSON Merge Patch, JSON Patch, custom). Authorization bugs happen when reviewers assume PATCH is \"low impact\" but handlers can change roles, ownership, or sensitive flags. Review object-level checks for both, not just the method name.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: PUT usually replaces a full resource representation; partial or...",
+          "expanded": false
+        },
+        {
+          "id": "n6717f1f13807ac6",
+          "title": "What is OPTIONS used for, and why do interviewers bring it up?",
+          "markdown": "**Answer:** **OPTIONS** describes communication options for a resource. In browsers, **CORS preflight** uses **OPTIONS** to ask whether a cross-origin request with certain headers/methods is permitted. Misconfigured **Access-Control-Allow-Origin** combined with **credentials** is a common vulnerability class. Even outside browsers, OPTIONS responses that leak **internal methods** or **routing** can aid attackers-keep them accurate but minimal.",
+          "notes": "Answer: OPTIONS describes communication options for a resource. In browsers, CORS preflight uses OPTIONS to ask whether a cross-origin request with certain headers/methods is permitted. Misconfigured Access-Control-Allow-Origin combined with credentials is a common vulnerability class. Even outside browsers, OPTIONS responses that leak internal methods or routing can aid attackers-keep them accurate but minimal.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: OPTIONS describes communication options for a resource.",
+          "expanded": false
+        },
+        {
+          "id": "n2c79250bd9bddb8",
+          "title": "How do you explain 2xx, 3xx, 4xx, and 5xx in a security review?",
+          "markdown": "**Answer:** **2xx** means success-still verify **authorization** and that bodies do not leak **PII** or **secrets** on \"success\" paths. **3xx** means redirection-scrutinize **user-controlled** `Location`/`Refresh` for **open redirects** and **cache pinning**. **4xx** means the client errored-watch inconsistent **enumeration** signals and overly verbose errors. **5xx** means server failure-avoid **stack traces** and internal details in responses; use **correlation IDs** for support.\n\n**Concrete tests:** confirm **200** vs **204** vs **201** on write APIs do not skip **audit** events; verify **3xx** `Location` is not injectable via **CRLF** in legacy stacks; ensure **404** vs **403** policy matches the product's **enumeration** threat model.",
+          "notes": "Answer: 2xx means success-still verify authorization and that bodies do not leak PII or secrets on \"success\" paths. 3xx means redirection-scrutinize user-controlled Location/Refresh for open redirects and cache pinning. 4xx means the client errored-watch inconsistent enumeration signals and overly verbose errors. 5xx means server failure-avoid stack traces and internal details in responses; use correlation IDs for support.\n\nConcrete tests: confirm 200 vs 204 vs 201 on write APIs do not skip audit events; verify 3xx Location is not injectable via CRLF in legacy stacks; ensure 404 vs 403 policy matches the product's enumeration threat model.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: 2xx means success-still verify authorization and that bodies do not...",
+          "expanded": false
+        },
+        {
+          "id": "nc1d3ec1527ba026",
+          "title": "What is the practical difference between 401 and 403?",
+          "markdown": "**Answer (common industry mapping):** **401 Unauthorized** means authentication failed or is missing (\"who are you?\"). **403 Forbidden** means the server recognizes the caller but denies the action (\"you may not\"). In practice, some APIs use **403** for both to reduce **account enumeration**. Interviewers reward **consistent** behavior, not debating names-define policy and apply it across endpoints.",
+          "notes": "Answer (common industry mapping): 401 Unauthorized means authentication failed or is missing (\"who are you?\"). 403 Forbidden means the server recognizes the caller but denies the action (\"you may not\"). In practice, some APIs use 403 for both to reduce account enumeration. Interviewers reward consistent behavior, not debating names-define policy and apply it across endpoints.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer (common industry mapping): 401 Unauthorized means authentication...",
+          "expanded": false
+        },
+        {
+          "id": "n5fba707ce546896",
+          "title": "Why do 301 vs 302 vs 307 vs 308 matter?",
+          "markdown": "**Answer:** **Permanent** redirects (**301**, **308**) are treated as **long-lived** mappings by many caches-harder to unwind than temporary ones. **302** is historically **ambiguous** for whether the follow-up request **keeps the method**; **307** (temporary) and **308** (permanent) clarify **method preservation** vs patterns like **303**, which typically forces **GET** for the follow-up. For APIs that must not **downgrade POST to GET**, **307/308** are clearer choices than **302**.\n\n**Incident angle:** after a bad **301** rollout, users may \"stick\" to the wrong host or path until caches expire-plan **CDN purge**, **client** guidance, and **monitoring** on redirect endpoints just like any other critical config.",
+          "notes": "Answer: Permanent redirects (301, 308) are treated as long-lived mappings by many caches-harder to unwind than temporary ones. 302 is historically ambiguous for whether the follow-up request keeps the method; 307 (temporary) and 308 (permanent) clarify method preservation vs patterns like 303, which typically forces GET for the follow-up. For APIs that must not downgrade POST to GET, 307/308 are clearer choices than 302.\n\nIncident angle: after a bad 301 rollout, users may \"stick\" to the wrong host or path until caches expire-plan CDN purge, client guidance, and monitoring on redirect endpoints just like any other critical config.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: Permanent redirects (301, 308) are treated as long-lived mappings by...",
+          "expanded": false
+        },
+        {
+          "id": "n849dd633c84b11b",
+          "title": "What is an open redirect, and how do you fix it?",
+          "markdown": "**Answer:** An **open redirect** reflects user input into a **`Location`** header, **`Refresh`** header, **`meta refresh`**, or JavaScript navigation without strict validation-so `https://trusted.example/redirect?url=https://evil.example` sends victims through a trusted domain into a malicious site (**phishing**, **OAuth** confusion when combined with other flows). Fixes: **allowlists** of destinations, **relative** redirects, **signed** redirect tokens, strict URL parsing with **https-only** schemes, and tests for **`//evil`**, backslashes, and encoding tricks.",
+          "notes": "Answer: An open redirect reflects user input into a Location header, Refresh header, meta refresh, or JavaScript navigation without strict validation-so https://trusted.example/redirect?url=https://evil.example sends victims through a trusted domain into a malicious site (phishing, OAuth confusion when combined with other flows). Fixes: allowlists of destinations, relative redirects, signed redirect tokens, strict URL parsing with https-only schemes, and tests for //evil, backslashes, and encoding tricks.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: An open redirect reflects user input into a Location header, Refresh...",
+          "expanded": false
+        },
+        {
+          "id": "nfef6ecce661b033",
+          "title": "How does 303 relate to POST submissions?",
+          "markdown": "**Answer:** **303 See Other** tells the client to fetch another resource, typically with **GET**. The **Post/Redirect/Get** pattern returns **303** + **`Location`** after a state-changing **POST** so refreshing the landing page does not **resubmit** the POST. That improves UX and reduces accidental duplicate writes, but it is **not** a substitute for **server-side idempotency** on the POST handler itself.\n\n**Double-submission:** PRG helps **browsers**; **API clients** and **mobile apps** may still retry POSTs on timeouts-issue **idempotency keys** or **dedupe** using stable business identifiers where duplicates are unacceptable.",
+          "notes": "Answer: 303 See Other tells the client to fetch another resource, typically with GET. The Post/Redirect/Get pattern returns 303 + Location after a state-changing POST so refreshing the landing page does not resubmit the POST. That improves UX and reduces accidental duplicate writes, but it is not a substitute for server-side idempotency on the POST handler itself.\n\nDouble-submission: PRG helps browsers; API clients and mobile apps may still retry POSTs on timeouts-issue idempotency keys or dedupe using stable business identifiers where duplicates are unacceptable.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: 303 See Other tells the client to fetch another resource, typically...",
+          "expanded": false
+        },
+        {
+          "id": "n38451c3e3e86635",
+          "title": "What is risky about the Refresh header or ?",
+          "markdown": "**Answer:** Both can navigate the user after a delay, including **`url=`** targets. If an attacker can inject or control the target (CMS profiles, HTML sanitization gaps, template injection), this becomes an **open redirect** or **client-side** phishing vector. Prefer **3xx** redirects with **`Location`** from the server, block untrusted **`Refresh`**, and sanitize HTML so **meta refresh** cannot carry attacker URLs.",
+          "notes": "Answer: Both can navigate the user after a delay, including url= targets. If an attacker can inject or control the target (CMS profiles, HTML sanitization gaps, template injection), this becomes an open redirect or client-side phishing vector. Prefer 3xx redirects with Location from the server, block untrusted Refresh, and sanitize HTML so meta refresh cannot carry attacker URLs.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: Both can navigate the user after a delay, including url= targets.",
+          "expanded": false
+        },
+        {
+          "id": "n76b9375a5cf6e84",
+          "title": "How do caching headers interact with authenticated pages and redirects?",
+          "markdown": "**Answer:** Shared caches must not store **private** responses as **public**. Use explicit **`Cache-Control`** (often **`no-store`** for sensitive authenticated HTML/API payloads) rather than relying on defaults. **301** responses may be cached for a long time-treat **permanent** redirects as operational commitments. **`Vary`** must reflect dimensions that differ per user if caching could otherwise **mix sessions**.",
+          "notes": "Answer: Shared caches must not store private responses as public. Use explicit Cache-Control (often no-store for sensitive authenticated HTML/API payloads) rather than relying on defaults. 301 responses may be cached for a long time-treat permanent redirects as operational commitments. Vary must reflect dimensions that differ per user if caching could otherwise mix sessions.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: Shared caches must not store private responses as public.",
+          "expanded": false
+        },
+        {
+          "id": "n7b3e3691199054a",
+          "title": "Name security headers that complement good redirect hygiene.",
+          "markdown": "**Answer:** **Strict-Transport-Security** reduces **downgrade** to plaintext intercept paths. **Content-Security-Policy** can reduce several **client-side** execution and navigation risks when carefully tuned (not a complete redirect allowlist by itself). **Referrer-Policy** limits leakage of path/query data via **`Referer`** on cross-site navigations-important if URLs ever carried **tokens** (prefer removing secrets from URLs). These do not replace **server-side** redirect validation.\n\n**Cookie flags:** on HTTPS sites, **`Secure`** cookies reduce accidental plaintext exposure; **`SameSite`** reduces some cross-site request contexts-still orthogonal to fixing **`Location`** allowlists.",
+          "notes": "Answer: Strict-Transport-Security reduces downgrade to plaintext intercept paths. Content-Security-Policy can reduce several client-side execution and navigation risks when carefully tuned (not a complete redirect allowlist by itself). Referrer-Policy limits leakage of path/query data via Referer on cross-site navigations-important if URLs ever carried tokens (prefer removing secrets from URLs). These do not replace server-side redirect validation.\n\nCookie flags: on HTTPS sites, Secure cookies reduce accidental plaintext exposure; SameSite reduces some cross-site request contexts-still orthogonal to fixing Location allowlists.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: Strict-Transport-Security reduces downgrade to plaintext intercept...",
+          "expanded": false
+        },
+        {
+          "id": "na92a4f0ecd656d3",
+          "title": "Does HTTP/2 change how methods or status codes work?",
+          "markdown": "**Answer:** **No semantically.** HTTP/2 changes **framing** (multiplexed streams, **HPACK** header compression) but **RFC 9110** semantics for methods and status codes still apply. Interview trap: confusing **transport** optimizations with permission to ignore **safe/idempotent** rules or **authorization** checks.",
+          "notes": "Answer: No semantically. HTTP/2 changes framing (multiplexed streams, HPACK header compression) but RFC 9110 semantics for methods and status codes still apply. Interview trap: confusing transport optimizations with permission to ignore safe/idempotent rules or authorization checks.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: No semantically.",
+          "expanded": false
+        },
+        {
+          "id": "n8d2b768201adfd1",
+          "title": "When might you see 429, and what should accompany it?",
+          "markdown": "**Answer:** **429 Too Many Requests** signals **rate limiting** or quota exhaustion. Pair with **`Retry-After`** (seconds or HTTP-date) when possible so legitimate clients back off, and monitor for **retry storms** from naive SDKs. Rate limits are **not** a replacement for **authentication** and **authorization**-they reduce abuse and protect availability.",
+          "notes": "Answer: 429 Too Many Requests signals rate limiting or quota exhaustion. Pair with Retry-After (seconds or HTTP-date) when possible so legitimate clients back off, and monitor for retry storms from naive SDKs. Rate limits are not a replacement for authentication and authorization-they reduce abuse and protect availability.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: 429 Too Many Requests signals rate limiting or quota exhaustion.",
+          "expanded": false
+        },
+        {
+          "id": "n51afc29ae8ec51e",
+          "title": "What goes wrong when APIs leak detail in 4xx/5xx bodies?",
+          "markdown": "**Answer:** Verbose errors expose **stack traces**, **database** errors, **internal hostnames**, and **dependency** versions-aiding **reconnaissance** and exploit refinement. Return **stable, typed** error codes for clients and log rich detail **server-side** only. Ensure **500** pages are scrubbed at the framework and **reverse proxy** layers.",
+          "notes": "Answer: Verbose errors expose stack traces, database errors, internal hostnames, and dependency versions-aiding reconnaissance and exploit refinement. Return stable, typed error codes for clients and log rich detail server-side only. Ensure 500 pages are scrubbed at the framework and reverse proxy layers.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: Verbose errors expose stack traces, database errors, internal...",
+          "expanded": false
+        },
+        {
+          "id": "n431bd0a7fa42858",
+          "title": "How would you structure an HTTP API review for authorization bugs?",
+          "markdown": "**Answer:** Build a matrix of **roles** \u00d7 **resources** \u00d7 **methods**; verify checks on **every** route variant (including **HEAD**/**OPTIONS** where relevant). Test **IDOR** with adjacent IDs, **method override** tricks if supported, inconsistent **GraphQL** vs REST coverage, and **status code** consistency (**401/403** policy). Include **redirect** endpoints and **post-login** `next` parameters in the same review pass-they are often implemented outside main controllers.",
+          "notes": "Answer: Build a matrix of roles \u00d7 resources \u00d7 methods; verify checks on every route variant (including HEAD/OPTIONS where relevant). Test IDOR with adjacent IDs, method override tricks if supported, inconsistent GraphQL vs REST coverage, and status code consistency (401/403 policy). Include redirect endpoints and post-login next parameters in the same review pass-they are often implemented outside main controllers.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: Build a matrix of roles \u00d7 resources \u00d7 methods; verify checks on...",
+          "expanded": false
+        },
+        {
+          "id": "n3220b308af5026b",
+          "title": "What is 304 Not Modified, and why might it matter for security testing?",
+          "markdown": "**Answer:** **304** means the client's **conditional** request shows the cached representation is still valid (via **ETag**/**If-None-Match** or **Last-Modified**/**If-Modified-Since**). It is not a \"security control,\" but testers should know **304** responses typically have **no body**-if you expected fresh authorization-sensitive JSON and got **304**, you might be seeing **stale cache** behavior or **misconfigured** `Cache-Control`/`Vary`. Reviews should ensure **ETags** do not embed **secrets** and that authenticated data is not unintentionally **shared-cacheable**.",
+          "notes": "Answer: 304 means the client's conditional request shows the cached representation is still valid (via ETag/If-None-Match or Last-Modified/If-Modified-Since). It is not a \"security control,\" but testers should know 304 responses typically have no body-if you expected fresh authorization-sensitive JSON and got 304, you might be seeing stale cache behavior or misconfigured Cache-Control/Vary. Reviews should ensure ETags do not embed secrets and that authenticated data is not unintentionally shared-cacheable.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: 304 means the client's conditional request shows the cached...",
+          "expanded": false
+        },
+        {
+          "id": "nf7e5da76eef5bb6",
+          "title": "When would you mention 425 Too Early in an HTTP security discussion?",
+          "markdown": "**Answer:** **425 Too Early** signals \"don't process this yet\" when a request might be **replayable** on **early** connection data (commonly discussed with **0-RTT** / resumed sessions). It connects **TLS** policy to **application** safety: money movement, **one-time** codes, and **non-idempotent** creates may need **retry-after-full-handshake** behavior. Pair protocol-level mitigations with **idempotency keys** so legitimate clients can recover safely.\n\n---\n\n**References:** [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110) (HTTP Semantics); [RFC 9111](https://www.rfc-editor.org/rfc/rfc9111) (Caching); [RFC 9113](https://www.rfc-editor.org/rfc/rfc9113) (HTTP/2); [MDN HTTP status](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status).",
+          "notes": "Answer: 425 Too Early signals \"don't process this yet\" when a request might be replayable on early connection data (commonly discussed with 0-RTT / resumed sessions). It connects TLS policy to application safety: money movement, one-time codes, and non-idempotent creates may need retry-after-full-handshake behavior. Pair protocol-level mitigations with idempotency keys so legitimate clients can recover safely.\n\n---\n\nReferences: RFC 9110 (HTTP Semantics); RFC 9111 (Caching); RFC 9113 (HTTP/2); MDN HTTP status.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: 425 Too Early signals \"don't process this yet\" when a request might...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes What are the main parts of an HTTP request and response?"
+    }
+  ],
+  "topicId": "http-refresh-verbs-and-status-codes",
+  "name": "HTTP Refresh, verbs and status codes",
+  "structure": "logic-right",
+  "blurb": "HTTP semantics (methods, safety, idempotency, status codes, and redirect..."
+}

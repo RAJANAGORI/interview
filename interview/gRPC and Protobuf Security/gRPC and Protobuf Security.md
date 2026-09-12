@@ -7,3 +7,5 @@
 [**Critical Clarification: gRPC and Protobuf Security Misconceptions**](Critical%20Clarification%20gRPC%20and%20Protobuf%20Security%20Misconceptions.md)
 
 [**gRPC and Protobuf Security - Quick Reference**](gRPC%20and%20Protobuf%20Security%20-%20Quick%20Reference.md)
+
+[**gRPC and Protobuf Security - Mind Map**](gRPC%20and%20Protobuf%20Security%20-%20Mind%20Map.md)

@@ -7,3 +7,5 @@
 [**Critical Clarification: OAuth Security Misconceptions**](Critical Clarification OAuth 2 0 Security Misconce.md)
 
 [**OAuth - Quick Reference Guide**](OAuth 2 0 - Quick Reference Guide.md)
+
+[**OAuth - Mind Map**](OAuth%20-%20Mind%20Map.md)

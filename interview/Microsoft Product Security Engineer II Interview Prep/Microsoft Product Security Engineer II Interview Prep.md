@@ -7,3 +7,5 @@
 [**Microsoft Product Security Engineer II Interview Prep - Quick Reference**](Microsoft%20Product%20Security%20Engineer%20II%20Interview%20Prep%20-%20Quick%20Reference.md)
 
 [**Microsoft Product Security Engineer II Interview Prep - Mastery Track**](Microsoft%20Product%20Security%20Engineer%20II%20Interview%20Prep%20-%20Mastery%20Track.md)
+
+[**Microsoft Product Security Engineer II Interview Prep - Mind Map**](Microsoft%20Product%20Security%20Engineer%20II%20Interview%20Prep%20-%20Mind%20Map.md)

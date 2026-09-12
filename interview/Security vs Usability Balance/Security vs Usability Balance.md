@@ -7,3 +7,5 @@
 [**Critical Clarification: Security vs Usability Balance**](Critical%20Clarification%20Security%20vs%20Usability%20Balan.md)
 
 [**Security vs Usability Balance - Quick Reference**](Security%20vs%20Usability%20Balance%20-%20Quick%20Reference.md)
+
+[**Security vs Usability Balance - Mind Map**](Security%20vs%20Usability%20Balance%20-%20Mind%20Map.md)

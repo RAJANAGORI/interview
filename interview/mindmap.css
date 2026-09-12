@@ -1,0 +1,635 @@
+/* Logic Chart — study map UI
+   Psychology targets:
+   - Progressive disclosure: map first, notes on demand
+   - Hierarchy: root / arms / leaves read differently
+   - Fitts: 44px touch targets on narrow viewports
+   - Working memory: fewer chrome controls on phones
+*/
+
+.logic-shell {
+  --logic-ink: var(--text, #f2f0ec);
+  --logic-muted: var(--muted, rgba(242, 240, 236, 0.68));
+  --logic-panel: var(--panel, #1c1c1c);
+  --logic-elev: var(--panel-2, #252525);
+  --logic-surface: var(--surface, #181818);
+  --logic-line: var(--border, rgba(255, 255, 255, 0.08));
+  --logic-accent: var(--accent, #ff8c00);
+  --logic-accent-soft: var(--accent-soft, rgba(255, 140, 0, 0.14));
+  --logic-bg: var(--bg, #141414);
+  --logic-dock-w: min(400px, 38vw);
+  --logic-touch: 44px;
+  --logic-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  color: var(--logic-ink);
+  font-family: "Source Sans 3", system-ui, sans-serif;
+  background: var(--logic-panel);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.logic-shell .sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.logic-shell .xm-main {
+  display: grid;
+  grid-template-columns: 1fr var(--logic-dock-w);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-areas:
+    "bar bar"
+    "hint hint"
+    "map dock";
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  position: relative;
+}
+
+.logic-shell .xm-bar {
+  grid-area: bar;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--logic-bg) 88%, transparent);
+  border-bottom: 1px solid var(--logic-line);
+  flex-wrap: wrap;
+}
+
+.logic-shell .xm-tools {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.logic-shell .xm-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--logic-line);
+  flex-shrink: 0;
+}
+
+.logic-shell .xm-bar button,
+.logic-shell .xm-dl,
+.logic-shell .xm-outliner button,
+.logic-shell .xm-send,
+.logic-shell .xm-ask-row select,
+.logic-shell .xm-dock-toggle {
+  font: inherit;
+  border-radius: 8px;
+  border: 1px solid var(--logic-line);
+  background: var(--logic-surface);
+  color: var(--logic-ink);
+  padding: 6px 10px;
+  min-height: 36px;
+  cursor: pointer;
+}
+
+.logic-shell .xm-dl {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.logic-shell .xm-tools .on {
+  border-color: color-mix(in oklab, var(--logic-accent) 45%, var(--logic-line));
+  background: var(--logic-accent-soft);
+  color: var(--logic-ink);
+}
+
+.logic-shell .xm-hint {
+  grid-area: hint;
+  margin: 0;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--logic-muted);
+  background: color-mix(in srgb, var(--logic-bg) 70%, transparent);
+  border-bottom: 1px solid var(--logic-line);
+}
+
+.logic-shell .xm-hint strong {
+  color: var(--logic-ink);
+  font-weight: 600;
+}
+
+.logic-shell .xm-canvas {
+  grid-area: map;
+  overflow: hidden;
+  position: relative;
+  cursor: grab;
+  min-height: 0;
+  min-width: 0;
+  background:
+    radial-gradient(circle at 1px 1px, rgba(255, 140, 0, 0.1) 1px, transparent 0) 0 0 / 24px 24px,
+    var(--logic-bg);
+  touch-action: none;
+}
+
+.logic-shell .xm-canvas.pointer { cursor: default; }
+.logic-shell .xm-canvas.panning { cursor: grabbing; }
+
+.logic-shell #mapSvg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.logic-shell #mapSvg text {
+  font-family: "Source Sans 3", system-ui, sans-serif;
+  pointer-events: none;
+}
+
+.logic-shell .node-root rect { fill: var(--logic-accent); }
+.logic-shell .node-root text { fill: #141414; }
+.logic-shell .node-main rect {
+  fill: var(--logic-panel);
+  stroke: color-mix(in oklab, var(--logic-accent) 55%, var(--logic-line));
+  stroke-width: 1.5;
+}
+.logic-shell .node-main text { fill: var(--logic-ink); }
+.logic-shell .node-sub rect {
+  fill: var(--logic-elev);
+  stroke: var(--logic-line);
+  stroke-width: 1;
+}
+.logic-shell .node-sub text { fill: var(--logic-ink); }
+.logic-shell .node-leaf rect {
+  fill: color-mix(in srgb, var(--logic-elev) 80%, var(--logic-bg));
+  stroke: color-mix(in srgb, var(--logic-line) 70%, transparent);
+}
+.logic-shell .node-leaf text { fill: var(--logic-muted); }
+.logic-shell .node-blurb {
+  fill: color-mix(in oklab, var(--logic-ink) 58%, transparent);
+  font-weight: 400;
+}
+.logic-shell .node-root .node-blurb {
+  fill: color-mix(in oklab, #141414 68%, transparent);
+}
+.logic-shell .node-note rect {
+  fill: var(--logic-accent-soft);
+  stroke: color-mix(in oklab, var(--logic-accent) 40%, var(--logic-line));
+}
+.logic-shell .node-note text { fill: var(--logic-ink); }
+.logic-shell .node-sel rect {
+  stroke: var(--logic-accent);
+  stroke-width: 2.6;
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--logic-accent) 35%, transparent));
+}
+.logic-shell .link {
+  fill: none;
+  stroke: color-mix(in srgb, var(--logic-accent) 48%, #8a5a20);
+  stroke-width: 1.5;
+  opacity: 0.9;
+}
+.logic-shell .note-dot { fill: var(--logic-accent); }
+.logic-shell .plus {
+  fill: var(--logic-accent);
+  cursor: pointer;
+  stroke: color-mix(in srgb, #141414 40%, transparent);
+  stroke-width: 1;
+}
+.logic-shell .plus-hit {
+  fill: transparent;
+  cursor: pointer;
+}
+.logic-shell .plus-fg {
+  fill: #141414;
+  font-size: 12px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.logic-shell .xm-note-dock {
+  grid-area: dock;
+  background: var(--logic-panel);
+  border-left: 1px solid var(--logic-line);
+  padding: 0;
+  overflow: hidden;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 4;
+}
+
+.logic-shell .xm-dock-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px 8px;
+  border-bottom: 1px solid var(--logic-line);
+  flex-shrink: 0;
+}
+
+.logic-shell .xm-dock-head-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.logic-shell .xm-dock-handle {
+  display: none;
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--logic-muted) 55%, transparent);
+  margin: 8px auto 0;
+  flex-shrink: 0;
+}
+
+.logic-shell .xm-note-kicker {
+  margin: 0 0 2px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--logic-muted);
+}
+
+.logic-shell .xm-note-dock h2 {
+  margin: 0;
+  font-family: "Fraunces", Georgia, "Times New Roman", serif;
+  font-size: 1.12rem;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.logic-shell .xm-path {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--logic-muted);
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logic-shell .xm-dock-toggle {
+  flex-shrink: 0;
+  min-width: 36px;
+  padding-inline: 8px;
+}
+
+.logic-shell .xm-note-scroll {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+  padding: 10px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.logic-shell .xm-note-body {
+  flex: 1;
+  min-height: 0;
+}
+
+.logic-shell .xm-empty-note {
+  margin: 0.25rem 0 0.75rem;
+  color: var(--logic-muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.logic-shell .xm-note-body h1,
+.logic-shell .xm-note-body h2,
+.logic-shell .xm-note-body h3,
+.logic-shell .xm-note-body h4 {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 1.02rem;
+  margin: 1rem 0 0.4rem;
+}
+
+.logic-shell .xm-note-body p,
+.logic-shell .xm-note-body li {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0 0 0.65rem;
+}
+
+.logic-shell .xm-note-body ul,
+.logic-shell .xm-note-body ol {
+  margin: 0 0 0.85rem;
+  padding-left: 1.2rem;
+}
+
+.logic-shell .xm-note-body pre {
+  overflow-x: auto;
+  padding: 0.75rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid var(--logic-line);
+  background: var(--logic-surface);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.logic-shell .xm-note-body code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.86em;
+}
+
+.logic-shell .xm-note-body table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin: 0 0 0.85rem;
+  font-size: 0.88rem;
+}
+
+.logic-shell .xm-note-body th,
+.logic-shell .xm-note-body td {
+  border: 1px solid var(--logic-line);
+  padding: 0.35rem 0.55rem;
+  text-align: left;
+}
+
+.logic-shell .xm-note-body blockquote {
+  margin: 0 0 0.85rem;
+  padding: 0.15rem 0 0.15rem 0.85rem;
+  border-left: 3px solid var(--logic-accent);
+  color: var(--logic-muted);
+}
+
+.logic-shell .xm-chip {
+  display: inline-block;
+  background: var(--logic-accent-soft);
+  color: var(--logic-ink);
+  border: 1px solid color-mix(in oklab, var(--logic-accent) 35%, var(--logic-line));
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.logic-shell .xm-ask {
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.logic-shell .xm-ask-box {
+  border: 1px solid var(--logic-line);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: var(--logic-surface);
+}
+
+.logic-shell .xm-ask-box textarea {
+  width: 100%;
+  border: 0;
+  resize: none;
+  font: inherit;
+  outline: none;
+  background: transparent;
+  color: var(--logic-ink);
+}
+
+.logic-shell .xm-ask-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.logic-shell .xm-send {
+  background: var(--logic-accent-soft);
+  border-color: color-mix(in oklab, var(--logic-accent) 45%, var(--logic-line));
+}
+
+.logic-shell .xm-zoom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.logic-shell #zoomLabel {
+  min-width: 48px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--logic-muted);
+}
+
+.logic-shell .xm-outliner {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  bottom: 12px;
+  width: min(340px, 46vw);
+  background: var(--logic-panel);
+  border: 1px solid var(--logic-line);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  overflow: auto;
+  z-index: 6;
+  padding: 12px;
+}
+
+.logic-shell .xm-outliner header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.logic-shell .xm-outliner h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-family: "Fraunces", Georgia, serif;
+}
+
+.logic-shell .ol-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 8px 4px;
+  min-height: 36px;
+  font: inherit;
+  color: var(--logic-ink);
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.logic-shell .ol-item:hover,
+.logic-shell .ol-item:focus-visible {
+  color: var(--logic-accent);
+  background: var(--logic-accent-soft);
+  outline: none;
+}
+
+.logic-shell .ol-item.is-sel {
+  color: var(--logic-accent);
+  font-weight: 600;
+}
+
+.logic-shell .msg {
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  margin: 0 0 8px;
+}
+
+.logic-shell .msg.bot { background: var(--logic-elev); }
+.logic-shell .msg.me {
+  background: var(--logic-accent-soft);
+  margin-left: 12%;
+}
+
+.logic-shell .xm-error {
+  margin: 1.25rem;
+  color: var(--logic-muted);
+}
+
+.logic-shell .xm-mobile-only { display: none; }
+.logic-shell .xm-desk-only { display: inline-flex; }
+
+@media (min-width: 821px) {
+  .logic-shell .xm-dock-toggle,
+  .logic-shell .xm-dock-handle {
+    display: none;
+  }
+}
+
+/* ---- Tablet: still side dock, slightly narrower ---- */
+@media (max-width: 1100px) {
+  .logic-shell {
+    --logic-dock-w: min(340px, 42vw);
+  }
+}
+
+/* ---- Phone / small tablet: map first, notes as bottom sheet ---- */
+@media (max-width: 820px) {
+  .logic-shell {
+    --logic-dock-w: 100%;
+    border-radius: 0;
+  }
+
+  .logic-shell .xm-main {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-areas:
+      "bar"
+      "hint"
+      "map";
+  }
+
+  .logic-shell .xm-mobile-only { display: inline-flex; }
+  .logic-shell .xm-desk-only { display: none; }
+
+  .logic-shell .xm-bar {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .logic-shell .xm-bar button,
+  .logic-shell .xm-dl,
+  .logic-shell .xm-dock-toggle,
+  .logic-shell .xm-outliner button,
+  .logic-shell .xm-send,
+  .logic-shell .xm-ask-row select {
+    min-height: var(--logic-touch);
+    min-width: var(--logic-touch);
+    padding: 8px 12px;
+  }
+
+  .logic-shell .xm-dl {
+    margin-left: 0;
+    font-size: 0.85rem;
+  }
+
+  .logic-shell .xm-hint {
+    padding: 7px 12px;
+    font-size: 0.78rem;
+  }
+
+  .logic-shell .xm-note-dock {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    height: min(72dvh, 560px);
+    max-height: 72dvh;
+    border-left: 0;
+    border-top: 1px solid var(--logic-line);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.45);
+    transform: translateY(calc(100% - 64px));
+    transition: transform 0.28s var(--logic-ease);
+    z-index: 8;
+  }
+
+  .logic-shell .xm-note-dock.is-open {
+    transform: translateY(0);
+  }
+
+  .logic-shell .xm-note-dock.is-peek {
+    transform: translateY(calc(100% - 64px));
+  }
+
+  .logic-shell .xm-dock-handle {
+    display: block;
+  }
+
+  .logic-shell .xm-dock-head {
+    padding-top: 4px;
+  }
+
+  .logic-shell .xm-outliner {
+    left: 10px;
+    right: 10px;
+    width: auto;
+    top: 10px;
+    bottom: auto;
+    max-height: min(55dvh, 420px);
+  }
+
+  .logic-shell .ol-item {
+    min-height: var(--logic-touch);
+    padding: 10px 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logic-shell .xm-hint .xm-hint-extra {
+    display: none;
+  }
+
+  .logic-shell .xm-note-dock {
+    height: min(78dvh, 640px);
+    max-height: 78dvh;
+  }
+
+  .logic-shell .xm-note-body p,
+  .logic-shell .xm-note-body li {
+    font-size: 0.92rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logic-shell .xm-note-dock {
+    transition: none;
+  }
+
+  .logic-shell .node-sel rect {
+    filter: none;
+  }
+}

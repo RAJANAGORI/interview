@@ -1,0 +1,1185 @@
+{
+  "id": "ne1241a4c68a7c1b",
+  "title": "Serverless Security",
+  "markdown": "**Serverless security** covers **function-as-a-service (FaaS)** and **event-driven** workloads-AWS Lambda, Azure Functions, Google Cloud Functions, Cloudflare Workers-where you no longer patch OS images but you **do** own **IAM roles**, **event trust**, **secrets**, **dependencies**, and **network egress**. Attackers target **over-privileged execution roles**, **unauthenticated triggers**, **event injection** (S3 -> Lambda -> SQL), **cold-start secret leakage**, and **supply-chain** packages in short-lived containers.\n\nThis guide follows the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+  "notes": "Serverless security covers function-as-a-service (FaaS) and event-driven workloads-AWS Lambda, Azure Functions, Google Cloud Functions, Cloudflare Workers-where you no longer patch OS images but you do own IAM roles, event trust, secrets, dependencies, and network egress. Attackers target over-privileged execution roles, unauthenticated triggers, event injection (S3 -> Lambda -> SQL), cold-start secret leakage, and supply-chain packages in short-lived containers.\n\nThis guide follows the Content Mastery Framework.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "n44ee9ba5d27e730",
+      "title": "At a glance",
+      "markdown": "**Serverless security** covers **function-as-a-service (FaaS)** and **event-driven** workloads-AWS Lambda, Azure Functions, Google Cloud Functions, Cloudflare Workers-where you no longer patch OS images but you **do** own **IAM roles**, **event trust**, **secrets**, **dependencies**, and **network egress**. Attackers target **over-privileged execution roles**, **unauthenticated triggers**, **event injection** (S3 -> Lambda -> SQL), **cold-start secret leakage**, and **supply-chain** packages in short-lived containers.\n\nThis guide follows the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+      "notes": "Serverless security covers function-as-a-service (FaaS) and event-driven workloads-AWS Lambda, Azure Functions, Google Cloud Functions, Cloudflare Workers-where you no longer patch OS images but you do own IAM roles, event trust, secrets, dependencies, and network egress. Attackers target over-privileged execution roles, unauthenticated triggers, event injection (S3 -> Lambda -> SQL), cold-start secret leakage, and supply-chain packages in short-lived containers.\n\nThis guide follows the Content Mastery Framework.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Serverless security covers function-as-a-service (FaaS) and event-driven...",
+      "expanded": false
+    },
+    {
+      "id": "n9ae9c5832c4ab19",
+      "title": "L1 \u2014 Core model",
+      "markdown": "```\nEvent source (S3, API GW, SQS, EventBridge, webhook)\n        \u2502\n        \u25bc  [Who can invoke? Signature? AuthZ?]\n   Function (Lambda/Cloud Function)\n        \u2502\n        \u251c\u2500\u2500 Execution role (IAM) \u2500\u2500\u25ba AWS/Azure/GCP APIs\n        \u251c\u2500\u2500 Env vars / secrets extension\n        \u251c\u2500\u2500 /tmp ephemeral disk\n        \u2514\u2500\u2500 Outbound network (NAT, VPC, egress rules)\n```\n\n**Shared responsibility:** Provider secures **hypervisor, runtime patch, isolation**; you secure **code, IAM, triggers, secrets, dependencies, logging redaction**.",
+      "notes": "Event source (S3, API GW, SQS, EventBridge, webhook)\n        \u2502\n        \u25bc  [Who can invoke? Signature? AuthZ?]\n   Function (Lambda/Cloud Function)\n        \u2502\n        \u251c\u2500\u2500 Execution role (IAM) \u2500\u2500\u25ba AWS/Azure/GCP APIs\n        \u251c\u2500\u2500 Env vars / secrets extension\n        \u251c\u2500\u2500 /tmp ephemeral disk\n        \u2514\u2500\u2500 Outbound network (NAT, VPC, egress rules)\n\nShared responsibility: Provider secures hypervisor, runtime patch, isolation; you secure code, IAM, triggers, secrets, dependencies, logging redaction.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Event source (S3, API GW, SQS, EventBridge, webhook) \u2502 \u25bc [Who can invoke?",
+      "expanded": false
+    },
+    {
+      "id": "n09da3bf140c818b",
+      "title": "L2 \u2014 Identity: execution roles and cold start",
+      "markdown": "Each function runs as an **IAM principal** (Lambda execution role). **Anti-pattern:** one **shared admin role** for all functions-compromise of a low-risk handler yields **S3:*, dynamodb:*, secretsmanager:***.\n\n**Best practices:**",
+      "notes": "Each function runs as an IAM principal (Lambda execution role). Anti-pattern: one shared admin role for all functions-compromise of a low-risk handler yields S3:, dynamodb:, secretsmanager:.\n\nBest practices:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nf5cdd1abea58ee7",
+          "title": "One role per function (or per trust tier: read-only vs write vs admin).",
+          "markdown": "- One role per function (or per trust tier: read-only vs write vs admin).",
+          "notes": "One role per function (or per trust tier: read-only vs write vs admin).",
+          "blurb": "One role per function (or per trust tier: read-only vs write vs admin).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n56b0fb1faab0764",
+          "title": "Resource-scoped ARNs in policies; condition keys (aws:SourceArn, aws:SourceAccount).",
+          "markdown": "- Resource-scoped ARNs in policies; condition keys (aws:SourceArn, aws:SourceAccount).",
+          "notes": "Resource-scoped ARNs in policies; condition keys (aws:SourceArn, aws:SourceAccount).",
+          "blurb": "Resource-scoped ARNs in policies; condition keys (aws:SourceArn,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nd13dbb17f43f517",
+          "title": "Permission boundaries for platform teams.",
+          "markdown": "- Permission boundaries for platform teams.",
+          "notes": "Permission boundaries for platform teams.",
+          "blurb": "Permission boundaries for platform teams.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nf19a98133de0ae8",
+          "title": "Avoid wildcard actions; prefer specific API calls needed at runtime.",
+          "markdown": "- Avoid wildcard actions; prefer specific API calls needed at runtime.",
+          "notes": "Avoid wildcard actions; prefer specific API calls needed at runtime.",
+          "blurb": "Avoid wildcard actions; prefer specific API calls needed at runtime.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n5cd0ef8dde28d1e",
+          "title": "Effect: Allow",
+          "markdown": "- Effect: Allow",
+          "notes": "Effect: Allow",
+          "blurb": "",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n3230f0402ee65dc",
+          "title": "s3:GetObject",
+          "markdown": "- s3:GetObject",
+          "notes": "s3:GetObject",
+          "blurb": "",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Each function runs as an IAM principal (Lambda execution role).",
+      "expanded": true
+    },
+    {
+      "id": "n5a5ab63b43a45e7",
+      "title": "L2 \u2014 Event trust and injection",
+      "markdown": "| Source | Risk | Control |\n|--------|------|---------|\n| **HTTP API (API Gateway)** | Unauthenticated invoke | **JWT/IAM auth**, WAF, rate limits |\n| **S3 notifications** | Malicious object triggers processing | Validate **bucket policy**, **object metadata**, **virus scan** stage |\n| **SQS/SNS** | Poison messages, replay | **Idempotency keys**, DLQ, max receive count |\n| **EventBridge** | Cross-account rules misconfigured | **Resource policies**, least privilege on `events:PutEvents` |\n| **Webhooks** | Forged GitHub/Stripe payloads | **HMAC signature** verification, timestamp tolerance |\n\n**Event injection pattern:** Attacker uploads **crafted file** to S3 -> Lambda **parses** with vulnerable library -> **SSRF or RCE** -> **IMDS credential theft** if role is broad and egress allowed.\n\n**Interview example:** Lambda triggered on **image upload** uses **ImageMagick** shell delegate -> same class as **ImageTragick**; combine with **IMDSv1** if SSRF exists elsewhere in pipeline.",
+      "notes": "| Source | Risk | Control |\n|--------|------|---------|\n| HTTP API (API Gateway) | Unauthenticated invoke | JWT/IAM auth, WAF, rate limits |\n| S3 notifications | Malicious object triggers processing | Validate bucket policy, object metadata, virus scan stage |\n| SQS/SNS | Poison messages, replay | Idempotency keys, DLQ, max receive count |\n| EventBridge | Cross-account rules misconfigured | Resource policies, least privilege on events:PutEvents |\n| Webhooks | Forged GitHub/Stripe payloads | HMAC signature verification, timestamp tolerance |\n\nEvent injection pattern: Attacker uploads crafted file to S3 -> Lambda parses with vulnerable library -> SSRF or RCE -> IMDS credential theft if role is broad and egress allowed.\n\nInterview example: Lambda triggered on image upload uses ImageMagick shell delegate -> same class as ImageTragick; combine with IMDSv1 if SSRF exists elsewhere in pipeline.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Source | Risk | Control | |--------|------|---------| | HTTP API (API...",
+      "expanded": false
+    },
+    {
+      "id": "nafe0f42d3736511",
+      "title": "L2 \u2014 Secrets and configuration",
+      "markdown": "| Anti-pattern | Fix |\n|--------------|-----|\n| Secrets in **plain env vars** in template | **Secrets Manager / Parameter Store** with extension; rotate |\n| Secrets in **git** (serverless.yml, SAM) | CI injection, **SOPS**, sealed secrets |\n| **Logging** event bodies with API keys | **Structured redaction**, sampling |\n| **Over-broad KMS** decrypt | **Key policy** + role scoping |\n\n**Lambda Secrets Extension:** Fetch at init, cache in memory-ensure **no debug dumps** and **minimal lifetime** where possible.",
+      "notes": "| Anti-pattern | Fix |\n|--------------|-----|\n| Secrets in plain env vars in template | Secrets Manager / Parameter Store with extension; rotate |\n| Secrets in git (serverless.yml, SAM) | CI injection, SOPS, sealed secrets |\n| Logging event bodies with API keys | Structured redaction, sampling |\n| Over-broad KMS decrypt | Key policy + role scoping |\n\nLambda Secrets Extension: Fetch at init, cache in memory-ensure no debug dumps and minimal lifetime where possible.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Anti-pattern | Fix | |--------------|-----| | Secrets in plain env vars in...",
+      "expanded": false
+    },
+    {
+      "id": "n4d1457e0b174421",
+      "title": "L2 \u2014 Network: VPC, egress, and IMDS",
+      "markdown": "Public Lambda with 0.0.0.0/0 egress + privileged role = disaster on RCE.",
+      "notes": "Public Lambda with 0.0.0.0/0 egress + privileged role = disaster on RCE.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n69b8b1f79c09ffc",
+          "title": "Public Lambda with 0.0.0.0/0 egress + privileged role = disaster on RCE.",
+          "markdown": "- Public Lambda with 0.0.0.0/0 egress + privileged role = disaster on RCE.",
+          "notes": "Public Lambda with 0.0.0.0/0 egress + privileged role = disaster on RCE.",
+          "blurb": "Public Lambda with 0.0.0.0/0 egress + privileged role = disaster on RCE.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n537be5152519123",
+          "title": "VPC-attached functions: understand ENI scaling, NAT cost, security groups-still need IMD",
+          "markdown": "- VPC-attached functions: understand ENI scaling, NAT cost, security groups-still need IMD",
+          "notes": "VPC-attached functions: understand ENI scaling, NAT cost, security groups-still need IMD",
+          "blurb": "VPC-attached functions: understand ENI scaling, NAT cost, security...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nd93b0f84685ab04",
+          "title": "IMDSv2 required on EC2; for Lambda, block metadata URLs in outbound fetchers unless requ",
+          "markdown": "- IMDSv2 required on EC2; for Lambda, block metadata URLs in outbound fetchers unless requ",
+          "notes": "IMDSv2 required on EC2; for Lambda, block metadata URLs in outbound fetchers unless requ",
+          "blurb": "IMDSv2 required on EC2; for Lambda, block metadata URLs in outbound fetchers...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Public Lambda with 0.0.0.0/0 egress + privileged role = disaster on RCE.",
+      "expanded": true
+    },
+    {
+      "id": "nf513ed63a6a6131",
+      "title": "L2 \u2014 Dependencies and supply chain",
+      "markdown": "Functions **bundle dependencies** (npm, pip layers)-each deploy is a **new image-like artifact**.",
+      "notes": "Functions bundle dependencies (npm, pip layers)-each deploy is a new image-like artifact.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n623fe1cb1b018cc",
+          "title": "Pin versions; lockfiles in CI.",
+          "markdown": "- Pin versions; lockfiles in CI.",
+          "notes": "Pin versions; lockfiles in CI.",
+          "blurb": "Pin versions; lockfiles in CI.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n662509116d6b659",
+          "title": "SCA (Snyk, Dependabot, OSV) on every deploy.",
+          "markdown": "- SCA (Snyk, Dependabot, OSV) on every deploy.",
+          "notes": "SCA (Snyk, Dependabot, OSV) on every deploy.",
+          "blurb": "SCA (Snyk, Dependabot, OSV) on every deploy.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n97cf940b3eb3b56",
+          "title": "Minimal layers; remove dev dependencies.",
+          "markdown": "- Minimal layers; remove dev dependencies.",
+          "notes": "Minimal layers; remove dev dependencies.",
+          "blurb": "Minimal layers; remove dev dependencies.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nbe6399a531a3c17",
+          "title": "Provenance / Sigstore for internal packages where applicable.",
+          "markdown": "- Provenance / Sigstore for internal packages where applicable.",
+          "notes": "Provenance / Sigstore for internal packages where applicable.",
+          "blurb": "Provenance / Sigstore for internal packages where applicable.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Functions bundle dependencies (npm, pip layers)-each deploy is a new...",
+      "expanded": true
+    },
+    {
+      "id": "n4fc540c1bdcc55f",
+      "title": "L2 \u2014 Concurrency, cost, and denial of wallet",
+      "markdown": "Attackers **flood triggers** (API Gateway, S3 PUT, SQS) causing **runaway invocations** and **bill shock**.\n\n**Controls:** **Reserved concurrency caps**, **API throttling**, **S3 prefix policies**, **budget alarms**, **WAF**, **CAPTCHA** on public endpoints, **idempotency** to reduce duplicate work.",
+      "notes": "Attackers flood triggers (API Gateway, S3 PUT, SQS) causing runaway invocations and bill shock.\n\nControls: Reserved concurrency caps, API throttling, S3 prefix policies, budget alarms, WAF, CAPTCHA on public endpoints, idempotency to reduce duplicate work.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Attackers flood triggers (API Gateway, S3 PUT, SQS) causing runaway...",
+      "expanded": false
+    },
+    {
+      "id": "nf6966f163d02e59",
+      "title": "L2 \u2014 Multi-tenant and data isolation",
+      "markdown": "Serverless **does not automatically isolate tenants**-shared tables keyed by `tenant_id` need **consistent authZ** in every handler.",
+      "notes": "Serverless does not automatically isolate tenants-shared tables keyed by tenantid need consistent authZ in every handler.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n25b6bf3ca8f2fac",
+          "title": "Row-level security in database where supported.",
+          "markdown": "- Row-level security in database where supported.",
+          "notes": "Row-level security in database where supported.",
+          "blurb": "Row-level security in database where supported.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nc64073006b4c28e",
+          "title": "Per-tenant KMS keys for sensitive fields.",
+          "markdown": "- Per-tenant KMS keys for sensitive fields.",
+          "notes": "Per-tenant KMS keys for sensitive fields.",
+          "blurb": "Per-tenant KMS keys for sensitive fields.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n62ea2d99a0fe112",
+          "title": "No cross-tenant IDs from event payloads without verification.",
+          "markdown": "- No cross-tenant IDs from event payloads without verification.",
+          "notes": "No cross-tenant IDs from event payloads without verification.",
+          "blurb": "No cross-tenant IDs from event payloads without verification.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Serverless does not automatically isolate tenants-shared tables keyed by...",
+      "expanded": false
+    },
+    {
+      "id": "n62ec93efa5078a7",
+      "title": "L3 \u2014 Detection",
+      "markdown": "CloudTrail / Activity Log: lambda:InvokeFunction spikes, sts:AssumeRole anomalies.",
+      "notes": "CloudTrail / Activity Log: lambda:InvokeFunction spikes, sts:AssumeRole anomalies.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "ndd2a71a14f6faf7",
+          "title": "CloudTrail / Activity Log: lambda:InvokeFunction spikes, sts:AssumeRole anomalies.",
+          "markdown": "- CloudTrail / Activity Log: lambda:InvokeFunction spikes, sts:AssumeRole anomalies.",
+          "notes": "CloudTrail / Activity Log: lambda:InvokeFunction spikes, sts:AssumeRole anomalies.",
+          "blurb": "CloudTrail / Activity Log: lambda:InvokeFunction spikes, sts:AssumeRole...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "na60d014b5f72622",
+          "title": "GuardDuty / Defender: credential exfil patterns.",
+          "markdown": "- GuardDuty / Defender: credential exfil patterns.",
+          "notes": "GuardDuty / Defender: credential exfil patterns.",
+          "blurb": "GuardDuty / Defender: credential exfil patterns.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nf77516fd1442f80",
+          "title": "Custom metrics: error rate, duration, concurrent executions, DLQ depth.",
+          "markdown": "- Custom metrics: error rate, duration, concurrent executions, DLQ depth.",
+          "notes": "Custom metrics: error rate, duration, concurrent executions, DLQ depth.",
+          "blurb": "Custom metrics: error rate, duration, concurrent executions, DLQ depth.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n7f3e290edc5aac1",
+          "title": "Log insights: unexpected outbound IPs, metadata URL fetches in application logs.",
+          "markdown": "- Log insights: unexpected outbound IPs, metadata URL fetches in application logs.",
+          "notes": "Log insights: unexpected outbound IPs, metadata URL fetches in application logs.",
+          "blurb": "Log insights: unexpected outbound IPs, metadata URL fetches in application...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "CloudTrail / Activity Log: lambda:InvokeFunction spikes, sts:AssumeRole...",
+      "expanded": false
+    },
+    {
+      "id": "n4b979c15baeb808",
+      "title": "L3 \u2014 Secure SDLC for serverless",
+      "markdown": "IaC review (SAM, CDK, Terraform): IAM, triggers, env vars.",
+      "notes": "IaC review (SAM, CDK, Terraform): IAM, triggers, env vars.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n42742a142d04823",
+          "title": "IaC review (SAM, CDK, Terraform): IAM, triggers, env vars.",
+          "markdown": "- IaC review (SAM, CDK, Terraform): IAM, triggers, env vars.",
+          "notes": "IaC review (SAM, CDK, Terraform): IAM, triggers, env vars.",
+          "blurb": "IaC review (SAM, CDK, Terraform): IAM, triggers, env vars.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nfa4e430e80d6d74",
+          "title": "Unit + integration tests including malformed events.",
+          "markdown": "- Unit + integration tests including malformed events.",
+          "notes": "Unit + integration tests including malformed events.",
+          "blurb": "Unit + integration tests including malformed events.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nc2f752673f2a9b8",
+          "title": "Static analysis: Checkov, tfsec, cfn-nag, Semgrep for deserialization, SSRF, shell.",
+          "markdown": "- Static analysis: Checkov, tfsec, cfn-nag, Semgrep for deserialization, SSRF, shell.",
+          "notes": "Static analysis: Checkov, tfsec, cfn-nag, Semgrep for deserialization, SSRF, shell.",
+          "blurb": "Static analysis: Checkov, tfsec, cfn-nag, Semgrep for deserialization, SSRF,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n8e3b0ae0f170051",
+          "title": "Deploy pipelines: OIDC to CI, no long-lived cloud keys in GitHub.",
+          "markdown": "- Deploy pipelines: OIDC to CI, no long-lived cloud keys in GitHub.",
+          "notes": "Deploy pipelines: OIDC to CI, no long-lived cloud keys in GitHub.",
+          "blurb": "Deploy pipelines: OIDC to CI, no long-lived cloud keys in GitHub.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "IaC review (SAM, CDK, Terraform): IAM, triggers, env vars.",
+      "expanded": false
+    },
+    {
+      "id": "nc761b80b1fdf5c8",
+      "title": "Platform specifics (name in interviews)",
+      "markdown": "| AWS | Azure | GCP |\n|-----|-------|-----|\n| Lambda + IAM role | Function App + Managed Identity | Cloud Functions + SA |\n| API Gateway authorizers | APIM / EasyAuth | Cloud Endpoints / IAP |\n| Lambda layers | Deployment slots | Cloud Run (related pattern) |",
+      "notes": "| AWS | Azure | GCP |\n|-----|-------|-----|\n| Lambda + IAM role | Function App + Managed Identity | Cloud Functions + SA |\n| API Gateway authorizers | APIM / EasyAuth | Cloud Endpoints / IAP |\n| Lambda layers | Deployment slots | Cloud Run (related pattern) |",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| AWS | Azure | GCP | |-----|-------|-----| | Lambda + IAM role | Function...",
+      "expanded": false
+    },
+    {
+      "id": "n39e48be4b971de2",
+      "title": "Hands-on / labs",
+      "markdown": "Serverless Goat (OWASP) - AWS Well-Architected Serverless Lens - Rhino Security Labs Lambda privilege escalation posts - CloudGoat scenarios with Lambda misconfig",
+      "notes": "Serverless Goat (OWASP) - AWS Well-Architected Serverless Lens - Rhino Security Labs Lambda privilege escalation posts - CloudGoat scenarios with Lambda misconfig",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n2e458d6dac1b7dd",
+          "title": "Serverless Goat (OWASP)",
+          "markdown": "- Serverless Goat (OWASP)",
+          "notes": "Serverless Goat (OWASP)",
+          "blurb": "Serverless Goat (OWASP)",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n90a2f9398360c1c",
+          "title": "AWS Well-Architected Serverless Lens",
+          "markdown": "- AWS Well-Architected Serverless Lens",
+          "notes": "AWS Well-Architected Serverless Lens",
+          "blurb": "AWS Well-Architected Serverless Lens",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "na633472a4ee63a1",
+          "title": "Rhino Security Labs Lambda privilege escalation posts",
+          "markdown": "- Rhino Security Labs Lambda privilege escalation posts",
+          "notes": "Rhino Security Labs Lambda privilege escalation posts",
+          "blurb": "Rhino Security Labs Lambda privilege escalation posts",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ncc6eca68f95703a",
+          "title": "CloudGoat scenarios with Lambda misconfig",
+          "markdown": "- CloudGoat scenarios with Lambda misconfig",
+          "notes": "CloudGoat scenarios with Lambda misconfig",
+          "blurb": "CloudGoat scenarios with Lambda misconfig",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Serverless Goat (OWASP) - AWS Well-Architected Serverless Lens - Rhino...",
+      "expanded": false
+    },
+    {
+      "id": "nc4f28c46409e7e7",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nd160c69516ce9fc",
+          "title": "Top risks",
+          "markdown": "Over-privileged IAM role",
+          "notes": "Over-privileged IAM role",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n51cc9f42806cc0c",
+              "title": "Over-privileged IAM role",
+              "markdown": "- Over-privileged IAM role",
+              "notes": "Over-privileged IAM role",
+              "blurb": "Over-privileged IAM role",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9ef6b93e979697c",
+              "title": "Unauthenticated / spoofed triggers",
+              "markdown": "- Unauthenticated / spoofed triggers",
+              "notes": "Unauthenticated / spoofed triggers",
+              "blurb": "Unauthenticated / spoofed triggers",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na99211f9b11184c",
+              "title": "Secrets in env / logs",
+              "markdown": "- Secrets in env / logs",
+              "notes": "Secrets in env / logs",
+              "blurb": "Secrets in env / logs",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd6eb9a3e34368cb",
+              "title": "Vulnerable dependencies",
+              "markdown": "- Vulnerable dependencies",
+              "notes": "Vulnerable dependencies",
+              "blurb": "Vulnerable dependencies",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6da252f578d9cb1",
+              "title": "Unbounded concurrency / cost abuse",
+              "markdown": "- Unbounded concurrency / cost abuse",
+              "notes": "Unbounded concurrency / cost abuse",
+              "blurb": "Unbounded concurrency / cost abuse",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n69e819e6d9772ab",
+              "title": "SSRF + broad cloud API access",
+              "markdown": "- SSRF + broad cloud API access",
+              "notes": "SSRF + broad cloud API access",
+              "blurb": "SSRF + broad cloud API access",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Over-privileged IAM role",
+          "expanded": false
+        },
+        {
+          "id": "n49bbcf191d4b62c",
+          "title": "IAM rules",
+          "markdown": "One role per function (or tier: read/write/admin) - Resource ARNs, not - Condition keys: aws:SourceArn, aws:SourceAccount - Permission boundaries for platforms",
+          "notes": "One role per function (or tier: read/write/admin) - Resource ARNs, not - Condition keys: aws:SourceArn, aws:SourceAccount - Permission boundaries for platforms",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n9b73037e5a5a3cd",
+              "title": "One role per function (or tier: read/write/admin)",
+              "markdown": "- One role per function (or tier: read/write/admin)",
+              "notes": "One role per function (or tier: read/write/admin)",
+              "blurb": "One role per function (or tier: read/write/admin)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8afbfd98abfd7ad",
+              "title": "Resource ARNs, not *",
+              "markdown": "- Resource ARNs, not *",
+              "notes": "Resource ARNs, not *",
+              "blurb": "Resource ARNs, not",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9b8df0a09acc9b0",
+              "title": "Condition keys: aws:SourceArn, aws:SourceAccount",
+              "markdown": "- Condition keys: aws:SourceArn, aws:SourceAccount",
+              "notes": "Condition keys: aws:SourceArn, aws:SourceAccount",
+              "blurb": "Condition keys: aws:SourceArn, aws:SourceAccount",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3d0555f69906c9f",
+              "title": "Permission boundaries for platforms",
+              "markdown": "- Permission boundaries for platforms",
+              "notes": "Permission boundaries for platforms",
+              "blurb": "Permission boundaries for platforms",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "One role per function (or tier: read/write/admin) - Resource ARNs, not -...",
+          "expanded": false
+        },
+        {
+          "id": "nc4cf667a47e7337",
+          "title": "Events",
+          "markdown": "Verify webhook signatures (HMAC, timestamp) - API Gateway: JWT / IAM auth, throttling, WAF - Treat S3/SQS payloads as untrusted - DLQ + idempotency for poison messages",
+          "notes": "Verify webhook signatures (HMAC, timestamp) - API Gateway: JWT / IAM auth, throttling, WAF - Treat S3/SQS payloads as untrusted - DLQ + idempotency for poison messages",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nab0b614841b8562",
+              "title": "Verify webhook signatures (HMAC, timestamp)",
+              "markdown": "- Verify webhook signatures (HMAC, timestamp)",
+              "notes": "Verify webhook signatures (HMAC, timestamp)",
+              "blurb": "Verify webhook signatures (HMAC, timestamp)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n33861b9ae69f5e8",
+              "title": "API Gateway: JWT / IAM auth, throttling, WAF",
+              "markdown": "- API Gateway: JWT / IAM auth, throttling, WAF",
+              "notes": "API Gateway: JWT / IAM auth, throttling, WAF",
+              "blurb": "API Gateway: JWT / IAM auth, throttling, WAF",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n1304db310b9b578",
+              "title": "Treat S3/SQS payloads as untrusted",
+              "markdown": "- Treat S3/SQS payloads as untrusted",
+              "notes": "Treat S3/SQS payloads as untrusted",
+              "blurb": "Treat S3/SQS payloads as untrusted",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc61bb65da3184c0",
+              "title": "DLQ + idempotency for poison messages",
+              "markdown": "- DLQ + idempotency for poison messages",
+              "notes": "DLQ + idempotency for poison messages",
+              "blurb": "DLQ + idempotency for poison messages",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Verify webhook signatures (HMAC, timestamp) - API Gateway: JWT / IAM auth,...",
+          "expanded": false
+        },
+        {
+          "id": "n32d589abae20d42",
+          "title": "Secrets",
+          "markdown": "Secrets Manager / Parameter Store + KMS - Never commit to SAM/CDK/Terraform git - Redact logs; no secret env dumps on crash",
+          "notes": "Secrets Manager / Parameter Store + KMS - Never commit to SAM/CDK/Terraform git - Redact logs; no secret env dumps on crash",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n2415cb2d89ab9db",
+              "title": "Secrets Manager / Parameter Store + KMS",
+              "markdown": "- Secrets Manager / Parameter Store + KMS",
+              "notes": "Secrets Manager / Parameter Store + KMS",
+              "blurb": "Secrets Manager / Parameter Store + KMS",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf3b7fa04540ed47",
+              "title": "Never commit to SAM/CDK/Terraform git",
+              "markdown": "- Never commit to SAM/CDK/Terraform git",
+              "notes": "Never commit to SAM/CDK/Terraform git",
+              "blurb": "Never commit to SAM/CDK/Terraform git",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc2ecb02857ea82d",
+              "title": "Redact logs; no secret env dumps on crash",
+              "markdown": "- Redact logs; no secret env dumps on crash",
+              "notes": "Redact logs; no secret env dumps on crash",
+              "blurb": "Redact logs; no secret env dumps on crash",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Secrets Manager / Parameter Store + KMS - Never commit to SAM/CDK/Terraform...",
+          "expanded": false
+        },
+        {
+          "id": "n2cbf99b5b1c37da",
+          "title": "Network",
+          "markdown": "Restrict egress; block metadata IP if app fetches URLs - VPC endpoints for AWS APIs - No public Function URL without auth",
+          "notes": "Restrict egress; block metadata IP if app fetches URLs - VPC endpoints for AWS APIs - No public Function URL without auth",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nadeb14fe4154e40",
+              "title": "Restrict egress; block metadata IP if app fetches URLs",
+              "markdown": "- Restrict egress; block metadata IP if app fetches URLs",
+              "notes": "Restrict egress; block metadata IP if app fetches URLs",
+              "blurb": "Restrict egress; block metadata IP if app fetches URLs",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nfa02511a90b2c33",
+              "title": "VPC endpoints for AWS APIs",
+              "markdown": "- VPC endpoints for AWS APIs",
+              "notes": "VPC endpoints for AWS APIs",
+              "blurb": "VPC endpoints for AWS APIs",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ne5e52b69e22e1a7",
+              "title": "No public Function URL without auth",
+              "markdown": "- No public Function URL without auth",
+              "notes": "No public Function URL without auth",
+              "blurb": "No public Function URL without auth",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Restrict egress; block metadata IP if app fetches URLs - VPC endpoints for...",
+          "expanded": false
+        },
+        {
+          "id": "n531bb1a55c8cbae",
+          "title": "Supply chain",
+          "markdown": "- **Lockfiles**, SCA on deploy, minimal layers\n- Watch **Log4j**, **pickle**, native libs in handlers",
+          "notes": "- Lockfiles, SCA on deploy, minimal layers\n- Watch Log4j, pickle, native libs in handlers",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Lockfiles, SCA on deploy, minimal layers - Watch Log4j, pickle, native libs...",
+          "expanded": false
+        },
+        {
+          "id": "ned2f577158bc436",
+          "title": "Detection",
+          "markdown": "Invocations / ConcurrentExecutions spikes - CloudTrail lambda:, sts:AssumeRole - DLQ depth, error rate, unusual outbound in logs",
+          "notes": "Invocations / ConcurrentExecutions spikes - CloudTrail lambda:, sts:AssumeRole - DLQ depth, error rate, unusual outbound in logs",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n2ac314c49484a52",
+              "title": "Invocations / ConcurrentExecutions spikes",
+              "markdown": "- Invocations / ConcurrentExecutions spikes",
+              "notes": "Invocations / ConcurrentExecutions spikes",
+              "blurb": "Invocations / ConcurrentExecutions spikes",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf1e3ad86b69096c",
+              "title": "CloudTrail lambda:*, sts:AssumeRole",
+              "markdown": "- CloudTrail lambda:*, sts:AssumeRole",
+              "notes": "CloudTrail lambda:*, sts:AssumeRole",
+              "blurb": "CloudTrail lambda:, sts:AssumeRole",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n70f58d59b026b7c",
+              "title": "DLQ depth, error rate, unusual outbound in logs",
+              "markdown": "- DLQ depth, error rate, unusual outbound in logs",
+              "notes": "DLQ depth, error rate, unusual outbound in logs",
+              "blurb": "DLQ depth, error rate, unusual outbound in logs",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Invocations / ConcurrentExecutions spikes - CloudTrail lambda:,...",
+          "expanded": false
+        },
+        {
+          "id": "n00fa9891e057b4a",
+          "title": "Tools",
+          "markdown": "**Checkov** \u00b7 **tfsec** \u00b7 **cfn-nag** \u00b7 **Semgrep** \u00b7 **GuardDuty**",
+          "notes": "Checkov \u00b7 tfsec \u00b7 cfn-nag \u00b7 Semgrep \u00b7 GuardDuty",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Checkov \u00b7 tfsec \u00b7 cfn-nag \u00b7 Semgrep \u00b7 GuardDuty",
+          "expanded": false
+        },
+        {
+          "id": "nab4052991135ffc",
+          "title": "Cross-reads",
+          "markdown": "`Cloud Attack Paths` \u00b7 `IAM and Least Privilege at Scale` \u00b7 `Software Supply Chain Security`",
+          "notes": "Cloud Attack Paths \u00b7 IAM and Least Privilege at Scale \u00b7 Software Supply Chain Security",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Cloud Attack Paths \u00b7 IAM and Least Privilege at Scale \u00b7 Software Supply...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Top risks"
+    },
+    {
+      "id": "n53b425711c68396",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n7875be0b20ea753",
+          "title": "\"Serverless means no servers, so no patching needed \u2014 we're secure.\"",
+          "markdown": "**Wrong.** Provider patches the **runtime**; you still own **code, IAM, events, secrets, and dependencies**. Vulnerable **npm/pip** packages in your deployment bundle are still your RCE surface.",
+          "notes": "Wrong. Provider patches the runtime; you still own code, IAM, events, secrets, and dependencies. Vulnerable npm/pip packages in your deployment bundle are still your RCE surface.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "nbd08c9bdfb0a0c2",
+          "title": "\"One shared Lambda role simplifies operations.\"",
+          "markdown": "**Wrong.** Shared roles create **blast-radius amplification**. Use **per-function or per-tier** roles with **resource-scoped** policies.",
+          "notes": "Wrong. Shared roles create blast-radius amplification. Use per-function or per-tier roles with resource-scoped policies.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "ncab42fec6bb91e7",
+          "title": "\"Environment variables are fine for API keys if the console is locked down.\"",
+          "markdown": "**Wrong.** Env vars appear in **CloudFormation/SAM exports**, **CI logs**, **crash dumps**, and **console readers** with `lambda:GetFunctionConfiguration`. Use **Secrets Manager** with rotation and audit.",
+          "notes": "Wrong. Env vars appear in CloudFormation/SAM exports, CI logs, crash dumps, and console readers with lambda:GetFunctionConfiguration. Use Secrets Manager with rotation and audit.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "nd97a8ad4d72ee5b",
+          "title": "\"Internal S3 triggers don't need validation.\"",
+          "markdown": "**Wrong.** Any **Principal** that can **PutObject** can **inject events**. Treat object content as **untrusted input**-malware, zip bombs, parser exploits.",
+          "notes": "Wrong. Any Principal that can PutObject can inject events. Treat object content as untrusted input-malware, zip bombs, parser exploits.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "n7541beeefc4c41e",
+          "title": "\"Lambda in a VPC is automatically isolated from the internet.\"",
+          "markdown": "**Wrong.** VPC attachment controls **network paths**, not **IAM**. Functions still need **egress rules**, **NAT**, and **endpoint policies**. Misconfigured SGs can expose internal services.",
+          "notes": "Wrong. VPC attachment controls network paths, not IAM. Functions still need egress rules, NAT, and endpoint policies. Misconfigured SGs can expose internal services.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "n64b0dfd4d4871f9",
+          "title": "\"Concurrency limits hurt availability so we leave them unlimited.\"",
+          "markdown": "**Wrong.** Unlimited concurrency enables **cost abuse** and **downstream overload**. Set **reserved/max concurrency** per critical functions with **alarms**.",
+          "notes": "Wrong. Unlimited concurrency enables cost abuse and downstream overload. Set reserved/max concurrency per critical functions with alarms.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "n15848ff57e6ce36",
+          "title": "\"Function URLs are convenient and low risk for internal tools.\"",
+          "markdown": "**Wrong.** **Unauthenticated Function URLs** are a common **data leak** vector. Require **IAM auth**, **JWT**, or front with **API Gateway + WAF**.",
+          "notes": "Wrong. Unauthenticated Function URLs are a common data leak vector. Require IAM auth, JWT, or front with API Gateway + WAF.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "n4a05e7a989ccf12",
+          "title": "\"Cold starts don't matter for security.\"",
+          "markdown": "**Wrong.** Init-time **secret fetch**, **global variable** caching, and **race conditions** in warm containers affect **credential lifetime** and **tenant isolation** assumptions-document behavior.",
+          "notes": "Wrong. Init-time secret fetch, global variable caching, and race conditions in warm containers affect credential lifetime and tenant isolation assumptions-document behavior.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "nb7ef2ddd8384f9b",
+          "title": "\"Serverless eliminates SSRF impact.\"",
+          "markdown": "**Wrong.** Functions often have **high IAM** and **outbound access**-SSRF can be **worse** than in a locked-down monolith if roles are over-privileged.",
+          "notes": "Wrong. Functions often have high IAM and outbound access-SSRF can be worse than in a locked-down monolith if roles are over-privileged.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "nc5704527e4d23ff",
+          "title": "\"Infrastructure-as-code review is optional for small functions.\"",
+          "markdown": "**Wrong.** **IAM and trigger misconfigurations** scale with **copy-paste IaC**-automate **policy-as-code** checks on every PR.",
+          "notes": "Wrong. IAM and trigger misconfigurations scale with copy-paste IaC-automate policy-as-code checks on every PR.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \"Serverless means no servers, so no patching needed \u2014 we're secure.\""
+    },
+    {
+      "id": "ne235e5905b9859b",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nd1305ef2bcee977",
+          "title": "60-second answer",
+          "markdown": "**Q: What makes serverless security different from traditional app security?**\n\n**A:** You don't manage the OS, but each function is a **mini service** with its own **IAM role**, **event triggers**, and **dependency bundle**. The top risks are **over-privileged roles**, **unauthenticated or spoofed events**, **secrets in environment variables and logs**, **vulnerable dependencies**, and **unbounded concurrency** causing cost or abuse. Secure serverless means **least-privilege IAM per function**, **verified event sources**, **secret managers**, **egress control**, and **supply-chain scanning** on every deploy.",
+          "notes": "Q: What makes serverless security different from traditional app security?\n\nA: You don't manage the OS, but each function is a mini service with its own IAM role, event triggers, and dependency bundle. The top risks are over-privileged roles, unauthenticated or spoofed events, secrets in environment variables and logs, vulnerable dependencies, and unbounded concurrency causing cost or abuse. Secure serverless means least-privilege IAM per function, verified event sources, secret managers, egress control, and supply-chain scanning on every deploy.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Q: What makes serverless security different from traditional app security?",
+          "expanded": false
+        },
+        {
+          "id": "ndf785f5ca197dd6",
+          "title": "Core questions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ne357a22df122267",
+              "title": "How do you design IAM for a Lambda that processes S3 uploads?",
+              "markdown": "**A:** Create a **dedicated execution role** with **s3:GetObject** on the specific bucket/prefix, **s3:PutObject** only if needed for output, and **kms:Decrypt** scoped to the bucket's CMK. Deny `s3:*` on `*`. Add **conditions** on source account/ARN. No **AdministratorAccess**. If the function needs SQS, scope **ReceiveMessage** to one queue ARN. Review **resource-based policies** on the bucket so only expected triggers invoke processing.",
+              "notes": "A: Create a dedicated execution role with s3:GetObject on the specific bucket/prefix, s3:PutObject only if needed for output, and kms:Decrypt scoped to the bucket's CMK. Deny s3: on . Add conditions on source account/ARN. No AdministratorAccess. If the function needs SQS, scope ReceiveMessage to one queue ARN. Review resource-based policies on the bucket so only expected triggers invoke processing.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Create a dedicated execution role with s3:GetObject on the specific...",
+              "expanded": false
+            },
+            {
+              "id": "n60bca3c665c8445",
+              "title": "What is event injection in serverless?",
+              "markdown": "**A:** An attacker crafts an **event**-malicious S3 object, SQS message, or HTTP body-that your function **trusts and processes**. If parsing uses **vulnerable libraries** or passes data to **shell/SSRF**, you get **RCE or credential theft**. Mitigate with **input validation**, **sandboxed parsers**, **minimal IAM**, **no outbound metadata access**, and **separate** untrusted processing from privileged callbacks.",
+              "notes": "A: An attacker crafts an event-malicious S3 object, SQS message, or HTTP body-that your function trusts and processes. If parsing uses vulnerable libraries or passes data to shell/SSRF, you get RCE or credential theft. Mitigate with input validation, sandboxed parsers, minimal IAM, no outbound metadata access, and separate untrusted processing from privileged callbacks.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: An attacker crafts an event-malicious S3 object, SQS message, or HTTP...",
+              "expanded": false
+            },
+            {
+              "id": "nf43cafbc0abbff7",
+              "title": "Where should secrets live in Lambda?",
+              "markdown": "**A:** **Secrets Manager or Parameter Store** (with extension or runtime fetch), **never** committed in SAM/CDK/Terraform or plain **environment variables** in repos. Rotate regularly. **Redact** secrets from logs and X-Ray. Use **KMS** keys scoped to the function role.",
+              "notes": "A: Secrets Manager or Parameter Store (with extension or runtime fetch), never committed in SAM/CDK/Terraform or plain environment variables in repos. Rotate regularly. Redact secrets from logs and X-Ray. Use KMS keys scoped to the function role.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Secrets Manager or Parameter Store (with extension or runtime fetch),...",
+              "expanded": false
+            },
+            {
+              "id": "n292f5110a47a3ed",
+              "title": "How do you prevent \"denial of wallet\" attacks?",
+              "markdown": "**A:** **API throttling**, **WAF**, **reserved concurrency limits**, **S3 bucket policies**, **budget alarms**, **CAPTCHA** on public endpoints, and **idempotent** handlers so retries don't multiply work. Monitor **Invocations** and **ConcurrentExecutions** metrics.",
+              "notes": "A: API throttling, WAF, reserved concurrency limits, S3 bucket policies, budget alarms, CAPTCHA on public endpoints, and idempotent handlers so retries don't multiply work. Monitor Invocations and ConcurrentExecutions metrics.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: API throttling, WAF, reserved concurrency limits, S3 bucket policies,...",
+              "expanded": false
+            },
+            {
+              "id": "n0ed24914e8a6a87",
+              "title": "SSRF from a Lambda\u2014special considerations?",
+              "markdown": "**A:** Functions often have **outbound internet** and **broad IAM**. SSRF to **169.254.169.254** or internal services is high impact. Block metadata IPs at **egress**, use **VPC endpoints** for AWS APIs instead of generic HTTP, validate URLs with **allowlists**, and avoid passing user URLs to raw HTTP clients without checks. Cross-read **[Cloud Attack Paths](../Cloud%20Attack%20Paths/)**.",
+              "notes": "A: Functions often have outbound internet and broad IAM. SSRF to 169.254.169.254 or internal services is high impact. Block metadata IPs at egress, use VPC endpoints for AWS APIs instead of generic HTTP, validate URLs with allowlists, and avoid passing user URLs to raw HTTP clients without checks. Cross-read Cloud Attack Paths.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Functions often have outbound internet and broad IAM.",
+              "expanded": false
+            },
+            {
+              "id": "n346ce4722bf4792",
+              "title": "Compare serverless vs containers for security.",
+              "markdown": "**A:** Serverless reduces **OS patch** burden and **long-lived shell** persistence but increases **IAM fragmentation** and **event-driven** attack surface. Containers offer **stronger network policy** and **immutable image** scanning but you patch images. Both need **least privilege** and **dependency hygiene**; serverless adds **trigger auth** and **concurrency** concerns.",
+              "notes": "A: Serverless reduces OS patch burden and long-lived shell persistence but increases IAM fragmentation and event-driven attack surface. Containers offer stronger network policy and immutable image scanning but you patch images. Both need least privilege and dependency hygiene; serverless adds trigger auth and concurrency concerns.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Serverless reduces OS patch burden and long-lived shell persistence but...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes How do you design IAM for a Lambda that processes S3 uploads?",
+          "expanded": false
+        },
+        {
+          "id": "n8eef2c0118d137d",
+          "title": "Senior follow-ups",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n326d16a0d10e3be",
+              "title": "Design guardrails for 100 teams deploying Lambdas.",
+              "markdown": "**A:** **Platform templates** with **permission boundaries**, **approved layers**, **Checkov/cfn-nag** in CI, **OIDC federation** for deploy roles, **central logging** with retention, **no public Function URLs** by default, **Service Control Policies** denying `iam:*` wildcards, **tagging** for cost and ownership, **break-glass** audited admin role.",
+              "notes": "A: Platform templates with permission boundaries, approved layers, Checkov/cfn-nag in CI, OIDC federation for deploy roles, central logging with retention, no public Function URLs by default, Service Control Policies denying iam: wildcards, tagging for cost and ownership, break-glass audited admin role.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Platform templates with permission boundaries, approved layers,...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Design guardrails for 100 teams deploying Lambdas.",
+          "expanded": false
+        },
+        {
+          "id": "nfe803f2b90f9441",
+          "title": "Depth \u2014 follow-ups",
+          "markdown": "Explain Lambda resource policy vs execution role trust.",
+          "notes": "Explain Lambda resource policy vs execution role trust.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n0868948f2d43c26",
+              "title": "Explain Lambda resource policy vs execution role trust.",
+              "markdown": "- Explain Lambda resource policy vs execution role trust.",
+              "notes": "Explain Lambda resource policy vs execution role trust.",
+              "blurb": "Explain Lambda resource policy vs execution role trust.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf52fd0a148b4304",
+              "title": "EventBridge cross-account misconfiguration example.",
+              "markdown": "- EventBridge cross-account misconfiguration example.",
+              "notes": "EventBridge cross-account misconfiguration example.",
+              "blurb": "EventBridge cross-account misconfiguration example.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3922569d9e39012",
+              "title": "Cold start implications for secret caching.",
+              "markdown": "- Cold start implications for secret caching.",
+              "notes": "Cold start implications for secret caching.",
+              "blurb": "Cold start implications for secret caching.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3858e2b85ff00d9",
+              "title": "Lambda layer supply-chain risk.",
+              "markdown": "- Lambda layer supply-chain risk.",
+              "notes": "Lambda layer supply-chain risk.",
+              "blurb": "Lambda layer supply-chain risk.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Explain Lambda resource policy vs execution role trust.",
+          "expanded": false
+        },
+        {
+          "id": "n9ceddfbde3b06d0",
+          "title": "Authoritative references",
+          "markdown": "AWS Lambda security - OWASP Serverless Top 10 - CIS AWS Foundations Benchmark",
+          "notes": "AWS Lambda security - OWASP Serverless Top 10 - CIS AWS Foundations Benchmark",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nafdd4d584bbe3ff",
+              "title": "AWS Lambda security",
+              "markdown": "- AWS Lambda security",
+              "notes": "AWS Lambda security",
+              "blurb": "AWS Lambda security",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nefcbabfc1a70e1c",
+              "title": "OWASP Serverless Top 10",
+              "markdown": "- OWASP Serverless Top 10",
+              "notes": "OWASP Serverless Top 10",
+              "blurb": "OWASP Serverless Top 10",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n48768a20f1948cb",
+              "title": "CIS AWS Foundations Benchmark",
+              "markdown": "- CIS AWS Foundations Benchmark",
+              "notes": "CIS AWS Foundations Benchmark",
+              "blurb": "CIS AWS Foundations Benchmark",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "AWS Lambda security - OWASP Serverless Top 10 - CIS AWS Foundations Benchmark",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 60-second answer"
+    }
+  ],
+  "topicId": "serverless-security",
+  "name": "Serverless Security",
+  "structure": "logic-right",
+  "blurb": "Serverless security covers function-as-a-service (FaaS) and event-driven..."
+}

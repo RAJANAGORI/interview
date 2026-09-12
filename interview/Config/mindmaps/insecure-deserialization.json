@@ -1,0 +1,1342 @@
+{
+  "id": "n3296c7d898e5004",
+  "title": "Insecure Deserialization",
+  "markdown": "**Insecure deserialization** turns **attacker-controlled serialized blobs** into **live objects** in memory, enabling **RCE**, **auth bypass**, **logic** **abuse**, and **data** **tampering** via **gadget chains**-sequences of **existing** **methods** (**gadgets**) that **bridge** from a **benign** **readObject** (or equivalent) to **dangerous** **behavior**. Languages differ (**Java**, **.NET**, **Python**, **PHP**, **Ruby**), but the **interview** **pattern** is the same: **never** **deserialize** **untrusted** **native** **formats**; prefer **signed** **tokens** or **schema-constrained** **formats** like **JSON** + **DTO** **validation**.\n\nAligned with **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+  "notes": "Insecure deserialization turns attacker-controlled serialized blobs into live objects in memory, enabling RCE, auth bypass, logic abuse, and data tampering via gadget chains-sequences of existing methods (gadgets) that bridge from a benign readObject (or equivalent) to dangerous behavior. Languages differ (Java, .NET, Python, PHP, Ruby), but the interview pattern is the same: never deserialize untrusted native formats; prefer signed tokens or schema-constrained formats like JSON + DTO validation.\n\nAligned with Content Mastery Framework.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "nadbf0b3f9f073cf",
+      "title": "At a glance",
+      "markdown": "**Insecure deserialization** turns **attacker-controlled serialized blobs** into **live objects** in memory, enabling **RCE**, **auth bypass**, **logic** **abuse**, and **data** **tampering** via **gadget chains**-sequences of **existing** **methods** (**gadgets**) that **bridge** from a **benign** **readObject** (or equivalent) to **dangerous** **behavior**. Languages differ (**Java**, **.NET**, **Python**, **PHP**, **Ruby**), but the **interview** **pattern** is the same: **never** **deserialize** **untrusted** **native** **formats**; prefer **signed** **tokens** or **schema-constrained** **formats** like **JSON** + **DTO** **validation**.\n\nAligned with **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+      "notes": "Insecure deserialization turns attacker-controlled serialized blobs into live objects in memory, enabling RCE, auth bypass, logic abuse, and data tampering via gadget chains-sequences of existing methods (gadgets) that bridge from a benign readObject (or equivalent) to dangerous behavior. Languages differ (Java, .NET, Python, PHP, Ruby), but the interview pattern is the same: never deserialize untrusted native formats; prefer signed tokens or schema-constrained formats like JSON + DTO validation.\n\nAligned with Content Mastery Framework.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Insecure deserialization turns attacker-controlled serialized blobs into...",
+      "expanded": false
+    },
+    {
+      "id": "n9d2ecf4539c00d0",
+      "title": "L1 \u2014 Mechanism",
+      "markdown": "**Serialization** flattens **objects** to **bytes** for **storage** or **transport**. **Deserialization** **reconstructs** **objects**, **running** **constructors**, **readObject**, **magic** **methods**-**attack surface**.\n\n**Unsafe when:** **attacker** **controls** **bytes** and **runtime** **loads** **arbitrary** **classes** **or** **prototypes**.",
+      "notes": "Serialization flattens objects to bytes for storage or transport. Deserialization reconstructs objects, running constructors, readObject, magic methods-attack surface.\n\nUnsafe when: attacker controls bytes and runtime loads arbitrary classes or prototypes.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Serialization flattens objects to bytes for storage or transport.",
+      "expanded": false
+    },
+    {
+      "id": "nd8e7db3ad6a5f67",
+      "title": "L3 \u2014 Cryptographic envelope pitfalls",
+      "markdown": "Serialization controls fail frequently because integrity/context design is weak:",
+      "notes": "Serialization controls fail frequently because integrity/context design is weak:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nc1c0a01ef23c8f2",
+          "title": "Unsigned payloads: attacker can rewrite object graphs freely.",
+          "markdown": "- Unsigned payloads: attacker can rewrite object graphs freely.",
+          "notes": "Unsigned payloads: attacker can rewrite object graphs freely.",
+          "blurb": "Unsigned payloads: attacker can rewrite object graphs freely.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n2bccca4240403f0",
+          "title": "Key reuse across token families: confusion and cross-context acceptance.",
+          "markdown": "- Key reuse across token families: confusion and cross-context acceptance.",
+          "notes": "Key reuse across token families: confusion and cross-context acceptance.",
+          "blurb": "Key reuse across token families: confusion and cross-context acceptance.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n79885060704ea03",
+          "title": "Algorithm confusion/downgrade: verifier accepts weaker mode than intended.",
+          "markdown": "- Algorithm confusion/downgrade: verifier accepts weaker mode than intended.",
+          "notes": "Algorithm confusion/downgrade: verifier accepts weaker mode than intended.",
+          "blurb": "Algorithm confusion/downgrade: verifier accepts weaker mode than intended.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n58816d7ecc837dd",
+          "title": "Missing audience/purpose binding: token valid across tenants or services.",
+          "markdown": "- Missing audience/purpose binding: token valid across tenants or services.",
+          "notes": "Missing audience/purpose binding: token valid across tenants or services.",
+          "blurb": "Missing audience/purpose binding: token valid across tenants or services.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Serialization controls fail frequently because integrity/context design is...",
+      "expanded": true
+    },
+    {
+      "id": "n5564c6af01f0dba",
+      "title": "L3 \u2014 PHP phar and wrapper-adjacent risk",
+      "markdown": "In PHP stacks, danger is not limited to direct `unserialize($_INPUT)` patterns:",
+      "notes": "In PHP stacks, danger is not limited to direct unserialize($INPUT) patterns:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "neee798dc49d8063",
+          "title": "phar:// metadata can trigger object reconstruction through file APIs.",
+          "markdown": "- phar:// metadata can trigger object reconstruction through file APIs.",
+          "notes": "phar:// metadata can trigger object reconstruction through file APIs.",
+          "blurb": "phar:// metadata can trigger object reconstruction through file APIs.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nf1bca1587335657",
+          "title": "Magic methods (__wakeup, __destruct, __toString) can act as implicit chain steps.",
+          "markdown": "- Magic methods (__wakeup, __destruct, __toString) can act as implicit chain steps.",
+          "notes": "Magic methods (__wakeup, __destruct, __toString) can act as implicit chain steps.",
+          "blurb": "Magic methods (wakeup, destruct, toString) can act as implicit chain steps.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n4aaea142f0c59ac",
+          "title": "Session/plugin middleware may deserialize state blobs outside controller code paths.",
+          "markdown": "- Session/plugin middleware may deserialize state blobs outside controller code paths.",
+          "notes": "Session/plugin middleware may deserialize state blobs outside controller code paths.",
+          "blurb": "Session/plugin middleware may deserialize state blobs outside controller...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "In PHP stacks, danger is not limited to direct unserialize($INPUT) patterns:",
+      "expanded": true
+    },
+    {
+      "id": "n13860bfa6b77ae4",
+      "title": "Defenses",
+      "markdown": "",
+      "notes": "",
+      "expanded": true,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n7d77c9644c71d24",
+          "title": "L3 \u2014 Mitigations (tiered)",
+          "markdown": "Do not deserialize untrusted native binary formats.",
+          "notes": "Do not deserialize untrusted native binary formats.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nf51737f0c5046fa",
+              "title": "Do not deserialize untrusted native binary formats.",
+              "markdown": "- Do not deserialize untrusted native binary formats.",
+              "notes": "Do not deserialize untrusted native binary formats.",
+              "blurb": "Do not deserialize untrusted native binary formats.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nfe8a80e8dfd44a6",
+              "title": "If you must: strict allowlist of types; signed payloads with rotation; isolated low-priv",
+              "markdown": "- If you must: strict allowlist of types; signed payloads with rotation; isolated low-priv",
+              "notes": "If you must: strict allowlist of types; signed payloads with rotation; isolated low-priv",
+              "blurb": "If you must: strict allowlist of types; signed payloads with rotation;...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n1751e10dfb14dc6",
+              "title": "Patch gadget primitives in commons-collections, Spring, etc.-fast.",
+              "markdown": "- Patch gadget primitives in commons-collections, Spring, etc.-fast.",
+              "notes": "Patch gadget primitives in commons-collections, Spring, etc.-fast.",
+              "blurb": "Patch gadget primitives in commons-collections, Spring, etc.-fast.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nbc625449980f021",
+              "title": "WAF signatures are fragile secondary controls.",
+              "markdown": "- WAF signatures are fragile secondary controls.",
+              "notes": "WAF signatures are fragile secondary controls.",
+              "blurb": "WAF signatures are fragile secondary controls.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Do not deserialize untrusted native binary formats.",
+          "expanded": false
+        },
+        {
+          "id": "ncaefff64699179e",
+          "title": "L4 \u2014 Program-level hardening pattern",
+          "markdown": "At scale, teams reduce recurrence by turning ad-hoc fixes into guardrails:",
+          "notes": "At scale, teams reduce recurrence by turning ad-hoc fixes into guardrails:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nf50c2797e2b560f",
+              "title": "Ban high-risk serializers in secure coding standards and enforce via CI rules.",
+              "markdown": "- Ban high-risk serializers in secure coding standards and enforce via CI rules.",
+              "notes": "Ban high-risk serializers in secure coding standards and enforce via CI rules.",
+              "blurb": "Ban high-risk serializers in secure coding standards and enforce via CI rules.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n877884454f4b768",
+              "title": "Provide approved internal libraries for schema-constrained, signed serialization.",
+              "markdown": "- Provide approved internal libraries for schema-constrained, signed serialization.",
+              "notes": "Provide approved internal libraries for schema-constrained, signed serialization.",
+              "blurb": "Provide approved internal libraries for schema-constrained, signed...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n299c6882604fbd9",
+              "title": "Track gadget-bearing dependencies as a dedicated risk class in dependency governance.",
+              "markdown": "- Track gadget-bearing dependencies as a dedicated risk class in dependency governance.",
+              "notes": "Track gadget-bearing dependencies as a dedicated risk class in dependency governance.",
+              "blurb": "Track gadget-bearing dependencies as a dedicated risk class in dependency...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8e59ff094ca0a65",
+              "title": "Require threat-model signoff when introducing new cross-service object transport formats",
+              "markdown": "- Require threat-model signoff when introducing new cross-service object transport formats",
+              "notes": "Require threat-model signoff when introducing new cross-service object transport formats",
+              "blurb": "Require threat-model signoff when introducing new cross-service object...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "At scale, teams reduce recurrence by turning ad-hoc fixes into guardrails:",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes L3 \u2014 Mitigations (tiered)"
+    },
+    {
+      "id": "n2d62fc4b45b250a",
+      "title": "L3 \u2014 Detection",
+      "markdown": "Deserialization exceptions spikes; unexpected classes in logs.",
+      "notes": "Deserialization exceptions spikes; unexpected classes in logs.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "ndc33beac923b331",
+          "title": "Deserialization exceptions spikes; unexpected classes in logs.",
+          "markdown": "- Deserialization exceptions spikes; unexpected classes in logs.",
+          "notes": "Deserialization exceptions spikes; unexpected classes in logs.",
+          "blurb": "Deserialization exceptions spikes; unexpected classes in logs.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n8a3f898db01e9e6",
+          "title": "Child processes from JVM / dotnet after blob input.",
+          "markdown": "- Child processes from JVM / dotnet after blob input.",
+          "notes": "Child processes from JVM / dotnet after blob input.",
+          "blurb": "Child processes from JVM / dotnet after blob input.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "na872b303efae50e",
+          "title": "SAST rules for dangerous APIs; Dependabot on gadget libraries.",
+          "markdown": "- SAST rules for dangerous APIs; Dependabot on gadget libraries.",
+          "notes": "SAST rules for dangerous APIs; Dependabot on gadget libraries.",
+          "blurb": "SAST rules for dangerous APIs; Dependabot on gadget libraries.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Deserialization exceptions spikes; unexpected classes in logs.",
+      "expanded": false
+    },
+    {
+      "id": "n5c46fd657734a0e",
+      "title": "Hands-on (authorized)",
+      "markdown": "- **WebGoat** / **PortSwigger** **deserialization** **labs**; **local** **Java** **gadget** **labs** in **VM**.",
+      "notes": "- WebGoat / PortSwigger deserialization labs; local Java gadget labs in VM.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n2270d1758772cb4",
+          "title": "Junior",
+          "markdown": "- Why is **pickle** **dangerous**?",
+          "notes": "- Why is pickle dangerous?",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Why is pickle dangerous?",
+          "expanded": false
+        },
+        {
+          "id": "na98021572ef26b4",
+          "title": "Mid",
+          "markdown": "- **Gadget** **chain** in **one** **paragraph**.",
+          "notes": "- Gadget chain in one paragraph.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Gadget chain in one paragraph.",
+          "expanded": false
+        },
+        {
+          "id": "n903020f40cb5701",
+          "title": "Senior",
+          "markdown": "- **Allowlist** vs **signing** for **internal** **service** **RPC**.",
+          "notes": "- Allowlist vs signing for internal service RPC.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Allowlist vs signing for internal service RPC.",
+          "expanded": false
+        },
+        {
+          "id": "n0936200fd7cd117",
+          "title": "Staff",
+          "markdown": "- **Org** **policy**: **ban** **BinaryFormatter** **globally**-**how** **enforce**?",
+          "notes": "- Org policy: ban BinaryFormatter globally-how enforce?",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Org policy: ban BinaryFormatter globally-how enforce?",
+          "expanded": false
+        }
+      ],
+      "blurb": "WebGoat / PortSwigger deserialization labs; local Java gadget labs in VM.",
+      "expanded": false
+    },
+    {
+      "id": "n7452e18f3f08b04",
+      "title": "L3 \u2014 Java mechanics interviewers probe",
+      "markdown": "At a conceptual level, Java exploitation narratives usually involve:",
+      "notes": "At a conceptual level, Java exploitation narratives usually involve:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "ndbbf89bea5a7595",
+          "title": "A deserialization entrypoint (ObjectInputStream.readObject or equivalent).",
+          "markdown": "- A deserialization entrypoint (ObjectInputStream.readObject or equivalent).",
+          "notes": "A deserialization entrypoint (ObjectInputStream.readObject or equivalent).",
+          "blurb": "A deserialization entrypoint (ObjectInputStream.readObject or equivalent).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ndfd2d748c670dda",
+          "title": "Magic/callback methods (readObject, readResolve, comparator hooks, collection transforms",
+          "markdown": "- Magic/callback methods (readObject, readResolve, comparator hooks, collection transforms",
+          "notes": "Magic/callback methods (readObject, readResolve, comparator hooks, collection transforms",
+          "blurb": "Magic/callback methods (readObject, readResolve, comparator hooks,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n259e2c61826eb08",
+          "title": "Gadget classes from common libraries that eventually trigger reflection, process executi",
+          "markdown": "- Gadget classes from common libraries that eventually trigger reflection, process executi",
+          "notes": "Gadget classes from common libraries that eventually trigger reflection, process executi",
+          "blurb": "Gadget classes from common libraries that eventually trigger reflection,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "At a conceptual level, Java exploitation narratives usually involve:",
+      "expanded": false
+    },
+    {
+      "id": "n65fa6ec07125987",
+      "title": "Practice & references",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nabfd3b76fd0e4c7",
+          "title": "Authoritative references",
+          "markdown": "CWE-502 - Deserialization of Untrusted Data - OWASP Deserialization Cheat Sheet - CERT advisories on Java serialization",
+          "notes": "CWE-502 - Deserialization of Untrusted Data - OWASP Deserialization Cheat Sheet - CERT advisories on Java serialization",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n11e173d3bca20e6",
+              "title": "CWE-502 - Deserialization of Untrusted Data",
+              "markdown": "- CWE-502 - Deserialization of Untrusted Data",
+              "notes": "CWE-502 - Deserialization of Untrusted Data",
+              "blurb": "CWE-502 - Deserialization of Untrusted Data",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na53885991b6bd6a",
+              "title": "OWASP Deserialization Cheat Sheet",
+              "markdown": "- OWASP Deserialization Cheat Sheet",
+              "notes": "OWASP Deserialization Cheat Sheet",
+              "blurb": "OWASP Deserialization Cheat Sheet",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5935b45b17f92cd",
+              "title": "CERT advisories on Java serialization",
+              "markdown": "- CERT advisories on Java serialization",
+              "notes": "CERT advisories on Java serialization",
+              "blurb": "CERT advisories on Java serialization",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "CWE-502 - Deserialization of Untrusted Data - OWASP Deserialization Cheat...",
+          "expanded": false
+        },
+        {
+          "id": "n6b0dff4b922dc49",
+          "title": "Verification checklist",
+          "markdown": "[ ] Name two language sinks and fixes.",
+          "notes": "[ ] Name two language sinks and fixes.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n386619d1dd44da9",
+              "title": "[ ] Name two language sinks and fixes.",
+              "markdown": "- [ ] Name two language sinks and fixes.",
+              "notes": "[ ] Name two language sinks and fixes.",
+              "blurb": "[ ] Name two language sinks and fixes.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n002239764b940dd",
+              "title": "[ ] Explain why JSON.parse can still be risky (prototype pollution JS-related topic).",
+              "markdown": "- [ ] Explain why JSON.parse can still be risky (prototype pollution JS-related topic).",
+              "notes": "[ ] Explain why JSON.parse can still be risky (prototype pollution JS-related topic).",
+              "blurb": "[ ] Explain why JSON.parse can still be risky (prototype pollution...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na7afcf71427b6e8",
+              "title": "[ ] No payload details in client reports-behavior only.",
+              "markdown": "- [ ] No payload details in client reports-behavior only.",
+              "notes": "[ ] No payload details in client reports-behavior only.",
+              "blurb": "[ ] No payload details in client reports-behavior only.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n03ac462da8ed5fe",
+              "title": "[ ] Explain one cryptographic envelope failure mode and consequence.",
+              "markdown": "- [ ] Explain one cryptographic envelope failure mode and consequence.",
+              "notes": "[ ] Explain one cryptographic envelope failure mode and consequence.",
+              "blurb": "[ ] Explain one cryptographic envelope failure mode and consequence.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n83eea92f5fa9660",
+              "title": "[ ] Describe Java gadget-chain mechanics without payload details.",
+              "markdown": "- [ ] Describe Java gadget-chain mechanics without payload details.",
+              "notes": "[ ] Describe Java gadget-chain mechanics without payload details.",
+              "blurb": "[ ] Describe Java gadget-chain mechanics without payload details.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "[ ] Name two language sinks and fixes.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Authoritative references"
+    },
+    {
+      "id": "na544cc6b05da525",
+      "title": "Code examples",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "ne63b4db0e92b320",
+          "title": "L2 \u2014 Language notes (interview table)",
+          "markdown": "| Platform | Risky patterns | Safer direction |\n|----------|----------------|-----------------|\n| **Java** | `ObjectInputStream`, **XMLDecoder**, some **YAML** **loaders** | **JSON** + **validated** **types**; **signed** **JWS**; **avoid** **native** **Java** **serialization** **for** **untrusted** **input** |\n| **.NET** | `BinaryFormatter`, `LosFormatter`, some **Binary** **serializers** | **System.Text.Json** with **DTOs**; **DataContractSerializer** with **allowlist** |\n| **Python** | `pickle`, `marshal`, unsafe **yaml.load** | `json` + **schema**; `yaml.safe_load` |\n| **PHP** | `unserialize` on **user** **data** | **JSON**; **signed** **tokens**; **avoid** **phar** **tricks** **on** **file** **ops** |\n| **Ruby** | `Marshal.load` | **JSON** / **msgpack** with **strict** **types** |",
+          "notes": "| Platform | Risky patterns | Safer direction |\n|----------|----------------|-----------------|\n| Java | ObjectInputStream, XMLDecoder, some YAML loaders | JSON + validated types; signed JWS; avoid native Java serialization for untrusted input |\n| .NET | BinaryFormatter, LosFormatter, some Binary serializers | System.Text.Json with DTOs; DataContractSerializer with allowlist |\n| Python | pickle, marshal, unsafe yaml.load | json + schema; yaml.safeload |\n| PHP | unserialize on user data | JSON; signed tokens; avoid phar tricks on file ops |\n| Ruby | Marshal.load | JSON / msgpack with strict types |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Platform | Risky patterns | Safer direction |...",
+          "expanded": false
+        },
+        {
+          "id": "n7a37db803ec8f21",
+          "title": "L2 \u2014 Gadget chains (concept)",
+          "markdown": "**Gadget:** **Existing** **class** **method** **that** **does** **something** **useful** **to** **attacker** when **called** **in** **sequence**.\n**Chain:** Attacker **ties** **gadgets** **together** via **deserialization** **graph** **edges**-**no** **new** **code** **on** **disk**, **only** **data**.\n\n**Research tools** (authorized labs only): **ysoserial**, **marshalsec**-names for **interviews**; **not** **step-by-step** **weaponization** **in** **prod**.",
+          "notes": "Gadget: Existing class method that does something useful to attacker when called in sequence.\nChain: Attacker ties gadgets together via deserialization graph edges-no new code on disk, only data.\n\nResearch tools (authorized labs only): ysoserial, marshalsec-names for interviews; not step-by-step weaponization in prod.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Gadget: Existing class method that does something useful to attacker when...",
+          "expanded": false
+        },
+        {
+          "id": "n8c06898bafa8a48",
+          "title": "L3 \u2014 Blind deserialization signals",
+          "markdown": "Some assessments have weak visibility, so validation uses indirect indicators:",
+          "notes": "Some assessments have weak visibility, so validation uses indirect indicators:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n7fbf6d431398598",
+              "title": "Stable timing differences on structured vs malformed payloads.",
+              "markdown": "- Stable timing differences on structured vs malformed payloads.",
+              "notes": "Stable timing differences on structured vs malformed payloads.",
+              "blurb": "Stable timing differences on structured vs malformed payloads.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf257b2aba61a3cc",
+              "title": "Distinct exception fingerprints (class-not-found, type-cast, stream corruption).",
+              "markdown": "- Distinct exception fingerprints (class-not-found, type-cast, stream corruption).",
+              "notes": "Distinct exception fingerprints (class-not-found, type-cast, stream corruption).",
+              "blurb": "Distinct exception fingerprints (class-not-found, type-cast, stream...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n921dfc7fb68a063",
+              "title": "Controlled outbound callback indicators (DNS/HTTP) in authorized test environments.",
+              "markdown": "- Controlled outbound callback indicators (DNS/HTTP) in authorized test environments.",
+              "notes": "Controlled outbound callback indicators (DNS/HTTP) in authorized test environments.",
+              "blurb": "Controlled outbound callback indicators (DNS/HTTP) in authorized test...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Some assessments have weak visibility, so validation uses indirect indicators:",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes L2 \u2014 Language notes (interview table)"
+    },
+    {
+      "id": "n99a44c3f6a95c4c",
+      "title": "Named patterns / CVE classes",
+      "markdown": "- **Java** **deserialization** **RCE** **era** (commons-collections, **etc.**)-**historical** **lesson**: **dependency** **hygiene**.\n- **Log4j** is **JNDI**, **not** **classic** **deserialization**, but **often** **grouped** in **\"object\"** **injection** **discussions**-**keep** **precise**.",
+      "notes": "- Java deserialization RCE era (commons-collections, etc.)-historical lesson: dependency hygiene.\n- Log4j is JNDI, not classic deserialization, but often grouped in \"object\" injection discussions-keep precise.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Java deserialization RCE era (commons-collections, etc.)-historical lesson:...",
+      "expanded": false
+    },
+    {
+      "id": "n73a53deb9895d69",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nf68f959411d2ce0",
+          "title": "Risk",
+          "markdown": "**Untrusted** **bytes** -> **object** **graph** -> **gadget** **chains** -> **RCE** / **authz** **break**",
+          "notes": "Untrusted bytes -> object graph -> gadget chains -> RCE / authz break",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Untrusted bytes -> object graph -> gadget chains -> RCE / authz break",
+          "expanded": false
+        },
+        {
+          "id": "n8a78aafbddfe4c5",
+          "title": "Sinks (examples)",
+          "markdown": "| Lang | Avoid on untrusted input |\n|------|---------------------------|\n| Java | `ObjectInputStream`, **XMLDecoder** |\n| .NET | `BinaryFormatter`, `LosFormatter` |\n| Python | `pickle`, `marshal`, `yaml.load` |\n| PHP | `unserialize` |",
+          "notes": "| Lang | Avoid on untrusted input |\n|------|---------------------------|\n| Java | ObjectInputStream, XMLDecoder |\n| .NET | BinaryFormatter, LosFormatter |\n| Python | pickle, marshal, yaml.load |\n| PHP | unserialize |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Lang | Avoid on untrusted input | |------|---------------------------| |...",
+          "expanded": false
+        },
+        {
+          "id": "n3bb7b2903f1b8ce",
+          "title": "Fixes",
+          "markdown": "**JSON** + **DTO** \u00b7 **protobuf** \u00b7 **signed** **tokens** \u00b7 **allowlist** **filters** \u00b7 **patch** **gadget** **libs**",
+          "notes": "JSON + DTO \u00b7 protobuf \u00b7 signed tokens \u00b7 allowlist filters \u00b7 patch gadget libs",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "JSON + DTO \u00b7 protobuf \u00b7 signed tokens \u00b7 allowlist filters \u00b7 patch gadget libs",
+          "expanded": false
+        },
+        {
+          "id": "n968f5c5f7670eda",
+          "title": "CWE",
+          "markdown": "**CWE-502** - Deserialization of Untrusted Data",
+          "notes": "CWE-502 - Deserialization of Untrusted Data",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "CWE-502 - Deserialization of Untrusted Data",
+          "expanded": false
+        },
+        {
+          "id": "n0649e4d13c7bda8",
+          "title": "Detection",
+          "markdown": "**SAST** **sinks** \u00b7 **unexpected** **classes** \u00b7 **process** **spawn** **post**-request",
+          "notes": "SAST sinks \u00b7 unexpected classes \u00b7 process spawn post-request",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "SAST sinks \u00b7 unexpected classes \u00b7 process spawn post-request",
+          "expanded": false
+        },
+        {
+          "id": "nca218332dd6211d",
+          "title": "Cross-read",
+          "markdown": "`RCE` \u00b7 `Supply Chain` \u00b7 `Secure Source Code Review`",
+          "notes": "RCE \u00b7 Supply Chain \u00b7 Secure Source Code Review",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "RCE \u00b7 Supply Chain \u00b7 Secure Source Code Review",
+          "expanded": false
+        },
+        {
+          "id": "nabae7adf823c691",
+          "title": "One-liner",
+          "markdown": "\"**No** **native** **deser** **on** **untrusted** **data**; **schema**-bound **formats**; **sign** **and** **allowlist** **if** **unavoidable**.\"",
+          "notes": "\"No native deser on untrusted data; schema-bound formats; sign and allowlist if unavoidable.\"",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "\"No native deser on untrusted data; schema-bound formats; sign and allowlist...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Risk"
+    },
+    {
+      "id": "nf586d04b30867d0",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n953e278e99ba167",
+          "title": "\"We use HTTPS, so serialized data is trusted.\"",
+          "markdown": "**Reality:** **TLS** **protects** **transit**-**not** **endpoint** **compromise** or **malicious** **clients**. **Authenticate** **and** **validate** **payloads**.",
+          "notes": "Reality: TLS protects transit-not endpoint compromise or malicious clients. Authenticate and validate payloads.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: TLS protects transit-not endpoint compromise or malicious clients.",
+          "expanded": false
+        },
+        {
+          "id": "nc644cb91478310d",
+          "title": "\"JSON is always safe.\"",
+          "markdown": "**Reality:** **Type** **gadgets** and **parser** **bugs** **exist**. **Schema** **validation** and **safe** **parser** **settings** **matter**.",
+          "notes": "Reality: Type gadgets and parser bugs exist. Schema validation and safe parser settings matter.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Type gadgets and parser bugs exist.",
+          "expanded": false
+        },
+        {
+          "id": "n3b86b04cea70793",
+          "title": "\"We deserialize only our own cookies.\"",
+          "markdown": "**Reality:** **Clients** **forge** **cookies**-**treat** **as** **untrusted** **unless** **signed** **and** **verified** **with** **strong** **keys**.",
+          "notes": "Reality: Clients forge cookies-treat as untrusted unless signed and verified with strong keys.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Clients forge cookies-treat as untrusted unless signed and verified...",
+          "expanded": false
+        },
+        {
+          "id": "n0fb2cddd11eea62",
+          "title": "\"Updating one library fixed deserialization.\"",
+          "markdown": "**Reality:** **Multiple** **gadget** **packages** **may** **exist**-**SBOM** **and** **recurring** **scans**.",
+          "notes": "Reality: Multiple gadget packages may exist-SBOM and recurring scans.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Multiple gadget packages may exist-SBOM and recurring scans.",
+          "expanded": false
+        },
+        {
+          "id": "n1569e1a9bf511d5",
+          "title": "\"WAF blocks deserialization attacks.\"",
+          "markdown": "**Reality:** **Encoded** **payloads** and **nested** **structures** **evade** **signatures**-**fix** **code** **path**.",
+          "notes": "Reality: Encoded payloads and nested structures evade signatures-fix code path.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Encoded payloads and nested structures evade signatures-fix code...",
+          "expanded": false
+        },
+        {
+          "id": "n9770427df69a4cf",
+          "title": "\"Internal RPC is trusted.\"",
+          "markdown": "**Reality:** **Lateral** **movement** **and** **compromised** **workloads** **send** **malicious** **RPC**-**zero** **trust** **boundaries**.",
+          "notes": "Reality: Lateral movement and compromised workloads send malicious RPC-zero trust boundaries.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Lateral movement and compromised workloads send malicious RPC-zero...",
+          "expanded": false
+        },
+        {
+          "id": "n9eb54072a4765f6",
+          "title": "\"Protobuf prevents all object injection.\"",
+          "markdown": "**Reality:** **Protobuf** **reduces** **graph** **deserialization** **risks** but **implementation** **bugs** and **code** **generation** **issues** **still** **exist**-**not** **magic**.",
+          "notes": "Reality: Protobuf reduces graph deserialization risks but implementation bugs and code generation issues still exist-not magic.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Protobuf reduces graph deserialization risks but implementation...",
+          "expanded": false
+        },
+        {
+          "id": "nbc7e7c29d8823c6",
+          "title": "\"Only Java has this problem.\"",
+          "markdown": "**Reality:** **Every** **ecosystem** with **rich** **native** **serialization** **has** **had** **incidents**-**Python**, **PHP**, **.NET**, **Ruby**.",
+          "notes": "Reality: Every ecosystem with rich native serialization has had incidents-Python, PHP, .NET, Ruby.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Every ecosystem with rich native serialization has had...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \"We use HTTPS, so serialized data is trusted.\""
+    },
+    {
+      "id": "n0b1f397447f4eae",
+      "title": "How to test",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "na7e29a801919e8a",
+          "title": "Objective",
+          "markdown": "Create a repeatable assessment workflow for `Insecure Deserialization` that produces reproducible evidence and actionable remediation guidance.",
+          "notes": "Create a repeatable assessment workflow for Insecure Deserialization that produces reproducible evidence and actionable remediation guidance.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Create a repeatable assessment workflow for Insecure Deserialization that...",
+          "expanded": false
+        },
+        {
+          "id": "n57e671a526eb2e0",
+          "title": "Phase 1 - Scope and preparation",
+          "markdown": "Confirm in-scope assets, test windows, and prohibited actions.",
+          "notes": "Confirm in-scope assets, test windows, and prohibited actions.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n1ec3e2cab9ae1bc",
+              "title": "Confirm in-scope assets, test windows, and prohibited actions.",
+              "markdown": "- Confirm in-scope assets, test windows, and prohibited actions.",
+              "notes": "Confirm in-scope assets, test windows, and prohibited actions.",
+              "blurb": "Confirm in-scope assets, test windows, and prohibited actions.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n87700bb70e29494",
+              "title": "Identify critical user journeys and trust boundaries.",
+              "markdown": "- Identify critical user journeys and trust boundaries.",
+              "notes": "Identify critical user journeys and trust boundaries.",
+              "blurb": "Identify critical user journeys and trust boundaries.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n783b11155471ab3",
+              "title": "Define severity rubric and evidence requirements before testing.",
+              "markdown": "- Define severity rubric and evidence requirements before testing.",
+              "notes": "Define severity rubric and evidence requirements before testing.",
+              "blurb": "Define severity rubric and evidence requirements before testing.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Confirm in-scope assets, test windows, and prohibited actions.",
+          "expanded": false
+        },
+        {
+          "id": "n7430c9060b905ab",
+          "title": "Phase 2 - Recon and attack-surface mapping",
+          "markdown": "Enumerate relevant endpoints, flows, and data paths.",
+          "notes": "Enumerate relevant endpoints, flows, and data paths.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n6945e6d4bb459a1",
+              "title": "Enumerate relevant endpoints, flows, and data paths.",
+              "markdown": "- Enumerate relevant endpoints, flows, and data paths.",
+              "notes": "Enumerate relevant endpoints, flows, and data paths.",
+              "blurb": "Enumerate relevant endpoints, flows, and data paths.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8ee25b17c823d0d",
+              "title": "Document where security checks are expected to happen.",
+              "markdown": "- Document where security checks are expected to happen.",
+              "notes": "Document where security checks are expected to happen.",
+              "blurb": "Document where security checks are expected to happen.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nddc2c94ed4db473",
+              "title": "Mark high-value assets and high-impact paths.",
+              "markdown": "- Mark high-value assets and high-impact paths.",
+              "notes": "Mark high-value assets and high-impact paths.",
+              "blurb": "Mark high-value assets and high-impact paths.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Enumerate relevant endpoints, flows, and data paths.",
+          "expanded": false
+        },
+        {
+          "id": "nc97dd940a2396cd",
+          "title": "Phase 3 - Hypothesis-driven testing",
+          "markdown": "Start with low-risk probes and baseline behavior.",
+          "notes": "Start with low-risk probes and baseline behavior.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "na6d01a5b6b6878b",
+              "title": "Start with low-risk probes and baseline behavior.",
+              "markdown": "- Start with low-risk probes and baseline behavior.",
+              "notes": "Start with low-risk probes and baseline behavior.",
+              "blurb": "Start with low-risk probes and baseline behavior.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n4e96569aa7f7ddf",
+              "title": "Test failure hypotheses systematically (one variable at a time).",
+              "markdown": "- Test failure hypotheses systematically (one variable at a time).",
+              "notes": "Test failure hypotheses systematically (one variable at a time).",
+              "blurb": "Test failure hypotheses systematically (one variable at a time).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3ecfd5ccfc12ffa",
+              "title": "Capture request/response artifacts for each finding candidate.",
+              "markdown": "- Capture request/response artifacts for each finding candidate.",
+              "notes": "Capture request/response artifacts for each finding candidate.",
+              "blurb": "Capture request/response artifacts for each finding candidate.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Start with low-risk probes and baseline behavior.",
+          "expanded": false
+        },
+        {
+          "id": "n320551709a7f3f7",
+          "title": "Phase 4 - Validation and impact proof",
+          "markdown": "Reproduce findings with clean-state retests.",
+          "notes": "Reproduce findings with clean-state retests.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nec7a7d4b15d56bf",
+              "title": "Reproduce findings with clean-state retests.",
+              "markdown": "- Reproduce findings with clean-state retests.",
+              "notes": "Reproduce findings with clean-state retests.",
+              "blurb": "Reproduce findings with clean-state retests.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf4346097c97b3db",
+              "title": "Confirm exploitability and practical impact.",
+              "markdown": "- Confirm exploitability and practical impact.",
+              "notes": "Confirm exploitability and practical impact.",
+              "blurb": "Confirm exploitability and practical impact.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n588a0829b0b1020",
+              "title": "Eliminate false positives; record confidence level.",
+              "markdown": "- Eliminate false positives; record confidence level.",
+              "notes": "Eliminate false positives; record confidence level.",
+              "blurb": "Eliminate false positives; record confidence level.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Reproduce findings with clean-state retests.",
+          "expanded": false
+        },
+        {
+          "id": "ndb5c4814b2faa84",
+          "title": "Phase 5 - Remediation and verification",
+          "markdown": "Provide immediate containment + structural fix recommendations.",
+          "notes": "Provide immediate containment + structural fix recommendations.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n02060ec3023f1fe",
+              "title": "Provide immediate containment + structural fix recommendations.",
+              "markdown": "- Provide immediate containment + structural fix recommendations.",
+              "notes": "Provide immediate containment + structural fix recommendations.",
+              "blurb": "Provide immediate containment + structural fix recommendations.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n71a162c05534de3",
+              "title": "Define post-fix verification tests and telemetry checks.",
+              "markdown": "- Define post-fix verification tests and telemetry checks.",
+              "notes": "Define post-fix verification tests and telemetry checks.",
+              "blurb": "Define post-fix verification tests and telemetry checks.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc0ffb90664e2538",
+              "title": "Re-test after remediation and close with evidence.",
+              "markdown": "- Re-test after remediation and close with evidence.",
+              "notes": "Re-test after remediation and close with evidence.",
+              "blurb": "Re-test after remediation and close with evidence.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Provide immediate containment + structural fix recommendations.",
+          "expanded": false
+        },
+        {
+          "id": "n2c7671be2ab6ad7",
+          "title": "Evidence template",
+          "markdown": "Asset / endpoint: - Preconditions: - Reproduction steps: - Observed behavior: - Security impact: - Business impact: - Recommended fix: - Verification result:",
+          "notes": "Asset / endpoint: - Preconditions: - Reproduction steps: - Observed behavior: - Security impact: - Business impact: - Recommended fix: - Verification result:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n5b06a386ad86565",
+              "title": "Asset / endpoint",
+              "markdown": "- Asset / endpoint",
+              "notes": "Asset / endpoint",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n84067395540437e",
+              "title": "Preconditions",
+              "markdown": "- Preconditions",
+              "notes": "Preconditions",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n2b402db3a43bf28",
+              "title": "Reproduction steps",
+              "markdown": "- Reproduction steps",
+              "notes": "Reproduction steps",
+              "blurb": "Reproduction steps",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ncb884540310c119",
+              "title": "Observed behavior",
+              "markdown": "- Observed behavior",
+              "notes": "Observed behavior",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n135628616f6f59d",
+              "title": "Security impact",
+              "markdown": "- Security impact",
+              "notes": "Security impact",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nbd54aad0ca9ae3f",
+              "title": "Business impact",
+              "markdown": "- Business impact",
+              "notes": "Business impact",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n2e0fd6f46244b62",
+              "title": "Recommended fix",
+              "markdown": "- Recommended fix",
+              "notes": "Recommended fix",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n948cdc328f4fe20",
+              "title": "Verification result",
+              "markdown": "- Verification result",
+              "notes": "Verification result",
+              "blurb": "Verification result",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Asset / endpoint: - Preconditions: - Reproduction steps: - Observed...",
+          "expanded": false
+        },
+        {
+          "id": "n6e84bf8bbf3377f",
+          "title": "Interview drill",
+          "markdown": "In 3 minutes, explain how you would run this VAPT workflow for one production-like service and what evidence you need before escalating severity.",
+          "notes": "In 3 minutes, explain how you would run this VAPT workflow for one production-like service and what evidence you need before escalating severity.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "In 3 minutes, explain how you would run this VAPT workflow for one...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Objective"
+    },
+    {
+      "id": "n0fa53e4b946b3fa",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "ncbfb882ca7c0380",
+          "title": "60-second answer",
+          "markdown": "**Q: What is insecure deserialization?**\n\n**A:** It's when an application **reconstructs** **objects** from **attacker-controlled** **serialized** **data**-Java **`ObjectInputStream`**, **Python pickle**, **PHP unserialize**, **.NET BinaryFormatter**, etc. The runtime may **invoke** **magic** **methods** that **chain** into **file** **write**, **code** **load**, or **RCE** through **gadget** **libraries** already on the **classpath**. **Fix** by **not** **using** **native** **serialization** for **untrusted** **input**, **prefer** **JSON** + **strict** **schemas**, **signed** **tokens**, **allowlisted** **types**, and **patch** **gadget** **dependencies**. **Detection** includes **SAST** for **dangerous** **APIs** and **behavior** **analytics** for **post-deser** **process** **spawns**.",
+          "notes": "Q: What is insecure deserialization?\n\nA: It's when an application reconstructs objects from attacker-controlled serialized data-Java ObjectInputStream, Python pickle, PHP unserialize, .NET BinaryFormatter, etc. The runtime may invoke magic methods that chain into file write, code load, or RCE through gadget libraries already on the classpath. Fix by not using native serialization for untrusted input, prefer JSON + strict schemas, signed tokens, allowlisted types, and patch gadget dependencies. Detection includes SAST for dangerous APIs and behavior analytics for post-deser process spawns.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Q: What is insecure deserialization?",
+          "expanded": false
+        },
+        {
+          "id": "n259a477c8f64d48",
+          "title": "Mechanism",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ncc215ba82fdb8b7",
+              "title": "Q: What is a gadget chain?",
+              "markdown": "**A:** A **directed** **sequence** of **existing** **class** **methods** **triggered** **during** **deserialization** that **ends** in **harmful** **behavior**-**without** **the** **attacker** **uploading** **new** **code** **to** **disk**.",
+              "notes": "A: A directed sequence of existing class methods triggered during deserialization that ends in harmful behavior-without the attacker uploading new code to disk.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: A directed sequence of existing class methods triggered during...",
+              "expanded": false
+            },
+            {
+              "id": "n8f65bc06cf4787f",
+              "title": "Q: Is JSON deserialization always safe?",
+              "markdown": "**A:** **No**-**Jackson** **polymorphic** **typing** **misconfig**, **.NET** **TypeNameHandling**, **JavaScript** **prototype** **pollution** **adjacent** **issues**. **Policy:** **disable** **polymorphism** **unless** **strictly** **needed**; **validate** **DTOs**.",
+              "notes": "A: No-Jackson polymorphic typing misconfig, .NET TypeNameHandling, JavaScript prototype pollution adjacent issues. Policy: disable polymorphism unless strictly needed; validate DTOs.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: No-Jackson polymorphic typing misconfig, .NET TypeNameHandling,...",
+              "expanded": false
+            },
+            {
+              "id": "n0854c3743056e88",
+              "title": "Q: YAML?",
+              "markdown": "**A:** **`yaml.load`** in **Python** can **construct** **arbitrary** **objects**-use **`safe_load`** or **JSON**.",
+              "notes": "A: yaml.load in Python can construct arbitrary objects-use safeload or JSON.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: yaml.load in Python can construct arbitrary objects-use safeload or JSON.",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: What is a gadget chain?",
+          "expanded": false
+        },
+        {
+          "id": "n80ed866c963c2f7",
+          "title": "Defense",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n978d836d40eb4a0",
+              "title": "Q: Preferred fix for Java microservices passing objects?",
+              "markdown": "**A:** **Protobuf** / **JSON** **with** **schema**; **JWT** **or** **mTLS** **for** **trust**-**not** **Java** **native** **serialization** **over** **HTTP**.",
+              "notes": "A: Protobuf / JSON with schema; JWT or mTLS for trust-not Java native serialization over HTTP.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Protobuf / JSON with schema; JWT or mTLS for trust-not Java native...",
+              "expanded": false
+            },
+            {
+              "id": "n0a83b012eca0c63",
+              "title": "Q: How do allowlists work in Java deserialization filters?",
+              "markdown": "**A:** **JEP 290** **filters** / **`ObjectInputFilter`** **restrict** **classes** **allowed** **to** **deserialize**-**defense** **in** **depth** **with** **library** **updates**.",
+              "notes": "A: JEP 290 filters / ObjectInputFilter restrict classes allowed to deserialize-defense in depth with library updates.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: JEP 290 filters / ObjectInputFilter restrict classes allowed to...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: Preferred fix for Java microservices passing objects?",
+          "expanded": false
+        },
+        {
+          "id": "n3752de5a49bcc13",
+          "title": "Incident",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nfc6cb8f8539ffc3",
+              "title": "Q: Log4j vs deserialization?",
+              "markdown": "**A:** **Log4j** was **JNDI** **lookup** from **log** **data**-**different** **primitive**, **similar** **lesson**: **don't** **trust** **input** **that** **triggers** **dangerous** **resolution** **paths**.",
+              "notes": "A: Log4j was JNDI lookup from log data-different primitive, similar lesson: don't trust input that triggers dangerous resolution paths.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Log4j was JNDI lookup from log data-different primitive, similar lesson:...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: Log4j vs deserialization?",
+          "expanded": false
+        },
+        {
+          "id": "n3d486f83960defb",
+          "title": "Depth: Follow-ups",
+          "markdown": "PHP phar metadata deserialization via file operations.",
+          "notes": "PHP phar metadata deserialization via file operations.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n4d120ca5c2106a5",
+              "title": "PHP phar metadata deserialization via file operations.",
+              "markdown": "- PHP phar metadata deserialization via file operations.",
+              "notes": "PHP phar metadata deserialization via file operations.",
+              "blurb": "PHP phar metadata deserialization via file operations.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na76633dd1e86e64",
+              "title": "Ruby Marshal in Rails sessions (legacy).",
+              "markdown": "- Ruby Marshal in Rails sessions (legacy).",
+              "notes": "Ruby Marshal in Rails sessions (legacy).",
+              "blurb": "Ruby Marshal in Rails sessions (legacy).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n573c583f3d9d9d4",
+              "title": "Kotlin serialization vs Java compat.",
+              "markdown": "- Kotlin serialization vs Java compat.",
+              "notes": "Kotlin serialization vs Java compat.",
+              "blurb": "Kotlin serialization vs Java compat.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "PHP phar metadata deserialization via file operations.",
+          "expanded": false
+        },
+        {
+          "id": "nf8c15956c15775c",
+          "title": "Mock ladder",
+          "markdown": "| Level | Question |\n|-------|----------|\n| Junior | **pickle** **risk**. |\n| Mid | **Gadget** **definition**. |\n| Senior | **Service** **A** **to** **B** **binary** **protocol** **hardening**. |\n| Staff | **Enterprise** **ban** **list** **for** **serializers**. |",
+          "notes": "| Level | Question |\n|-------|----------|\n| Junior | pickle risk. |\n| Mid | Gadget definition. |\n| Senior | Service A to B binary protocol hardening. |\n| Staff | Enterprise ban list for serializers. |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Level | Question | |-------|----------| | Junior | pickle risk.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 60-second answer"
+    }
+  ],
+  "topicId": "insecure-deserialization",
+  "name": "Insecure Deserialization",
+  "structure": "logic-right",
+  "blurb": "Insecure deserialization turns attacker-controlled serialized blobs into..."
+}

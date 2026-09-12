@@ -1,0 +1,1699 @@
+{
+  "id": "n518452f6446a37a",
+  "title": "Browser and Frontend Runtime Security Deep Dive",
+  "markdown": "Modern browsers are not a single \"trusted runtime.\" They combine **origins**, **process isolation**, **content policies**, and **network metadata** to contain compromise. After any **cross-site scripting (XSS)** or **supply-chain** incident, **attacker-controlled JavaScript** can still run in your page's origin. Staff-level product security work here means **standardizing** defenses-**site isolation**, **Content Security Policy (CSP)** with **Trusted Types**, **Subresource Integrity (SRI)**, **Fetch Metadata**, careful **storage** of secrets and identifiers, governance of **third-party scripts**, hardened **iframes**, disciplined **`postMessage`**, safe use of **workers**, and honest accounting of **browser extension** risk.",
+  "notes": "Modern browsers are not a single \"trusted runtime.\" They combine origins, process isolation, content policies, and network metadata to contain compromise. After any cross-site scripting (XSS) or supply-chain incident, attacker-controlled JavaScript can still run in your page's origin. Staff-level product security work here means standardizing defenses-site isolation, Content Security Policy (CSP) with Trusted Types, Subresource Integrity (SRI), Fetch Metadata, careful storage of secrets and identifiers, governance of third-party scripts, hardened iframes, disciplined postMessage, safe use of workers, and honest accounting of browser extension risk.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "n3523948234186a8",
+      "title": "At a glance",
+      "markdown": "Modern browsers are not a single \"trusted runtime.\" They combine **origins**, **process isolation**, **content policies**, and **network metadata** to contain compromise. After any **cross-site scripting (XSS)** or **supply-chain** incident, **attacker-controlled JavaScript** can still run in your page's origin. Staff-level product security work here means **standardizing** defenses-**site isolation**, **Content Security Policy (CSP)** with **Trusted Types**, **Subresource Integrity (SRI)**, **Fetch Metadata**, careful **storage** of secrets and identifiers, governance of **third-party scripts**, hardened **iframes**, disciplined **`postMessage`**, safe use of **workers**, and honest accounting of **browser extension** risk.",
+      "notes": "Modern browsers are not a single \"trusted runtime.\" They combine origins, process isolation, content policies, and network metadata to contain compromise. After any cross-site scripting (XSS) or supply-chain incident, attacker-controlled JavaScript can still run in your page's origin. Staff-level product security work here means standardizing defenses-site isolation, Content Security Policy (CSP) with Trusted Types, Subresource Integrity (SRI), Fetch Metadata, careful storage of secrets and identifiers, governance of third-party scripts, hardened iframes, disciplined postMessage, safe use of workers, and honest accounting of browser extension risk.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Modern browsers are not a single \"trusted runtime.\" They combine origins,...",
+      "expanded": false
+    },
+    {
+      "id": "n06bc653f29a5938",
+      "title": "What interviewers expect (7+ years)",
+      "markdown": "Interviewers want **concrete browser mechanics**: what breaks when you misconfigure CSP, why `postMessage` bugs persist, how **Fetch Metadata** changes server design, and how you **operationalize** controls across dozens of frontends-not a list of header names.",
+      "notes": "Interviewers want concrete browser mechanics: what breaks when you misconfigure CSP, why postMessage bugs persist, how Fetch Metadata changes server design, and how you operationalize controls across dozens of frontends-not a list of header names.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Interviewers want concrete browser mechanics: what breaks when you...",
+      "expanded": false
+    },
+    {
+      "id": "n45b45221b9a97f8",
+      "title": "Site isolation and the renderer trust boundary",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nd9360be95f09ac6",
+          "title": "What site isolation is",
+          "markdown": "**Site isolation** is the browser's strategy of placing different **sites** (typically **scheme + registrable domain**, e.g., `https://evil.example` vs `https://bank.example`) into separate **renderer processes** where possible. Cross-origin **iframes** often run in separate processes; same-site subdomains may share a process depending on browser heuristics and flags.",
+          "notes": "Site isolation is the browser's strategy of placing different sites (typically scheme + registrable domain, e.g., https://evil.example vs https://bank.example) into separate renderer processes where possible. Cross-origin iframes often run in separate processes; same-site subdomains may share a process depending on browser heuristics and flags.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Site isolation is the browser's strategy of placing different sites...",
+          "expanded": false
+        },
+        {
+          "id": "nbe0938c9752d42f",
+          "title": "Why it matters for security",
+          "markdown": "- **Renderer compromise containment:** If a bug in HTML/CSS/JS parsing or the graphics stack allows memory corruption, isolating processes limits **cross-site** memory reads (historically relevant to **Spectre-class** concerns and browser exploit chains).\n- **Not XSS prevention:** If attacker script executes **in your origin** (XSS), it already shares your origin's privileges-**site isolation does not save you** from token theft in that tab, `fetch` to your APIs, or DOM abuse.",
+          "notes": "- Renderer compromise containment: If a bug in HTML/CSS/JS parsing or the graphics stack allows memory corruption, isolating processes limits cross-site memory reads (historically relevant to Spectre-class concerns and browser exploit chains).\n- Not XSS prevention: If attacker script executes in your origin (XSS), it already shares your origin's privileges-site isolation does not save you from token theft in that tab, fetch to your APIs, or DOM abuse.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Renderer compromise containment: If a bug in HTML/CSS/JS parsing or the...",
+          "expanded": false
+        },
+        {
+          "id": "n584f23ca6dbd964",
+          "title": "Practical implications for engineers",
+          "markdown": "- Treat **cross-origin iframes** as separate **trust boundaries** at the OS/browser level, but still validate all **`postMessage`** traffic-process isolation does not authenticate messages.\n- **Cross-Origin Opener Policy (COOP)** and **Cross-Origin Embedder Policy (COEP)** (when used with **Cross-Origin Resource Policy (CORP)** / appropriate CORS) enable **cross-origin isolation**, which activates **`SharedArrayBuffer`** in supporting browsers and tightens certain timing side channels. This is a **platform decision** with compatibility trade-offs, not a default for every app.",
+          "notes": "- Treat cross-origin iframes as separate trust boundaries at the OS/browser level, but still validate all postMessage traffic-process isolation does not authenticate messages.\n- Cross-Origin Opener Policy (COOP) and Cross-Origin Embedder Policy (COEP) (when used with Cross-Origin Resource Policy (CORP) / appropriate CORS) enable cross-origin isolation, which activates SharedArrayBuffer in supporting browsers and tightens certain timing side channels. This is a platform decision with compatibility trade-offs, not a default for every app.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Treat cross-origin iframes as separate trust boundaries at the OS/browser...",
+          "expanded": false
+        },
+        {
+          "id": "n09f1b73d3765bd7",
+          "title": "Interview framing",
+          "markdown": "**Site isolation** reduces blast radius for **browser bugs** and certain **cross-site** attacks; **CSP + encoding + safe DOM** reduce **same-origin** script injection risk. Use both narratives without conflating them.",
+          "notes": "Site isolation reduces blast radius for browser bugs and certain cross-site attacks; CSP + encoding + safe DOM reduce same-origin script injection risk. Use both narratives without conflating them.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Site isolation reduces blast radius for browser bugs and certain cross-site...",
+          "expanded": false
+        },
+        {
+          "id": "n514a74c93fbfcdd",
+          "title": "Related hardening (often grouped in interviews)",
+          "markdown": "Cross-Origin Opener Policy (COOP) - same-origin severs cross-origin window.opener references where applicable, reducing tab-nabbing and certain cross-window attacks after navigations.",
+          "notes": "Cross-Origin Opener Policy (COOP) - same-origin severs cross-origin window.opener references where applicable, reducing tab-nabbing and certain cross-window attacks after navigations.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n2f41d82fbdf96ec",
+              "title": "Cross-Origin Opener Policy (COOP) - same-origin severs cross-origin window.opener refere",
+              "markdown": "- Cross-Origin Opener Policy (COOP) - same-origin severs cross-origin window.opener refere",
+              "notes": "Cross-Origin Opener Policy (COOP) - same-origin severs cross-origin window.opener refere",
+              "blurb": "Cross-Origin Opener Policy (COOP) - same-origin severs cross-origin...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n26b6e570d755ed0",
+              "title": "Cross-Origin Embedder Policy (COEP) - requires cross-origin resources to opt in (Cross-O",
+              "markdown": "- Cross-Origin Embedder Policy (COEP) - requires cross-origin resources to opt in (Cross-O",
+              "notes": "Cross-Origin Embedder Policy (COEP) - requires cross-origin resources to opt in (Cross-O",
+              "blurb": "Cross-Origin Embedder Policy (COEP) - requires cross-origin resources to opt...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n2da66aeb1b806a4",
+              "title": "Cross-Origin Resource Policy (CORP) - same-site / same-origin on responses signals wheth",
+              "markdown": "- Cross-Origin Resource Policy (CORP) - same-site / same-origin on responses signals wheth",
+              "notes": "Cross-Origin Resource Policy (CORP) - same-site / same-origin on responses signals wheth",
+              "blurb": "Cross-Origin Resource Policy (CORP) - same-site / same-origin on responses...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Cross-Origin Opener Policy (COOP) - same-origin severs cross-origin...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes What site isolation is",
+      "expanded": true
+    },
+    {
+      "id": "n8fefc2e9e3a0e51",
+      "title": "Content Security Policy (CSP)",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n2f94a1ee949a15e",
+          "title": "Goals",
+          "markdown": "Restrict script execution to known sources and approved inline (via nonces or hashes).",
+          "notes": "Restrict script execution to known sources and approved inline (via nonces or hashes).",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n848ffe18aaa35c2",
+              "title": "Restrict script execution to known sources and approved inline (via nonces or hashes).",
+              "markdown": "- Restrict script execution to known sources and approved inline (via nonces or hashes).",
+              "notes": "Restrict script execution to known sources and approved inline (via nonces or hashes).",
+              "blurb": "Restrict script execution to known sources and approved inline (via nonces...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n917d947701c2035",
+              "title": "Limit exfiltration and gadget chains via connect-src, img-src, frame-src, base-uri, form",
+              "markdown": "- Limit exfiltration and gadget chains via connect-src, img-src, frame-src, base-uri, form",
+              "notes": "Limit exfiltration and gadget chains via connect-src, img-src, frame-src, base-uri, form",
+              "blurb": "Limit exfiltration and gadget chains via connect-src, img-src, frame-src,...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ncf5c25e2e2a4b9c",
+              "title": "Reduce plugin risk (object-src 'none' is a common baseline).",
+              "markdown": "- Reduce plugin risk (object-src 'none' is a common baseline).",
+              "notes": "Reduce plugin risk (object-src 'none' is a common baseline).",
+              "blurb": "Reduce plugin risk (object-src 'none' is a common baseline).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Restrict script execution to known sources and approved inline (via nonces...",
+          "expanded": false
+        },
+        {
+          "id": "n999be29484cff68",
+          "title": "Nonces, hashes, and strict-dynamic",
+          "markdown": "Nonce-based script-src: The server emits a fresh random nonce per response; only <script nonce=\"...\"> and loader scripts that propagate trust may run.",
+          "notes": "Nonce-based script-src: The server emits a fresh random nonce per response; only <script nonce=\"...\"> and loader scripts that propagate trust may run.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nbca52648bb55b11",
+              "title": "Nonce-based script-src: The server emits a fresh random nonce per response; only <script",
+              "markdown": "- Nonce-based script-src: The server emits a fresh random nonce per response; only <script",
+              "notes": "Nonce-based script-src: The server emits a fresh random nonce per response; only <script",
+              "blurb": "Nonce-based script-src: The server emits a fresh random nonce per response;...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n311fa9f2fec56f4",
+              "title": "Hash-based script-src: Useful for small static inline snippets; brittle for anything tha",
+              "markdown": "- Hash-based script-src: Useful for small static inline snippets; brittle for anything tha",
+              "notes": "Hash-based script-src: Useful for small static inline snippets; brittle for anything tha",
+              "blurb": "Hash-based script-src: Useful for small static inline snippets; brittle for...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n331b5cfc894e11e",
+              "title": "strict-dynamic: Trusted scripts (matching nonce/hash) may load additional scripts withou",
+              "markdown": "- strict-dynamic: Trusted scripts (matching nonce/hash) may load additional scripts withou",
+              "notes": "strict-dynamic: Trusted scripts (matching nonce/hash) may load additional scripts withou",
+              "blurb": "strict-dynamic: Trusted scripts (matching nonce/hash) may load additional...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Nonce-based script-src: The server emits a fresh random nonce per response;...",
+          "expanded": false
+        },
+        {
+          "id": "ne8039238d8c268e",
+          "title": "Common failure modes",
+          "markdown": "unsafe-inline \"temporarily\" becomes permanent and neutralizes CSP against XSS.",
+          "notes": "unsafe-inline \"temporarily\" becomes permanent and neutralizes CSP against XSS.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n0f511a509449422",
+              "title": "unsafe-inline \"temporarily\" becomes permanent and neutralizes CSP against XSS.",
+              "markdown": "- unsafe-inline \"temporarily\" becomes permanent and neutralizes CSP against XSS.",
+              "notes": "unsafe-inline \"temporarily\" becomes permanent and neutralizes CSP against XSS.",
+              "blurb": "unsafe-inline \"temporarily\" becomes permanent and neutralizes CSP against XSS.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n82b0c31e8067fe3",
+              "title": "Over-broad script-src hosts that host AngularJS-sandbox escapes, JSONP, or uploaded .js",
+              "markdown": "- Over-broad script-src hosts that host AngularJS-sandbox escapes, JSONP, or uploaded .js",
+              "notes": "Over-broad script-src hosts that host AngularJS-sandbox escapes, JSONP, or uploaded .js",
+              "blurb": "Over-broad script-src hosts that host AngularJS-sandbox escapes, JSONP, or...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6bc28b1d2697379",
+              "title": "Missing base-uri allows <base href=\"https://evil\"> to retarget relative script URLs.",
+              "markdown": "- Missing base-uri allows <base href=\"https://evil\"> to retarget relative script URLs.",
+              "notes": "Missing base-uri allows <base href=\"https://evil\"> to retarget relative script URLs.",
+              "blurb": "Missing base-uri allows <base href=\"https://evil\"> to retarget relative...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc5b940407767195",
+              "title": "Weak object-src / default-src leaves Flash-era or unexpected plugin vectors.",
+              "markdown": "- Weak object-src / default-src leaves Flash-era or unexpected plugin vectors.",
+              "notes": "Weak object-src / default-src leaves Flash-era or unexpected plugin vectors.",
+              "blurb": "Weak object-src / default-src leaves Flash-era or unexpected plugin vectors.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "unsafe-inline \"temporarily\" becomes permanent and neutralizes CSP against XSS.",
+          "expanded": false
+        },
+        {
+          "id": "n8b45643065b4eb0",
+          "title": "Rollout pattern",
+          "markdown": "Content-Security-Policy-Report-Only with report-to / report-uri (legacy).",
+          "notes": "Content-Security-Policy-Report-Only with report-to / report-uri (legacy).",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nb8474f5734f8879",
+              "title": "Content-Security-Policy-Report-Only with report-to / report-uri (legacy).",
+              "markdown": "- Content-Security-Policy-Report-Only with report-to / report-uri (legacy).",
+              "notes": "Content-Security-Policy-Report-Only with report-to / report-uri (legacy).",
+              "blurb": "Content-Security-Policy-Report-Only with report-to / report-uri (legacy).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n942edb5beb068d0",
+              "title": "Fix violations by removing inline, moving JSON out of application/json endpoints interpr",
+              "markdown": "- Fix violations by removing inline, moving JSON out of application/json endpoints interpr",
+              "notes": "Fix violations by removing inline, moving JSON out of application/json endpoints interpr",
+              "blurb": "Fix violations by removing inline, moving JSON out of application/json...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ncf536e7509d81c2",
+              "title": "Enforce on high-value routes first (sign-in, payments, admin).",
+              "markdown": "- Enforce on high-value routes first (sign-in, payments, admin).",
+              "notes": "Enforce on high-value routes first (sign-in, payments, admin).",
+              "blurb": "Enforce on high-value routes first (sign-in, payments, admin).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8635400cd25bc6c",
+              "title": "Track violation volume, unique endpoints, and regressions per release.",
+              "markdown": "- Track violation volume, unique endpoints, and regressions per release.",
+              "notes": "Track violation volume, unique endpoints, and regressions per release.",
+              "blurb": "Track violation volume, unique endpoints, and regressions per release.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Content-Security-Policy-Report-Only with report-to / report-uri (legacy).",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Goals",
+      "expanded": true
+    },
+    {
+      "id": "n10ef168e932e348",
+      "title": "Trusted Types",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n875656145123978",
+          "title": "Problem addressed",
+          "markdown": "Many XSS classes sink into DOM APIs: **`innerHTML`**, **`insertAdjacentHTML`**, script **`src`** set from strings, **`eval`**. **Trusted Types** replaces raw string usage in those sinks with **policy-produced typed objects**, forcing data through **reviewed sanitizers** or **builders**.",
+          "notes": "Many XSS classes sink into DOM APIs: innerHTML, insertAdjacentHTML, script src set from strings, eval. Trusted Types replaces raw string usage in those sinks with policy-produced typed objects, forcing data through reviewed sanitizers or builders.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Many XSS classes sink into DOM APIs: innerHTML, insertAdjacentHTML, script...",
+          "expanded": false
+        },
+        {
+          "id": "n40ec729da0f3bb4",
+          "title": "Deployment strategy",
+          "markdown": "Enable report-only first: browsers report where string sinks would have violated policy.",
+          "notes": "Enable report-only first: browsers report where string sinks would have violated policy.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n06286e7b2f3b3d3",
+              "title": "Enable report-only first: browsers report where string sinks would have violated policy.",
+              "markdown": "- Enable report-only first: browsers report where string sinks would have violated policy.",
+              "notes": "Enable report-only first: browsers report where string sinks would have violated policy.",
+              "blurb": "Enable report-only first: browsers report where string sinks would have...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n01c1edbf8747078",
+              "title": "Create small, reviewed policies-not one giant \"allow everything\" policy.",
+              "markdown": "- Create small, reviewed policies-not one giant \"allow everything\" policy.",
+              "notes": "Create small, reviewed policies-not one giant \"allow everything\" policy.",
+              "blurb": "Create small, reviewed policies-not one giant \"allow everything\" policy.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n91235ac70d2721f",
+              "title": "Prefer framework-native patterns (e.g., template systems that bind text safely) over ad",
+              "markdown": "- Prefer framework-native patterns (e.g., template systems that bind text safely) over ad",
+              "notes": "Prefer framework-native patterns (e.g., template systems that bind text safely) over ad",
+              "blurb": "Prefer framework-native patterns (e.g., template systems that bind text...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Enable report-only first: browsers report where string sinks would have...",
+          "expanded": false
+        },
+        {
+          "id": "n30010091bdf37ac",
+          "title": "Relationship to CSP",
+          "markdown": "Trusted Types is typically enforced via CSP directive **`require-trusted-types-for 'script'`** and optionally **`trusted-types`** to **allowlist policy names**. CSP and Trusted Types are complementary: CSP limits **who** can run; Trusted Types limits **how** HTML is composed.",
+          "notes": "Trusted Types is typically enforced via CSP directive require-trusted-types-for 'script' and optionally trusted-types to allowlist policy names. CSP and Trusted Types are complementary: CSP limits who can run; Trusted Types limits how HTML is composed.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Trusted Types is typically enforced via CSP directive...",
+          "expanded": false
+        },
+        {
+          "id": "nce42d98da852f8e",
+          "title": "Pitfalls",
+          "markdown": "- **Custom sanitizers** with incomplete tag/attribute allowlists.\n- **Third-party libraries** that require unsafe patterns-may need forks, wrappers, or vendor fixes.",
+          "notes": "- Custom sanitizers with incomplete tag/attribute allowlists.\n- Third-party libraries that require unsafe patterns-may need forks, wrappers, or vendor fixes.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Custom sanitizers with incomplete tag/attribute allowlists.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Problem addressed",
+      "expanded": true
+    },
+    {
+      "id": "n2f98a08eebe5402",
+      "title": "Subresource Integrity (SRI)",
+      "markdown": "**SRI** (`integrity=\"sha384-...\"` on `<script>` / `<link rel=\"stylesheet\">`) tells the browser to **hash-verify** fetched resources. A mismatch **blocks execution**-protecting against **CDN compromise** and **man-in-the-middle** attacks on subresources when TLS is broken or mis-terminated.",
+      "notes": "SRI (integrity=\"sha384-...\" on <script> / <link rel=\"stylesheet\">) tells the browser to hash-verify fetched resources. A mismatch blocks execution-protecting against CDN compromise and man-in-the-middle attacks on subresources when TLS is broken or mis-terminated.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n49c3a0e2d0300ff",
+          "title": "Dynamic third-party scripts that change daily break integrity unless you re-pin on every",
+          "markdown": "- Dynamic third-party scripts that change daily break integrity unless you re-pin on every",
+          "notes": "Dynamic third-party scripts that change daily break integrity unless you re-pin on every",
+          "blurb": "Dynamic third-party scripts that change daily break integrity unless you...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n8fc1c0964f3211d",
+          "title": "JSONP and server-generated script cannot be integrity-pinned meaningfully if content var",
+          "markdown": "- JSONP and server-generated script cannot be integrity-pinned meaningfully if content var",
+          "notes": "JSONP and server-generated script cannot be integrity-pinned meaningfully if content var",
+          "blurb": "JSONP and server-generated script cannot be integrity-pinned meaningfully if...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n3982977ab19325f",
+          "title": "SRI does not help if you inline the attacker's script via XSS.",
+          "markdown": "- SRI does not help if you inline the attacker's script via XSS.",
+          "notes": "SRI does not help if you inline the attacker's script via XSS.",
+          "blurb": "SRI does not help if you inline the attacker's script via XSS.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "SRI (integrity=\"sha384-...\" on <script> / <link rel=\"stylesheet\">) tells the...",
+      "expanded": false
+    },
+    {
+      "id": "nf90fa4bb6405f73",
+      "title": "Fetch Metadata (Sec-Fetch-*)",
+      "markdown": "Browsers send **Fetch Metadata** request headers on navigations and many subresource requests:\n\n- **`Sec-Fetch-Site`:** `same-origin`, `same-site`, `cross-site`, `none` (user-initiated contexts).\n- **`Sec-Fetch-Mode`:** `navigate`, `cors`, `no-cors`, `websocket`, etc.\n- **`Sec-Fetch-Dest`:** `document`, `iframe`, `script`, `image`, ...\n- **`Sec-Fetch-User`:** `?1` when associated with a user gesture (navigations).",
+      "notes": "Browsers send Fetch Metadata request headers on navigations and many subresource requests:\n- Sec-Fetch-Site: same-origin, same-site, cross-site, none (user-initiated contexts).\n- Sec-Fetch-Mode: navigate, cors, no-cors, websocket, etc.\n- Sec-Fetch-Dest: document, iframe, script, image, ...\n- Sec-Fetch-User: ?1 when associated with a user gesture (navigations).",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n20e025bfcfe3120",
+          "title": "Server-side use",
+          "markdown": "- **Reject sensitive state-changing requests** when `Sec-Fetch-Site` is `cross-site` and `Sec-Fetch-Mode` is `cors` unless you **intend** cross-site API use-this is a **defense-in-depth** layer next to **CSRF tokens** and **SameSite cookies**.\n- **Block \"unexpected\" embedding** patterns by combining Fetch Metadata with **`Cross-Origin-Resource-Policy`** and **`frame-ancestors`** (CSP or `X-Frame-Options`).",
+          "notes": "- Reject sensitive state-changing requests when Sec-Fetch-Site is cross-site and Sec-Fetch-Mode is cors unless you intend cross-site API use-this is a defense-in-depth layer next to CSRF tokens and SameSite cookies.\n- Block \"unexpected\" embedding patterns by combining Fetch Metadata with Cross-Origin-Resource-Policy and frame-ancestors (CSP or X-Frame-Options).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Reject sensitive state-changing requests when Sec-Fetch-Site is cross-site...",
+          "expanded": false
+        },
+        {
+          "id": "n01c497287fdfaa6",
+          "title": "Caveats",
+          "markdown": "- Not all clients send identical sets; **bots** and **older** user agents exist-treat as **signal**, not sole authorization.\n- **Same-site** vs **cross-site** depends on **schemeful same-site** rules-subdomains and ports matter.",
+          "notes": "- Not all clients send identical sets; bots and older user agents exist-treat as signal, not sole authorization.\n- Same-site vs cross-site depends on schemeful same-site rules-subdomains and ports matter.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Not all clients send identical sets; bots and older user agents exist-treat...",
+          "expanded": false
+        },
+        {
+          "id": "nadd57a835271a59",
+          "title": "Example policy sketch (pseudocode)",
+          "markdown": "For a **JSON API** that must only be called from same-site XHR/fetch and not from random cross-site pages:",
+          "notes": "For a JSON API that must only be called from same-site XHR/fetch and not from random cross-site pages:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n0aa1fe43bcffa42",
+              "title": "Allow state-changing POST when Sec-Fetch-Site is same-origin or same-site, or when a val",
+              "markdown": "- Allow state-changing POST when Sec-Fetch-Site is same-origin or same-site, or when a val",
+              "notes": "Allow state-changing POST when Sec-Fetch-Site is same-origin or same-site, or when a val",
+              "blurb": "Allow state-changing POST when Sec-Fetch-Site is same-origin or same-site,...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n350bb7f468b042c",
+              "title": "For Sec-Fetch-Mode: navigate and Sec-Fetch-Dest: document, apply different rules (HTML f",
+              "markdown": "- For Sec-Fetch-Mode: navigate and Sec-Fetch-Dest: document, apply different rules (HTML f",
+              "notes": "For Sec-Fetch-Mode: navigate and Sec-Fetch-Dest: document, apply different rules (HTML f",
+              "blurb": "For Sec-Fetch-Mode: navigate and Sec-Fetch-Dest: document, apply different...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n82368e9a3b4c14c",
+              "title": "Log and alert on unexpected combinations (e.g., cross-site + cors + sensitive routes) fo",
+              "markdown": "- Log and alert on unexpected combinations (e.g., cross-site + cors + sensitive routes) fo",
+              "notes": "Log and alert on unexpected combinations (e.g., cross-site + cors + sensitive routes) fo",
+              "blurb": "Log and alert on unexpected combinations (e.g., cross-site + cors +...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "For a JSON API that must only be called from same-site XHR/fetch and not...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Browsers send Fetch Metadata request headers on navigations and many...",
+      "expanded": false
+    },
+    {
+      "id": "n73f2cb84f7d0421",
+      "title": "Storage risks on the client",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n4e78bfd8447d7e5",
+          "title": "Cookies (HttpOnly, Secure, SameSite)",
+          "markdown": "HttpOnly: Not readable from JavaScript-strong against XSS exfiltration; still sent on requests-pair with CSRF controls.",
+          "notes": "HttpOnly: Not readable from JavaScript-strong against XSS exfiltration; still sent on requests-pair with CSRF controls.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n1005ef26e18dc90",
+              "title": "HttpOnly: Not readable from JavaScript-strong against XSS exfiltration; still sent on re",
+              "markdown": "- HttpOnly: Not readable from JavaScript-strong against XSS exfiltration; still sent on re",
+              "notes": "HttpOnly: Not readable from JavaScript-strong against XSS exfiltration; still sent on re",
+              "blurb": "HttpOnly: Not readable from JavaScript-strong against XSS exfiltration;...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0384417974a9e51",
+              "title": "Secure: Sent only over HTTPS-baseline for session cookies.",
+              "markdown": "- Secure: Sent only over HTTPS-baseline for session cookies.",
+              "notes": "Secure: Sent only over HTTPS-baseline for session cookies.",
+              "blurb": "Secure: Sent only over HTTPS-baseline for session cookies.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0e7d67f74e5cd47",
+              "title": "SameSite=Lax or Strict: Reduces cross-site cookie inclusion; None requires Secure and is",
+              "markdown": "- SameSite=Lax or Strict: Reduces cross-site cookie inclusion; None requires Secure and is",
+              "notes": "SameSite=Lax or Strict: Reduces cross-site cookie inclusion; None requires Secure and is",
+              "blurb": "SameSite=Lax or Strict: Reduces cross-site cookie inclusion; None requires...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "HttpOnly: Not readable from JavaScript-strong against XSS exfiltration;...",
+          "expanded": false
+        },
+        {
+          "id": "n707847d7784ada7",
+          "title": "sessionStorage and tab scope",
+          "markdown": "- **Tab-scoped**; cleared when the tab closes (implementation nuances exist). Still **fully readable under XSS**.",
+          "notes": "- Tab-scoped; cleared when the tab closes (implementation nuances exist). Still fully readable under XSS.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Tab-scoped; cleared when the tab closes (implementation nuances exist).",
+          "expanded": false
+        },
+        {
+          "id": "n6a760f33a47d7ec",
+          "title": "localStorage",
+          "markdown": "- **Persists**; convenient for non-secret preferences. **Avoid high-value long-lived tokens** if XSS is in threat model-any script in origin reads it.",
+          "notes": "- Persists; convenient for non-secret preferences. Avoid high-value long-lived tokens if XSS is in threat model-any script in origin reads it.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Persists; convenient for non-secret preferences.",
+          "expanded": false
+        },
+        {
+          "id": "n46f1a921ca2c5a1",
+          "title": "IndexedDB, WebSQL legacy, Cache API",
+          "markdown": "- **Origin-scoped** durable stores-**XSS reads everything** in origin. **Service workers** can cache responses; a **compromised SW registration** is catastrophic-protect **`/sw.js`** and **`navigator.serviceWorker.register`** origins with CSP and auth.",
+          "notes": "- Origin-scoped durable stores-XSS reads everything in origin. Service workers can cache responses; a compromised SW registration is catastrophic-protect /sw.js and navigator.serviceWorker.register origins with CSP and auth.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Origin-scoped durable stores-XSS reads everything in origin.",
+          "expanded": false
+        },
+        {
+          "id": "nf7eeb3ea2865cd9",
+          "title": "Partitioning and third-party context (brief)",
+          "markdown": "Browsers continue to tighten **third-party cookie** and storage behavior. **Partitioned** cookies (e.g., `Partitioned` attribute with **CHIPS**) reduce **cross-site tracking** but also change how embedded SaaS and SSO flows behave. Security teams should **test** partner integrations when **ITP**/tracking prevention features change-not only \"cookies still on.\"",
+          "notes": "Browsers continue to tighten third-party cookie and storage behavior. Partitioned cookies (e.g., Partitioned attribute with CHIPS) reduce cross-site tracking but also change how embedded SaaS and SSO flows behave. Security teams should test partner integrations when ITP/tracking prevention features change-not only \"cookies still on.\"",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Browsers continue to tighten third-party cookie and storage behavior.",
+          "expanded": false
+        },
+        {
+          "id": "n82eb2d3164bb7e3",
+          "title": "\u201cMemory-only\u201d tokens in SPAs",
+          "markdown": "- **Smaller theft window** than `localStorage`-but **still stolen** under XSS while the tab is open. Combine with **short TTL**, **refresh rotation**, **binding** (device signals on server-not client secrets), and **CSP**.",
+          "notes": "- Smaller theft window than localStorage-but still stolen under XSS while the tab is open. Combine with short TTL, refresh rotation, binding (device signals on server-not client secrets), and CSP.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Smaller theft window than localStorage-but still stolen under XSS while the...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Cookies (HttpOnly, Secure, SameSite)",
+      "expanded": false
+    },
+    {
+      "id": "n04c651a3d832abf",
+      "title": "Third-party scripts and tag managers",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n66af862a58abad5",
+          "title": "Risks",
+          "markdown": "Full DOM and network access within your origin-equivalent to deploying their engineers' credentials into your page.",
+          "notes": "Full DOM and network access within your origin-equivalent to deploying their engineers' credentials into your page.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n0a55a1d485a4669",
+              "title": "Full DOM and network access within your origin-equivalent to deploying their engineers'",
+              "markdown": "- Full DOM and network access within your origin-equivalent to deploying their engineers'",
+              "notes": "Full DOM and network access within your origin-equivalent to deploying their engineers'",
+              "blurb": "Full DOM and network access within your origin-equivalent to deploying their...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n798c52a05121a31",
+              "title": "Supply-chain drift: vendor updates, compromised tags, geo-specific loading.",
+              "markdown": "- Supply-chain drift: vendor updates, compromised tags, geo-specific loading.",
+              "notes": "Supply-chain drift: vendor updates, compromised tags, geo-specific loading.",
+              "blurb": "Supply-chain drift: vendor updates, compromised tags, geo-specific loading.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6259593595a104d",
+              "title": "Data exfiltration via fetch, sendBeacon, image pixels, and DOM scraping.",
+              "markdown": "- Data exfiltration via fetch, sendBeacon, image pixels, and DOM scraping.",
+              "notes": "Data exfiltration via fetch, sendBeacon, image pixels, and DOM scraping.",
+              "blurb": "Data exfiltration via fetch, sendBeacon, image pixels, and DOM scraping.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Full DOM and network access within your origin-equivalent to deploying their...",
+          "expanded": false
+        },
+        {
+          "id": "n7f07e5361acaa59",
+          "title": "Controls",
+          "markdown": "Inventory every script by owner, data class, and surface (marketing vs authenticated app).",
+          "notes": "Inventory every script by owner, data class, and surface (marketing vs authenticated app).",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n3d5ab9239303e7a",
+              "title": "Inventory every script by owner, data class, and surface (marketing vs authenticated app",
+              "markdown": "- Inventory every script by owner, data class, and surface (marketing vs authenticated app",
+              "notes": "Inventory every script by owner, data class, and surface (marketing vs authenticated app",
+              "blurb": "Inventory every script by owner, data class, and surface (marketing vs...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n7c655c2192a9d58",
+              "title": "Segment: never load analytics on admin or PCI flows unless legally and contractually req",
+              "markdown": "- Segment: never load analytics on admin or PCI flows unless legally and contractually req",
+              "notes": "Segment: never load analytics on admin or PCI flows unless legally and contractually req",
+              "blurb": "Segment: never load analytics on admin or PCI flows unless legally and...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n54c8d360a0128c5",
+              "title": "Prefer first-party proxies for analytics where policy allows.",
+              "markdown": "- Prefer first-party proxies for analytics where policy allows.",
+              "notes": "Prefer first-party proxies for analytics where policy allows.",
+              "blurb": "Prefer first-party proxies for analytics where policy allows.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb2d640a496d115b",
+              "title": "Contractual DPIAs, subprocessor lists, and incident notification.",
+              "markdown": "- Contractual DPIAs, subprocessor lists, and incident notification.",
+              "notes": "Contractual DPIAs, subprocessor lists, and incident notification.",
+              "blurb": "Contractual DPIAs, subprocessor lists, and incident notification.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ndbb7df24528f1b1",
+              "title": "CSP allowlists as narrow as possible; monitor violation reports for new domains.",
+              "markdown": "- CSP allowlists as narrow as possible; monitor violation reports for new domains.",
+              "notes": "CSP allowlists as narrow as possible; monitor violation reports for new domains.",
+              "blurb": "CSP allowlists as narrow as possible; monitor violation reports for new...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Inventory every script by owner, data class, and surface (marketing vs...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Risks",
+      "expanded": false
+    },
+    {
+      "id": "n3fcbe0a8764f4be",
+      "title": "iframe sandbox and embedding",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n741646bde8994e0",
+          "title": "sandbox attribute",
+          "markdown": "The **`sandbox`** attribute on `<iframe>` restricts capabilities unless **allowlisted**:\n\n- Default: no scripts, no forms, no popups, same-origin treats the frame as **unique opaque origin** (cannot access parent).\n- **`allow-scripts`:** enables JS-often paired with **`allow-same-origin`** only when necessary-**that combination can escape** some sandbox assumptions; treat as **high risk**.",
+          "notes": "The sandbox attribute on <iframe> restricts capabilities unless allowlisted:\n- Default: no scripts, no forms, no popups, same-origin treats the frame as unique opaque origin (cannot access parent).\n- allow-scripts: enables JS-often paired with allow-same-origin only when necessary-that combination can escape some sandbox assumptions; treat as high risk.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "The sandbox attribute on <iframe> restricts capabilities unless allowlisted:...",
+          "expanded": false
+        },
+        {
+          "id": "n2ffb99f38ee657e",
+          "title": "allow (Permissions Policy integration)",
+          "markdown": "Use **`allow=\"camera 'none'; microphone 'none'\"`** style directives to disable powerful features inside embeds.",
+          "notes": "Use allow=\"camera 'none'; microphone 'none'\" style directives to disable powerful features inside embeds.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Use allow=\"camera 'none'; microphone 'none'\" style directives to disable...",
+          "expanded": false
+        },
+        {
+          "id": "n6391cfe30334c8d",
+          "title": "referrerpolicy and loading",
+          "markdown": "Reduce **data leakage** via `Referer` on third-party embeds; lazy loading is performance-related but reduces **accidental** early third-party execution.",
+          "notes": "Reduce data leakage via Referer on third-party embeds; lazy loading is performance-related but reduces accidental early third-party execution.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Reduce data leakage via Referer on third-party embeds; lazy loading is...",
+          "expanded": false
+        },
+        {
+          "id": "neb3ec5411057d03",
+          "title": "CSP frame-ancestors",
+          "markdown": "Prefer CSP **`frame-ancestors 'none'`** or allowlists instead of relying solely on legacy **`X-Frame-Options`**-`frame-ancestors` is more expressive.",
+          "notes": "Prefer CSP frame-ancestors 'none' or allowlists instead of relying solely on legacy X-Frame-Options-frame-ancestors is more expressive.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Prefer CSP frame-ancestors 'none' or allowlists instead of relying solely on...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes sandbox attribute",
+      "expanded": false
+    },
+    {
+      "id": "nbae04574a988209",
+      "title": "postMessage and cross-origin communication",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n8884cab0c881216",
+          "title": "The vulnerability pattern",
+          "markdown": "`window.postMessage(data, targetOrigin)` is easy to misuse:\n\n- **`targetOrigin: *`** leaks data to **any** embedder or child listening.\n- **Missing origin checks** on `message` events accepts messages from **attackers' windows** opened or navigated into relationships (`window.opener`, named windows, nested iframes).",
+          "notes": "window.postMessage(data, targetOrigin) is easy to misuse:\n- targetOrigin:  leaks data to any embedder or child listening.\n- Missing origin checks on message events accepts messages from attackers' windows opened or navigated into relationships (window.opener, named windows, nested iframes).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "window.postMessage(data, targetOrigin) is easy to misuse: - targetOrigin:...",
+          "expanded": false
+        },
+        {
+          "id": "n70c24cbd7cbec6b",
+          "title": "Safe patterns",
+          "markdown": "Always specify an explicit targetOrigin (never for sensitive data).",
+          "notes": "Always specify an explicit targetOrigin (never for sensitive data).",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n3b290ccc11691c2",
+              "title": "Always specify an explicit targetOrigin (never * for sensitive data).",
+              "markdown": "- Always specify an explicit targetOrigin (never * for sensitive data).",
+              "notes": "Always specify an explicit targetOrigin (never * for sensitive data).",
+              "blurb": "Always specify an explicit targetOrigin (never for sensitive data).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n846b9ba427d51b5",
+              "title": "On receive: verify event.origin against an allowlist; verify event.source if you expect",
+              "markdown": "- On receive: verify event.origin against an allowlist; verify event.source if you expect",
+              "notes": "On receive: verify event.origin against an allowlist; verify event.source if you expect",
+              "blurb": "On receive: verify event.origin against an allowlist; verify event.source if...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n505a58e868cb0f8",
+              "title": "Use versioned message schemas ({ type: 'PAYMENT_RESULT', version: 1, ... }) and ignore u",
+              "markdown": "- Use versioned message schemas ({ type: 'PAYMENT_RESULT', version: 1, ... }) and ignore u",
+              "notes": "Use versioned message schemas ({ type: 'PAYMENT_RESULT', version: 1, ... }) and ignore u",
+              "blurb": "Use versioned message schemas ({ type: 'PAYMENTRESULT', version: 1, ...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Always specify an explicit targetOrigin (never for sensitive data).",
+          "expanded": false
+        },
+        {
+          "id": "nd438935c1b1943c",
+          "title": "Pair with CSP",
+          "markdown": "**`frame-ancestors`** controls who embeds you; **`postMessage`** policies control **what you say** once embedded.",
+          "notes": "frame-ancestors controls who embeds you; postMessage policies control what you say once embedded.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "frame-ancestors controls who embeds you; postMessage policies control what...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes The vulnerability pattern",
+      "expanded": false
+    },
+    {
+      "id": "nc94a9024cb709d1",
+      "title": "Workers: dedicated, shared, and service",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nb58f6e97e5f0c15",
+          "title": "Dedicated workers",
+          "markdown": "- **Separate thread**, **same-origin** as the creating document (subject to file/URL origin). **No DOM**-but can **`fetch`** with cookies depending on settings and **`importScripts`**. Compromise via **XSS** can still **create** workers and exfiltrate.",
+          "notes": "- Separate thread, same-origin as the creating document (subject to file/URL origin). No DOM-but can fetch with cookies depending on settings and importScripts. Compromise via XSS can still create workers and exfiltrate.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Separate thread, same-origin as the creating document (subject to file/URL...",
+          "expanded": false
+        },
+        {
+          "id": "nb92b4734fc9dbbe",
+          "title": "Shared workers",
+          "markdown": "- Shared across **same-origin** contexts-**larger attack surface** for state bugs; rarely needed in modern apps.",
+          "notes": "- Shared across same-origin contexts-larger attack surface for state bugs; rarely needed in modern apps.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Shared across same-origin contexts-larger attack surface for state bugs;...",
+          "expanded": false
+        },
+        {
+          "id": "n591fb9a705a3697",
+          "title": "Service workers",
+          "markdown": "- **Intercept network** events; **persist** until upgraded. A malicious SW is **a persistent insider** in the origin.\n- Protect registration endpoints; use **CSP** to block unexpected script; **monitor** `navigator.serviceWorker.getRegistrations()` in diagnostics; prefer **short-lived** caches for sensitive data.",
+          "notes": "- Intercept network events; persist until upgraded. A malicious SW is a persistent insider in the origin.\n- Protect registration endpoints; use CSP to block unexpected script; monitor navigator.serviceWorker.getRegistrations() in diagnostics; prefer short-lived caches for sensitive data.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Intercept network events; persist until upgraded.",
+          "expanded": false
+        },
+        {
+          "id": "n0c8b3f832c1496e",
+          "title": "Security notes",
+          "markdown": "Workers **do not magically sandbox** third-party code you import. **Third-party scripts** running in the page can still **`fetch()`** credentials unless forbidden by **`SameSite`**, **CORS**, and **cookie** attributes.",
+          "notes": "Workers do not magically sandbox third-party code you import. Third-party scripts running in the page can still fetch() credentials unless forbidden by SameSite, CORS, and cookie attributes.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Workers do not magically sandbox third-party code you import.",
+          "expanded": false
+        },
+        {
+          "id": "n18e5e5cb34ae454",
+          "title": "importScripts and credentials",
+          "markdown": "**`importScripts('https://cdn/vendor.js')`** pulls code into the worker's origin context. If that CDN is compromised, **worker and main thread** are both at risk. Prefer **first-party** hosting with **SRI** at the HTML entry when the architecture allows, or **subresource pinning** via your build pipeline.",
+          "notes": "importScripts('https://cdn/vendor.js') pulls code into the worker's origin context. If that CDN is compromised, worker and main thread are both at risk. Prefer first-party hosting with SRI at the HTML entry when the architecture allows, or subresource pinning via your build pipeline.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "importScripts('https://cdn/vendor.js') pulls code into the worker's origin...",
+          "expanded": false
+        },
+        {
+          "id": "n4813340af88c606",
+          "title": "Message passing (worker.postMessage)",
+          "markdown": "Structured cloning applies-**do not pass** live DOM nodes. Treat messages like **`postMessage`**: validate **shape** and **intent**; never **eval** string payloads inside workers.",
+          "notes": "Structured cloning applies-do not pass live DOM nodes. Treat messages like postMessage: validate shape and intent; never eval string payloads inside workers.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Structured cloning applies-do not pass live DOM nodes.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Dedicated workers",
+      "expanded": false
+    },
+    {
+      "id": "n390f33ffcbadc45",
+      "title": "Browser extensions risk",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n8e9b7546f6584d2",
+          "title": "Consumer extensions",
+          "markdown": "Users install **password managers**, **ad blockers**, and **malware posing as utilities**. Extensions with **`webRequest`** / **`debugger`** / broad **`host_permissions`** can **read and modify** pages, **strip CSP**, inject script, and **exfiltrate** data-even on HTTPS.\n\nHigh-risk capability patterns in the manifest include **`\"all_urls\"`** host permissions, **`webRequestBlocking`**, **`debugger`**, and **content scripts** at `document_start` on sensitive domains-each increases **supply-chain** value for a malicious or compromised extension update.",
+          "notes": "Users install password managers, ad blockers, and malware posing as utilities. Extensions with webRequest / debugger / broad hostpermissions can read and modify pages, strip CSP, inject script, and exfiltrate data-even on HTTPS.\n\nHigh-risk capability patterns in the manifest include \"allurls\" host permissions, webRequestBlocking, debugger, and content scripts at documentstart on sensitive domains-each increases supply-chain value for a malicious or compromised extension update.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Users install password managers, ad blockers, and malware posing as utilities.",
+          "expanded": false
+        },
+        {
+          "id": "n18d627cf13f7811",
+          "title": "Enterprise angle",
+          "markdown": "- **Managed browsers** can **force-allowlist** extensions; **block** inline installation.\n- **Sensitive operations** should rely on **server-side** step-up and **device posture** where available-not on \"the browser is clean.\"",
+          "notes": "- Managed browsers can force-allowlist extensions; block inline installation.\n- Sensitive operations should rely on server-side step-up and device posture where available-not on \"the browser is clean.\"",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Managed browsers can force-allowlist extensions; block inline installation.",
+          "expanded": false
+        },
+        {
+          "id": "n8a2f0353a1a78fc",
+          "title": "Product security response",
+          "markdown": "- **Never** assume client integrity; **rate-limit** and **detect** anomalous admin patterns.\n- Document that **CSP** may be **weakened** by user extensions-support should know **incognito with extensions disabled** as a troubleshooting step, not a security control.",
+          "notes": "- Never assume client integrity; rate-limit and detect anomalous admin patterns.\n- Document that CSP may be weakened by user extensions-support should know incognito with extensions disabled as a troubleshooting step, not a security control.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Never assume client integrity; rate-limit and detect anomalous admin patterns.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Consumer extensions",
+      "expanded": false
+    },
+    {
+      "id": "n2bd9c04a6b9c8b5",
+      "title": "How defenses fail (war stories)",
+      "markdown": "CSP bypass via JSONP endpoints, AngularJS templates, open redirects that reflect into script contexts, or base-uri gaps.",
+      "notes": "CSP bypass via JSONP endpoints, AngularJS templates, open redirects that reflect into script contexts, or base-uri gaps.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nb4fe78fe63ce677",
+          "title": "CSP bypass via JSONP endpoints, AngularJS templates, open redirects that reflect into sc",
+          "markdown": "- CSP bypass via JSONP endpoints, AngularJS templates, open redirects that reflect into sc",
+          "notes": "CSP bypass via JSONP endpoints, AngularJS templates, open redirects that reflect into sc",
+          "blurb": "CSP bypass via JSONP endpoints, AngularJS templates, open redirects that...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nd99b5580fe1d439",
+          "title": "Trusted Types stuck forever in report-only with thousands of noisy reports and no owner.",
+          "markdown": "- Trusted Types stuck forever in report-only with thousands of noisy reports and no owner.",
+          "notes": "Trusted Types stuck forever in report-only with thousands of noisy reports and no owner.",
+          "blurb": "Trusted Types stuck forever in report-only with thousands of noisy reports...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n5b75ae6b7c72cb7",
+          "title": "SRI breaking production every deploy because third-party assets change silently.",
+          "markdown": "- SRI breaking production every deploy because third-party assets change silently.",
+          "notes": "SRI breaking production every deploy because third-party assets change silently.",
+          "blurb": "SRI breaking production every deploy because third-party assets change...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n96202bb1d15bea9",
+          "title": "postMessage handlers that check substring origins or trust data without schema.",
+          "markdown": "- postMessage handlers that check substring origins or trust data without schema.",
+          "notes": "postMessage handlers that check substring origins or trust data without schema.",
+          "blurb": "postMessage handlers that check substring origins or trust data without...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nbe7b2e4a5f2f3b0",
+          "title": "Service worker poisoning via XSS once, persisting until users clear site data.",
+          "markdown": "- Service worker poisoning via XSS once, persisting until users clear site data.",
+          "notes": "Service worker poisoning via XSS once, persisting until users clear site data.",
+          "blurb": "Service worker poisoning via XSS once, persisting until users clear site data.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "CSP bypass via JSONP endpoints, AngularJS templates, open redirects that...",
+      "expanded": false
+    },
+    {
+      "id": "nd1ff695037e6d26",
+      "title": "Verification and metrics",
+      "markdown": "CSP reports: counts by directive, URI, route, release; SLO for new violations.",
+      "notes": "CSP reports: counts by directive, URI, route, release; SLO for new violations.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n0e3bc31dec4454e",
+          "title": "CSP reports: counts by directive, URI, route, release; SLO for new violations.",
+          "markdown": "- CSP reports: counts by directive, URI, route, release; SLO for new violations.",
+          "notes": "CSP reports: counts by directive, URI, route, release; SLO for new violations.",
+          "blurb": "CSP reports: counts by directive, URI, route, release; SLO for new violations.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n8ba1132b08cb4e7",
+          "title": "Trusted Types reports trending to zero on critical surfaces before enforce.",
+          "markdown": "- Trusted Types reports trending to zero on critical surfaces before enforce.",
+          "notes": "Trusted Types reports trending to zero on critical surfaces before enforce.",
+          "blurb": "Trusted Types reports trending to zero on critical surfaces before enforce.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n113c5b535caf3fb",
+          "title": "Third-party inventory reviewed quarterly; diff on script URLs per release.",
+          "markdown": "- Third-party inventory reviewed quarterly; diff on script URLs per release.",
+          "notes": "Third-party inventory reviewed quarterly; diff on script URLs per release.",
+          "blurb": "Third-party inventory reviewed quarterly; diff on script URLs per release.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ne2629d13fa4bffd",
+          "title": "E2E smoke tests for login, checkout, and embedded partner flows with headers enabled.",
+          "markdown": "- E2E smoke tests for login, checkout, and embedded partner flows with headers enabled.",
+          "notes": "E2E smoke tests for login, checkout, and embedded partner flows with headers enabled.",
+          "blurb": "E2E smoke tests for login, checkout, and embedded partner flows with headers...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "CSP reports: counts by directive, URI, route, release; SLO for new violations.",
+      "expanded": false
+    },
+    {
+      "id": "na16ab6b971067e4",
+      "title": "Operational reality",
+      "markdown": "- **Marketing** stacks (CMS, tag managers) and **app** stacks (SPA shell) diverge-align on a **single baseline** document even if enforcement timing differs.\n- **Platform** (CDN/edge) + **frontend** + **security** must **co-own** CSP; otherwise production hotfixes **weaken** policy.",
+      "notes": "- Marketing stacks (CMS, tag managers) and app stacks (SPA shell) diverge-align on a single baseline document even if enforcement timing differs.\n- Platform (CDN/edge) + frontend + security must co-own CSP; otherwise production hotfixes weaken policy.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Marketing stacks (CMS, tag managers) and app stacks (SPA shell)...",
+      "expanded": false
+    },
+    {
+      "id": "n616b2fc0024743a",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nc8ee69dda7b0d02",
+          "title": "Core defenses (layered)",
+          "markdown": "CSP - default-src, nonces or hashes, frame-ancestors, restrict script-src",
+          "notes": "CSP - default-src, nonces or hashes, frame-ancestors, restrict script-src",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n3ab8c5ea7491464",
+              "title": "CSP - default-src, nonces or hashes, frame-ancestors, restrict script-src",
+              "markdown": "- CSP - default-src, nonces or hashes, frame-ancestors, restrict script-src",
+              "notes": "CSP - default-src, nonces or hashes, frame-ancestors, restrict script-src",
+              "blurb": "CSP - default-src, nonces or hashes, frame-ancestors, restrict script-src",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n4778f8adf6713b1",
+              "title": "Cookie flags - HttpOnly, Secure, SameSite (pair with CSRF tokens / double submit where n",
+              "markdown": "- Cookie flags - HttpOnly, Secure, SameSite (pair with CSRF tokens / double submit where n",
+              "notes": "Cookie flags - HttpOnly, Secure, SameSite (pair with CSRF tokens / double submit where n",
+              "blurb": "Cookie flags - HttpOnly, Secure, SameSite (pair with CSRF tokens / double...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n745c6e6ab47b676",
+              "title": "Subresource Integrity - on third-party script/link when not self-hosted",
+              "markdown": "- Subresource Integrity - on third-party script/link when not self-hosted",
+              "notes": "Subresource Integrity - on third-party script/link when not self-hosted",
+              "blurb": "Subresource Integrity - on third-party script/link when not self-hosted",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd34502e22e63fc7",
+              "title": "Fetch metadata / isolation - Cross-Origin-Opener-Policy, Cross-Origin-Resource-Policy wh",
+              "markdown": "- Fetch metadata / isolation - Cross-Origin-Opener-Policy, Cross-Origin-Resource-Policy wh",
+              "notes": "Fetch metadata / isolation - Cross-Origin-Opener-Policy, Cross-Origin-Resource-Policy wh",
+              "blurb": "Fetch metadata / isolation - Cross-Origin-Opener-Policy,...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "CSP - default-src, nonces or hashes, frame-ancestors, restrict script-src",
+          "expanded": false
+        },
+        {
+          "id": "n710c33cb0cb29ab",
+          "title": "Dangerous sinks (spot in code review)",
+          "markdown": "`dangerouslySetInnerHTML` \u00b7 `v-html` \u00b7 `innerHTML` assignment \u00b7 `document.write` \u00b7 URL handlers feeding `javascript:` / `data:` \u00b7 **unsanitized** `postMessage`",
+          "notes": "dangerouslySetInnerHTML \u00b7 v-html \u00b7 innerHTML assignment \u00b7 document.write \u00b7 URL handlers feeding javascript: / data: \u00b7 unsanitized postMessage",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "dangerouslySetInnerHTML \u00b7 v-html \u00b7 innerHTML assignment \u00b7 document.write \u00b7...",
+          "expanded": false
+        },
+        {
+          "id": "n8aac14bcfa44ec6",
+          "title": "Token storage rule of thumb",
+          "markdown": "**Prefer** **HttpOnly** **session** or **BFF** **pattern**; **avoid** **long-lived** **secrets** in **localStorage**/**sessionStorage** (XSS = **game** **over**).",
+          "notes": "Prefer HttpOnly session or BFF pattern; avoid long-lived secrets in localStorage/sessionStorage (XSS = game over).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Prefer HttpOnly session or BFF pattern; avoid long-lived secrets in...",
+          "expanded": false
+        },
+        {
+          "id": "n7d0c9c14343d2b9",
+          "title": "Third-party script governance",
+          "markdown": "Inventory tags \u00b7 **contract** **SRI**/**CSP** \u00b7 **sandbox** **payment**/**support** widgets \u00b7 **kill** **switch** for **compromised** vendor",
+          "notes": "Inventory tags \u00b7 contract SRI/CSP \u00b7 sandbox payment/support widgets \u00b7 kill switch for compromised vendor",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Inventory tags \u00b7 contract SRI/CSP \u00b7 sandbox payment/support widgets \u00b7 kill...",
+          "expanded": false
+        },
+        {
+          "id": "n4cb8c8537e22ead",
+          "title": "CORS quick check",
+          "markdown": "**Never** `Access-Control-Allow-Origin: *` **with** `Allow-Credentials: true`. Reflect **specific** **origins**; **avoid** **wildcard** **subdomains** **without** **proof**.",
+          "notes": "Never Access-Control-Allow-Origin:  with Allow-Credentials: true. Reflect specific origins; avoid wildcard subdomains without proof.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Never Access-Control-Allow-Origin: with Allow-Credentials: true.",
+          "expanded": false
+        },
+        {
+          "id": "n67def2e1013ae31",
+          "title": "Specs / references",
+          "markdown": "**CSP** - [W3C CSP Level 3](https://www.w3.org/TR/CSP3/) \u00b7 **Cookies** - [RFC 6265bis](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis) (evolving) \u00b7 **Fetch** metadata patterns - MDN + OWASP cheat sheets",
+          "notes": "CSP - W3C CSP Level 3 \u00b7 Cookies - RFC 6265bis (evolving) \u00b7 Fetch metadata patterns - MDN + OWASP cheat sheets",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "CSP - W3C CSP Level 3 \u00b7 Cookies - RFC 6265bis (evolving) \u00b7 Fetch metadata...",
+          "expanded": false
+        },
+        {
+          "id": "n05a39cf0222fb30",
+          "title": "Cross-read",
+          "markdown": "`XSS` \u00b7 `CSRF` \u00b7 `TLS` \u00b7 `OAuth` / `JWT` (token handling)",
+          "notes": "XSS \u00b7 CSRF \u00b7 TLS \u00b7 OAuth / JWT (token handling)",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "XSS \u00b7 CSRF \u00b7 TLS \u00b7 OAuth / JWT (token handling)",
+          "expanded": false
+        },
+        {
+          "id": "naeb42d77d57c0b4",
+          "title": "One-liner",
+          "markdown": "\"Treat the **browser** as **hostile** **JS** **runtime**: **CSP** + **safe** **DOM** **APIs** + **no** **secrets** **in** **JS** **reach**.\"",
+          "notes": "\"Treat the browser as hostile JS runtime: CSP + safe DOM APIs + no secrets in JS reach.\"",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "\"Treat the browser as hostile JS runtime: CSP + safe DOM APIs + no secrets...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Core defenses (layered)"
+    },
+    {
+      "id": "n7d0bfb22f80b242",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n3e2bceb446f03e4",
+          "title": "\u201cReact/Vue/Svelte prevents XSS.\u201d",
+          "markdown": "**Reality:** **Unsafe** **sinks** (`dangerouslySetInnerHTML`, `v-html`, URL handlers), **third-party** **scripts**, and **DOM** **API** **misuse** **reintroduce** XSS.",
+          "notes": "Reality: Unsafe sinks (dangerouslySetInnerHTML, v-html, URL handlers), third-party scripts, and DOM API misuse reintroduce XSS.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Unsafe sinks (dangerouslySetInnerHTML, v-html, URL handlers),...",
+          "expanded": false
+        },
+        {
+          "id": "n4a246eb45ef1be7",
+          "title": "\u201cWe can add CSP later.\u201d",
+          "markdown": "**Reality:** **Retrofit** CSP without **nonces**/**hashes** often **breaks** **ads**/**analytics**; **early** **design** (no **inline** **handlers**, **bundle** **discipline**) **cheapens** **rollout**.",
+          "notes": "Reality: Retrofit CSP without nonces/hashes often breaks ads/analytics; early design (no inline handlers, bundle discipline) cheapens rollout.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Retrofit CSP without nonces/hashes often breaks ads/analytics;...",
+          "expanded": false
+        },
+        {
+          "id": "ne1c41bb6683839a",
+          "title": "\u201cHttpOnly cookies remove frontend risk.\u201d",
+          "markdown": "**Reality:** **HttpOnly** **helps** **session** **theft** via **JS**; **CSRF**, **subresource** **integrity** gaps, **postMessage** **bugs**, and **open** **redirects** **remain**.",
+          "notes": "Reality: HttpOnly helps session theft via JS; CSRF, subresource integrity gaps, postMessage bugs, and open redirects remain.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: HttpOnly helps session theft via JS; CSRF, subresource integrity...",
+          "expanded": false
+        },
+        {
+          "id": "n977fa5b3c1223d6",
+          "title": "\u201cSubresource Integrity is optional for first-party JS.\u201d",
+          "markdown": "**Reality:** **CDN** **compromise** and **build** **tampering** **justify** **SRI** or **first-party** **hosting** with **integrity** **checks** on **critical** paths.",
+          "notes": "Reality: CDN compromise and build tampering justify SRI or first-party hosting with integrity checks on critical paths.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: CDN compromise and build tampering justify SRI or first-party...",
+          "expanded": false
+        },
+        {
+          "id": "ndeadf7a3635439e",
+          "title": "\u201clocalStorage is fine for tokens if we minify.\u201d",
+          "markdown": "**Reality:** **Any** **secret** **readable** by **JS** is **stealable** via XSS-prefer **HttpOnly** **cookies** **with** **CSRF** **defenses** or **BFF** **patterns**.",
+          "notes": "Reality: Any secret readable by JS is stealable via XSS-prefer HttpOnly cookies with CSRF defenses or BFF patterns.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Any secret readable by JS is stealable via XSS-prefer HttpOnly...",
+          "expanded": false
+        },
+        {
+          "id": "nd1eaa10471a8793",
+          "title": "\u201cpostMessage is safe with *.\u201d",
+          "markdown": "**Reality:** **Wildcard** **origins** **enable** **cross-site** **data** **exfil**; **always** **validate** `event.origin` and **structure** **messages**.",
+          "notes": "Reality: Wildcard origins enable cross-site data exfil; always validate event.origin and structure messages.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Wildcard origins enable cross-site data exfil; always validate...",
+          "expanded": false
+        },
+        {
+          "id": "n36679fd8d97b471",
+          "title": "\u201cThird-party tags are marketing\u2019s problem.\u201d",
+          "markdown": "**Reality:** **Supply** **chain** **XSS** from **tags** is **AppSec** **scope**-**inventory**, **CSP**, **sandbox** **iframes**, **contracts**.",
+          "notes": "Reality: Supply chain XSS from tags is AppSec scope-inventory, CSP, sandbox iframes, contracts.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Supply chain XSS from tags is AppSec scope-inventory, CSP, sandbox...",
+          "expanded": false
+        },
+        {
+          "id": "n8caa2c4e2307859",
+          "title": "\u201cBrowser extensions don\u2019t affect our threat model.\u201d",
+          "markdown": "**Reality:** **Enterprise** **users** with **malicious** or **vulnerable** **extensions** **alter** **DOM** and **steal** **sessions**-**policy** and **DLP** **considerations** apply.",
+          "notes": "Reality: Enterprise users with malicious or vulnerable extensions alter DOM and steal sessions-policy and DLP considerations apply.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Enterprise users with malicious or vulnerable extensions alter DOM...",
+          "expanded": false
+        },
+        {
+          "id": "ne4c68bfc44bcf0e",
+          "title": "\u201cCORS misconfig is only a small bug.\u201d",
+          "markdown": "**Reality:** **Broken** CORS with **credentials** can **enable** **cross-origin** **data** **theft**-**treat** as **high** **impact** when **sensitive** **APIs** are involved.",
+          "notes": "Reality: Broken CORS with credentials can enable cross-origin data theft-treat as high impact when sensitive APIs are involved.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Broken CORS with credentials can enable cross-origin data...",
+          "expanded": false
+        },
+        {
+          "id": "n7d916fbc036b87f",
+          "title": "\u201cFeature policy / Permissions-Policy is redundant.\u201d",
+          "markdown": "**Reality:** **Disabling** **geolocation**, **camera**, **payment**, and **sync-xhr** **reduces** **attack** **surface** for **XSS** **chains**.",
+          "notes": "Reality: Disabling geolocation, camera, payment, and sync-xhr reduces attack surface for XSS chains.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Disabling geolocation, camera, payment, and sync-xhr reduces attack...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \u201cReact/Vue/Svelte prevents XSS.\u201d"
+    },
+    {
+      "id": "n818cfbda54af602",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nd75aa1e20bc3637",
+          "title": "Does site isolation stop XSS?",
+          "markdown": "**Answer:** No. **Site isolation** separates different **sites** into different **renderer processes** (where the browser can), which **limits blast radius** from certain **browser bugs** and **cross-site** memory attacks. **XSS** runs **in your origin's JavaScript context**, so the attacker already has the same privileges as your page: read **same-origin** storage (except `HttpOnly` cookies), call your APIs with the user's cookies (subject to **CORS** and **SameSite**), and manipulate the DOM. For XSS you rely on **encoding**, **CSP**, **Trusted Types**, **safe frameworks**, and **short-lived tokens**-not process boundaries.",
+          "notes": "Answer: No. Site isolation separates different sites into different renderer processes (where the browser can), which limits blast radius from certain browser bugs and cross-site memory attacks. XSS runs in your origin's JavaScript context, so the attacker already has the same privileges as your page: read same-origin storage (except HttpOnly cookies), call your APIs with the user's cookies (subject to CORS and SameSite), and manipulate the DOM. For XSS you rely on encoding, CSP, Trusted Types, safe frameworks, and short-lived tokens-not process boundaries.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "n8e46e23f9640510",
+          "title": "How is CSP different from the Same-Origin Policy?",
+          "markdown": "**Answer:** **SOP** (with **CORS**) governs whether one origin can **read** another origin's responses and how **cross-origin** resources participate in the page. **CSP** governs **what your own document is allowed to load and execute**: script sources, inline script, frames, connections, etc. A page can be **same-origin** to your API and still be dangerous if CSP allows **`unsafe-inline`** or a **broad `script-src`** that includes hosts serving **JSONP** or user-controlled JavaScript. Interviewers want you to separate **network/origin** rules from **content execution** rules.",
+          "notes": "Answer: SOP (with CORS) governs whether one origin can read another origin's responses and how cross-origin resources participate in the page. CSP governs what your own document is allowed to load and execute: script sources, inline script, frames, connections, etc. A page can be same-origin to your API and still be dangerous if CSP allows unsafe-inline or a broad script-src that includes hosts serving JSONP or user-controlled JavaScript. Interviewers want you to separate network/origin rules from content execution rules.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: SOP (with CORS) governs whether one origin can read another origin's...",
+          "expanded": false
+        },
+        {
+          "id": "n871443b5b330fb7",
+          "title": "Walk me through rolling out CSP on a large React SPA safely.",
+          "markdown": "**Answer:** Start with **`Content-Security-Policy-Report-Only`** and a **reporting endpoint** (`report-to` / `report-uri`). Inventory **inline scripts**, **event handlers**, **`eval`**, and **third-party domains** from real traffic and staging. Move the app toward **nonce-based** `script-src` (or hashes where tiny), add **`strict-dynamic`** so you are not maintaining a fragile host list, and lock **`base-uri`**, **`object-src 'none'`**, and tight **`frame-ancestors`**. Fix violations by **bundle changes** and **vendor** updates, not by widening policy. Enforce first on **auth, admin, and payments**, then expand. Track **violations per release** so regressions are visible in CI or dashboards.",
+          "notes": "Answer: Start with Content-Security-Policy-Report-Only and a reporting endpoint (report-to / report-uri). Inventory inline scripts, event handlers, eval, and third-party domains from real traffic and staging. Move the app toward nonce-based script-src (or hashes where tiny), add strict-dynamic so you are not maintaining a fragile host list, and lock base-uri, object-src 'none', and tight frame-ancestors. Fix violations by bundle changes and vendor updates, not by widening policy. Enforce first on auth, admin, and payments, then expand. Track violations per release so regressions are visible in CI or dashboards.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: Start with Content-Security-Policy-Report-Only and a reporting...",
+          "expanded": false
+        },
+        {
+          "id": "ndb48d35c11aa528",
+          "title": "What is Trusted Types, and when do you enforce it?",
+          "markdown": "**Answer:** **Trusted Types** wraps dangerous DOM sinks (`innerHTML`, string-to-script paths, etc.) so only **named policies** can produce values the browser will accept-pushing teams through **reviewed sanitizers** or safe builders instead of raw strings. Roll out **report-only** first, fix the **noisy sinks** (often legacy ads or admin widgets), then enforce with CSP **`require-trusted-types-for 'script'`** on **high-risk surfaces** first. It does not replace CSP; it **shrinks DOM XSS** where attackers string together gadgets after a partial injection.",
+          "notes": "Answer: Trusted Types wraps dangerous DOM sinks (innerHTML, string-to-script paths, etc.) so only named policies can produce values the browser will accept-pushing teams through reviewed sanitizers or safe builders instead of raw strings. Roll out report-only first, fix the noisy sinks (often legacy ads or admin widgets), then enforce with CSP require-trusted-types-for 'script' on high-risk surfaces first. It does not replace CSP; it shrinks DOM XSS where attackers string together gadgets after a partial injection.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: Trusted Types wraps dangerous DOM sinks (innerHTML, string-to-script...",
+          "expanded": false
+        },
+        {
+          "id": "n04e29cab0c3185b",
+          "title": "What does strict-dynamic buy you in CSP?",
+          "markdown": "**Answer:** With a **nonce** or **hash** marking a root script as trusted, **`strict-dynamic`** lets **that** script load additional scripts **without** adding more host entries to `script-src`. That reduces **allowlist bypass** risk where an allowed CDN path serves **dynamic JSONP** or user-uploaded **`.js`**. You still need a **safe bootstrap** (nonce on the loader) and to avoid **`unsafe-inline`** in production.",
+          "notes": "Answer: With a nonce or hash marking a root script as trusted, strict-dynamic lets that script load additional scripts without adding more host entries to script-src. That reduces allowlist bypass risk where an allowed CDN path serves dynamic JSONP or user-uploaded .js. You still need a safe bootstrap (nonce on the loader) and to avoid unsafe-inline in production.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: With a nonce or hash marking a root script as trusted,...",
+          "expanded": false
+        },
+        {
+          "id": "n56550303ce50a85",
+          "title": "When would you use Subresource Integrity (SRI), and what are the limits?",
+          "markdown": "**Answer:** Use **SRI** on **`<script>`** and **`<link rel=\"stylesheet\">`** when you load **versioned** static files from a **CDN** or third-party host to detect **tampering** or **CDN compromise**. The browser hashes the bytes and **blocks** mismatches. Limits: **frequently changing** vendor scripts break pins unless you **automate** hash updates; **per-user dynamic** scripts cannot be pinned; SRI **does not help** if XSS **inlines** attacker code. Prefer **first-party** hosting for critical code when feasible.",
+          "notes": "Answer: Use SRI on <script> and <link rel=\"stylesheet\"> when you load versioned static files from a CDN or third-party host to detect tampering or CDN compromise. The browser hashes the bytes and blocks mismatches. Limits: frequently changing vendor scripts break pins unless you automate hash updates; per-user dynamic scripts cannot be pinned; SRI does not help if XSS inlines attacker code. Prefer first-party hosting for critical code when feasible.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: Use SRI on <script> and <link rel=\"stylesheet\"> when you load...",
+          "expanded": false
+        },
+        {
+          "id": "ncfee00c5e6ead74",
+          "title": "How would you use Fetch Metadata (Sec-Fetch-*) on the server?",
+          "markdown": "**Answer:** Treat **`Sec-Fetch-Site`**, **`Sec-Fetch-Mode`**, **`Sec-Fetch-Dest`**, and **`Sec-Fetch-User`** as **hints** about how the browser believes the request was initiated-for example **cross-site** `cors` POSTs vs **same-origin** fetches. For **state-changing** endpoints you can **deny or challenge** combinations that your app never legitimately produces (defense-in-depth **next to** **CSRF tokens** and **SameSite** cookies). Never use Fetch Metadata as **sole** authorization; **bots** and **older clients** may omit or differ. Log odd combinations for **abuse** triage.",
+          "notes": "Answer: Treat Sec-Fetch-Site, Sec-Fetch-Mode, Sec-Fetch-Dest, and Sec-Fetch-User as hints about how the browser believes the request was initiated-for example cross-site cors POSTs vs same-origin fetches. For state-changing endpoints you can deny or challenge combinations that your app never legitimately produces (defense-in-depth next to CSRF tokens and SameSite cookies). Never use Fetch Metadata as sole authorization; bots and older clients may omit or differ. Log odd combinations for abuse triage.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: Treat Sec-Fetch-Site, Sec-Fetch-Mode, Sec-Fetch-Dest, and...",
+          "expanded": false
+        },
+        {
+          "id": "nb9920a86da8d0dd",
+          "title": "Compare HttpOnly cookies, memory tokens, and localStorage for session...",
+          "markdown": "**Answer:** **`HttpOnly` cookies** are **not readable from JavaScript**, so **XSS** cannot exfiltrate them directly; you must handle **CSRF** with **tokens**, **SameSite**, and **Fetch Metadata** patterns. **Memory-only** access tokens reduce **persistence** versus `localStorage` but are still **stolen under XSS** while the tab lives-pair with **short TTL** and rotation. **`localStorage`** is **trivially read** by any script in the origin; avoid **long-lived high-value secrets** there if XSS is plausible. Choose based on **threat model**, **token lifetime**, and whether you can deploy **CSP + Trusted Types**.",
+          "notes": "Answer: HttpOnly cookies are not readable from JavaScript, so XSS cannot exfiltrate them directly; you must handle CSRF with tokens, SameSite, and Fetch Metadata patterns. Memory-only access tokens reduce persistence versus localStorage but are still stolen under XSS while the tab lives-pair with short TTL and rotation. localStorage is trivially read by any script in the origin; avoid long-lived high-value secrets there if XSS is plausible. Choose based on threat model, token lifetime, and whether you can deploy CSP + Trusted Types.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: HttpOnly cookies are not readable from JavaScript, so XSS cannot...",
+          "expanded": false
+        },
+        {
+          "id": "nfd9dd5c85fae385",
+          "title": "How do you govern third-party scripts and tag managers?",
+          "markdown": "**Answer:** Maintain an **inventory**: owner, data classes, surfaces (marketing vs authenticated app), and **domains**. **Segment** so analytics and ads do not run on **admin** or **regulated** flows. Prefer **narrow CSP** allowlists and **monitor violations** for **new** endpoints. Use **contracts**, **subprocessor** review, and **incident** SLAs. Where possible, **self-host** or proxy analytics. Treat third parties as **supply chain**: their **JS is your code** in the user's browser.",
+          "notes": "Answer: Maintain an inventory: owner, data classes, surfaces (marketing vs authenticated app), and domains. Segment so analytics and ads do not run on admin or regulated flows. Prefer narrow CSP allowlists and monitor violations for new endpoints. Use contracts, subprocessor review, and incident SLAs. Where possible, self-host or proxy analytics. Treat third parties as supply chain: their JS is your code in the user's browser.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: Maintain an inventory: owner, data classes, surfaces (marketing vs...",
+          "expanded": false
+        },
+        {
+          "id": "n5a1f841331d3409",
+          "title": "What mistakes do teams make with iframe sandbox?",
+          "markdown": "**Answer:** Common mistakes: adding **`allow-scripts`** and **`allow-same-origin`** together without understanding that **same-origin** frames can **revert** much of the sandbox's isolation intent; using **`allow-top-navigation`** on untrusted embeds; omitting **`sandbox`** entirely on **user-generated** embeds; assuming **`sandbox`** replaces **`postMessage`** validation. Pair **`sandbox`** with CSP **`frame-ancestors`** on your own pages, explicit **`allow`** feature policies, and **least privilege** token passing.",
+          "notes": "Answer: Common mistakes: adding allow-scripts and allow-same-origin together without understanding that same-origin frames can revert much of the sandbox's isolation intent; using allow-top-navigation on untrusted embeds; omitting sandbox entirely on user-generated embeds; assuming sandbox replaces postMessage validation. Pair sandbox with CSP frame-ancestors on your own pages, explicit allow feature policies, and least privilege token passing.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: Common mistakes: adding allow-scripts and allow-same-origin together...",
+          "expanded": false
+        },
+        {
+          "id": "n3983645fc6315c9",
+          "title": "How should postMessage be implemented securely?",
+          "markdown": "**Answer:** On send: use a **specific `targetOrigin`**, never **`*`**, for anything sensitive. On receive: check **`event.origin`** against an **allowlist**, validate **`event.source`** if you expect a particular window, and parse **`data`** with a **schema** (`type`, `version`, fields)-**ignore** everything else. Do not use **substring** origin checks. Assume **any** embedded partner can go malicious after a breach; **messages are authentication**, not friendship.",
+          "notes": "Answer: On send: use a specific targetOrigin, never , for anything sensitive. On receive: check event.origin against an allowlist, validate event.source if you expect a particular window, and parse data with a schema (type, version, fields)-ignore everything else. Do not use substring origin checks. Assume any embedded partner can go malicious after a breach; messages are authentication, not friendship.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: On send: use a specific targetOrigin, never , for anything sensitive.",
+          "expanded": false
+        },
+        {
+          "id": "n27cbabe32de969c",
+          "title": "What is the security concern with service workers?",
+          "markdown": "**Answer:** A **service worker** **intercepts fetches** and **persists** until updated. If an attacker registers **malicious SW** (via **XSS** or **MITM** on the script URL), they gain a **long-lived** foothold in the **origin**. Protect **`/sw.js`** with **CSP**, **HTTPS**, **auth** where appropriate, and **monitor** registrations. Cache **sensitive** responses carefully; prefer **network-first** for private data. **Version** and **audit** SW updates like backend deploys.",
+          "notes": "Answer: A service worker intercepts fetches and persists until updated. If an attacker registers malicious SW (via XSS or MITM on the script URL), they gain a long-lived foothold in the origin. Protect /sw.js with CSP, HTTPS, auth where appropriate, and monitor registrations. Cache sensitive responses carefully; prefer network-first for private data. Version and audit SW updates like backend deploys.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: A service worker intercepts fetches and persists until updated.",
+          "expanded": false
+        },
+        {
+          "id": "nc3c85a28ff39ad0",
+          "title": "Do workers \u201csandbox\u201d untrusted code?",
+          "markdown": "**Answer:** **No.** **Dedicated workers** share the **same origin** as the creator (for their script URL) and can **`fetch`** and run **`importScripts`**. They **do not have DOM** access, but they **do not isolate** malicious code from **calling your APIs** or **exfiltrating** data the browser allows. **Shared workers** widen exposure across tabs. Treat **worker-loaded scripts** like any other **third-party** code: **pin**, **review**, **CSP**, and **avoid passing secrets** in messages without need.",
+          "notes": "Answer: No. Dedicated workers share the same origin as the creator (for their script URL) and can fetch and run importScripts. They do not have DOM access, but they do not isolate malicious code from calling your APIs or exfiltrating data the browser allows. Shared workers widen exposure across tabs. Treat worker-loaded scripts like any other third-party code: pin, review, CSP, and avoid passing secrets in messages without need.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "nf8cfee2b8cdc487",
+          "title": "Why would you set COOP / COEP / CORP, and what breaks?",
+          "markdown": "**Answer:** **`COOP: same-origin`** reduces risky **`window.opener`** relationships across origins. **`COEP`** plus **`CORP`** / CORS enables **cross-origin isolation** features (e.g., **`SharedArrayBuffer`** in Chromium) and tightens some **side-channel** surfaces. **Breakage** appears when **cross-origin iframes**, images, or workers load resources that **do not** opt into being embedded or consumed from an isolated context-so rollout requires **asset inventory** and partner fixes. These headers complement but **do not replace** XSS defenses.",
+          "notes": "Answer: COOP: same-origin reduces risky window.opener relationships across origins. COEP plus CORP / CORS enables cross-origin isolation features (e.g., SharedArrayBuffer in Chromium) and tightens some side-channel surfaces. Breakage appears when cross-origin iframes, images, or workers load resources that do not opt into being embedded or consumed from an isolated context-so rollout requires asset inventory and partner fixes. These headers complement but do not replace XSS defenses.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: COOP: same-origin reduces risky window.opener relationships across...",
+          "expanded": false
+        },
+        {
+          "id": "n9f1070c93b101d0",
+          "title": "Name realistic CSP bypass patterns you watch for.",
+          "markdown": "**Answer:** **Over-broad `script-src`** hosts that serve **JSONP**, **AngularJS** template injection gadgets, or **user-controlled** paths ending in executable script. **Missing `base-uri`** enabling `<base>` retargeting. **`unsafe-inline`** left on \"for one widget.\" **Misconfigured** reporting that hides violations. **Third-party** consent tools that inject new script domains every sprint. **Trusted Types** gaps where one policy is **over-permissive**. Defense is **narrow lists**, **`strict-dynamic`**, **remove gadgets**, and **continuous** violation metrics.",
+          "notes": "Answer: Over-broad script-src hosts that serve JSONP, AngularJS template injection gadgets, or user-controlled paths ending in executable script. Missing base-uri enabling <base> retargeting. unsafe-inline left on \"for one widget.\" Misconfigured reporting that hides violations. Third-party consent tools that inject new script domains every sprint. Trusted Types gaps where one policy is over-permissive. Defense is narrow lists, strict-dynamic, remove gadgets, and continuous violation metrics.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: Over-broad script-src hosts that serve JSONP, AngularJS template...",
+          "expanded": false
+        },
+        {
+          "id": "n32ab3ac24e04097",
+          "title": "How do browser extensions affect your threat model for a web app?",
+          "markdown": "**Answer:** Extensions can **inject scripts**, **strip or alter CSP**, **read DOM** and form fields, and **exfiltrate** data despite HTTPS. For **consumer** users, assume **compromised or malicious** extensions exist; **never** treat the browser as a **trusted endpoint** for high-assurance actions without **server-side** step-up. **Enterprise** managed browsers can **allowlist** extensions. Support playbooks should include **disable extensions** tests, but that is **diagnostics**, not security architecture.",
+          "notes": "Answer: Extensions can inject scripts, strip or alter CSP, read DOM and form fields, and exfiltrate data despite HTTPS. For consumer users, assume compromised or malicious extensions exist; never treat the browser as a trusted endpoint for high-assurance actions without server-side step-up. Enterprise managed browsers can allowlist extensions. Support playbooks should include disable extensions tests, but that is diagnostics, not security architecture.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: Extensions can inject scripts, strip or alter CSP, read DOM and form...",
+          "expanded": false
+        },
+        {
+          "id": "n75949312f6ea70b",
+          "title": "What storage is exposed if there is an XSS bug?",
+          "markdown": "**Answer:** Everything **readable from JavaScript** in the origin: **`localStorage`**, **`sessionStorage`**, **IndexedDB**, **Cache API** contents accessible to scripts, and **non-HttpOnly** cookies. **`HttpOnly` cookies** remain **not directly readable**, but XSS can still **perform actions** as the user. **Memory** tokens are readable while live. **Service worker** caches may persist exfiltratable data. This is why **CSP**, **short-lived tokens**, and **minimal client secrets** matter.",
+          "notes": "Answer: Everything readable from JavaScript in the origin: localStorage, sessionStorage, IndexedDB, Cache API contents accessible to scripts, and non-HttpOnly cookies. HttpOnly cookies remain not directly readable, but XSS can still perform actions as the user. Memory tokens are readable while live. Service worker caches may persist exfiltratable data. This is why CSP, short-lived tokens, and minimal client secrets matter.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: Everything readable from JavaScript in the origin: localStorage,...",
+          "expanded": false
+        },
+        {
+          "id": "n2126683de70ea46",
+          "title": "How would you standardize frontend runtime security across many teams?",
+          "markdown": "**Answer:** Publish a **baseline**: required **headers** (CSP template with nonces, `frame-ancestors`, `object-src`, **Permissions-Policy** where used), **third-party** approval workflow, **Forbidden DOM APIs** list, **Trusted Types** roadmap, and **Fetch Metadata** server middleware shared libraries. Provide **starter** edge/CDN configs, **lint rules**, and **E2E** checks that fail builds on **new inline script**. Run **office hours** and **violation dashboards** per domain. Tie to **launch review** gates for **auth** and **payments** without blocking low-risk marketing pages from adopting on a **staggered** schedule.",
+          "notes": "Answer: Publish a baseline: required headers (CSP template with nonces, frame-ancestors, object-src, Permissions-Policy where used), third-party approval workflow, Forbidden DOM APIs list, Trusted Types roadmap, and Fetch Metadata server middleware shared libraries. Provide starter edge/CDN configs, lint rules, and E2E checks that fail builds on new inline script. Run office hours and violation dashboards per domain. Tie to launch review gates for auth and payments without blocking low-risk marketing pages from adopting on a staggered schedule.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: Publish a baseline: required headers (CSP template with nonces,...",
+          "expanded": false
+        },
+        {
+          "id": "nd4122759448f1de",
+          "title": "How do third-party cookie and storage changes affect your app security...",
+          "markdown": "**Answer:** Browsers partition or block **third-party cookies** and tighten **storage** access for cross-site embeds. Flows that relied on **iframes**, **pop-up SSO**, or **embedded SaaS** may **break** or **downgrade** silently. Security testing should include **Safari/Firefox/Chrome** matrix runs, **incognito**, and **ITP**/tracking-prevention modes. From a **security** angle, fewer third-party cookies can **reduce CSRF** and **tracking**, but **auth vendors** may require **CHIPS** (`Partitioned`), **Relying Party** redirects, or **first-party** proxy patterns-validate **session fixation** and **logout** across those changes.",
+          "notes": "Answer: Browsers partition or block third-party cookies and tighten storage access for cross-site embeds. Flows that relied on iframes, pop-up SSO, or embedded SaaS may break or downgrade silently. Security testing should include Safari/Firefox/Chrome matrix runs, incognito, and ITP/tracking-prevention modes. From a security angle, fewer third-party cookies can reduce CSRF and tracking, but auth vendors may require CHIPS (Partitioned), Relying Party redirects, or first-party proxy patterns-validate session fixation and logout across those changes.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: Browsers partition or block third-party cookies and tighten storage...",
+          "expanded": false
+        },
+        {
+          "id": "nc93307b899fa278",
+          "title": "Why is frame-ancestors preferred over only X-Frame-Options?",
+          "markdown": "**Answer:** CSP **`frame-ancestors`** supports **multiple** origins, **`none`**, and **`self`** with clearer composition alongside the rest of CSP, while **`X-Frame-Options`** is a **legacy** single-value header (`DENY`, `SAMEORIGIN`, or one `ALLOW-FROM` in older worlds). In modern stacks you still see **`X-Frame-Options: DENY`** as **defense-in-depth** for **older** user agents, but **`frame-ancestors`** is the **expressive** control for **clickjacking** prevention in current browsers. Interview credit for naming **both** and explaining **compatibility** layering.",
+          "notes": "Answer: CSP frame-ancestors supports multiple origins, none, and self with clearer composition alongside the rest of CSP, while X-Frame-Options is a legacy single-value header (DENY, SAMEORIGIN, or one ALLOW-FROM in older worlds). In modern stacks you still see X-Frame-Options: DENY as defense-in-depth for older user agents, but frame-ancestors is the expressive control for clickjacking prevention in current browsers. Interview credit for naming both and explaining compatibility layering.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: CSP frame-ancestors supports multiple origins, none, and self with...",
+          "expanded": false
+        },
+        {
+          "id": "n378ccf1a6fb7fc2",
+          "title": "Depth: Interview follow-ups",
+          "markdown": "**Authoritative references:** [OWASP HTML5 Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html); [Trusted Types](https://web.dev/trusted-types/) (web.dev); [CSP Level 3](https://www.w3.org/TR/CSP3/) (W3C-verify the snapshot you cite).\n\n**Likely follow-ups:** DOM XSS sources/sinks in your framework; **JSONP** and **CSP** tension; **`postMessage`** origin pitfalls; **service worker** registration abuse; **extension**-weakened CSP in bug bounty reports.\n\n**Cross-read:** XSS, Security Headers, Cookie Security, Cross-Origin Authentication, Software Supply Chain Security.",
+          "notes": "Authoritative references: OWASP HTML5 Security Cheat Sheet; Trusted Types (web.dev); CSP Level 3 (W3C-verify the snapshot you cite).\n\nLikely follow-ups: DOM XSS sources/sinks in your framework; JSONP and CSP tension; postMessage origin pitfalls; service worker registration abuse; extension-weakened CSP in bug bounty reports.\n\nCross-read: XSS, Security Headers, Cookie Security, Cross-Origin Authentication, Software Supply Chain Security.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Authoritative references: OWASP HTML5 Security Cheat Sheet; Trusted Types...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Does site isolation stop XSS?"
+    }
+  ],
+  "topicId": "browser-and-frontend-runtime-security-deep-dive",
+  "name": "Browser and Frontend Runtime Security Deep Dive",
+  "structure": "logic-right",
+  "blurb": "Modern browsers are not a single \"trusted runtime.\" They combine origins,..."
+}

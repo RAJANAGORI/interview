@@ -7,3 +7,5 @@
 [**Critical Clarification: Web Application Security Vulnerabilities Misconceptions**](Critical%20Clarification%20Web%20Application%20Security%20Vu.md)
 
 [**Web Application Security Vulnerabilities - Quick Reference**](Web%20Application%20Security%20Vulnerabilities%20-%20Quick%20R.md)
+
+[**Web Application Security Vulnerabilities - Mind Map**](Web%20Application%20Security%20Vulnerabilities%20-%20Mind%20Map.md)

@@ -7,3 +7,5 @@
 [**Critical Clarification: XSS vs CSRF Misconceptions**](Critical%20Clarification%20XSS%20vs%20CSRF%20Misconceptions.md)
 
 [**XSS vs CSRF - Quick Reference**](XSS%20vs%20CSRF%20-%20Quick%20Reference.md)
+
+[**XSS vs CSRF - Mind Map**](XSS%20vs%20CSRF%20-%20Mind%20Map.md)

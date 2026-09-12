@@ -7,3 +7,5 @@
 [**Critical Clarification: CORS and SOP Security Misconceptions**](Critical Clarification CORS vs SOP.md)
 
 [**CORS and SOP - Quick Reference Guide**](CORS and Same-Origin Policy - Quick Reference Guid.md)
+
+[**CORS and SOP - Mind Map**](CORS%20and%20SOP%20-%20Mind%20Map.md)

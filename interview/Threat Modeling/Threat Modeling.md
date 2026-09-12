@@ -7,3 +7,5 @@
 [**Threat Modeling - Critical Clarifications**](Threat%20Modeling%20-%20Critical%20Clarifications.md)
 
 [**Threat Modeling - Quick Reference**](Threat%20Modeling%20-%20Quick%20Reference.md)
+
+[**Threat Modeling - Mind Map**](Threat%20Modeling%20-%20Mind%20Map.md)

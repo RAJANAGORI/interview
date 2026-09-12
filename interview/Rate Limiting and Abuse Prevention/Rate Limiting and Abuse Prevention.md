@@ -7,3 +7,5 @@
 [**Critical Clarification: Rate Limiting and Abuse Prevention Misconceptions**](Critical%20Clarification%20Rate%20Limiting%20and%20Abuse%20Prevention%20Misconceptions.md)
 
 [**Rate Limiting and Abuse Prevention - Quick Reference**](Rate%20Limiting%20and%20Abuse%20Prevention%20-%20Quick%20Reference.md)
+
+[**Rate Limiting and Abuse Prevention - Mind Map**](Rate%20Limiting%20and%20Abuse%20Prevention%20-%20Mind%20Map.md)

@@ -1,0 +1,147 @@
+{
+  "topicId": "secure-microservices-communication",
+  "name": "Secure Microservices Communication",
+  "source": "Secure Microservices Communication/Secure Microservices Communication - Interview Que.md",
+  "prompts": [
+    {
+      "id": "p8191d582b2306e",
+      "cluster": "Fundamentals",
+      "title": "How do you secure communication between microservices end to end?",
+      "seconds": 90,
+      "answerMarkdown": "**Answer.** Treat east-west traffic like it crosses a hostile network: **encrypt** (TLS, ideally **mTLS**), **authenticate workloads** with **cryptographic identity** (for example **SPIFFE X509-SVIDs** or mesh-issued client certs), **authorize every request** with explicit policy (mesh **AuthorizationPolicy** or app middleware), and **segment** with **network policies** so a compromised pod cannot reach every port. Store bootstrap material in a **secret manager**, rotate credentials, and log **who called whom** with correlation IDs-not just source IPs.\n\n---"
+    },
+    {
+      "id": "p60dc92859db1a2",
+      "cluster": "Fundamentals",
+      "title": "What is mTLS and why use it between services?",
+      "seconds": 90,
+      "answerMarkdown": "**Answer.** **Mutual TLS** adds **client certificate authentication** to TLS. Both peers present certs signed by a trusted CA, so you get **mutual authentication** plus **confidentiality and integrity** on the channel. For microservices it binds identity to a **key pair** instead of ephemeral IPs or pod names. Operational cost is **certificate lifecycle** (issuance, renewal, trust bundles); service meshes automate much of this on the data plane.\n\n---"
+    },
+    {
+      "id": "p505c93e89e14d2",
+      "cluster": "Fundamentals",
+      "title": "How does SPIFFE/SPIRE help compared to \u201ceach service gets an API key\u201d?",
+      "seconds": 90,
+      "answerMarkdown": "**Answer.** **SPIFFE** defines a **workload identity** (SPIFFE ID) and **SVIDs** (commonly short-lived **X.509** certs or JWTs). **SPIRE** attests the workload (via Kubernetes, cloud instance identity, etc.) and mints SVIDs. That is **stronger than static API keys**: keys are long-lived secrets with high blast radius; SVIDs are **short-lived**, **cryptographically bound**, and **attested** to a specific running workload. API keys can still exist for external SaaS, but they should be **scoped**, **rotated**, and **audited**-not the primary east-west identity.\n\n---"
+    },
+    {
+      "id": "pd4b7a9c9aa8a12",
+      "cluster": "Fundamentals",
+      "title": "When would you use JWTs between services instead of\u2014or in addition to\u2014mTLS?",
+      "seconds": 90,
+      "answerMarkdown": "**Answer.** Use **JWTs** to carry **authorization context** (`sub`, `tenant`, `scopes`, `aud`) across hops or trust boundaries where a single mesh CA is not shared, or where downstream services need **delegation** semantics (acting on behalf of a user). Prefer **short TTLs**, strict **`aud`** checks, and **asymmetric signing** with JWKS rotation. **mTLS** answers \"which **service** is this connection?\"; a JWT answers \"**what** is this request allowed to do?\"-they are complementary. Avoid long-lived shared **HMAC** secrets across many services.\n\n---"
+    },
+    {
+      "id": "pcfd66e4033001b",
+      "cluster": "Fundamentals",
+      "title": "What is zero trust in the context of internal (east\u2013west) microservice calls?",
+      "seconds": 90,
+      "answerMarkdown": "**Answer.** **Zero trust** means **no implicit trust from network location**. Every call is **authenticated** (service identity), **authorized** by policy, **encrypted on the wire**, and **logged**. A pod in the same namespace as production data is not trusted **because** it is internal; it is trusted only if its **identity** and **claims** satisfy policy. Network segmentation and mesh rules **reduce** blast radius; identity and authz **enforce** intent.\n\n---"
+    },
+    {
+      "id": "p9d2cc72e6a363a",
+      "cluster": "Fundamentals",
+      "title": "How do Kubernetes NetworkPolicies fit with mTLS and service mesh?",
+      "seconds": 90,
+      "answerMarkdown": "**Answer.** **NetworkPolicy** is **L3/L4** segmentation: which pods may reach which ports and namespaces. **mTLS** proves **identity** on the connection. **Mesh authorization** can be **L7** (paths, methods, JWT claims). Use all three layers: NetworkPolicy to **shrink the attack surface** (deny unexpected east-west), mTLS to **authenticate peers**, and L7 policy for **fine-grained** rules. If the CNI does not enforce policies, document that gap-your \"segmentation\" may be illusory.\n\n---"
+    },
+    {
+      "id": "pd40cf00fa62a69",
+      "cluster": "Fundamentals",
+      "title": "What responsibilities belong at an API gateway versus inside each service?",
+      "seconds": 90,
+      "answerMarkdown": "**Answer.** The **gateway** should handle **north-south** concerns: TLS termination for clients, **WAF/bot** controls, **OAuth/OIDC** for users, coarse **rate limits**, routing, and **DDoS** absorption. Each **service** should enforce **business authorization** and **data-scoped** rules (\"this tenant may read this row\"). Gateways should not become a **black box** that strips identity-forward or **re-issue** minimal signed context so downstream hops can still **verify** callers. For east-west, prefer **mesh** or **direct mTLS** rather than forcing all traffic through one gateway.\n\n---"
+    },
+    {
+      "id": "p2798db2e1bd7d9",
+      "cluster": "Fundamentals",
+      "title": "What is the difference between mesh mTLS and application mTLS?",
+      "seconds": 90,
+      "answerMarkdown": "**Answer.** **Mesh mTLS** terminates TLS between **Envoy sidecars** (or similar); applications often speak plain HTTP to `localhost`. **Application mTLS** means the **app** itself terminates TLS and validates peer certs. Mesh mode is faster to roll out and centralizes policy; app mode gives **end-to-end** crypto inside the process-useful when you distrust the local UDS/TCP hop or run **outside** a mesh. Be explicit in reviews which trust boundary you are protecting.\n\n---"
+    },
+    {
+      "id": "p700e4018b25faa",
+      "cluster": "Fundamentals",
+      "title": "How do you prevent a compromised service from calling every other service?",
+      "seconds": 90,
+      "answerMarkdown": "**Answer.** Combine **least privilege**: **authorization** lists which **source identities** may invoke which **APIs**; **network policies** block unexpected ports; **egress controls** limit outbound Internet and lateral paths; **secrets** scoped per workload so stolen creds do not unlock all databases. Monitor **deny** logs and **anomalous** call graphs. **Break-glass** accounts and **admin APIs** need extra isolation and auditing.\n\n---"
+    },
+    {
+      "id": "p1eda02a293df57",
+      "cluster": "Implementation and operations",
+      "title": "Walk through how you would roll out STRICT mTLS without taking down production.",
+      "seconds": 90,
+      "answerMarkdown": "**Answer.** Start **permissive** or **peer-only** mode in shadow environments, validate **SNI**, **SANs**, and **trust bundles**, then enable **STRICT** namespace by namespace with **canaries**. Pre-deploy **automation** for cert renewal and dashboards for **expiry**. Run **game days** revoking one trust bundle to test failure modes. Communicate **rollback**: temporary permissive mode is a **risk**-time-box it and fix root cause quickly.\n\n---"
+    },
+    {
+      "id": "pf5d37aaa211bad",
+      "cluster": "Implementation and operations",
+      "title": "What do you store in a secret manager for microservices, and what should *not* live there as a primary pattern?",
+      "seconds": 90,
+      "answerMarkdown": "**Answer.** Store **signing private keys**, **database passwords**, **third-party API keys**, **bootstrap tokens**, and **mesh CA** material appropriate to your architecture. Prefer **workload identity** (SPIRE, IAM roles, projected tokens) for **calling cloud APIs** instead of static cloud keys in every pod. Avoid copying the **same** symmetric JWT secret into twelve repos-use **asymmetric** keys and JWKS, or centralized issuance.\n\n---"
+    },
+    {
+      "id": "pdb050207962bec",
+      "cluster": "Implementation and operations",
+      "title": "How do you rotate JWT signing keys without breaking all services?",
+      "seconds": 90,
+      "answerMarkdown": "**Answer.** Publish **JWKS** with **two valid keys** during rotation: new key signs tokens; old key still verifies until outstanding tokens expire. Coordinate **TTL** so overlap covers max clock skew. Automate **key ID** (`kid`) handling in verifiers. For symmetric keys (if unavoidable), use **blue/green** verifiers or dual secrets with a cutover window-document maximum token lifetime during migration.\n\n---"
+    },
+    {
+      "id": "pb778c38343bee0",
+      "cluster": "Implementation and operations",
+      "title": "What certificate fields matter when using client certs for service identity?",
+      "seconds": 90,
+      "answerMarkdown": "**Answer.** Verify **chain** to a trusted CA, check **SAN** or **URI** for **SPIFFE ID** or your naming convention, enforce **EKU**/`keyUsage` for client auth where applicable, respect **notBefore/notAfter**, and pin **minimum TLS** version and **cipher** policy. Align **SPIFFE ID** in policy engines with what operators expect-avoid ambiguous **CN-only** checks for services.\n\n---"
+    },
+    {
+      "id": "p1fb3890eb92242",
+      "cluster": "Threats and edge cases",
+      "title": "What is a \u201cconfused deputy\u201d risk with JWTs in microservice chains?",
+      "seconds": 90,
+      "answerMarkdown": "**Answer.** Service A receives a **user** JWT and forwards it to Service B. B may authorize based on **user claims** without knowing whether **A** was allowed to act on behalf of that user for **this** action. Mitigations: include **service identity** from mTLS in the authz decision, use **audience** so tokens are **receiver-specific**, prefer **token exchange** at controlled boundaries, or sign **downstream** tokens with **scoped** claims after A's own authorization.\n\n---"
+    },
+    {
+      "id": "pa458401a6b75d5",
+      "cluster": "Threats and edge cases",
+      "title": "How do you handle multi-cluster or multi-cloud service calls securely?",
+      "seconds": 90,
+      "answerMarkdown": "**Answer.** Establish **trust domains**: separate **CAs** or **federated** SPIFFE trust bundles, **mTLS** or **TLS + verified JWT** with strict `aud`, and **network** controls between clusters (private links, firewalls). Avoid **flat** kubeconfig access across clusters. Centralize **observability** with shared **trace** context but **redact** secrets in logs.\n\n---"
+    },
+    {
+      "id": "p20e900d20d3ceb",
+      "cluster": "Threats and edge cases",
+      "title": "What observability signals prove that security controls are actually enforced?",
+      "seconds": 90,
+      "answerMarkdown": "**Answer.** Logs or metrics for **TLS handshake failures**, **authz denies** with **rule IDs**, **certificate days-to-expiry**, **JWKS fetch errors**, and **unexpected** east-west connections blocked by NetworkPolicy. Correlate with **distributed traces** using **W3C trace context**. Alert on **sudden deny spikes** or **new** calling patterns between principals.\n\n---"
+    },
+    {
+      "id": "p68d54e1b4995aa",
+      "cluster": "Trade-offs and judgment",
+      "title": "mTLS everywhere vs selective mTLS\u2014how do you decide?",
+      "seconds": 90,
+      "answerMarkdown": "**Answer.** **Everywhere** reduces policy exceptions and audit arguments but increases **operational** load and **latency** sensitivity on very chatty paths-usually still acceptable on modern meshes. **Selective** mTLS may fit **legacy** binaries or **batch** jobs-document **exceptions**, **compensating controls** (network policy, dedicated VLANs, app JWT), and **review cadence**. In regulated environments, bias toward **consistent** mTLS with automation.\n\n---"
+    },
+    {
+      "id": "p7efa62db14551a",
+      "cluster": "Trade-offs and judgment",
+      "title": "Can network segmentation replace strong service identity?",
+      "seconds": 90,
+      "answerMarkdown": "**Answer.** **No.** Segmentation **limits** who can reach a port, but any **allowed** path is still ambiguous about **which workload** is calling-IPs and pods change, and attackers move laterally within allowed zones. **Identity + authorization** answers \"**this** principal may perform **this** action.\" Use segmentation as **defense in depth**, not as the sole control.\n\n---"
+    },
+    {
+      "id": "pe21a75c8b047e7",
+      "cluster": "Trade-offs and judgment",
+      "title": "How do gRPC and HTTP/2 change your gateway and security posture?",
+      "seconds": 90,
+      "answerMarkdown": "**Answer.** You need gateways and WAFs that understand **HTTP/2**, **streams**, and **gRPC** routing; naive HTTP/1 assumptions break. Keep **timeouts**, **max streams**, and **message size** limits to prevent abuse. mTLS and JWT validation apply the same principles; ensure **trailers** and streaming errors do not leak sensitive data in logs.\n\n---"
+    },
+    {
+      "id": "pbd8f68e2e1a73b",
+      "cluster": "Trade-offs and judgment",
+      "title": "How do you secure asynchronous messaging (queues, event buses) between services?",
+      "seconds": 120,
+      "answerMarkdown": "**Answer.** Apply the same principles **out of band** of HTTP: **TLS** to the broker, **mutual authentication** where the broker supports **client certs** or **SASL/OAUTHBEARER** with short-lived tokens, **topic-level ACLs** tied to **workload identity** (not shared `kafka_user` passwords). Sign messages or attach **signed attributes** only when you need **non-repudiation** or cross-domain proof-but then manage **keys** and **replay** carefully. **Network policy** should limit which pods may reach broker ports. **Never** put bearer tokens or PII in headers you log at the broker; treat payloads as **untrusted** at consumers and **re-validate** authorization against your source-of-truth store.\n\n---"
+    }
+  ]
+}

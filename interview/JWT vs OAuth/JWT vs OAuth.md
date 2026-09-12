@@ -7,3 +7,5 @@
 [**Critical Clarification: JWT vs OAuth Security Misconceptions**](Critical Clarification JWT vs OAuth 2 0 Misconcept.md)
 
 [**JWT vs OAuth - Quick Reference Guide**](JWT vs OAuth 2 0 - Quick Reference Guide.md)
+
+[**JWT vs OAuth - Mind Map**](JWT%20vs%20OAuth%20-%20Mind%20Map.md)

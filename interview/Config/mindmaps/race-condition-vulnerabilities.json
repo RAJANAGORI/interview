@@ -1,0 +1,1722 @@
+{
+  "id": "nbb7acaeeb9635a9",
+  "title": "Race Condition Vulnerabilities",
+  "markdown": "**Race condition vulnerabilities** arise when **security or business invariants** depend on **ordering** between concurrent operations, but the application **checks** a condition and **acts** later **without** an **atomic** guarantee. Attackers **overlap** requests (or threads) so the world changes **between** check and act-classic **TOCTOU** (time-of-check to time-of-use). In web/API systems this shows up as **double spending**, **inventory oversell**, **coupon abuse**, **rate-limit bypass**, **privilege escalation**, and **authZ gaps** on state transitions.\n\nThis guide follows the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+  "notes": "Race condition vulnerabilities arise when security or business invariants depend on ordering between concurrent operations, but the application checks a condition and acts later without an atomic guarantee. Attackers overlap requests (or threads) so the world changes between check and act-classic TOCTOU (time-of-check to time-of-use). In web/API systems this shows up as double spending, inventory oversell, coupon abuse, rate-limit bypass, privilege escalation, and authZ gaps on state transitions.\n\nThis guide follows the Content Mastery Framework.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "nf52d6720dd8b495",
+      "title": "At a glance",
+      "markdown": "**Race condition vulnerabilities** arise when **security or business invariants** depend on **ordering** between concurrent operations, but the application **checks** a condition and **acts** later **without** an **atomic** guarantee. Attackers **overlap** requests (or threads) so the world changes **between** check and act-classic **TOCTOU** (time-of-check to time-of-use). In web/API systems this shows up as **double spending**, **inventory oversell**, **coupon abuse**, **rate-limit bypass**, **privilege escalation**, and **authZ gaps** on state transitions.\n\nThis guide follows the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+      "notes": "Race condition vulnerabilities arise when security or business invariants depend on ordering between concurrent operations, but the application checks a condition and acts later without an atomic guarantee. Attackers overlap requests (or threads) so the world changes between check and act-classic TOCTOU (time-of-check to time-of-use). In web/API systems this shows up as double spending, inventory oversell, coupon abuse, rate-limit bypass, privilege escalation, and authZ gaps on state transitions.\n\nThis guide follows the Content Mastery Framework.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Race condition vulnerabilities arise when security or business invariants...",
+      "expanded": false
+    },
+    {
+      "id": "n04097cf8732456a",
+      "title": "Variants (interview map)",
+      "markdown": "| Variant | Discriminator |\n|---------|----------------|\n| **Lost update** | Two writers overwrite without seeing each other |\n| **Read skew / non-repeatable read** | Invariant checked across two reads in different isolation |\n| **Write skew** | Two transactions read disjoint rows; together violate global rule |\n| **Distributed race** | Two app instances; no single DB row lock (use **distributed lock**, **lease**, or **single-writer** queue) |\n| **Client-side race** | Double-submit; needs **token** + server idempotency |",
+      "notes": "| Variant | Discriminator |\n|---------|----------------|\n| Lost update | Two writers overwrite without seeing each other |\n| Read skew / non-repeatable read | Invariant checked across two reads in different isolation |\n| Write skew | Two transactions read disjoint rows; together violate global rule |\n| Distributed race | Two app instances; no single DB row lock (use distributed lock, lease, or single-writer queue) |\n| Client-side race | Double-submit; needs token + server idempotency |",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Variant | Discriminator | |---------|----------------| | Lost update | Two...",
+      "expanded": false
+    },
+    {
+      "id": "n10a2a0dd20f6df1",
+      "title": "Attacks & abuse",
+      "markdown": "",
+      "notes": "",
+      "expanded": true,
+      "kind": "group",
+      "children": [
+        {
+          "id": "na470438e95dd56f",
+          "title": "L2 \u2014 Common vulnerability patterns",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ncf033e3810a2846",
+              "title": "Double withdrawal / transfer",
+              "markdown": "Two parallel POSTs both read the same balance; both pass validation; both deduct.",
+              "notes": "Two parallel POSTs both read the same balance; both pass validation; both deduct.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Two parallel POSTs both read the same balance; both pass validation; both...",
+              "expanded": false
+            },
+            {
+              "id": "n26e82ec642a9f3a",
+              "title": "Inventory oversell",
+              "markdown": "Two checkouts read `stock = 1`; both proceed; two orders confirmed.",
+              "notes": "Two checkouts read stock = 1; both proceed; two orders confirmed.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Two checkouts read stock = 1; both proceed; two orders confirmed.",
+              "expanded": false
+            },
+            {
+              "id": "n40160afc57d73be",
+              "title": "Coupon / referral / reward abuse",
+              "markdown": "\"First click wins\" implemented in app logic only; parallel requests all see \"unused.\"",
+              "notes": "\"First click wins\" implemented in app logic only; parallel requests all see \"unused.\"",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "\"First click wins\" implemented in app logic only; parallel requests all see...",
+              "expanded": false
+            },
+            {
+              "id": "n51697db41287f86",
+              "title": "Rate limit or OTP bypass",
+              "markdown": "Counter incremented **after** expensive work; parallel requests slip through before counter updates.",
+              "notes": "Counter incremented after expensive work; parallel requests slip through before counter updates.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Counter incremented after expensive work; parallel requests slip through...",
+              "expanded": false
+            },
+            {
+              "id": "nbe4a7222fa35883",
+              "title": "State machine races",
+              "markdown": "Order status `PENDING -> PAID -> SHIPPED` - two transitions applied out of order or **duplicate** `PAID` callbacks.",
+              "notes": "Order status PENDING -> PAID -> SHIPPED - two transitions applied out of order or duplicate PAID callbacks.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Order status PENDING -> PAID -> SHIPPED - two transitions applied out of...",
+              "expanded": false
+            },
+            {
+              "id": "n995dbcc5aedc9ef",
+              "title": "File / token TOCTOU (systems context)",
+              "markdown": "Symlink swap between **access check** and **open** (more common in **native** code; still fair game in **senior** \"TOCTOU\" discussions).",
+              "notes": "Symlink swap between access check and open (more common in native code; still fair game in senior \"TOCTOU\" discussions).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Symlink swap between access check and open (more common in native code;...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Double withdrawal / transfer",
+          "expanded": false
+        },
+        {
+          "id": "ne2eacd290c1f020",
+          "title": "L3 \u2014 Bypasses of weak fixes",
+          "markdown": "App-level mutex fails across multiple processes/hosts.",
+          "notes": "App-level mutex fails across multiple processes/hosts.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n86595ec0a8278a1",
+              "title": "App-level mutex fails across multiple processes/hosts.",
+              "markdown": "- App-level mutex fails across multiple processes/hosts.",
+              "notes": "App-level mutex fails across multiple processes/hosts.",
+              "blurb": "App-level mutex fails across multiple processes/hosts.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9d269065802d0bd",
+              "title": "\"We use transactions\" with READ COMMITTED still allows many races.",
+              "markdown": "- \"We use transactions\" with READ COMMITTED still allows many races.",
+              "notes": "\"We use transactions\" with READ COMMITTED still allows many races.",
+              "blurb": "\"We use transactions\" with READ COMMITTED still allows many races.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n4cf2133718182d2",
+              "title": "Retry without idempotency creates duplicate charges.",
+              "markdown": "- Retry without idempotency creates duplicate charges.",
+              "notes": "Retry without idempotency creates duplicate charges.",
+              "blurb": "Retry without idempotency creates duplicate charges.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "App-level mutex fails across multiple processes/hosts.",
+          "expanded": false
+        },
+        {
+          "id": "n24c794a8349c2d8",
+          "title": "L4 \u2014 Idempotency design pitfalls",
+          "markdown": "Idempotency keys are powerful but easy to misuse:",
+          "notes": "Idempotency keys are powerful but easy to misuse:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n194543d3bab1657",
+              "title": "Key scope too broad (different users collide on same key namespace).",
+              "markdown": "- Key scope too broad (different users collide on same key namespace).",
+              "notes": "Key scope too broad (different users collide on same key namespace).",
+              "blurb": "Key scope too broad (different users collide on same key namespace).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n261a3e392aae6c7",
+              "title": "Key TTL too short (late retries become duplicate business actions).",
+              "markdown": "- Key TTL too short (late retries become duplicate business actions).",
+              "notes": "Key TTL too short (late retries become duplicate business actions).",
+              "blurb": "Key TTL too short (late retries become duplicate business actions).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9d5d98ddde8322b",
+              "title": "Response replay mismatch (same key but mutated request body still accepted).",
+              "markdown": "- Response replay mismatch (same key but mutated request body still accepted).",
+              "notes": "Response replay mismatch (same key but mutated request body still accepted).",
+              "blurb": "Response replay mismatch (same key but mutated request body still accepted).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na246d62b54eea0e",
+              "title": "Non-atomic key record write (race between business commit and key persistence).",
+              "markdown": "- Non-atomic key record write (race between business commit and key persistence).",
+              "notes": "Non-atomic key record write (race between business commit and key persistence).",
+              "blurb": "Non-atomic key record write (race between business commit and key...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Idempotency keys are powerful but easy to misuse:",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes L2 \u2014 Common vulnerability patterns"
+    },
+    {
+      "id": "nc7f247447337e3a",
+      "title": "L3 \u2014 Mitigations (tier order)",
+      "markdown": "Invariant in one place: DB CHECK, unique index, or single atomic UPDATE ... WHERE.",
+      "notes": "Invariant in one place: DB CHECK, unique index, or single atomic UPDATE ... WHERE.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n61922f9e04d548e",
+          "title": "Invariant in one place: DB CHECK, unique index, or single atomic UPDATE ... WHERE.",
+          "markdown": "- Invariant in one place: DB CHECK, unique index, or single atomic UPDATE ... WHERE.",
+          "notes": "Invariant in one place: DB CHECK, unique index, or single atomic UPDATE ... WHERE.",
+          "blurb": "Invariant in one place: DB CHECK, unique index, or single atomic UPDATE ...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nd9b3e72893dbde8",
+          "title": "Right isolation: SERIALIZABLE or explicit locks where needed; understand cost.",
+          "markdown": "- Right isolation: SERIALIZABLE or explicit locks where needed; understand cost.",
+          "notes": "Right isolation: SERIALIZABLE or explicit locks where needed; understand cost.",
+          "blurb": "Right isolation: SERIALIZABLE or explicit locks where needed; understand cost.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n2c5cc4a25fad479",
+          "title": "Idempotency: Idempotency-Key header + unique store; safe retries.",
+          "markdown": "- Idempotency: Idempotency-Key header + unique store; safe retries.",
+          "notes": "Idempotency: Idempotency-Key header + unique store; safe retries.",
+          "blurb": "Idempotency: Idempotency-Key header + unique store; safe retries.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n83b7ada021d6d46",
+          "title": "Queues: Serialize mutations per aggregate (per user wallet, per SKU shard).",
+          "markdown": "- Queues: Serialize mutations per aggregate (per user wallet, per SKU shard).",
+          "notes": "Queues: Serialize mutations per aggregate (per user wallet, per SKU shard).",
+          "blurb": "Queues: Serialize mutations per aggregate (per user wallet, per SKU shard).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n4c28dbf0359c7f9",
+          "title": "Monitoring: duplicate external refs, impossible negative counts, audit trail.",
+          "markdown": "- Monitoring: duplicate external refs, impossible negative counts, audit trail.",
+          "notes": "Monitoring: duplicate external refs, impossible negative counts, audit trail.",
+          "blurb": "Monitoring: duplicate external refs, impossible negative counts, audit trail.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Invariant in one place: DB CHECK, unique index, or single atomic UPDATE ...",
+      "expanded": true
+    },
+    {
+      "id": "na20a0b628e71fd7",
+      "title": "L3 \u2014 Detection",
+      "markdown": "Code review: grep for read then write on money, inventory, limits, roles without transaction or constraint.",
+      "notes": "Code review: grep for read then write on money, inventory, limits, roles without transaction or constraint.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nc713431d023adbc",
+          "title": "Code review: grep for read then write on money, inventory, limits, roles without transac",
+          "markdown": "- Code review: grep for read then write on money, inventory, limits, roles without transac",
+          "notes": "Code review: grep for read then write on money, inventory, limits, roles without transac",
+          "blurb": "Code review: grep for read then write on money, inventory, limits, roles...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n05088e7ad4948af",
+          "title": "Design review: state diagrams without single-transition ownership.",
+          "markdown": "- Design review: state diagrams without single-transition ownership.",
+          "notes": "Design review: state diagrams without single-transition ownership.",
+          "blurb": "Design review: state diagrams without single-transition ownership.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n19f380543deb157",
+          "title": "Dynamic: parallel curl/Burp Turbo Intruder with identical sessions; watch for duplicate",
+          "markdown": "- Dynamic: parallel curl/Burp Turbo Intruder with identical sessions; watch for duplicate",
+          "notes": "Dynamic: parallel curl/Burp Turbo Intruder with identical sessions; watch for duplicate",
+          "blurb": "Dynamic: parallel curl/Burp Turbo Intruder with identical sessions; watch...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n17e4309c4c418d1",
+          "title": "DB metrics: deadlock / serialization failure spikes after tightening isolation-signals r",
+          "markdown": "- DB metrics: deadlock / serialization failure spikes after tightening isolation-signals r",
+          "notes": "DB metrics: deadlock / serialization failure spikes after tightening isolation-signals r",
+          "blurb": "DB metrics: deadlock / serialization failure spikes after tightening...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Code review: grep for read then write on money, inventory, limits, roles...",
+      "expanded": true
+    },
+    {
+      "id": "n7060479ccb2060e",
+      "title": "Hands-on practice (authorized)",
+      "markdown": "Build a toy wallet API; hammer with parallel requests; observe lost updates.",
+      "notes": "Build a toy wallet API; hammer with parallel requests; observe lost updates.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n4b101521bf1733a",
+          "title": "Build a toy wallet API; hammer with parallel requests; observe lost updates.",
+          "markdown": "- Build a toy wallet API; hammer with parallel requests; observe lost updates.",
+          "notes": "Build a toy wallet API; hammer with parallel requests; observe lost updates.",
+          "blurb": "Build a toy wallet API; hammer with parallel requests; observe lost updates.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n8c4d6c2e63c676f",
+          "title": "Fix with predicate UPDATE or serializable and re-test.",
+          "markdown": "- Fix with predicate UPDATE or serializable and re-test.",
+          "notes": "Fix with predicate UPDATE or serializable and re-test.",
+          "blurb": "Fix with predicate UPDATE or serializable and re-test.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n18db096e184c54b",
+          "title": "PortSwigger business logic labs sometimes include race angles; OWASP WebGoat / custom la",
+          "markdown": "- PortSwigger business logic labs sometimes include race angles; OWASP WebGoat / custom la",
+          "notes": "PortSwigger business logic labs sometimes include race angles; OWASP WebGoat / custom la",
+          "blurb": "PortSwigger business logic labs sometimes include race angles; OWASP WebGoat...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Build a toy wallet API; hammer with parallel requests; observe lost updates.",
+      "expanded": false
+    },
+    {
+      "id": "nd19e6221baba30e",
+      "title": "L2 \u2014 Code shape: vulnerable vs safer (illustrative)",
+      "markdown": "**Vulnerable pseudo-pattern:**\n\n```python\n# NOT SAFE under concurrency\nbalance = db.get_balance(user_id)\nif balance >= amount:\n    db.set_balance(user_id, balance - amount)  # lost update\n```\n\n**Safer directions (choose by stack):**",
+      "notes": "Vulnerable pseudo-pattern:\n\nNOT SAFE under concurrency\nbalance = db.getbalance(userid)\nif balance >= amount:\n    db.setbalance(userid, balance - amount)  # lost update\n\nSafer directions (choose by stack):",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nd0ca853d25388c9",
+          "title": "Single UPDATE with predicate (atomic, database enforces)",
+          "markdown": "- Single UPDATE with predicate (atomic, database enforces)",
+          "notes": "Single UPDATE with predicate (atomic, database enforces)",
+          "blurb": "Single UPDATE with predicate (atomic, database enforces)",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n8b95c889e3e9878",
+          "title": "Serializable / repeatable read transaction + SELECT FOR UPDATE on the row.",
+          "markdown": "- Serializable / repeatable read transaction + SELECT FOR UPDATE on the row.",
+          "notes": "Serializable / repeatable read transaction + SELECT FOR UPDATE on the row.",
+          "blurb": "Serializable / repeatable read transaction + SELECT FOR UPDATE on the row.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n6b94b906ee6dfb1",
+          "title": "Idempotency key on the transfer API; store processed keys in a unique table.",
+          "markdown": "- Idempotency key on the transfer API; store processed keys in a unique table.",
+          "notes": "Idempotency key on the transfer API; store processed keys in a unique table.",
+          "blurb": "Idempotency key on the transfer API; store processed keys in a unique table.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n7a827a253b28bd3",
+          "title": "Optimistic locking: version column; UPDATE ... WHERE id = ? AND version = ?; retry on co",
+          "markdown": "- Optimistic locking: version column; UPDATE ... WHERE id = ? AND version = ?; retry on co",
+          "notes": "Optimistic locking: version column; UPDATE ... WHERE id = ? AND version = ?; retry on co",
+          "blurb": "Optimistic locking: version column; UPDATE ...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Vulnerable pseudo-pattern: NOT SAFE under concurrency balance =...",
+      "expanded": false
+    },
+    {
+      "id": "n0c3e8f5280eb6fc",
+      "title": "Practice & references",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n322d28f6030a8db",
+          "title": "Named patterns and references",
+          "markdown": "CWE-362: Concurrent Execution using Shared Resource with Improper Synchronization - CWE-367: Time-of-check Time-of-use (TOCTOU) Race Condition - OWASP - business logic / integrity discussions often cite race on...",
+          "notes": "CWE-362: Concurrent Execution using Shared Resource with Improper Synchronization - CWE-367: Time-of-check Time-of-use (TOCTOU) Race Condition - OWASP - business logic / integrity discussions often cite race on...",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nb4f041cabf251cf",
+              "title": "CWE-362: Concurrent Execution using Shared Resource with Improper Synchronization",
+              "markdown": "- CWE-362: Concurrent Execution using Shared Resource with Improper Synchronization",
+              "notes": "CWE-362: Concurrent Execution using Shared Resource with Improper Synchronization",
+              "blurb": "CWE-362: Concurrent Execution using Shared Resource with Improper...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb5f03fe77690b7c",
+              "title": "CWE-367: Time-of-check Time-of-use (TOCTOU) Race Condition",
+              "markdown": "- CWE-367: Time-of-check Time-of-use (TOCTOU) Race Condition",
+              "notes": "CWE-367: Time-of-check Time-of-use (TOCTOU) Race Condition",
+              "blurb": "CWE-367: Time-of-check Time-of-use (TOCTOU) Race Condition",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n624245a62e5c3c5",
+              "title": "OWASP - business logic / integrity discussions often cite race on workflows",
+              "markdown": "- OWASP - business logic / integrity discussions often cite race on workflows",
+              "notes": "OWASP - business logic / integrity discussions often cite race on workflows",
+              "blurb": "OWASP - business logic / integrity discussions often cite race on workflows",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "CWE-362: Concurrent Execution using Shared Resource with Improper...",
+          "expanded": false
+        },
+        {
+          "id": "nb91673874a74d0b",
+          "title": "Toolchain",
+          "markdown": "| Tool / technique | Role |\n|------------------|------|\n| **Burp Turbo Intruder** | Many parallel requests with same session |\n| **custom scripts** (`asyncio`, `httpx`) | Reproducible race windows |\n| **DB query logs / slow query log** | See interleaving |\n| **Load tests** (k6, Locust) | Flush races under contention |",
+          "notes": "| Tool / technique | Role |\n|------------------|------|\n| Burp Turbo Intruder | Many parallel requests with same session |\n| custom scripts (asyncio, httpx) | Reproducible race windows |\n| DB query logs / slow query log | See interleaving |\n| Load tests (k6, Locust) | Flush races under contention |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Tool / technique | Role | |------------------|------| | Burp Turbo...",
+          "expanded": false
+        },
+        {
+          "id": "n1d523715f677260",
+          "title": "Authoritative references",
+          "markdown": "CWE-362, CWE-367 - Database docs: PostgreSQL transaction isolation, MySQL InnoDB locking, SQL Server isolation levels - OWASP Testing Guide - business logic (race / process timing)",
+          "notes": "CWE-362, CWE-367 - Database docs: PostgreSQL transaction isolation, MySQL InnoDB locking, SQL Server isolation levels - OWASP Testing Guide - business logic (race / process timing)",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n9872c4bd2f1765f",
+              "title": "CWE-362, CWE-367",
+              "markdown": "- CWE-362, CWE-367",
+              "notes": "CWE-362, CWE-367",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na166e2acd66e330",
+              "title": "Database docs: PostgreSQL transaction isolation, MySQL InnoDB locking, SQL Server isolat",
+              "markdown": "- Database docs: PostgreSQL transaction isolation, MySQL InnoDB locking, SQL Server isolat",
+              "notes": "Database docs: PostgreSQL transaction isolation, MySQL InnoDB locking, SQL Server isolat",
+              "blurb": "Database docs: PostgreSQL transaction isolation, MySQL InnoDB locking, SQL...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n10ba57723ab8cfe",
+              "title": "OWASP Testing Guide - business logic (race / process timing)",
+              "markdown": "- OWASP Testing Guide - business logic (race / process timing)",
+              "notes": "OWASP Testing Guide - business logic (race / process timing)",
+              "blurb": "OWASP Testing Guide - business logic (race / process timing)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "CWE-362, CWE-367 - Database docs: PostgreSQL transaction isolation, MySQL...",
+          "expanded": false
+        },
+        {
+          "id": "n14fb36cffa78fa9",
+          "title": "Verification checklist (study)",
+          "markdown": "[ ] Draw a two-request timeline for your favorite invariant.",
+          "notes": "[ ] Draw a two-request timeline for your favorite invariant.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n8532fae153d0922",
+              "title": "[ ] Draw a two-request timeline for your favorite invariant.",
+              "markdown": "- [ ] Draw a two-request timeline for your favorite invariant.",
+              "notes": "[ ] Draw a two-request timeline for your favorite invariant.",
+              "blurb": "[ ] Draw a two-request timeline for your favorite invariant.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nbf114eec9ca962a",
+              "title": "[ ] Write the predicate UPDATE pattern from memory.",
+              "markdown": "- [ ] Write the predicate UPDATE pattern from memory.",
+              "notes": "[ ] Write the predicate UPDATE pattern from memory.",
+              "blurb": "[ ] Write the predicate UPDATE pattern from memory.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n553d4b845e298f4",
+              "title": "[ ] Explain one failure mode of app-only locks.",
+              "markdown": "- [ ] Explain one failure mode of app-only locks.",
+              "notes": "[ ] Explain one failure mode of app-only locks.",
+              "blurb": "[ ] Explain one failure mode of app-only locks.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n818408a592ff8df",
+              "title": "[ ] Run a parallel test in a lab and capture before/after metrics.",
+              "markdown": "- [ ] Run a parallel test in a lab and capture before/after metrics.",
+              "notes": "[ ] Run a parallel test in a lab and capture before/after metrics.",
+              "blurb": "[ ] Run a parallel test in a lab and capture before/after metrics.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ndcccc566574a4d3",
+              "title": "[ ] Explain one distributed race pattern and its mitigation strategy.",
+              "markdown": "- [ ] Explain one distributed race pattern and its mitigation strategy.",
+              "notes": "[ ] Explain one distributed race pattern and its mitigation strategy.",
+              "blurb": "[ ] Explain one distributed race pattern and its mitigation strategy.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nfd43080102bb28b",
+              "title": "[ ] Define safe idempotency key scope and replay behavior.",
+              "markdown": "- [ ] Define safe idempotency key scope and replay behavior.",
+              "notes": "[ ] Define safe idempotency key scope and replay behavior.",
+              "blurb": "[ ] Define safe idempotency key scope and replay behavior.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "[ ] Draw a two-request timeline for your favorite invariant.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Named patterns and references"
+    },
+    {
+      "id": "n2bc77e4714d3b3d",
+      "title": "Code examples",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n70e70c9caba34d7",
+          "title": "L4 \u2014 Distributed races across regions/services",
+          "markdown": "When a workflow spans services (payments, inventory, loyalty), \"one DB transaction\" is no longer available.\n\nCommon failure modes:",
+          "notes": "When a workflow spans services (payments, inventory, loyalty), \"one DB transaction\" is no longer available.\n\nCommon failure modes:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ndf4aea24b2cd0f1",
+              "title": "Two regions accept the same logical operation before replication converges.",
+              "markdown": "- Two regions accept the same logical operation before replication converges.",
+              "notes": "Two regions accept the same logical operation before replication converges.",
+              "blurb": "Two regions accept the same logical operation before replication converges.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8240b95b8ccf51c",
+              "title": "Inventory is reserved in one service but payment retries replay stale reservation IDs.",
+              "markdown": "- Inventory is reserved in one service but payment retries replay stale reservation IDs.",
+              "notes": "Inventory is reserved in one service but payment retries replay stale reservation IDs.",
+              "blurb": "Inventory is reserved in one service but payment retries replay stale...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6effd610201ea46",
+              "title": "Saga compensations race with forward actions, creating duplicate side effects.",
+              "markdown": "- Saga compensations race with forward actions, creating duplicate side effects.",
+              "notes": "Saga compensations race with forward actions, creating duplicate side effects.",
+              "blurb": "Saga compensations race with forward actions, creating duplicate side effects.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n410e9b68a9b0f15",
+              "title": "Single-writer ownership per aggregate (per wallet/SKU shard).",
+              "markdown": "- Single-writer ownership per aggregate (per wallet/SKU shard).",
+              "notes": "Single-writer ownership per aggregate (per wallet/SKU shard).",
+              "blurb": "Single-writer ownership per aggregate (per wallet/SKU shard).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nfde8e2b4e8b9c88",
+              "title": "Reservation + expiry model with unique reservation IDs.",
+              "markdown": "- Reservation + expiry model with unique reservation IDs.",
+              "notes": "Reservation + expiry model with unique reservation IDs.",
+              "blurb": "Reservation + expiry model with unique reservation IDs.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n73b0f0d193bf0f8",
+              "title": "Idempotency key propagation across all downstream calls, not just edge API.",
+              "markdown": "- Idempotency key propagation across all downstream calls, not just edge API.",
+              "notes": "Idempotency key propagation across all downstream calls, not just edge API.",
+              "blurb": "Idempotency key propagation across all downstream calls, not just edge API.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n17a7f032fd27eba",
+              "title": "Reconciliation jobs and invariant monitors for eventual-consistency drift.",
+              "markdown": "- Reconciliation jobs and invariant monitors for eventual-consistency drift.",
+              "notes": "Reconciliation jobs and invariant monitors for eventual-consistency drift.",
+              "blurb": "Reconciliation jobs and invariant monitors for eventual-consistency drift.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "When a workflow spans services (payments, inventory, loyalty), \"one DB...",
+          "expanded": false
+        },
+        {
+          "id": "n882d144f1c0f014",
+          "title": "L4 \u2014 Race testing strategy in CI/CD",
+          "markdown": "To make race testing practical:",
+          "notes": "To make race testing practical:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n5b9f0817c2f0d1d",
+              "title": "Keep a deterministic lab harness with synchronized parallel start (barrier).",
+              "markdown": "- Keep a deterministic lab harness with synchronized parallel start (barrier).",
+              "notes": "Keep a deterministic lab harness with synchronized parallel start (barrier).",
+              "blurb": "Keep a deterministic lab harness with synchronized parallel start (barrier).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n356e690c104b543",
+              "title": "Run short \"burst\" race suites on high-risk mutations in CI.",
+              "markdown": "- Run short \"burst\" race suites on high-risk mutations in CI.",
+              "notes": "Run short \"burst\" race suites on high-risk mutations in CI.",
+              "blurb": "Run short \"burst\" race suites on high-risk mutations in CI.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n565f2be0d3ccac1",
+              "title": "Run longer stochastic contention tests nightly with invariant checks.",
+              "markdown": "- Run longer stochastic contention tests nightly with invariant checks.",
+              "notes": "Run longer stochastic contention tests nightly with invariant checks.",
+              "blurb": "Run longer stochastic contention tests nightly with invariant checks.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3d855779b60e003",
+              "title": "Capture timeline artifacts (request IDs, DB transaction IDs, event timestamps) for debug",
+              "markdown": "- Capture timeline artifacts (request IDs, DB transaction IDs, event timestamps) for debug",
+              "notes": "Capture timeline artifacts (request IDs, DB transaction IDs, event timestamps) for debug",
+              "blurb": "Capture timeline artifacts (request IDs, DB transaction IDs, event...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "To make race testing practical:",
+          "expanded": false
+        },
+        {
+          "id": "n420d9ef2708aaa8",
+          "title": "L4 \u2014 Interview clusters",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nfe92bfb3f0c3e98",
+              "title": "Junior",
+              "markdown": "- What is **check-then-act**?\n- Name one **business** impact of a race.",
+              "notes": "- What is check-then-act?\n- Name one business impact of a race.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "What is check-then-act?",
+              "expanded": false
+            },
+            {
+              "id": "n7d7df1fcb1eef1f",
+              "title": "Mid",
+              "markdown": "- How does **READ COMMITTED** differ from **SERIALIZABLE** for a money transfer?\n- What is an **idempotency key**?",
+              "notes": "- How does READ COMMITTED differ from SERIALIZABLE for a money transfer?\n- What is an idempotency key?",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "How does READ COMMITTED differ from SERIALIZABLE for a money transfer?",
+              "expanded": false
+            },
+            {
+              "id": "n7c0187945d2750e",
+              "title": "Senior",
+              "markdown": "- Design **checkout** for **high concurrency** without oversell.\n- Trade-offs of **pessimistic** vs **optimistic** locking.",
+              "notes": "- Design checkout for high concurrency without oversell.\n- Trade-offs of pessimistic vs optimistic locking.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Design checkout for high concurrency without oversell.",
+              "expanded": false
+            },
+            {
+              "id": "nac4ebb93ce239b9",
+              "title": "Staff",
+              "markdown": "- **Global** inventory across regions with **eventual consistency**-what invariants can you **not** promise?\n- How do you **test** for races in **CI**?",
+              "notes": "- Global inventory across regions with eventual consistency-what invariants can you not promise?\n- How do you test for races in CI?",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Global inventory across regions with eventual consistency-what invariants...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Junior",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes L4 \u2014 Distributed races across regions/services"
+    },
+    {
+      "id": "ncfe03b4532620e7",
+      "title": "L1 \u2014 Core model: check-then-act",
+      "markdown": "```\nThread A                          Thread B\n   |                                 |\n   | READ balance = $100             |\n   |                                 | READ balance = $100\n   | WRITE withdraw $80              |\n   | COMMIT (balance $20)            |\n   |                                 | WRITE withdraw $80  <- still thinks $100\n   |                                 | COMMIT (illegal or negative?)\n```\n\nThe **invariant** (\"balance never negative\", \"one coupon per user\", \"stock \u2265 0\") is checked **outside** a single atomic transaction or **without** a **constraint** the database enforces.\n\n**Trust boundary:** Any **mutable resource** (balance, inventory, quota, role flag) touched by **concurrent** clients.",
+      "notes": "Thread A                          Thread B\n   |                                 |\n   | READ balance = $100             |\n   |                                 | READ balance = $100\n   | WRITE withdraw $80              |\n   | COMMIT (balance $20)            |\n   |                                 | WRITE withdraw $80  <- still thinks $100\n   |                                 | COMMIT (illegal or negative?)\n\nThe invariant (\"balance never negative\", \"one coupon per user\", \"stock \u2265 0\") is checked outside a single atomic transaction or without a constraint the database enforces.\n\nTrust boundary: Any mutable resource (balance, inventory, quota, role flag) touched by concurrent clients.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Thread A Thread B | | | READ balance = $100 | | | READ balance = $100 |...",
+      "expanded": false
+    },
+    {
+      "id": "nafacde7b0328233",
+      "title": "Quick recall",
+      "markdown": "**Check-then-act** without **atomicity** or **correct isolation** -> concurrent requests **invalidate** the assumption between check and use (**TOCTOU**).",
+      "notes": "Check-then-act without atomicity or correct isolation -> concurrent requests invalidate the assumption between check and use (TOCTOU).",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n1f5f9a7a52ab152",
+          "title": "Symptoms in code",
+          "markdown": "| Smell | Risk |\n|-------|------|\n| Read row -> Python `if` -> write row | **Lost update** |\n| \"Balance\" in **cache** only | Stale **source of truth** |\n| Increment counter **after** side effect | **Parallel** bypass |\n| No **idempotency** on money webhooks | **Duplicate** charge |",
+          "notes": "| Smell | Risk |\n|-------|------|\n| Read row -> Python if -> write row | Lost update |\n| \"Balance\" in cache only | Stale source of truth |\n| Increment counter after side effect | Parallel bypass |\n| No idempotency on money webhooks | Duplicate charge |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Smell | Risk | |-------|------| | Read row -> Python if -> write row |...",
+          "expanded": false
+        },
+        {
+          "id": "n2b91bcd7a944296",
+          "title": "Fixes (pick per case)",
+          "markdown": "| Control | When |\n|---------|------|\n| **`UPDATE ... WHERE balance >= ?`** (check in predicate) | Single-row numeric invariant |\n| **`SELECT ... FOR UPDATE`** | Need lock through multi-step tx |\n| **`SERIALIZABLE`** + retries | Complex invariants; tolerate conflicts |\n| **Optimistic `version` column** | Moderate contention |\n| **Idempotency-Key + UNIQUE** | External retries, webhooks |\n| **Queue per aggregate** | High contention; single writer |",
+          "notes": "| Control | When |\n|---------|------|\n| UPDATE ... WHERE balance >= ? (check in predicate) | Single-row numeric invariant |\n| SELECT ... FOR UPDATE | Need lock through multi-step tx |\n| SERIALIZABLE + retries | Complex invariants; tolerate conflicts |\n| Optimistic version column | Moderate contention |\n| Idempotency-Key + UNIQUE | External retries, webhooks |\n| Queue per aggregate | High contention; single writer |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Control | When | |---------|------| | UPDATE ...",
+          "expanded": false
+        },
+        {
+          "id": "n2a924999a20cbc0",
+          "title": "Testing",
+          "markdown": "Parallel same-session requests (Turbo Intruder / scripts).",
+          "notes": "Parallel same-session requests (Turbo Intruder / scripts).",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "naee56fb09ba50ca",
+              "title": "Parallel same-session requests (Turbo Intruder / scripts).",
+              "markdown": "- Parallel same-session requests (Turbo Intruder / scripts).",
+              "notes": "Parallel same-session requests (Turbo Intruder / scripts).",
+              "blurb": "Parallel same-session requests (Turbo Intruder / scripts).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n164b5278e4bce29",
+              "title": "Assert rowcount, constraints, audit uniqueness.",
+              "markdown": "- Assert rowcount, constraints, audit uniqueness.",
+              "notes": "Assert rowcount, constraints, audit uniqueness.",
+              "blurb": "Assert rowcount, constraints, audit uniqueness.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n67ee1dc9d4c890f",
+              "title": "Watch serialization_failure / deadlock rates after fixes.",
+              "markdown": "- Watch serialization_failure / deadlock rates after fixes.",
+              "notes": "Watch serialization_failure / deadlock rates after fixes.",
+              "blurb": "Watch serializationfailure / deadlock rates after fixes.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Parallel same-session requests (Turbo Intruder / scripts).",
+          "expanded": false
+        },
+        {
+          "id": "na0de583e3630fb0",
+          "title": "CWEs",
+          "markdown": "- **CWE-362** - improper synchronization (shared resource)\n- **CWE-367** - TOCTOU",
+          "notes": "- CWE-362 - improper synchronization (shared resource)\n- CWE-367 - TOCTOU",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "CWE-362 - improper synchronization (shared resource) - CWE-367 - TOCTOU",
+          "expanded": false
+        },
+        {
+          "id": "nd9584f3e6118b76",
+          "title": "Cross-read",
+          "markdown": "`Business Logic Abuse` \u00b7 `IDOR` \u00b7 `Rate Limiting` \u00b7 `Security Bug Identification`",
+          "notes": "Business Logic Abuse \u00b7 IDOR \u00b7 Rate Limiting \u00b7 Security Bug Identification",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Business Logic Abuse \u00b7 IDOR \u00b7 Rate Limiting \u00b7 Security Bug Identification",
+          "expanded": false
+        },
+        {
+          "id": "n97619d387ac8ff2",
+          "title": "60-second answer",
+          "markdown": "\"Concurrent requests interleave between **check** and **act**; use **atomic DB operations**, **locks** or **serializable** where needed, **idempotency** for retries, and **test** with parallel requests.\"",
+          "notes": "\"Concurrent requests interleave between check and act; use atomic DB operations, locks or serializable where needed, idempotency for retries, and test with parallel requests.\"",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "\"Concurrent requests interleave between check and act; use atomic DB...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Check-then-act without atomicity or correct isolation -> concurrent requests..."
+    },
+    {
+      "id": "nc900ed83bc00675",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n95adf40ade917de",
+          "title": "\"Using a database transaction automatically prevents races.\"",
+          "markdown": "**Reality:** A transaction helps only if **isolation** and **statement patterns** actually **serialize** conflicting access. **READ COMMITTED** still allows **lost updates** unless you use **`FOR UPDATE`**, **serializable**, or an **atomic single-statement** update.",
+          "notes": "Reality: A transaction helps only if isolation and statement patterns actually serialize conflicting access. READ COMMITTED still allows lost updates unless you use FOR UPDATE, serializable, or an atomic single-statement update.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: A transaction helps only if isolation and statement patterns...",
+          "expanded": false
+        },
+        {
+          "id": "n100bd1e8a9f5e61",
+          "title": "\"Race conditions only happen under huge load.\"",
+          "markdown": "**Reality:** **Two** well-timed requests are enough-attackers **parallelize** intentionally. Burp **Turbo Intruder** or scripts can create \"load\" from a laptop.",
+          "notes": "Reality: Two well-timed requests are enough-attackers parallelize intentionally. Burp Turbo Intruder or scripts can create \"load\" from a laptop.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Two well-timed requests are enough-attackers parallelize...",
+          "expanded": false
+        },
+        {
+          "id": "n09fe3c7ab573cb6",
+          "title": "\"This is a threading bug, not a security issue.\"",
+          "markdown": "**Reality:** In web apps, **each HTTP request** may hit **shared** mutable state (DB rows, cache counters). **Logical** races are **security** when they break **integrity** (money, access, quotas).",
+          "notes": "Reality: In web apps, each HTTP request may hit shared mutable state (DB rows, cache counters). Logical races are security when they break integrity (money, access, quotas).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: In web apps, each HTTP request may hit shared mutable state (DB...",
+          "expanded": false
+        },
+        {
+          "id": "nd701de808b99a7d",
+          "title": "\"We\u2019ll fix it with a mutex in the app.\"",
+          "markdown": "**Reality:** An in-process lock **does not** coordinate across **multiple** app servers. You need **DB**, **queue**, or **distributed** coordination-and **fencing** where external systems are involved.",
+          "notes": "Reality: An in-process lock does not coordinate across multiple app servers. You need DB, queue, or distributed coordination-and fencing where external systems are involved.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: An in-process lock does not coordinate across multiple app servers.",
+          "expanded": false
+        },
+        {
+          "id": "nf979ba93d72a24c",
+          "title": "\"Idempotency keys are only for nice UX.\"",
+          "markdown": "**Reality:** They are a **primary** control for **safe retries** once you add **serializable** transactions or **distributed** flows. Without them, **retries** **duplicate** side effects.",
+          "notes": "Reality: They are a primary control for safe retries once you add serializable transactions or distributed flows. Without them, retries duplicate side effects.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: They are a primary control for safe retries once you add...",
+          "expanded": false
+        },
+        {
+          "id": "n959aea6e8864a96",
+          "title": "\"SELECT \u2026 IF balance OK then UPDATE is fine in one API handler.\"",
+          "markdown": "**Reality:** Two handlers can **both** pass the `SELECT` before either `UPDATE` unless the row is **locked** or the check is **inside** one atomic `UPDATE ... WHERE`.",
+          "notes": "Reality: Two handlers can both pass the SELECT before either UPDATE unless the row is locked or the check is inside one atomic UPDATE ... WHERE.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Two handlers can both pass the SELECT before either UPDATE unless...",
+          "expanded": false
+        },
+        {
+          "id": "nf0d53ca6ef47e12",
+          "title": "\"NoSQL means no race problems.\"",
+          "markdown": "**Reality:** **Document** databases still have **read-modify-write** races; some offer **conditional** writes or **transactions**-you must **use** them correctly.",
+          "notes": "Reality: Document databases still have read-modify-write races; some offer conditional writes or transactions-you must use them correctly.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Document databases still have read-modify-write races; some offer...",
+          "expanded": false
+        },
+        {
+          "id": "n4ba33a20e01c58c",
+          "title": "\"Static analysis will find all races.\"",
+          "markdown": "**Reality:** **Dataflow** across requests is hard; **dynamic** race tests and **domain** review remain essential.",
+          "notes": "Reality: Dataflow across requests is hard; dynamic race tests and domain review remain essential.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Dataflow across requests is hard; dynamic race tests and domain...",
+          "expanded": false
+        },
+        {
+          "id": "n93f2369c10ece26",
+          "title": "Generic interview traps",
+          "markdown": "Claiming any single-layer fix without end-to-end story.",
+          "notes": "Claiming any single-layer fix without end-to-end story.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n3e393cf17d841e3",
+              "title": "Claiming any single-layer fix without end-to-end story.",
+              "markdown": "- Claiming any single-layer fix without end-to-end story.",
+              "notes": "Claiming any single-layer fix without end-to-end story.",
+              "blurb": "Claiming any single-layer fix without end-to-end story.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n67142fd3495af16",
+              "title": "Ignoring webhook / payment duplicate delivery.",
+              "markdown": "- Ignoring webhook / payment duplicate delivery.",
+              "notes": "Ignoring webhook / payment duplicate delivery.",
+              "blurb": "Ignoring webhook / payment duplicate delivery.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ne61cc76f61824e2",
+              "title": "Forgetting monitoring for impossible states (negative balance, count mismatch).",
+              "markdown": "- Forgetting monitoring for impossible states (negative balance, count mismatch).",
+              "notes": "Forgetting monitoring for impossible states (negative balance, count mismatch).",
+              "blurb": "Forgetting monitoring for impossible states (negative balance, count...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Claiming any single-layer fix without end-to-end story.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \"Using a database transaction automatically prevents races.\""
+    },
+    {
+      "id": "n0bc8e208c33afc2",
+      "title": "How to test",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n10dfebd34449eb0",
+          "title": "Objective",
+          "markdown": "Create a repeatable assessment workflow for `Race Condition Vulnerabilities` that produces reproducible evidence and actionable remediation guidance.",
+          "notes": "Create a repeatable assessment workflow for Race Condition Vulnerabilities that produces reproducible evidence and actionable remediation guidance.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Create a repeatable assessment workflow for Race Condition Vulnerabilities...",
+          "expanded": false
+        },
+        {
+          "id": "na70cb0e182994b5",
+          "title": "Phase 1 - Scope and preparation",
+          "markdown": "Confirm in-scope assets, test windows, and prohibited actions.",
+          "notes": "Confirm in-scope assets, test windows, and prohibited actions.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n3ae2d92ee473ca5",
+              "title": "Confirm in-scope assets, test windows, and prohibited actions.",
+              "markdown": "- Confirm in-scope assets, test windows, and prohibited actions.",
+              "notes": "Confirm in-scope assets, test windows, and prohibited actions.",
+              "blurb": "Confirm in-scope assets, test windows, and prohibited actions.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6c8d37ec53f8e42",
+              "title": "Identify critical user journeys and trust boundaries.",
+              "markdown": "- Identify critical user journeys and trust boundaries.",
+              "notes": "Identify critical user journeys and trust boundaries.",
+              "blurb": "Identify critical user journeys and trust boundaries.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n36fbf260adfa61d",
+              "title": "Define severity rubric and evidence requirements before testing.",
+              "markdown": "- Define severity rubric and evidence requirements before testing.",
+              "notes": "Define severity rubric and evidence requirements before testing.",
+              "blurb": "Define severity rubric and evidence requirements before testing.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Confirm in-scope assets, test windows, and prohibited actions.",
+          "expanded": false
+        },
+        {
+          "id": "n9005584f965e6aa",
+          "title": "Phase 2 - Recon and attack-surface mapping",
+          "markdown": "Enumerate relevant endpoints, flows, and data paths.",
+          "notes": "Enumerate relevant endpoints, flows, and data paths.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nefb1a28a12a5c01",
+              "title": "Enumerate relevant endpoints, flows, and data paths.",
+              "markdown": "- Enumerate relevant endpoints, flows, and data paths.",
+              "notes": "Enumerate relevant endpoints, flows, and data paths.",
+              "blurb": "Enumerate relevant endpoints, flows, and data paths.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nfad7bca74fa02a9",
+              "title": "Document where security checks are expected to happen.",
+              "markdown": "- Document where security checks are expected to happen.",
+              "notes": "Document where security checks are expected to happen.",
+              "blurb": "Document where security checks are expected to happen.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n34472064650678a",
+              "title": "Mark high-value assets and high-impact paths.",
+              "markdown": "- Mark high-value assets and high-impact paths.",
+              "notes": "Mark high-value assets and high-impact paths.",
+              "blurb": "Mark high-value assets and high-impact paths.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Enumerate relevant endpoints, flows, and data paths.",
+          "expanded": false
+        },
+        {
+          "id": "n44a93bdeff4717f",
+          "title": "Phase 3 - Hypothesis-driven testing",
+          "markdown": "Start with low-risk probes and baseline behavior.",
+          "notes": "Start with low-risk probes and baseline behavior.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n96333e84cd11dc7",
+              "title": "Start with low-risk probes and baseline behavior.",
+              "markdown": "- Start with low-risk probes and baseline behavior.",
+              "notes": "Start with low-risk probes and baseline behavior.",
+              "blurb": "Start with low-risk probes and baseline behavior.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n74af8d4242f94d6",
+              "title": "Test failure hypotheses systematically (one variable at a time).",
+              "markdown": "- Test failure hypotheses systematically (one variable at a time).",
+              "notes": "Test failure hypotheses systematically (one variable at a time).",
+              "blurb": "Test failure hypotheses systematically (one variable at a time).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n384bc0c0da492b7",
+              "title": "Capture request/response artifacts for each finding candidate.",
+              "markdown": "- Capture request/response artifacts for each finding candidate.",
+              "notes": "Capture request/response artifacts for each finding candidate.",
+              "blurb": "Capture request/response artifacts for each finding candidate.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Start with low-risk probes and baseline behavior.",
+          "expanded": false
+        },
+        {
+          "id": "n42a2474b832a835",
+          "title": "Phase 4 - Validation and impact proof",
+          "markdown": "Reproduce findings with clean-state retests.",
+          "notes": "Reproduce findings with clean-state retests.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n7a34b5b33a000cc",
+              "title": "Reproduce findings with clean-state retests.",
+              "markdown": "- Reproduce findings with clean-state retests.",
+              "notes": "Reproduce findings with clean-state retests.",
+              "blurb": "Reproduce findings with clean-state retests.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n09233ec238b3e3d",
+              "title": "Confirm exploitability and practical impact.",
+              "markdown": "- Confirm exploitability and practical impact.",
+              "notes": "Confirm exploitability and practical impact.",
+              "blurb": "Confirm exploitability and practical impact.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nab6fde8863f49e9",
+              "title": "Eliminate false positives; record confidence level.",
+              "markdown": "- Eliminate false positives; record confidence level.",
+              "notes": "Eliminate false positives; record confidence level.",
+              "blurb": "Eliminate false positives; record confidence level.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Reproduce findings with clean-state retests.",
+          "expanded": false
+        },
+        {
+          "id": "n0c7dc37abe1c2a7",
+          "title": "Phase 5 - Remediation and verification",
+          "markdown": "Provide immediate containment + structural fix recommendations.",
+          "notes": "Provide immediate containment + structural fix recommendations.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n0a34be87dffff67",
+              "title": "Provide immediate containment + structural fix recommendations.",
+              "markdown": "- Provide immediate containment + structural fix recommendations.",
+              "notes": "Provide immediate containment + structural fix recommendations.",
+              "blurb": "Provide immediate containment + structural fix recommendations.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n16a9dde69421918",
+              "title": "Define post-fix verification tests and telemetry checks.",
+              "markdown": "- Define post-fix verification tests and telemetry checks.",
+              "notes": "Define post-fix verification tests and telemetry checks.",
+              "blurb": "Define post-fix verification tests and telemetry checks.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ne530880ef0b6da5",
+              "title": "Re-test after remediation and close with evidence.",
+              "markdown": "- Re-test after remediation and close with evidence.",
+              "notes": "Re-test after remediation and close with evidence.",
+              "blurb": "Re-test after remediation and close with evidence.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Provide immediate containment + structural fix recommendations.",
+          "expanded": false
+        },
+        {
+          "id": "n76c540b2f48163f",
+          "title": "Evidence template",
+          "markdown": "Asset / endpoint: - Preconditions: - Reproduction steps: - Observed behavior: - Security impact: - Business impact: - Recommended fix: - Verification result:",
+          "notes": "Asset / endpoint: - Preconditions: - Reproduction steps: - Observed behavior: - Security impact: - Business impact: - Recommended fix: - Verification result:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n52bab90ea466235",
+              "title": "Asset / endpoint",
+              "markdown": "- Asset / endpoint",
+              "notes": "Asset / endpoint",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nfa6e8ee14ed0f80",
+              "title": "Preconditions",
+              "markdown": "- Preconditions",
+              "notes": "Preconditions",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6c4d252ea5cc102",
+              "title": "Reproduction steps",
+              "markdown": "- Reproduction steps",
+              "notes": "Reproduction steps",
+              "blurb": "Reproduction steps",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n373913ace072a6f",
+              "title": "Observed behavior",
+              "markdown": "- Observed behavior",
+              "notes": "Observed behavior",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd2fb3452d35a71b",
+              "title": "Security impact",
+              "markdown": "- Security impact",
+              "notes": "Security impact",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd2c3adec27b185e",
+              "title": "Business impact",
+              "markdown": "- Business impact",
+              "notes": "Business impact",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n538c7f6e75e53ad",
+              "title": "Recommended fix",
+              "markdown": "- Recommended fix",
+              "notes": "Recommended fix",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n4150b69163a1027",
+              "title": "Verification result",
+              "markdown": "- Verification result",
+              "notes": "Verification result",
+              "blurb": "Verification result",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Asset / endpoint: - Preconditions: - Reproduction steps: - Observed...",
+          "expanded": false
+        },
+        {
+          "id": "n04ae77ffabcbc8d",
+          "title": "Interview drill",
+          "markdown": "In 3 minutes, explain how you would run this VAPT workflow for one production-like service and what evidence you need before escalating severity.",
+          "notes": "In 3 minutes, explain how you would run this VAPT workflow for one production-like service and what evidence you need before escalating severity.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "In 3 minutes, explain how you would run this VAPT workflow for one...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Objective"
+    },
+    {
+      "id": "n8b8f47ac088c3b6",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "ne8ee8c14e91c6b2",
+          "title": "Elevator pitch (45 seconds)",
+          "markdown": "**Q: What is a race condition vulnerability in web apps?**\n\n**A:** It is when **two or more concurrent requests** interleave so the application **checks** a condition-like \"balance enough\" or \"coupon unused\"-and then **acts** later **without** locking or **atomic** database operations. Another request changes state **between** the check and the act, so **invalid** or **duplicate** outcomes occur: double spend, oversold inventory, or bypassed limits. Fixes center on **atomic updates** (`UPDATE ... WHERE balance >= ?`), **proper isolation**, **idempotency keys**, and **constraints** the database enforces-not \"more if statements.\"",
+          "notes": "Q: What is a race condition vulnerability in web apps?\n\nA: It is when two or more concurrent requests interleave so the application checks a condition-like \"balance enough\" or \"coupon unused\"-and then acts later without locking or atomic database operations. Another request changes state between the check and the act, so invalid or duplicate outcomes occur: double spend, oversold inventory, or bypassed limits. Fixes center on atomic updates (UPDATE ... WHERE balance >= ?), proper isolation, idempotency keys, and constraints the database enforces-not \"more if statements.\"",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Q: What is a race condition vulnerability in web apps?",
+          "expanded": false
+        },
+        {
+          "id": "n83645994d850d42",
+          "title": "Mechanism",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nb2a338cc923e96f",
+              "title": "Q: Explain TOCTOU in one sentence.",
+              "markdown": "**A:** **Time-of-check to time-of-use** gap: the **system** validates state at time T1 but **uses** that assumption at T2 after **concurrent** activity has changed reality.",
+              "notes": "A: Time-of-check to time-of-use gap: the system validates state at time T1 but uses that assumption at T2 after concurrent activity has changed reality.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Time-of-check to time-of-use gap: the system validates state at time T1...",
+              "expanded": false
+            },
+            {
+              "id": "n68d8b1d241f02ed",
+              "title": "Q: Lost update vs write skew?",
+              "markdown": "**A:** **Lost update:** two transactions both read X, both write based on stale X; last write wins-**first** change lost. **Write skew:** two transactions read **different** rows; each update is \"locally\" valid but **together** they violate a **global** rule (classic under **snapshot isolation**).",
+              "notes": "A: Lost update: two transactions both read X, both write based on stale X; last write wins-first change lost. Write skew: two transactions read different rows; each update is \"locally\" valid but together they violate a global rule (classic under snapshot isolation).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Lost update: two transactions both read X, both write based on stale X;...",
+              "expanded": false
+            },
+            {
+              "id": "n409370778c4eabf",
+              "title": "Q: Why are races a \u201cbusiness logic\u201d issue?",
+              "markdown": "**A:** The code is often \"correct\" for **one** request at a time but wrong under **parallel** use-scanners miss it; **threat modeling** and **code review** catch it.",
+              "notes": "A: The code is often \"correct\" for one request at a time but wrong under parallel use-scanners miss it; threat modeling and code review catch it.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: The code is often \"correct\" for one request at a time but wrong under...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: Explain TOCTOU in one sentence.",
+          "expanded": false
+        },
+        {
+          "id": "n31b6c37c8870e62",
+          "title": "Defense",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n9a6ec1ab2660901",
+              "title": "Q: Best fix for a wallet debit?",
+              "markdown": "**A:** Prefer **`UPDATE accounts SET balance = balance - $amt WHERE id = $id AND balance >= $amt`** and verify **one row** updated; add **idempotency** for the **operation** key to handle **retries**.",
+              "notes": "A: Prefer UPDATE accounts SET balance = balance - $amt WHERE id = $id AND balance >= $amt and verify one row updated; add idempotency for the operation key to handle retries.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Prefer UPDATE accounts SET balance = balance - $amt WHERE id = $id AND...",
+              "expanded": false
+            },
+            {
+              "id": "n9d5df9d02dd4dca",
+              "title": "Q: When do you need SERIALIZABLE?",
+              "markdown": "**A:** When **multiple rows** or **invariants** span reads/writes that **snapshot** isolation allows to skew. Expect **retries** on serialization failures-pair with **idempotency**.",
+              "notes": "A: When multiple rows or invariants span reads/writes that snapshot isolation allows to skew. Expect retries on serialization failures-pair with idempotency.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: When multiple rows or invariants span reads/writes that snapshot...",
+              "expanded": false
+            },
+            {
+              "id": "n58ee9edce050151",
+              "title": "Q: Distributed system without shared DB row?",
+              "markdown": "**A:** **Per-aggregate** **single writer** (queue), **distributed lock** with **lease** (careful with TTL/fencing), or **consensus**-never a **process-local** mutex alone.",
+              "notes": "A: Per-aggregate single writer (queue), distributed lock with lease (careful with TTL/fencing), or consensus-never a process-local mutex alone.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Per-aggregate single writer (queue), distributed lock with lease (careful...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: Best fix for a wallet debit?",
+          "expanded": false
+        },
+        {
+          "id": "n35ef3c325c927ee",
+          "title": "Testing and validation",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "neec60d768204e22",
+              "title": "Q: How do you prove a race in a bug bounty safely?",
+              "markdown": "**A:** **Coordinated** disclosure scope; **non-destructive** parallel requests; **document** timestamps and **duplicate** resource IDs; stop if **availability** impact.",
+              "notes": "A: Coordinated disclosure scope; non-destructive parallel requests; document timestamps and duplicate resource IDs; stop if availability impact.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Coordinated disclosure scope; non-destructive parallel requests; document...",
+              "expanded": false
+            },
+            {
+              "id": "nc5118de284ae376",
+              "title": "Q: How do you regression-test races?",
+              "markdown": "**A:** **Load** test with **controlled** parallelism; **property** tests; **assert** DB constraints (`balance >= 0`); monitor **serialization** errors after hardening.",
+              "notes": "A: Load test with controlled parallelism; property tests; assert DB constraints (balance >= 0); monitor serialization errors after hardening.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Load test with controlled parallelism; property tests; assert DB...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: How do you prove a race in a bug bounty safely?",
+          "expanded": false
+        },
+        {
+          "id": "nc482a6f1d905591",
+          "title": "Senior traps",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ne2917aa34997844",
+              "title": "Q: \u201cWe use Redis lock so we\u2019re safe.\u201d",
+              "markdown": "**A:** Redis locks need **correct** TTL, **fencing tokens**, and **failure** handling; **still** need **DB truth** for money. Interview answer: **defense in depth**, not **one** tool.",
+              "notes": "A: Redis locks need correct TTL, fencing tokens, and failure handling; still need DB truth for money. Interview answer: defense in depth, not one tool.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Redis locks need correct TTL, fencing tokens, and failure handling; still...",
+              "expanded": false
+            },
+            {
+              "id": "n0f37f85afbd0f92",
+              "title": "Q: Optimistic locking downside?",
+              "markdown": "**A:** **Retries** and **UX** under **contention**; clients must handle **409 Conflict** and **backoff**.",
+              "notes": "A: Retries and UX under contention; clients must handle 409 Conflict and backoff.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Retries and UX under contention; clients must handle 409 Conflict and...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: \u201cWe use Redis lock so we\u2019re safe.\u201d",
+          "expanded": false
+        },
+        {
+          "id": "nc6f71b5880857c3",
+          "title": "Depth: Interview follow-ups",
+          "markdown": "How does idempotency interact with HTTP retries and network timeouts?",
+          "notes": "How does idempotency interact with HTTP retries and network timeouts?",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n440065f182e5c23",
+              "title": "How does idempotency interact with HTTP retries and network timeouts?",
+              "markdown": "- How does idempotency interact with HTTP retries and network timeouts?",
+              "notes": "How does idempotency interact with HTTP retries and network timeouts?",
+              "blurb": "How does idempotency interact with HTTP retries and network timeouts?",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9690fea6eb3f09d",
+              "title": "Design inventory for flash sale without oversell.",
+              "markdown": "- Design inventory for flash sale without oversell.",
+              "notes": "Design inventory for flash sale without oversell.",
+              "blurb": "Design inventory for flash sale without oversell.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n65fbdc524cdd4d7",
+              "title": "What metrics prove race fixes work in production?",
+              "markdown": "- What metrics prove race fixes work in production?",
+              "notes": "What metrics prove race fixes work in production?",
+              "blurb": "What metrics prove race fixes work in production?",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6baec75c981a23b",
+              "title": "Stripe-style exactly-once vs at-least-once-what can APIs honestly promise?",
+              "markdown": "- Stripe-style exactly-once vs at-least-once-what can APIs honestly promise?",
+              "notes": "Stripe-style exactly-once vs at-least-once-what can APIs honestly promise?",
+              "blurb": "Stripe-style exactly-once vs at-least-once-what can APIs honestly promise?",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "How does idempotency interact with HTTP retries and network timeouts?",
+          "expanded": false
+        },
+        {
+          "id": "nabea03d4f45aeb1",
+          "title": "Mock ladder",
+          "markdown": "| Level | Prompt |\n|-------|--------|\n| **Junior** | Define race; give **non-security** example. |\n| **Mid** | Predicate UPDATE vs **SELECT FOR UPDATE**. |\n| **Senior** | Race in **webhook** duplicate delivery + idempotency. |\n| **Staff** | **Multi-region** **checkout** consistency story. |\n\n**Rubric:** accuracy, concurrency depth, practical mitigation, verification-**7-8/8** target.",
+          "notes": "| Level | Prompt |\n|-------|--------|\n| Junior | Define race; give non-security example. |\n| Mid | Predicate UPDATE vs SELECT FOR UPDATE. |\n| Senior | Race in webhook duplicate delivery + idempotency. |\n| Staff | Multi-region checkout consistency story. |\n\nRubric: accuracy, concurrency depth, practical mitigation, verification-7-8/8 target.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Level | Prompt | |-------|--------| | Junior | Define race; give...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Elevator pitch (45 seconds)"
+    }
+  ],
+  "topicId": "race-condition-vulnerabilities",
+  "name": "Race Condition Vulnerabilities",
+  "structure": "logic-right",
+  "blurb": "Race condition vulnerabilities arise when security or business invariants..."
+}

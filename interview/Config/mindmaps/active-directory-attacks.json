@@ -1,0 +1,636 @@
+{
+  "id": "n06edc66f7186a13",
+  "title": "Active Directory Attacks",
+  "markdown": "**Active Directory (AD)** is the **identity and authorization backbone** of most enterprise Windows estates. Offensive interviews expect you to connect **Kerberos** and **NTLM** mechanics to **named** **abuse** **patterns** (Kerberoasting, AS-REP roasting, NTLM relay, DCSync, **AD CS** misconfigurations) and to **defensive** **countermeasures** (tiering, **PAM**, **EPA**, **signing**, **auditing**). This guide is **defensive** and **interview-oriented**-not an operational attack playbook.\n\nAligned with the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+  "notes": "Active Directory (AD) is the identity and authorization backbone of most enterprise Windows estates. Offensive interviews expect you to connect Kerberos and NTLM mechanics to named abuse patterns (Kerberoasting, AS-REP roasting, NTLM relay, DCSync, AD CS misconfigurations) and to defensive countermeasures (tiering, PAM, EPA, signing, auditing). This guide is defensive and interview-oriented-not an operational attack playbook.\n\nAligned with the Content Mastery Framework.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "nb4e82badcf6ae54",
+      "title": "At a glance",
+      "markdown": "**Active Directory (AD)** is the **identity and authorization backbone** of most enterprise Windows estates. Offensive interviews expect you to connect **Kerberos** and **NTLM** mechanics to **named** **abuse** **patterns** (Kerberoasting, AS-REP roasting, NTLM relay, DCSync, **AD CS** misconfigurations) and to **defensive** **countermeasures** (tiering, **PAM**, **EPA**, **signing**, **auditing**). This guide is **defensive** and **interview-oriented**-not an operational attack playbook.\n\nAligned with the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+      "notes": "Active Directory (AD) is the identity and authorization backbone of most enterprise Windows estates. Offensive interviews expect you to connect Kerberos and NTLM mechanics to named abuse patterns (Kerberoasting, AS-REP roasting, NTLM relay, DCSync, AD CS misconfigurations) and to defensive countermeasures (tiering, PAM, EPA, signing, auditing). This guide is defensive and interview-oriented-not an operational attack playbook.\n\nAligned with the Content Mastery Framework.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Active Directory (AD) is the identity and authorization backbone of most...",
+      "expanded": false
+    },
+    {
+      "id": "n1fb1c26629b61ca",
+      "title": "L2 \u2014 Attack pattern map (name \u2192 prerequisite)",
+      "markdown": "| Pattern | Core idea | Typical prerequisite |\n|---------|-----------|----------------------|\n| **AS-REP roast** | Request **TGT** for **pre-auth** **disabled** accounts; crack **AS-REP** | `UF_DONT_REQUIRE_PREAUTH` |\n| **Kerberoast** | Request **TGS** for **SPN** tied to **user**; crack **ticket** | **Weak** **service** **account** **passwords** |\n| **Silver ticket** | Forge **TGS** with **service** **NTLM** hash | **Compromised** **machine**/**service** hash |\n| **Golden ticket** | Forge **TGT** with **krbtgt** hash | **Domain** **compromise**-level **secret** |\n| **DCSync** | **DS** **replication** **API** abuse to **dump** **hashes** | **Replicate** **Directory** **Changes** **rights** |\n| **Pass-the-Hash** | Reuse **NTLM** hash **without** **password** | **LMCompatibility**, **signing** **off** contexts |\n| **NTLM relay** | **MITM** **challenge/response** to **auth** elsewhere | **Unsigned** **SMB**/**LDAP**, **LLMNR** **poisoning** adjacency |\n| **AD CS (ESC patterns)** | **Misissued** **templates** / **enrollment** **agents** | **Vulnerable** **certificate** **templates** |\n\nExact **ESC** numbers (**ESC1**, **ESC8**, ...) rotate in community literature-learn **the** **mechanism** (**who** can **enroll**, **EKU**, **subject** **supplied**).",
+      "notes": "| Pattern | Core idea | Typical prerequisite |\n|---------|-----------|----------------------|\n| AS-REP roast | Request TGT for pre-auth disabled accounts; crack AS-REP | UFDONTREQUIREPREAUTH |\n| Kerberoast | Request TGS for SPN tied to user; crack ticket | Weak service account passwords |\n| Silver ticket | Forge TGS with service NTLM hash | Compromised machine/service hash |\n| Golden ticket | Forge TGT with krbtgt hash | Domain compromise-level secret |\n| DCSync | DS replication API abuse to dump hashes | Replicate Directory Changes rights |\n| Pass-the-Hash | Reuse NTLM hash without password | LMCompatibility, signing off contexts |\n| NTLM relay | MITM challenge/response to auth elsewhere | Unsigned SMB/LDAP, LLMNR poisoning adjacency |\n| AD CS (ESC patterns) | Misissued templates / enrollment agents | Vulnerable certificate templates |\n\nExact ESC numbers (ESC1, ESC8, ...) rotate in community literature-learn the mechanism (who can enroll, EKU, subject supplied).",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Pattern | Core idea | Typical prerequisite |...",
+      "expanded": false
+    },
+    {
+      "id": "n28ec4e3ed6c865d",
+      "title": "Mitigations (tier order)",
+      "markdown": "Tier model: Tier 0 workstations separate from internet email.",
+      "notes": "Tier model: Tier 0 workstations separate from internet email.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nf257407b8b719e4",
+          "title": "Tier model: Tier 0 workstations separate from internet email.",
+          "markdown": "- Tier model: Tier 0 workstations separate from internet email.",
+          "notes": "Tier model: Tier 0 workstations separate from internet email.",
+          "blurb": "Tier model: Tier 0 workstations separate from internet email.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n452b165bfae244f",
+          "title": "Strong service account passwords / gMSA; remove stale SPNs.",
+          "markdown": "- Strong service account passwords / gMSA; remove stale SPNs.",
+          "notes": "Strong service account passwords / gMSA; remove stale SPNs.",
+          "blurb": "Strong service account passwords / gMSA; remove stale SPNs.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n2215145339e3332",
+          "title": "LDAP/SMB signing; EPA for NTLM contexts that support it.",
+          "markdown": "- LDAP/SMB signing; EPA for NTLM contexts that support it.",
+          "notes": "LDAP/SMB signing; EPA for NTLM contexts that support it.",
+          "blurb": "LDAP/SMB signing; EPA for NTLM contexts that support it.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n397fc4b7e50e3fd",
+          "title": "AD CS baseline (templates, enrollment agents, HTTP endpoints).",
+          "markdown": "- AD CS baseline (templates, enrollment agents, HTTP endpoints).",
+          "notes": "AD CS baseline (templates, enrollment agents, HTTP endpoints).",
+          "blurb": "AD CS baseline (templates, enrollment agents, HTTP endpoints).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nd2c9b31a65fdd65",
+          "title": "PAM / JIT for admin; Audit ACLs continuously.",
+          "markdown": "- PAM / JIT for admin; Audit ACLs continuously.",
+          "notes": "PAM / JIT for admin; Audit ACLs continuously.",
+          "blurb": "PAM / JIT for admin; Audit ACLs continuously.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Tier model: Tier 0 workstations separate from internet email.",
+      "expanded": true
+    },
+    {
+      "id": "nbe6d6c233f84163",
+      "title": "Detection and logging",
+      "markdown": "4769 Kerberos service ticket events (volume/noise tradeoffs).",
+      "notes": "4769 Kerberos service ticket events (volume/noise tradeoffs).",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nc41a24f3946b377",
+          "title": "4769 Kerberos service ticket events (volume/noise tradeoffs).",
+          "markdown": "- 4769 Kerberos service ticket events (volume/noise tradeoffs).",
+          "notes": "4769 Kerberos service ticket events (volume/noise tradeoffs).",
+          "blurb": "4769 Kerberos service ticket events (volume/noise tradeoffs).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n0f35ce03c6899af",
+          "title": "4662 DS access with sensitive GUIDs for DCSync-class detections.",
+          "markdown": "- 4662 DS access with sensitive GUIDs for DCSync-class detections.",
+          "notes": "4662 DS access with sensitive GUIDs for DCSync-class detections.",
+          "blurb": "4662 DS access with sensitive GUIDs for DCSync-class detections.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n94449bf00cad9e6",
+          "title": "Cert enrollment spikes, unusual template use.",
+          "markdown": "- Cert enrollment spikes, unusual template use.",
+          "notes": "Cert enrollment spikes, unusual template use.",
+          "blurb": "Cert enrollment spikes, unusual template use.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "4769 Kerberos service ticket events (volume/noise tradeoffs).",
+      "expanded": true
+    },
+    {
+      "id": "nc093c9f17a55b61",
+      "title": "Labs (authorized)",
+      "markdown": "**TryHackMe** / **HTB** **AD** paths; **Microsoft** **defensive** **labs**; **PingCastle** / **Purple** **Knight** for **health** **metrics** (read-only **assessment** tools).",
+      "notes": "TryHackMe / HTB AD paths; Microsoft defensive labs; PingCastle / Purple Knight for health metrics (read-only assessment tools).",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "TryHackMe / HTB AD paths; Microsoft defensive labs; PingCastle / Purple...",
+      "expanded": false
+    },
+    {
+      "id": "n88fd67d6a504a91",
+      "title": "Practice & references",
+      "markdown": "",
+      "notes": "",
+      "expanded": true,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nb1b02566ac40847",
+          "title": "Toolchain (defensive + purple)",
+          "markdown": "**BloodHound** (authorized) \u00b7 **SharpHound** collectors \u00b7 **Certipy** / **PSPKI** for **CA** **reviews** \u00b7 **Microsoft** **Advanced** **Threat** **Analytics** (legacy) / **Sentinel** **rules**",
+          "notes": "BloodHound (authorized) \u00b7 SharpHound collectors \u00b7 Certipy / PSPKI for CA reviews \u00b7 Microsoft Advanced Threat Analytics (legacy) / Sentinel rules",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "BloodHound (authorized) \u00b7 SharpHound collectors \u00b7 Certipy / PSPKI for CA...",
+          "expanded": false
+        },
+        {
+          "id": "n70fb39d65f8b81d",
+          "title": "Authoritative references",
+          "markdown": "MITRE ATT&CK Enterprise Windows techniques under Credential Access / Lateral Movement.",
+          "notes": "MITRE ATT&CK Enterprise Windows techniques under Credential Access / Lateral Movement.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n5839f2bfd6a8754",
+              "title": "MITRE ATT&CK Enterprise Windows techniques under Credential Access / Lateral Movement.",
+              "markdown": "- MITRE ATT&CK Enterprise Windows techniques under Credential Access / Lateral Movement.",
+              "notes": "MITRE ATT&CK Enterprise Windows techniques under Credential Access / Lateral Movement.",
+              "blurb": "MITRE ATT&CK Enterprise Windows techniques under Credential Access / Lateral...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n97aaf992228581a",
+              "title": "Microsoft Securing Active Directory guidance.",
+              "markdown": "- Microsoft Securing Active Directory guidance.",
+              "notes": "Microsoft Securing Active Directory guidance.",
+              "blurb": "Microsoft Securing Active Directory guidance.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nfc897a6fd9ecb54",
+              "title": "SpecterOps / harmj0y research (BloodHound lineage).",
+              "markdown": "- SpecterOps / harmj0y research (BloodHound lineage).",
+              "notes": "SpecterOps / harmj0y research (BloodHound lineage).",
+              "blurb": "SpecterOps / harmj0y research (BloodHound lineage).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "MITRE ATT&CK Enterprise Windows techniques under Credential Access / Lateral...",
+          "expanded": false
+        },
+        {
+          "id": "n5b93fb410c3bc32",
+          "title": "Verification checklist",
+          "markdown": "- [ ] Explain **why** **Kerberoasting** needs **user**-backed **SPNs**.\n- [ ] Name **two** **log** **sources** that help detect **DCSync**-class abuse.",
+          "notes": "- [ ] Explain why Kerberoasting needs user-backed SPNs.\n- [ ] Name two log sources that help detect DCSync-class abuse.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "[ ] Explain why Kerberoasting needs user-backed SPNs.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Toolchain (defensive + purple)"
+    },
+    {
+      "id": "n382c1c0ee993280",
+      "title": "Code examples",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n36a882da28f1e78",
+          "title": "L2 \u2014 Kerberos in one minute",
+          "markdown": "User authenticates to KDC -> TGT (encrypted with krbtgt hash).",
+          "notes": "User authenticates to KDC -> TGT (encrypted with krbtgt hash).",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ne3815a0a02ee770",
+              "title": "User authenticates to KDC -> TGT (encrypted with krbtgt hash).",
+              "markdown": "- User authenticates to KDC -> TGT (encrypted with krbtgt hash).",
+              "notes": "User authenticates to KDC -> TGT (encrypted with krbtgt hash).",
+              "blurb": "User authenticates to KDC -> TGT (encrypted with krbtgt hash).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8e3d1f6a156a04d",
+              "title": "User requests TGS for SPN service -> ticket encrypted with service account hash.",
+              "markdown": "- User requests TGS for SPN service -> ticket encrypted with service account hash.",
+              "notes": "User requests TGS for SPN service -> ticket encrypted with service account hash.",
+              "blurb": "User requests TGS for SPN service -> ticket encrypted with service account...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n222705d6e61ed25",
+              "title": "User presents TGS to service.",
+              "markdown": "- User presents TGS to service.",
+              "notes": "User presents TGS to service.",
+              "blurb": "User presents TGS to service.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "User authenticates to KDC -> TGT (encrypted with krbtgt hash).",
+          "expanded": false
+        },
+        {
+          "id": "nb2bfb5f9b27e2e9",
+          "title": "L2 \u2014 BloodHound (conceptual)",
+          "markdown": "A **graph** of **principals**, **rights**, and **shortest** **abuse** **paths**-**defenders** use it for **cleanup**; **attackers** for **prioritization**. **Interview:** \"It's **reachability** **analysis** on **ACLs** and **Kerberos** **edges**.\"",
+          "notes": "A graph of principals, rights, and shortest abuse paths-defenders use it for cleanup; attackers for prioritization. Interview: \"It's reachability analysis on ACLs and Kerberos edges.\"",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "A graph of principals, rights, and shortest abuse paths-defenders use it for...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes L2 \u2014 Kerberos in one minute"
+    },
+    {
+      "id": "nb300ed7814b655b",
+      "title": "L1 \u2014 Why AD is a prize",
+      "markdown": "- **Single** directory **powers** **workstations**, **servers**, **Exchange**, **Azure AD Connect** **hybrid**.\n- **One** **domain** **admin**-equivalent **compromise** often **flattens** the **forest** if **tiering** failed.\n\n**Trust boundary:** **Domain** **controllers** and **tier** **0** **assets** are **crown** **jewels**.",
+      "notes": "- Single directory powers workstations, servers, Exchange, Azure AD Connect hybrid.\n- One domain admin-equivalent compromise often flattens the forest if tiering failed.\n\nTrust boundary: Domain controllers and tier 0 assets are crown jewels.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Single directory powers workstations, servers, Exchange, Azure AD Connect...",
+      "expanded": false
+    },
+    {
+      "id": "n177243378fa8931",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n7d55ec5ba47951e",
+          "title": "Crown jewels",
+          "markdown": "**DCs** \u00b7 **krbtgt** \u00b7 **AD** **CS** **CA** \u00b7 **AADC** servers \u00b7 **Tier** **0** **workstations** (should be **zero**)",
+          "notes": "DCs \u00b7 krbtgt \u00b7 AD CS CA \u00b7 AADC servers \u00b7 Tier 0 workstations (should be zero)",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "DCs \u00b7 krbtgt \u00b7 AD CS CA \u00b7 AADC servers \u00b7 Tier 0 workstations (should be zero)",
+          "expanded": false
+        },
+        {
+          "id": "n9ad008ba8b1f447",
+          "title": "Abuse patterns (memorize names)",
+          "markdown": "**AS-REP** roast \u00b7 **Kerberoast** \u00b7 **DCSync** \u00b7 **NTLM** **relay** \u00b7 **Pass-the-Hash** \u00b7 **Golden/Silver** **tickets** \u00b7 **AD** **CS** **template** abuse",
+          "notes": "AS-REP roast \u00b7 Kerberoast \u00b7 DCSync \u00b7 NTLM relay \u00b7 Pass-the-Hash \u00b7 Golden/Silver tickets \u00b7 AD CS template abuse",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "AS-REP roast \u00b7 Kerberoast \u00b7 DCSync \u00b7 NTLM relay \u00b7 Pass-the-Hash \u00b7...",
+          "expanded": false
+        },
+        {
+          "id": "n59c0318af777da1",
+          "title": "Quick mitigations",
+          "markdown": "**gMSA** for **SPNs** \u00b7 **kill** **pre-auth** **exceptions** \u00b7 **SMB/LDAP** **signing** \u00b7 **EPA** \u00b7 **tier** model \u00b7 **CA** **template** **audit**",
+          "notes": "gMSA for SPNs \u00b7 kill pre-auth exceptions \u00b7 SMB/LDAP signing \u00b7 EPA \u00b7 tier model \u00b7 CA template audit",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "gMSA for SPNs \u00b7 kill pre-auth exceptions \u00b7 SMB/LDAP signing \u00b7 EPA \u00b7 tier...",
+          "expanded": false
+        },
+        {
+          "id": "n418a737e3bc88d1",
+          "title": "Logs (examples)",
+          "markdown": "**4769** Kerberos **service** **ticket** \u00b7 **4662** **DS** **access** \u00b7 **Cert** **enrollment** events",
+          "notes": "4769 Kerberos service ticket \u00b7 4662 DS access \u00b7 Cert enrollment events",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "4769 Kerberos service ticket \u00b7 4662 DS access \u00b7 Cert enrollment events",
+          "expanded": false
+        },
+        {
+          "id": "n30ef0fc26564a2f",
+          "title": "Tools",
+          "markdown": "**BloodHound** / **SharpHound** \u00b7 **PingCastle** \u00b7 **Certipy** (authorized)",
+          "notes": "BloodHound / SharpHound \u00b7 PingCastle \u00b7 Certipy (authorized)",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "BloodHound / SharpHound \u00b7 PingCastle \u00b7 Certipy (authorized)",
+          "expanded": false
+        },
+        {
+          "id": "nb49021ce6fdadc7",
+          "title": "Cross-read",
+          "markdown": "`Windows Security Boundaries` \u00b7 `MITRE ATTACK Interview Fluency`",
+          "notes": "Windows Security Boundaries \u00b7 MITRE ATTACK Interview Fluency",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Windows Security Boundaries \u00b7 MITRE ATTACK Interview Fluency",
+          "expanded": false
+        },
+        {
+          "id": "ncf058d352c01db2",
+          "title": "One-liner",
+          "markdown": "\"**Kerberos** **secrets** + **ACL** **edges** + **PKI** **mistakes** = **domain** **compromise**-**graph** it, **tier** it, **sign** it.\"",
+          "notes": "\"Kerberos secrets + ACL edges + PKI mistakes = domain compromise-graph it, tier it, sign it.\"",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "\"Kerberos secrets + ACL edges + PKI mistakes = domain compromise-graph it,...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Crown jewels"
+    },
+    {
+      "id": "nffba9fb521960d8",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n1a6179e48514e46",
+          "title": "\u201cAzure AD means on-prem AD doesn\u2019t matter.\u201d",
+          "markdown": "**Reality:** **Hybrid** **connect** **syncs** **identities**; **on-prem** **compromise** **propagates** **cloud** **risk**.",
+          "notes": "Reality: Hybrid connect syncs identities; on-prem compromise propagates cloud risk.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Hybrid connect syncs identities; on-prem compromise propagates...",
+          "expanded": false
+        },
+        {
+          "id": "neeeecfabaeb6fb0",
+          "title": "\u201cDisabling Kerberos fixes everything.\u201d",
+          "markdown": "**Reality:** **NTLM** **fallback** and **legacy** **apps** **widen** **relay** **surface**-**migrate** **safely**, don't **toggle** blindly.",
+          "notes": "Reality: NTLM fallback and legacy apps widen relay surface-migrate safely, don't toggle blindly.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: NTLM fallback and legacy apps widen relay surface-migrate safely,...",
+          "expanded": false
+        },
+        {
+          "id": "n303a344e3fb409d",
+          "title": "\u201cBloodHound is only offensive.\u201d",
+          "markdown": "**Reality:** **Defenders** use the **same** **graph** to **find** **over-permissioned** **paths** **before** attackers.",
+          "notes": "Reality: Defenders use the same graph to find over-permissioned paths before attackers.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Defenders use the same graph to find over-permissioned paths before...",
+          "expanded": false
+        },
+        {
+          "id": "n3f5ba11e5d5a3ea",
+          "title": "\u201cLocal admin doesn\u2019t affect the domain.\u201d",
+          "markdown": "**Reality:** **Credential** **theft** and **lateral** **movement** from **workstations** **feeds** **domain** **privilege** **chains**.",
+          "notes": "Reality: Credential theft and lateral movement from workstations feeds domain privilege chains.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Credential theft and lateral movement from workstations feeds...",
+          "expanded": false
+        },
+        {
+          "id": "nfbb6be538695ea9",
+          "title": "\u201cComplex password policy eliminates Kerberoasting.\u201d",
+          "markdown": "**Reality:** **Service** **accounts** **often** **miss** **rotation**; **gMSA** and **SPN** **hygiene** **matter** more than **length** **rules** alone.",
+          "notes": "Reality: Service accounts often miss rotation; gMSA and SPN hygiene matter more than length rules alone.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Service accounts often miss rotation; gMSA and SPN hygiene matter...",
+          "expanded": false
+        },
+        {
+          "id": "nb0e508a28de324a",
+          "title": "\u201cSIEM alerts on every TGS request.\u201d",
+          "markdown": "**Reality:** **Volume** is **massive**; **tuning** and **risk-based** **sampling** **required**.",
+          "notes": "Reality: Volume is massive; tuning and risk-based sampling required.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Volume is massive; tuning and risk-based sampling required.",
+          "expanded": false
+        },
+        {
+          "id": "n0b17c5a6b28b3ba",
+          "title": "\u201cPentest found no DA\u2014AD is clean.\u201d",
+          "markdown": "**Reality:** **Time-boxed** **tests** **miss** **ACL** **depth**; **continuous** **assessment** **tools** **find** **latent** **edges**.",
+          "notes": "Reality: Time-boxed tests miss ACL depth; continuous assessment tools find latent edges.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Time-boxed tests miss ACL depth; continuous assessment tools find...",
+          "expanded": false
+        },
+        {
+          "id": "n2d7a26d818d4386",
+          "title": "\u201cAD CS is optional for security.\u201d",
+          "markdown": "**Reality:** **Mis-issued** **certs** are **domain** **admin** **primitives** in **many** **orgs**-**treat** **PKI** as **tier** **0**.",
+          "notes": "Reality: Mis-issued certs are domain admin primitives in many orgs-treat PKI as tier 0.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Mis-issued certs are domain admin primitives in many orgs-treat PKI...",
+          "expanded": false
+        },
+        {
+          "id": "nbc4cb50c00fa73a",
+          "title": "\u201cLinux servers in the org are out of scope.\u201d",
+          "markdown": "**Reality:** **Synced** **identities**, **trusts**, and **SMB** **clients** **bridge** **Linux** into **AD** **attack** **graphs**.",
+          "notes": "Reality: Synced identities, trusts, and SMB clients bridge Linux into AD attack graphs.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Synced identities, trusts, and SMB clients bridge Linux into AD...",
+          "expanded": false
+        },
+        {
+          "id": "nedc556d935dff81",
+          "title": "\u201cResetting krbtgt twice fixes golden tickets.\u201d",
+          "markdown": "**Reality:** **Rotation** **helps** **contain** **known** **compromise** but **doesn't** replace **eviction** and **full** **credential** **rotation** **program**.",
+          "notes": "Reality: Rotation helps contain known compromise but doesn't replace eviction and full credential rotation program.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Rotation helps contain known compromise but doesn't replace...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \u201cAzure AD means on-prem AD doesn\u2019t matter.\u201d"
+    },
+    {
+      "id": "n412604235e04fa2",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nfc7962af75b12fa",
+          "title": "60-second answer",
+          "markdown": "**Q: How do attackers move through Active Directory, and how do you harden it?**\n\n**A:** They **steal** or **forge** **Kerberos** **tickets**, **relay** **NTLM**, **abuse** **replication** **rights** (**DCSync**), and **misuse** **certificate** **templates**. Hardening is **tiered** **admin**, **gMSA**/strong **passwords** for **SPN** accounts, **SMB/LDAP** **signing**, **EPA**, **AD** **CS** **baselines**, **PAM**, and **continuous** **ACL** **review** with **tools** like **BloodHound** in **authorized** **assessments**.",
+          "notes": "Q: How do attackers move through Active Directory, and how do you harden it?\n\nA: They steal or forge Kerberos tickets, relay NTLM, abuse replication rights (DCSync), and misuse certificate templates. Hardening is tiered admin, gMSA/strong passwords for SPN accounts, SMB/LDAP signing, EPA, AD CS baselines, PAM, and continuous ACL review with tools like BloodHound in authorized assessments.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Q: How do attackers move through Active Directory, and how do you harden it?",
+          "expanded": false
+        },
+        {
+          "id": "nec2dc297e03caa6",
+          "title": "Kerberos",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nf0869ab4ea234b7",
+              "title": "Q: Kerberoasting vs AS-REP roasting?",
+              "markdown": "**A:** **Kerberoast** pulls **TGS** for **SPNs** and **cracks** **offline**; **AS-REP** **roast** targets **accounts** **without** **pre-auth** and cracks **AS-REP** **responses**.",
+              "notes": "A: Kerberoast pulls TGS for SPNs and cracks offline; AS-REP roast targets accounts without pre-auth and cracks AS-REP responses.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Kerberoast pulls TGS for SPNs and cracks offline; AS-REP roast targets...",
+              "expanded": false
+            },
+            {
+              "id": "na87dc8305737fa9",
+              "title": "Q: Golden vs silver ticket (high level)?",
+              "markdown": "**A:** **Golden** forges **TGTs** with **krbtgt**; **silver** forges **service** **tickets** with a **target** **service** **hash**-**scope** and **detection** **difficulty** differ.",
+              "notes": "A: Golden forges TGTs with krbtgt; silver forges service tickets with a target service hash-scope and detection difficulty differ.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Golden forges TGTs with krbtgt; silver forges service tickets with a...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: Kerberoasting vs AS-REP roasting?",
+          "expanded": false
+        },
+        {
+          "id": "naa3a7b734d15da2",
+          "title": "NTLM",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n0c65c70ba441d58",
+              "title": "Q: Why does NTLM relay still matter?",
+              "markdown": "**A:** **Legacy** apps, **unsigned** **SMB**, and **cross-protocol** **tricks** keep it **relevant**-**disable** **NTLM** where possible and **enforce** **signing**.",
+              "notes": "A: Legacy apps, unsigned SMB, and cross-protocol tricks keep it relevant-disable NTLM where possible and enforce signing.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Legacy apps, unsigned SMB, and cross-protocol tricks keep it...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: Why does NTLM relay still matter?",
+          "expanded": false
+        },
+        {
+          "id": "n75076fb2cf40959",
+          "title": "Certificates",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n02118f56ce361b1",
+              "title": "Q: What is \u201cESC\u201d in AD CS abuse?",
+              "markdown": "**A:** A **catalog** of **misconfiguration** classes (**who** can **enroll**, **subject** **alternatives**, **agent** **templates**) leading to **DOMAIN** **ADMIN**-level **certs**-**review** **templates** and **enrollment** **permissions**.",
+              "notes": "A: A catalog of misconfiguration classes (who can enroll, subject alternatives, agent templates) leading to DOMAIN ADMIN-level certs-review templates and enrollment permissions.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: A catalog of misconfiguration classes (who can enroll, subject...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: What is \u201cESC\u201d in AD CS abuse?",
+          "expanded": false
+        },
+        {
+          "id": "naba86d6a4504189",
+          "title": "Mock ladder",
+          "markdown": "| Level | Question |\n|-------|----------|\n| Junior | What is a DC? |\n| Mid | Kerberoasting steps |\n| Senior | Tier 0 definition |\n| Staff | AD CS emergency audit |",
+          "notes": "| Level | Question |\n|-------|----------|\n| Junior | What is a DC? |\n| Mid | Kerberoasting steps |\n| Senior | Tier 0 definition |\n| Staff | AD CS emergency audit |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Level | Question | |-------|----------| | Junior | What is a DC?",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 60-second answer"
+    }
+  ],
+  "topicId": "active-directory-attacks",
+  "name": "Active Directory Attacks",
+  "structure": "logic-right",
+  "blurb": "Active Directory (AD) is the identity and authorization backbone of most..."
+}

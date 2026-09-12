@@ -1,0 +1,70 @@
+{
+  "topicId": "idor",
+  "name": "IDOR (Insecure Direct Object Reference)",
+  "source": "IDOR/IDOR - Interview Questions.md",
+  "prompts": [
+    {
+      "id": "p01c71932f95596",
+      "cluster": "Fundamental Questions",
+      "title": "What is IDOR and why is it dangerous?",
+      "seconds": 120,
+      "answerMarkdown": "**IDOR (Insecure Direct Object Reference)** is an access control vulnerability where an application provides direct access to objects (files, database records, resources) based on user-supplied input without verifying the user has permission to access that specific object.\n\n**Why it's dangerous:**\n- **Data breach**: Unauthorized access to sensitive data (PII, financial information)\n- **Privacy violation**: Access to other users' private information\n- **Privilege escalation**: Accessing resources requiring higher privileges\n- **Compliance issues**: GDPR, CCPA violations\n- **Reputation damage**: Loss of customer trust\n\n**Example:**\n```\nUser A accesses: /api/profile/100 (their own profile)\nUser A modifies: /api/profile/101 (another user's profile)\nResult: Unauthorized access to User B's data\n```\n\n---"
+    },
+    {
+      "id": "pe21947c6a73aec",
+      "cluster": "Fundamental Questions",
+      "title": "Explain the difference between authentication and authorization in the context of IDOR.",
+      "seconds": 120,
+      "answerMarkdown": "**Authentication** (who you are):\n- Verifies user identity\n- Login, password, MFA\n- Establishes session\n\n**Authorization** (what you can access):\n- Verifies user permissions\n- Checks if user owns the resource\n- Validates access rights\n\n**IDOR occurs when:**\n- Authentication is present (user is logged in)\n- Authorization is missing (no check if user owns the resource)\n\n**Example:**\n```python\n\n# Has authentication, missing authorization\n\n@app.route('/api/profile/<user_id>')\n@require_auth  # \u2705 Authentication check\ndef get_profile(user_id):\n    profile = db.get_profile(user_id)  # \u274c No authorization check\n    return jsonify(profile)\n```\n\n---"
+    },
+    {
+      "id": "p149dc5c96728cd",
+      "cluster": "Fundamental Questions",
+      "title": "What are the different types of IDOR vulnerabilities?",
+      "seconds": 90,
+      "answerMarkdown": "**1. Horizontal IDOR (Same Privilege Level):**\n- Accessing resources belonging to another user with same privileges\n- Example: User A accessing User B's profile\n\n**2. Vertical IDOR (Privilege Escalation):**\n- Accessing resources requiring higher privileges\n- Example: Regular user accessing admin endpoints\n\n**3. Direct Object Reference:**\n- Direct access to internal objects without indirection\n- Example: Using database IDs directly in URLs\n\n**4. Mass Assignment IDOR:**\n- Updating fields user shouldn't have access to\n- Example: Regular user updating their role to \"admin\"\n\n---"
+    },
+    {
+      "id": "p6b2be1d15b7124",
+      "cluster": "Fundamental Questions",
+      "title": "How would you test for IDOR vulnerabilities?",
+      "seconds": 120,
+      "answerMarkdown": "**Manual Testing:**\n1. **Identify object references**: URLs, API parameters, request bodies\n2. **Use multiple accounts**: Test with User A accessing User B's resources\n3. **Parameter manipulation**: Change IDs, modify UUIDs, alter filenames\n4. **Sequential enumeration**: Try sequential IDs (100, 101, 102...)\n\n**Automated Testing:**\n1. **Burp Suite**: Use extensions to automate IDOR testing\n2. **Custom scripts**: Test with different user contexts\n3. **CI/CD integration**: Automated IDOR scanning in pipelines\n\n**Example:**\n```python\n\n# Test script\n\ndef test_idor(endpoint, user_a_token, user_b_id):\n    headers = {\"Authorization\": f\"Bearer {user_a_token}\"}\n    response = requests.get(f\"{endpoint}/{user_b_id}\", headers=headers)\n\n    if response.status_code == 200:\n        print(\"\u26a0\ufe0f Potential IDOR detected\")\n```\n\n---"
+    },
+    {
+      "id": "p395a3327791a8e",
+      "cluster": "Fundamental Questions",
+      "title": "How do you prevent IDOR vulnerabilities?",
+      "seconds": 120,
+      "answerMarkdown": "**1. Authorization Checks:**\n```python\n@app.route('/api/profile/<user_id>')\ndef get_profile(user_id):\n    if int(user_id) != current_user.id:\n        return jsonify({\"error\": \"Forbidden\"}), 403\n\n# ... rest of code\n\n```\n\n**2. Indirect Object References:**\n```python\n\n# Instead of direct ID\n\n/api/invoice/123\n\n# Use token\n\n/api/invoice/abc123xyz789\n```\n\n**3. Access Control Lists (ACL):**\n```python\ndef can_access(resource, user_id):\n    return resource.owner_id == user_id or user_id in resource.shared_with\n```\n\n**4. Role-Based Access Control (RBAC):**\n```python\n@require_role('admin')\ndef admin_endpoint():\n\n# Only admins can access\n\n    pass\n```\n\n**5. Input Validation:**\n- Validate object references\n- Sanitize filenames\n- Check ownership before access\n\n---"
+    },
+    {
+      "id": "p03ab95f01f1edf",
+      "cluster": "Intermediate Questions",
+      "title": "Design a secure API endpoint that prevents IDOR.",
+      "seconds": 120,
+      "answerMarkdown": "```python\nfrom functools import wraps\n\ndef require_ownership(resource_type):\n    \"\"\"Decorator to check resource ownership\"\"\"\n    def decorator(f):\n        @wraps(f)\n        def decorated_function(*args, **kwargs):\n            resource_id = kwargs.get('resource_id')\n\n# Check ownership\n\n            if not is_owner(current_user.id, resource_type, resource_id):\n                return jsonify({\"error\": \"Forbidden\"}), 403\n\n            return f(*args, **kwargs)\n        return decorated_function\n    return decorator\n\n@app.route('/api/documents/<resource_id>')\n@require_auth\n@require_ownership('document')\ndef get_document(resource_id):\n    document = Document.query.filter_by(\n        id=resource_id,\n        owner_id=current_user.id  # Additional check\n    ).first()\n\n    if not document:\n        return jsonify({\"error\": \"Not found\"}), 404\n\n    return jsonify(document)\n```\n\n**Key Security Measures:**\n- Authentication check (`@require_auth`)\n- Authorization check (`@require_ownership`)\n- Database-level filtering (owner_id check)\n- Proper error handling (404 vs 403)\n\n---"
+    },
+    {
+      "id": "pfa0a49acbdb6bd",
+      "cluster": "Intermediate Questions",
+      "title": "How would you implement IDOR protection in a multi-tenant SaaS application?",
+      "seconds": 120,
+      "answerMarkdown": "**1. Tenant Isolation:**\n```python\n@app.route('/api/documents/<doc_id>')\ndef get_document(doc_id):\n    document = Document.query.filter_by(\n        id=doc_id,\n        tenant_id=current_user.tenant_id  # Tenant isolation\n    ).first()\n\n    if not document:\n        return jsonify({\"error\": \"Not found\"}), 404\n\n# Additional ownership check\n\n    if document.owner_id != current_user.id:\n        return jsonify({\"error\": \"Forbidden\"}), 403\n\n    return jsonify(document)\n```\n\n**2. Scoped IDs:**\n```python\n\n# Use tenant-scoped IDs\n\ntenant_doc_id = f\"{tenant_id}_{doc_id}\"\n\n# Or use UUIDs with tenant validation\n\ndocument = Document.query.filter_by(\n    id=doc_id,\n    tenant_id=current_user.tenant_id\n).first()\n```\n\n**3. Database-Level Isolation:**\n- Row-level security\n- Tenant-specific schemas\n- Database-level constraints\n\n---"
+    },
+    {
+      "id": "p8e2022bd1e64ab",
+      "cluster": "Advanced Questions",
+      "title": "How would you detect IDOR vulnerabilities at scale in a large codebase?",
+      "seconds": 120,
+      "answerMarkdown": "**1. Static Analysis (SAST):**\n- Scan for missing authorization checks\n- Identify direct object references\n- Pattern matching for vulnerable code\n\n**2. Dynamic Analysis (DAST):**\n- Automated API testing\n- Test with multiple user contexts\n- Fuzz object references\n\n**3. Code Review Process:**\n- Security checklists\n- Mandatory authorization reviews\n- Security champions program\n\n**4. Automated Testing:**\n```python\n\n# Integration tests\n\ndef test_idor_protection():\n    user_a = create_user(\"user_a\")\n    user_b = create_user(\"user_b\")\n\n# User A tries to access User B's resource\n\n    response = client.get(\n        f\"/api/profile/{user_b.id}\",\n        headers={\"Authorization\": f\"Bearer {user_a.token}\"}\n    )\n\n    assert response.status_code == 403\n```\n\n**5. Monitoring:**\n- Log all access attempts\n- Alert on suspicious patterns\n- Monitor for unauthorized access\n\n---"
+    },
+    {
+      "id": "p9a51c26e463966",
+      "cluster": "Advanced Questions",
+      "title": "Explain how IDOR relates to other OWASP Top 10 vulnerabilities.",
+      "seconds": 120,
+      "answerMarkdown": "**IDOR is part of A01:2021 - Broken Access Control:**\n- Missing authorization checks\n- Insecure object references\n- Privilege escalation\n\n**Related Vulnerabilities:**\n\n**1. Broken Authentication (A02):**\n- Weak authentication enables IDOR exploitation\n- Session hijacking can lead to IDOR\n\n**2. Security Misconfiguration (A05):**\n- Missing security headers\n- Improper access control configuration\n\n**3. Server-Side Request Forgery (SSRF):**\n- Similar pattern: trusting user input\n- Both involve unauthorized access\n\n**4. Insecure Deserialization (A08):**\n- Deserialized objects may have IDOR issues\n- Object references in serialized data\n\n**Common Root Cause:**\n- **Trusting user input** without validation\n- **Missing authorization checks**\n- **Insufficient access control**\n\n---"
+    }
+  ]
+}

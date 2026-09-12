@@ -7,3 +7,5 @@
 [**Critical Clarification: SQL Injection Security Misconceptions**](Critical Clarification SQL Injection Misconception.md)
 
 [**SQL Injection - Quick Reference Guide**](SQL Injection - Quick Reference.md)
+
+[**SQL Injection - Mind Map**](SQL%20Injection%20-%20Mind%20Map.md)

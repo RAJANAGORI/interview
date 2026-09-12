@@ -1,0 +1,126 @@
+{
+  "topicId": "cloud-security-architecture",
+  "name": "Cloud Security Architecture",
+  "source": "Cloud Security Architecture/Cloud Security Architecture - Interview Questions.md",
+  "prompts": [
+    {
+      "id": "p9082caa6955d15",
+      "cluster": "Fundamental Questions",
+      "title": "Explain the shared responsibility model in cloud security.",
+      "seconds": 120,
+      "answerMarkdown": "The shared responsibility model defines which security tasks are handled by the cloud provider and which are the customer's responsibility.\n\n**Cloud Provider Responsibilities:**\n- Physical infrastructure security (data centers, hardware)\n- Network infrastructure security\n- Hypervisor and virtualization layer\n- Cloud services security (compute, storage, networking)\n\n**Customer Responsibilities:**\n- Data classification and protection\n- Identity and access management (IAM)\n- Application security\n- Network security configuration (firewalls, security groups)\n- Client-side encryption\n- Operating system security (for IaaS)\n- Platform and application management\n\n**Key Principle:** The division of responsibility varies by service model:\n- **IaaS:** Customer responsible for OS, applications, data\n- **PaaS:** Customer responsible for applications and data\n- **SaaS:** Customer responsible primarily for data and access\n\n**Example:**\n```\nAWS EC2 (IaaS):\n- AWS: Physical infrastructure, hypervisor\n- Customer: OS patching, application security, IAM\n\nAWS RDS (PaaS):\n- AWS: Database engine, infrastructure\n- Customer: Database configuration, access control\n\nAWS S3 (Storage Service):\n- AWS: Infrastructure, encryption at rest (if enabled)\n- Customer: Access policies, encryption keys, data classification\n```\n\n---"
+    },
+    {
+      "id": "p829cab3a705810",
+      "cluster": "Fundamental Questions",
+      "title": "How do you implement least privilege in cloud IAM?",
+      "seconds": 120,
+      "answerMarkdown": "Least privilege means granting only the minimum permissions necessary to perform required tasks.\n\n**Implementation Strategies:**\n\n1. **Start with Deny All:**\n   - Default deny all permissions\n   - Explicitly grant only what's needed\n\n2. **Use Specific Actions:**\n   ```json\n   // Good: Specific actions\n   {\n     \"Effect\": \"Allow\",\n     \"Action\": [\n       \"s3:GetObject\",\n       \"s3:PutObject\"\n     ],\n     \"Resource\": \"arn:aws:s3:::my-bucket/*\"\n   }\n\n   // Bad: Overly broad\n   {\n     \"Effect\": \"Allow\",\n     \"Action\": [\"s3:*\"],\n     \"Resource\": \"*\"\n   }\n   ```\n\n3. **Resource-Level Permissions:**\n   - Restrict to specific resources\n   - Use resource ARNs instead of wildcards\n\n4. **Condition-Based Access:**\n   - Add conditions (IP, time, MFA)\n   - Further restrict access context\n\n5. **Regular Access Reviews:**\n   - Quarterly access certifications\n   - Remove unused permissions\n   - Monitor for privilege escalation\n\n**Best Practices:**\n- Use IAM roles instead of users for applications\n- Implement temporary credentials\n- Enable MFA for privileged operations\n- Use service accounts with minimal permissions\n- Separate read and write permissions\n\n---"
+    },
+    {
+      "id": "p37ad5d185ebf06",
+      "cluster": "Fundamental Questions",
+      "title": "Compare security groups and network ACLs in AWS.",
+      "seconds": 120,
+      "answerMarkdown": "**Security Groups:**\n- **Type:** Stateful firewall\n- **Scope:** Applied at instance level\n- **Evaluation:** All rules evaluated, allow if any match\n- **Default:** Deny all inbound, allow all outbound\n- **Return Traffic:** Automatically allowed (stateful)\n- **Use Case:** Instance-level security\n\n**Network ACLs (NACLs):**\n- **Type:** Stateless firewall\n- **Scope:** Applied at subnet level\n- **Evaluation:** Rules evaluated in order, first match applies\n- **Default:** Allow all traffic\n- **Return Traffic:** Must be explicitly allowed (stateless)\n- **Use Case:** Subnet-level security\n\n**Key Differences:**\n\n| Feature | Security Groups | Network ACLs |\n|---------|----------------|--------------|\n| Stateful | Yes | No |\n| Scope | Instance | Subnet |\n| Rule Order | All evaluated | First match |\n| Default | Deny inbound | Allow all |\n| Return Traffic | Automatic | Manual |\n\n**Best Practice:** Use both in layers:\n- Security Groups: Primary defense (instance level)\n- NACLs: Additional layer (subnet level)\n\n---"
+    },
+    {
+      "id": "p4915a440d0beda",
+      "cluster": "Fundamental Questions",
+      "title": "How do you secure data at rest and in transit in cloud?",
+      "seconds": 120,
+      "answerMarkdown": "**Data at Rest Encryption:**\n\n1. **AWS:**\n   - S3: SSE-S3, SSE-KMS, SSE-C\n   - EBS: Encryption with KMS\n   - RDS: Encryption at rest with KMS\n   - DynamoDB: Encryption with KMS\n\n2. **Azure:**\n   - Storage: Storage Service Encryption (SSE)\n   - SQL: Transparent Data Encryption (TDE)\n   - Disks: Azure Disk Encryption\n   - Cosmos DB: Encryption at rest\n\n3. **GCP:**\n   - Cloud Storage: Customer-managed encryption keys (CMEK)\n   - Cloud SQL: Encryption at rest\n   - Compute Engine: Encrypted persistent disks\n   - BigQuery: Encryption at rest\n\n**Data in Transit Encryption:**\n\n1. **TLS/SSL:**\n   - Use TLS 1.2+ for all connections\n   - Disable older protocols (SSL 3.0, TLS 1.0, 1.1)\n   - Use strong cipher suites\n\n2. **Certificate Management:**\n   - AWS: Certificate Manager (ACM)\n   - Azure: Key Vault certificates\n   - GCP: Certificate Manager\n\n3. **Private Connectivity:**\n   - AWS: VPC endpoints, PrivateLink\n   - Azure: Private Link, ExpressRoute\n   - GCP: Private Google Access, VPC peering\n\n**Example - End-to-End Encryption:**\n\n```python\n# Client-side encryption before upload\nfrom cryptography.fernet import Fernet\nimport boto3\n\n# Generate key (store in KMS in production)\nkey = Fernet.generate_key()\ncipher = Fernet(key)\n\n# Encrypt data\ndata = b\"Sensitive data\"\nencrypted_data = cipher.encrypt(data)\n\n# Upload to S3 with additional encryption\ns3 = boto3.client('s3')\ns3.put_object(\n    Bucket='my-bucket',\n    Key='encrypted-file',\n    Body=encrypted_data,\n    ServerSideEncryption='aws:kms'\n)\n```\n\n---"
+    },
+    {
+      "id": "p88c913519ff07b",
+      "cluster": "Fundamental Questions",
+      "title": "How do you implement network segmentation in cloud?",
+      "seconds": 120,
+      "answerMarkdown": "Network segmentation isolates different parts of the network to limit lateral movement.\n\n**AWS VPC Segmentation:**\n\n1. **Subnet Design:**\n   ```\n   Public Subnets:\n   - Load balancers\n   - NAT gateways\n   - Bastion hosts\n\n   Private Subnets:\n   - Application servers\n   - Databases\n   - Internal services\n   ```\n\n2. **Security Groups:**\n   - Different security groups per tier\n   - Allow only necessary communication\n   - Deny by default\n\n3. **Network ACLs:**\n   - Additional subnet-level filtering\n   - Control traffic between subnets\n\n**Azure VNet Segmentation:**\n\n1. **Hub-Spoke Topology:**\n   - Hub VNet: Shared services (firewall, DNS)\n   - Spoke VNets: Workloads isolated\n   - VNet peering for connectivity\n\n2. **Network Security Groups:**\n   - Applied to subnets or NICs\n   - Control traffic flow\n\n**GCP VPC Segmentation:**\n\n1. **Shared VPC:**\n   - Centralized network management\n   - Projects as network consumers\n   - Isolated workloads\n\n2. **Firewall Rules:**\n   - Network-level filtering\n   - Tag-based rules\n   - Priority-based evaluation\n\n**Best Practices:**\n- Separate environments (dev, staging, prod)\n- Use private subnets for applications\n- Implement network policies\n- Monitor network traffic\n- Regular network audits\n\n---"
+    },
+    {
+      "id": "p39f99bc5f04013",
+      "cluster": "AWS-Specific Questions",
+      "title": "How do you secure an S3 bucket?",
+      "seconds": 120,
+      "answerMarkdown": "**Security Measures:**\n\n1. **Block Public Access:**\n   ```python\n   s3.put_public_access_block(\n       Bucket='my-bucket',\n       PublicAccessBlockConfiguration={\n           'BlockPublicAcls': True,\n           'IgnorePublicAcls': True,\n           'BlockPublicPolicy': True,\n           'RestrictPublicBuckets': True\n       }\n   )\n   ```\n\n2. **Bucket Policy:**\n   ```json\n   {\n     \"Version\": \"2012-10-17\",\n     \"Statement\": [\n       {\n         \"Sid\": \"DenyPublicAccess\",\n         \"Effect\": \"Deny\",\n         \"Principal\": \"*\",\n         \"Action\": \"s3:GetObject\",\n         \"Resource\": \"arn:aws:s3:::my-bucket/*\",\n         \"Condition\": {\n           \"StringNotEquals\": {\n             \"aws:SourceIp\": \"203.0.113.0/24\"\n           }\n         }\n       }\n     ]\n   }\n   ```\n\n3. **Encryption:**\n   - Enable server-side encryption\n   - Use KMS for key management\n   - Enable versioning\n\n4. **Access Control:**\n   - Use IAM policies\n   - Enable access logging\n   - Use presigned URLs for temporary access\n\n5. **Monitoring:**\n   - Enable CloudTrail\n   - Set up S3 access logging\n   - Configure alerts\n\n---"
+    },
+    {
+      "id": "p52e1b6eae0d0a1",
+      "cluster": "AWS-Specific Questions",
+      "title": "Explain AWS IAM roles vs users.",
+      "seconds": 120,
+      "answerMarkdown": "**IAM Users:**\n- Long-term credentials (access keys)\n- Associated with a person\n- Credentials stored in IAM\n- Best for: Human access\n\n**IAM Roles:**\n- Temporary credentials (assumed)\n- Associated with a service or application\n- No credentials stored\n- Best for: Service-to-service access\n\n**When to Use Roles:**\n\n```python\n# Good: Application using IAM role\nimport boto3\n\n# Credentials automatically assumed from EC2 instance role\ns3 = boto3.client('s3')\ns3.list_buckets()\n\n# Bad: Hardcoded credentials\ns3 = boto3.client(\n    's3',\n    aws_access_key_id='AKIA...',\n    aws_secret_access_key='...'\n)\n```\n\n**Best Practices:**\n- Use roles for applications\n- Use users only for human access\n- Enable MFA for users\n- Rotate access keys regularly\n- Use cross-account roles for multi-account access\n\n---"
+    },
+    {
+      "id": "p7b41840237ef30",
+      "cluster": "Azure-Specific Questions",
+      "title": "How do you implement conditional access in Azure AD?",
+      "seconds": 120,
+      "answerMarkdown": "Conditional access policies enforce access controls based on conditions.\n\n**Policy Components:**\n\n1. **Assignments:**\n   - Users and groups\n   - Cloud apps\n   - Conditions (location, device, risk)\n\n2. **Access Controls:**\n   - Grant (require MFA, compliant device)\n   - Block\n\n**Example Policy:**\n\n```json\n{\n  \"displayName\": \"Require MFA for Admin Roles\",\n  \"state\": \"enabled\",\n  \"conditions\": {\n    \"users\": {\n      \"includeRoles\": [\"Global Administrator\"]\n    },\n    \"applications\": {\n      \"includeApplications\": [\"All\"]\n    },\n    \"locations\": {\n      \"includeLocations\": [\"All\"],\n      \"excludeLocations\": [\"Trusted IPs\"]\n    }\n  },\n  \"grantControls\": {\n    \"operator\": \"AND\",\n    \"builtInControls\": [\"mfa\", \"compliantDevice\"]\n  }\n}\n```\n\n**Common Scenarios:**\n- Require MFA for privileged roles\n- Block access from untrusted locations\n- Require compliant devices\n- Block legacy authentication\n\n---"
+    },
+    {
+      "id": "p698c3224afd1e3",
+      "cluster": "Azure-Specific Questions",
+      "title": "How do you secure Azure Key Vault?",
+      "seconds": 120,
+      "answerMarkdown": "**Security Measures:**\n\n1. **Access Policies:**\n   - RBAC for key vault access\n   - Specific permissions (get, list, set, delete)\n   - Principle of least privilege\n\n2. **Network Access:**\n   - Private endpoints\n   - VNet service endpoints\n   - Firewall rules\n\n3. **Monitoring:**\n   - Diagnostic logs\n   - Azure Monitor integration\n   - Alert on access attempts\n\n4. **Key Management:**\n   - Use HSM-backed keys\n   - Enable key rotation\n   - Set expiration dates\n\n**Example:**\n\n```python\nfrom azure.identity import DefaultAzureCredential\nfrom azure.keyvault.secrets import SecretClient\n\n# Use managed identity (no credentials in code)\ncredential = DefaultAzureCredential()\nclient = SecretClient(\n    vault_url=\"https://my-vault.vault.azure.net/\",\n    credential=credential\n)\n\n# Access secret\nsecret = client.get_secret(\"database-password\")\n```\n\n---"
+    },
+    {
+      "id": "pab4a08016e9714",
+      "cluster": "GCP-Specific Questions",
+      "title": "How do you secure GCP service accounts?",
+      "seconds": 120,
+      "answerMarkdown": "**Best Practices:**\n\n1. **Use Workload Identity:**\n   - Avoid service account keys\n   - Use workload identity federation\n   - Temporary credentials\n\n2. **Least Privilege:**\n   - Grant minimum necessary permissions\n   - Use custom roles\n   - Separate service accounts per application\n\n3. **Key Management:**\n   - Rotate keys regularly\n   - Use key expiration\n   - Monitor key usage\n\n4. **Access Control:**\n   - Use IAM bindings\n   - Implement conditions\n   - Regular access reviews\n\n**Example - Workload Identity:**\n\n```yaml\n# Kubernetes service account\napiVersion: v1\nkind: ServiceAccount\nmetadata:\n  name: my-app\n  annotations:\n    iam.gke.io/gcp-service-account: my-app@project.iam.gserviceaccount.com\n```\n\n---"
+    },
+    {
+      "id": "p601779f0e9d651",
+      "cluster": "Cross-Cloud Questions",
+      "title": "How do you detect and respond to security incidents in cloud?",
+      "seconds": 120,
+      "answerMarkdown": "**Detection:**\n\n1. **Logging:**\n   - Enable audit logs (CloudTrail, Activity Log, Cloud Audit)\n   - Centralize logs\n   - Retain per compliance requirements\n\n2. **Monitoring:**\n   - AWS: GuardDuty, Security Hub\n   - Azure: Security Center, Sentinel\n   - GCP: Security Command Center, Event Threat Detection\n\n3. **Alerts:**\n   - Unusual access patterns\n   - Failed authentication attempts\n   - Configuration changes\n   - Privilege escalations\n\n**Response:**\n\n1. **Incident Response Plan:**\n   - Define roles and responsibilities\n   - Establish communication channels\n   - Document procedures\n\n2. **Containment:**\n   - Isolate affected resources\n   - Revoke compromised credentials\n   - Block malicious IPs\n\n3. **Investigation:**\n   - Analyze logs\n   - Identify root cause\n   - Determine scope\n\n4. **Remediation:**\n   - Fix vulnerabilities\n   - Restore from backups\n   - Update security controls\n\n---"
+    },
+    {
+      "id": "pd87af1936e0ea2",
+      "cluster": "Cross-Cloud Questions",
+      "title": "How do you ensure compliance in cloud environments?",
+      "seconds": 120,
+      "answerMarkdown": "**Compliance Framework:**\n\n1. **Identify Requirements:**\n   - Regulatory (GDPR, HIPAA, PCI-DSS)\n   - Industry standards (ISO 27001, SOC 2)\n   - Internal policies\n\n2. **Map Controls:**\n   - Map requirements to cloud controls\n   - Use compliance frameworks\n   - Document controls\n\n3. **Implement Controls:**\n   - Encryption\n   - Access controls\n   - Monitoring\n   - Data retention\n\n4. **Continuous Compliance:**\n   - Regular assessments\n   - Automated compliance checks\n   - Compliance dashboards\n   - Remediation workflows\n\n**Tools:**\n- AWS: Security Hub, Config\n- Azure: Security Center, Policy\n- GCP: Security Command Center, Asset Inventory\n\n---"
+    },
+    {
+      "id": "p8da1999bc98f49",
+      "cluster": "Scenario-Based Questions",
+      "title": "You discover a public S3 bucket with sensitive data. What do you do?",
+      "seconds": 120,
+      "answerMarkdown": "**Immediate Actions:**\n\n1. **Containment:**\n   - Remove public access immediately\n   - Enable Block Public Access\n   - Review bucket policy\n\n2. **Assessment:**\n   - Determine what data was exposed\n   - Check access logs (if enabled)\n   - Identify who had access\n\n3. **Notification:**\n   - Notify security team\n   - Inform affected parties (if required)\n   - Consider legal/regulatory notification\n\n4. **Remediation:**\n   - Encrypt bucket contents\n   - Implement proper access controls\n   - Enable versioning and logging\n   - Set up monitoring alerts\n\n5. **Prevention:**\n   - Review all buckets\n   - Implement automated scanning\n   - Add security checks to CI/CD\n   - Train team on best practices\n\n---"
+    },
+    {
+      "id": "pa8a3373709eae2",
+      "cluster": "Scenario-Based Questions",
+      "title": "How would you design a secure multi-account AWS architecture?",
+      "seconds": 120,
+      "answerMarkdown": "**Architecture Design:**\n\n1. **Account Structure:**\n   ```\n   Organization Account (Master)\n   \u251c\u2500\u2500 Security Account (logging, security tools)\n   \u251c\u2500\u2500 Shared Services Account (DNS, shared resources)\n   \u251c\u2500\u2500 Development Account\n   \u251c\u2500\u2500 Staging Account\n   \u2514\u2500\u2500 Production Account\n   ```\n\n2. **Security Controls:**\n   - AWS Organizations for management\n   - Service Control Policies (SCPs)\n   - Centralized logging (Security Account)\n   - Cross-account roles with least privilege\n\n3. **Network Design:**\n   - VPC per account\n   - VPC peering or Transit Gateway\n   - Centralized firewall (if needed)\n\n4. **Access Management:**\n   - SSO for user access\n   - IAM roles for cross-account access\n   - Separate service accounts per environment\n\n5. **Monitoring:**\n   - Centralized CloudTrail\n   - Security Hub across accounts\n   - GuardDuty in each account\n\n---"
+    },
+    {
+      "id": "p8b22ac238d2dd1",
+      "cluster": "Scenario-Based Questions",
+      "title": "How do you secure a containerized application in cloud?",
+      "seconds": 120,
+      "answerMarkdown": "**Multi-Layer Security:**\n\n1. **Image Security:**\n   - Use minimal base images\n   - Scan for vulnerabilities\n   - Sign images\n   - Use trusted registries\n\n2. **Runtime Security:**\n   - Run as non-root user\n   - Implement resource limits\n   - Use security contexts\n   - Enable seccomp, AppArmor\n\n3. **Network Security:**\n   - Network policies (Kubernetes)\n   - Security groups (ECS/EKS)\n   - Service mesh for mTLS\n\n4. **Secrets Management:**\n   - Use cloud secret managers\n   - Avoid secrets in images\n   - Rotate secrets regularly\n\n5. **Monitoring:**\n   - Container runtime monitoring\n   - Log aggregation\n   - Threat detection\n\n**Cloud-Specific:**\n- **AWS:** ECS task roles, EKS pod identity\n- **Azure:** Managed identities, AKS pod identity\n- **GCP:** Workload identity, GKE pod identity\n\n---"
+    },
+    {
+      "id": "p82381345cb85ad",
+      "cluster": "Advanced Questions",
+      "title": "Explain zero trust architecture in cloud context.",
+      "seconds": 120,
+      "answerMarkdown": "Zero trust assumes no entity is trusted by default, regardless of location.\n\n**Principles:**\n\n1. **Verify Explicitly:**\n   - Authenticate and authorize every access\n   - Use identity as the perimeter\n\n2. **Use Least Privilege:**\n   - Grant minimum access\n   - Just-in-time access\n   - Risk-based access\n\n3. **Assume Breach:**\n   - Segment access\n   - Encrypt end-to-end\n   - Monitor continuously\n\n**Implementation:**\n\n1. **Identity:**\n   - Strong authentication (MFA)\n   - Device compliance\n   - Conditional access\n\n2. **Network:**\n   - Micro-segmentation\n   - Private endpoints\n   - No implicit trust\n\n3. **Data:**\n   - Classification\n   - Encryption\n   - Access controls\n\n**Cloud Services:**\n- AWS: IAM, VPC, PrivateLink\n- Azure: Conditional Access, Private Link\n- GCP: VPC Service Controls, IAM Conditions\n\n---"
+    },
+    {
+      "id": "p994a3ef625de8a",
+      "cluster": "Advanced Questions",
+      "title": "How do you implement defense in depth in cloud?",
+      "seconds": 120,
+      "answerMarkdown": "Defense in depth uses multiple security layers.\n\n**Layers:**\n\n1. **Identity:**\n   - MFA\n   - Strong passwords\n   - Access reviews\n   - Privileged access management\n\n2. **Network:**\n   - VPC/VNet isolation\n   - Security groups/firewalls\n   - DDoS protection\n   - WAF\n\n3. **Compute:**\n   - OS hardening\n   - Patch management\n   - Host-based firewalls\n   - Endpoint protection\n\n4. **Data:**\n   - Encryption at rest\n   - Encryption in transit\n   - Data classification\n   - Backup encryption\n\n5. **Application:**\n   - Secure coding\n   - Vulnerability scanning\n   - WAF\n   - API security\n\n6. **Monitoring:**\n   - Logging\n   - SIEM\n   - Threat detection\n   - Incident response\n\n**Example:**\n\n```\nUser \u2192 MFA \u2192 VPN \u2192 WAF \u2192 Load Balancer \u2192\nSecurity Group \u2192 Application \u2192 Database\n     \u2193              \u2193            \u2193\n  CloudTrail    GuardDuty    Encryption\n```\n\n---"
+    }
+  ]
+}

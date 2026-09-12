@@ -7,3 +7,5 @@
 [**Critical Clarification: Product Security Assessment Design Misconceptions**](Critical%20Clarification%20Product%20Security%20Assessment.md)
 
 [**Product Security Assessment Design - Quick Reference**](Product%20Security%20Assessment%20Design%20-%20Quick%20Referen.md)
+
+[**Product Security Assessment Design - Mind Map**](Product%20Security%20Assessment%20Design%20-%20Mind%20Map.md)

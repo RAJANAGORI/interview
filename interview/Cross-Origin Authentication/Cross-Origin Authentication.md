@@ -7,3 +7,5 @@
 [**Critical Clarification: Cross-Origin Authentication Security Misconceptions**](Critical Clarification Cross-Origin Authentication Misconceptions.md)
 
 [**Cross-Origin Authentication - Quick Reference Guide**](Cross-Origin Authentication - Quick Reference.md)
+
+[**Cross-Origin Authentication - Mind Map**](Cross-Origin%20Authentication%20-%20Mind%20Map.md)

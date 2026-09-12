@@ -7,3 +7,5 @@
 [**Critical Clarification: Agile Security Compliance Misconceptions**](Critical%20Clarification%20Agile%20Security%20Compliance.md)
 
 [**Agile Security Compliance - Quick Reference**](Agile%20Security%20Compliance%20-%20Quick%20Reference.md)
+
+[**Agile Security Compliance - Mind Map**](Agile%20Security%20Compliance%20-%20Mind%20Map.md)

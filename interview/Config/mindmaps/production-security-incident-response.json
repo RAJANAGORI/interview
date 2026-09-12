@@ -1,0 +1,1962 @@
+{
+  "id": "nac3a6ed77bf1f13",
+  "title": "Production Security Incident Response",
+  "markdown": "This guide describes how product and platform security teams respond when something goes wrong in **live production**: from the first credible signal through containment, eradication, recovery, customer impact, forensic logging, communications, legal obligations, and post-incident improvement. It aligns with common incident-handling lifecycles (for example NIST-style preparation -> detection/analysis -> containment -> eradication -> recovery -> post-incident) while staying grounded in operational tradeoffs: availability, evidence integrity, and regulatory reality.",
+  "notes": "This guide describes how product and platform security teams respond when something goes wrong in live production: from the first credible signal through containment, eradication, recovery, customer impact, forensic logging, communications, legal obligations, and post-incident improvement. It aligns with common incident-handling lifecycles (for example NIST-style preparation -> detection/analysis -> containment -> eradication -> recovery -> post-incident) while staying grounded in operational tradeoffs: availability, evidence integrity, and regulatory reality.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "n3c0a89268461d2d",
+      "title": "Scope and operating assumptions",
+      "markdown": "**Production security incidents** include confirmed or strongly suspected unauthorized access, credential or key compromise, malware or webshells on hosts, data exposure or exfiltration, abuse of admin interfaces, supply-chain or dependency compromise affecting runtime, cryptomining, ransomware, and targeted attacks on customer-facing APIs or control planes. The same playbook also applies when a **security control fails** in a way that materially increases risk (for example, broad accidental public exposure of storage or mis-routed traffic), even if no attacker is confirmed yet.\n\n**Success criteria** for response are: stop ongoing harm, preserve enough evidence to understand what happened, restore safe service, meet notification and record-keeping duties where they apply, and reduce recurrence through durable fixes-not only patches but also detection, architecture, and process.\n\n**Roles** (names vary by org): incident commander, technical lead, communications lead, legal/privacy liaison, customer-facing owner, and engineering/on-call for affected services. Clear **single-threaded ownership** for decisions during the acute phase avoids paralysis.",
+      "notes": "Production security incidents include confirmed or strongly suspected unauthorized access, credential or key compromise, malware or webshells on hosts, data exposure or exfiltration, abuse of admin interfaces, supply-chain or dependency compromise affecting runtime, cryptomining, ransomware, and targeted attacks on customer-facing APIs or control planes. The same playbook also applies when a security control fails in a way that materially increases risk (for example, broad accidental public exposure of storage or mis-routed traffic), even if no attacker is confirmed yet.\n\nSuccess criteria for response are: stop ongoing harm, preserve enough evidence to understand what happened, restore safe service, meet notification and record-keeping duties where they apply, and reduce recurrence through durable fixes-not only patches but also detection, architecture, and process.\n\nRoles (names vary by org): incident commander, technical lead, communications lead, legal/privacy liaison, customer-facing owner, and engineering/on-call for affected services. Clear single-threaded ownership for decisions during the acute phase avoids paralysis.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Production security incidents include confirmed or strongly suspected...",
+      "expanded": false
+    },
+    {
+      "id": "n3bc0ba1e46a9966",
+      "title": "Preparation: readiness before production breaks",
+      "markdown": "Incidents are won or lost **before** the alert fires. Preparation reduces time to contain and prevents improvised, error-prone heroics.",
+      "notes": "Incidents are won or lost before the alert fires. Preparation reduces time to contain and prevents improvised, error-prone heroics.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nd0be23a0887673d",
+          "title": "1 Runbooks and playbooks",
+          "markdown": "Maintain **versioned runbooks** for high-likelihood scenarios: credential leak in CI, compromised cloud admin role, ransomware on a fleet segment, database credential theft, OAuth client abuse, Kubernetes cluster breakout, and accidental public object storage. Each runbook should list **first actions**, **evidence to preserve**, **containment options** with expected customer impact, **rollback**, and **who must approve** emergency changes.",
+          "notes": "Maintain versioned runbooks for high-likelihood scenarios: credential leak in CI, compromised cloud admin role, ransomware on a fleet segment, database credential theft, OAuth client abuse, Kubernetes cluster breakout, and accidental public object storage. Each runbook should list first actions, evidence to preserve, containment options with expected customer impact, rollback, and who must approve emergency changes.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Maintain versioned runbooks for high-likelihood scenarios: credential leak...",
+          "expanded": false
+        },
+        {
+          "id": "nf86991291850f66",
+          "title": "2 Access and break-glass",
+          "markdown": "Define **break-glass** access to production, logging systems, and backups: who can use it, how it is logged, how quickly it is revoked, and how it is reviewed after closure. Ensure on-call engineers can actually reach **SIEM, EDR, cloud consoles, and PagerDuty-equivalent** without waiting for a weekday approver.",
+          "notes": "Define break-glass access to production, logging systems, and backups: who can use it, how it is logged, how quickly it is revoked, and how it is reviewed after closure. Ensure on-call engineers can actually reach SIEM, EDR, cloud consoles, and PagerDuty-equivalent without waiting for a weekday approver.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Define break-glass access to production, logging systems, and backups: who...",
+          "expanded": false
+        },
+        {
+          "id": "n32350ead18e3534",
+          "title": "3 Contacts and vendors",
+          "markdown": "Maintain current contacts for **cloud provider support**, **identity provider**, **WAF/CDN**, **payment processor**, **law enforcement liaison** (if applicable), **cyber insurer hotline**, and **outside counsel**. For regulated environments, know which privacy counsel handles **cross-border** transfers.",
+          "notes": "Maintain current contacts for cloud provider support, identity provider, WAF/CDN, payment processor, law enforcement liaison (if applicable), cyber insurer hotline, and outside counsel. For regulated environments, know which privacy counsel handles cross-border transfers.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Maintain current contacts for cloud provider support, identity provider,...",
+          "expanded": false
+        },
+        {
+          "id": "nff5d1f986ae9a86",
+          "title": "4 Tooling prerequisites",
+          "markdown": "Before an incident, verify: **centralized logging** with retention that meets legal hold needs, **immutable** or WORM-capable storage for security logs, **NTP or cloud clock** consistency across systems, **backup isolation** so backup accounts cannot be wiped from the same compromised admin session, and **out-of-band** communication paths if primary chat or email is untrusted.",
+          "notes": "Before an incident, verify: centralized logging with retention that meets legal hold needs, immutable or WORM-capable storage for security logs, NTP or cloud clock consistency across systems, backup isolation so backup accounts cannot be wiped from the same compromised admin session, and out-of-band communication paths if primary chat or email is untrusted.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Before an incident, verify: centralized logging with retention that meets...",
+          "expanded": false
+        },
+        {
+          "id": "nbe5eeebf6628c00",
+          "title": "5 Exercises",
+          "markdown": "Run **tabletop exercises** at least annually with executives and **game days** in staging for technical teams. Debrief with concrete tickets: missing dashboards, unclear ownership, or runbook gaps.",
+          "notes": "Run tabletop exercises at least annually with executives and game days in staging for technical teams. Debrief with concrete tickets: missing dashboards, unclear ownership, or runbook gaps.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Run tabletop exercises at least annually with executives and game days in...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Incidents are won or lost before the alert fires.",
+      "expanded": true
+    },
+    {
+      "id": "n237fc1dd38a100b",
+      "title": "Detection: knowing something is wrong",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nadaaf9e191465e0",
+          "title": "1 Signal sources",
+          "markdown": "Effective detection blends **automated** and **human** channels:",
+          "notes": "Effective detection blends automated and human channels:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n9c427860c3a3b51",
+              "title": "Detection engineering outputs: alerts from SIEM, EDR, CSPM, WAF, IDS/IPS, DLP, IAM anoma",
+              "markdown": "- Detection engineering outputs: alerts from SIEM, EDR, CSPM, WAF, IDS/IPS, DLP, IAM anoma",
+              "notes": "Detection engineering outputs: alerts from SIEM, EDR, CSPM, WAF, IDS/IPS, DLP, IAM anoma",
+              "blurb": "Detection engineering outputs: alerts from SIEM, EDR, CSPM, WAF, IDS/IPS,...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n656f84020d83ef6",
+              "title": "Reliability and abuse signals: sudden error spikes, auth failures, quota exhaustion, cos",
+              "markdown": "- Reliability and abuse signals: sudden error spikes, auth failures, quota exhaustion, cos",
+              "notes": "Reliability and abuse signals: sudden error spikes, auth failures, quota exhaustion, cos",
+              "blurb": "Reliability and abuse signals: sudden error spikes, auth failures, quota...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ncc8af18ec40e5a9",
+              "title": "Internal reports: engineers noticing odd processes, unexpected config changes, new admin",
+              "markdown": "- Internal reports: engineers noticing odd processes, unexpected config changes, new admin",
+              "notes": "Internal reports: engineers noticing odd processes, unexpected config changes, new admin",
+              "blurb": "Internal reports: engineers noticing odd processes, unexpected config...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc650efa145793f5",
+              "title": "External intelligence: notifications from researchers, customers, law enforcement, or bu",
+              "markdown": "- External intelligence: notifications from researchers, customers, law enforcement, or bu",
+              "notes": "External intelligence: notifications from researchers, customers, law enforcement, or bu",
+              "blurb": "External intelligence: notifications from researchers, customers, law...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Effective detection blends automated and human channels:",
+          "expanded": false
+        },
+        {
+          "id": "necb05947b865151",
+          "title": "2 Triage discipline",
+          "markdown": "Not every alert is an incident. **Triage** answers: Is this real? What asset class is involved? Is harm **ongoing**? What is the **blast radius** (single host, tenant, region, full product)? Is this a **known false positive** or operational change?\n\nUse a **severity model** tied to customer data, integrity of production, active exploitation, and regulatory exposure-not only CVSS. Practical axes include: confidentiality, integrity, and availability impact; number of affected users or tenants; privilege level of compromised identity; evidence of **persistence** or **lateral movement**; and whether **encryption** or **key management** was touched.",
+          "notes": "Not every alert is an incident. Triage answers: Is this real? What asset class is involved? Is harm ongoing? What is the blast radius (single host, tenant, region, full product)? Is this a known false positive or operational change?\n\nUse a severity model tied to customer data, integrity of production, active exploitation, and regulatory exposure-not only CVSS. Practical axes include: confidentiality, integrity, and availability impact; number of affected users or tenants; privilege level of compromised identity; evidence of persistence or lateral movement; and whether encryption or key management was touched.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Not every alert is an incident.",
+          "expanded": false
+        },
+        {
+          "id": "n8bae00e2e8288f3",
+          "title": "3 Declaring an incident",
+          "markdown": "Declare formally when credible harm or high risk exists, even if details are incomplete. Opening an **incident record** early (ticket or dedicated IR tool) with a running timeline supports later legal review and post-incident metrics. **Deferring declaration** to avoid paperwork usually backfires.",
+          "notes": "Declare formally when credible harm or high risk exists, even if details are incomplete. Opening an incident record early (ticket or dedicated IR tool) with a running timeline supports later legal review and post-incident metrics. Deferring declaration to avoid paperwork usually backfires.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Declare formally when credible harm or high risk exists, even if details are...",
+          "expanded": false
+        },
+        {
+          "id": "ned8740ac9c159d5",
+          "title": "4 Detection metrics",
+          "markdown": "Track **mean time to detect** and **mean time to acknowledge** for security-relevant alert classes. Review noisy rules quarterly; chronic false positives train responders to ignore real fires.",
+          "notes": "Track mean time to detect and mean time to acknowledge for security-relevant alert classes. Review noisy rules quarterly; chronic false positives train responders to ignore real fires.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Track mean time to detect and mean time to acknowledge for security-relevant...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 1 Signal sources",
+      "expanded": true
+    },
+    {
+      "id": "na66296ec8d285b8",
+      "title": "Containment: limit damage without burning the investigation",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n8114a42b4505b83",
+          "title": "1 Principles",
+          "markdown": "Stop ongoing abuse first when the threat is active; parallelize investigation where staffing allows.",
+          "notes": "Stop ongoing abuse first when the threat is active; parallelize investigation where staffing allows.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n5a7af324342148a",
+              "title": "Stop ongoing abuse first when the threat is active; parallelize investigation where staf",
+              "markdown": "- Stop ongoing abuse first when the threat is active; parallelize investigation where staf",
+              "notes": "Stop ongoing abuse first when the threat is active; parallelize investigation where staf",
+              "blurb": "Stop ongoing abuse first when the threat is active; parallelize...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3c6ed827fcc2ffb",
+              "title": "Prefer reversible, logged containment (revoke session, block IP at edge, disable single",
+              "markdown": "- Prefer reversible, logged containment (revoke session, block IP at edge, disable single",
+              "notes": "Prefer reversible, logged containment (revoke session, block IP at edge, disable single",
+              "blurb": "Prefer reversible, logged containment (revoke session, block IP at edge,...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0cb1f0110084c33",
+              "title": "Preserve evidence: snapshot disks or memory where policy permits, export critical logs t",
+              "markdown": "- Preserve evidence: snapshot disks or memory where policy permits, export critical logs t",
+              "notes": "Preserve evidence: snapshot disks or memory where policy permits, export critical logs t",
+              "blurb": "Preserve evidence: snapshot disks or memory where policy permits, export...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Stop ongoing abuse first when the threat is active; parallelize...",
+          "expanded": false
+        },
+        {
+          "id": "n25c6e2fc2a489bc",
+          "title": "2 Short-term containment",
+          "markdown": "Examples: revoke compromised credentials and sessions at the **identity provider**; rotate API keys with clear cutover; isolate a VPC, subnet, or security group; scale suspicious workloads to zero; put a service behind maintenance or a WAF rule; disable a feature flag that exposes risk; block command-and-control indicators at the network edge; disable a compromised **OAuth integration** or third-party SaaS connection.",
+          "notes": "Examples: revoke compromised credentials and sessions at the identity provider; rotate API keys with clear cutover; isolate a VPC, subnet, or security group; scale suspicious workloads to zero; put a service behind maintenance or a WAF rule; disable a feature flag that exposes risk; block command-and-control indicators at the network edge; disable a compromised OAuth integration or third-party SaaS connection.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Examples: revoke compromised credentials and sessions at the identity...",
+          "expanded": false
+        },
+        {
+          "id": "nd0e8a2cc67022bd",
+          "title": "3 Cloud and Kubernetes patterns",
+          "markdown": "In cloud environments, containment often combines **identity** (disable user, detach policy, deny list in SCP or org policy), **network** (security groups, private endpoints, firewall rules), and **workload** actions (stop instance, drain node, cordon, taint, network policy). Understand whether **shared tenancy** inside a cluster means one compromised namespace still threatens the node or control plane.",
+          "notes": "In cloud environments, containment often combines identity (disable user, detach policy, deny list in SCP or org policy), network (security groups, private endpoints, firewall rules), and workload actions (stop instance, drain node, cordon, taint, network policy). Understand whether shared tenancy inside a cluster means one compromised namespace still threatens the node or control plane.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "In cloud environments, containment often combines identity (disable user,...",
+          "expanded": false
+        },
+        {
+          "id": "nc18684286907d8a",
+          "title": "4 Long-term containment",
+          "markdown": "Temporary measures that hold the line while you plan eradication: hardened bastion access only, read-only database mode for non-critical paths, additional monitoring on suspected accounts, or quarantined rebuild hosts. Document these as **technical debt** with owners and sunset dates.",
+          "notes": "Temporary measures that hold the line while you plan eradication: hardened bastion access only, read-only database mode for non-critical paths, additional monitoring on suspected accounts, or quarantined rebuild hosts. Document these as technical debt with owners and sunset dates.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Temporary measures that hold the line while you plan eradication: hardened...",
+          "expanded": false
+        },
+        {
+          "id": "nbc812f056f5867b",
+          "title": "5 Tradeoffs",
+          "markdown": "Aggressive isolation restores safety faster but can **destroy volatile evidence** or amplify customer impact. The incident commander should explicitly choose among: **observe** (rare, high risk, only with clear legal and executive alignment), **contain in place** with monitoring, **segment**, or **take offline**. Decisions should be recorded in the timeline.",
+          "notes": "Aggressive isolation restores safety faster but can destroy volatile evidence or amplify customer impact. The incident commander should explicitly choose among: observe (rare, high risk, only with clear legal and executive alignment), contain in place with monitoring, segment, or take offline. Decisions should be recorded in the timeline.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Aggressive isolation restores safety faster but can destroy volatile...",
+          "expanded": false
+        },
+        {
+          "id": "n1024a7020fd51ff",
+          "title": "6 Multi-tenant products",
+          "markdown": "For SaaS, containment may require **per-tenant** revocation, feature flags, or data quarantine while other tenants stay live. Define **noisy neighbor** risks: a shared search index or cache may leak data across tenants if the attacker abused a confused deputy or IDOR-class bug.",
+          "notes": "For SaaS, containment may require per-tenant revocation, feature flags, or data quarantine while other tenants stay live. Define noisy neighbor risks: a shared search index or cache may leak data across tenants if the attacker abused a confused deputy or IDOR-class bug.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "For SaaS, containment may require per-tenant revocation, feature flags, or...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 1 Principles",
+      "expanded": true
+    },
+    {
+      "id": "nfc4ddae42d02d37",
+      "title": "Eradication: remove the threat and the conditions that enabled it",
+      "markdown": "Eradication means the adversary's **foothold and persistence** are removed and **root causes** are addressed-not merely that alerts stopped.",
+      "notes": "Eradication means the adversary's foothold and persistence are removed and root causes are addressed-not merely that alerts stopped.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n6f84dd98d21430f",
+          "title": "1 Technical eradication",
+          "markdown": "Malware and implants: rebuild from known-good images where integrity is uncertain; forensic imaging first when prosecution or insurance requires it.",
+          "notes": "Malware and implants: rebuild from known-good images where integrity is uncertain; forensic imaging first when prosecution or insurance requires it.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nc4c89c9fbe9f663",
+              "title": "Malware and implants: rebuild from known-good images where integrity is uncertain; foren",
+              "markdown": "- Malware and implants: rebuild from known-good images where integrity is uncertain; foren",
+              "notes": "Malware and implants: rebuild from known-good images where integrity is uncertain; foren",
+              "blurb": "Malware and implants: rebuild from known-good images where integrity is...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n158dad266b19cf2",
+              "title": "Accounts and keys: assume compromise of anything reachable from the breach; rotate secre",
+              "markdown": "- Accounts and keys: assume compromise of anything reachable from the breach; rotate secre",
+              "notes": "Accounts and keys: assume compromise of anything reachable from the breach; rotate secre",
+              "blurb": "Accounts and keys: assume compromise of anything reachable from the breach;...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n314651e1a33dfeb",
+              "title": "Vulnerabilities and misconfigurations: patch, fix infrastructure-as-code, remove excessi",
+              "markdown": "- Vulnerabilities and misconfigurations: patch, fix infrastructure-as-code, remove excessi",
+              "notes": "Vulnerabilities and misconfigurations: patch, fix infrastructure-as-code, remove excessi",
+              "blurb": "Vulnerabilities and misconfigurations: patch, fix infrastructure-as-code,...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n02caabfe5d6bdd8",
+              "title": "Supply chain: pin dependencies, verify provenance with attestations where available, rep",
+              "markdown": "- Supply chain: pin dependencies, verify provenance with attestations where available, rep",
+              "notes": "Supply chain: pin dependencies, verify provenance with attestations where available, rep",
+              "blurb": "Supply chain: pin dependencies, verify provenance with attestations where...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Malware and implants: rebuild from known-good images where integrity is...",
+          "expanded": false
+        },
+        {
+          "id": "n9ab2f41e66c7920",
+          "title": "2 Validation",
+          "markdown": "Before calling eradication complete, **hunt** for related IOCs: unexpected cron jobs, SSH keys, new users, outbound connections, persistence in startup scripts, or shadow APIs. Cross-check **all regions and environments** attackers might have touched, including **staging** if it shares credentials with production.",
+          "notes": "Before calling eradication complete, hunt for related IOCs: unexpected cron jobs, SSH keys, new users, outbound connections, persistence in startup scripts, or shadow APIs. Cross-check all regions and environments attackers might have touched, including staging if it shares credentials with production.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Before calling eradication complete, hunt for related IOCs: unexpected cron...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Eradication means the adversary's foothold and persistence are removed and...",
+      "expanded": false
+    },
+    {
+      "id": "nb3b08d958461568",
+      "title": "Recovery: return to normal operations safely",
+      "markdown": "Recovery is phased return of service with **verification**, not a single big bang.",
+      "notes": "Recovery is phased return of service with verification, not a single big bang.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n993a5157a8d1b1c",
+          "title": "1 Restore strategy",
+          "markdown": "Restore from known-clean backups or rebuild; verify backup integrity and backup access logs-attackers often target backups and snapshot APIs.",
+          "notes": "Restore from known-clean backups or rebuild; verify backup integrity and backup access logs-attackers often target backups and snapshot APIs.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nba0b4c5aca61277",
+              "title": "Restore from known-clean backups or rebuild; verify backup integrity and backup access l",
+              "markdown": "- Restore from known-clean backups or rebuild; verify backup integrity and backup access l",
+              "notes": "Restore from known-clean backups or rebuild; verify backup integrity and backup access l",
+              "blurb": "Restore from known-clean backups or rebuild; verify backup integrity and...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb6808867aae0baa",
+              "title": "Gradual traffic ramp or canary deployments for critical paths.",
+              "markdown": "- Gradual traffic ramp or canary deployments for critical paths.",
+              "notes": "Gradual traffic ramp or canary deployments for critical paths.",
+              "blurb": "Gradual traffic ramp or canary deployments for critical paths.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9331f3b3adb0187",
+              "title": "Enhanced monitoring for a defined period after go-live; tune detections for repeat attem",
+              "markdown": "- Enhanced monitoring for a defined period after go-live; tune detections for repeat attem",
+              "notes": "Enhanced monitoring for a defined period after go-live; tune detections for repeat attem",
+              "blurb": "Enhanced monitoring for a defined period after go-live; tune detections for...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Restore from known-clean backups or rebuild; verify backup integrity and...",
+          "expanded": false
+        },
+        {
+          "id": "n1d8a9789328c871",
+          "title": "2 Disaster recovery overlap",
+          "markdown": "If production restoration depends on **secondary region** failover, runbook the security implications: replication lag may restore **already-compromised** state; validate **RPO/RTO** against integrity checks, not only uptime.",
+          "notes": "If production restoration depends on secondary region failover, runbook the security implications: replication lag may restore already-compromised state; validate RPO/RTO against integrity checks, not only uptime.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "If production restoration depends on secondary region failover, runbook the...",
+          "expanded": false
+        },
+        {
+          "id": "ne9142af533dbe3b",
+          "title": "3 Definition of \u201crecovered\u201d",
+          "markdown": "Agree on criteria: no related alerts for an agreed observation window, successful integrity checks, key rotations complete, customers informed where required, and monitoring rules updated. **Formal closure** should be a conscious decision, not drift.",
+          "notes": "Agree on criteria: no related alerts for an agreed observation window, successful integrity checks, key rotations complete, customers informed where required, and monitoring rules updated. Formal closure should be a conscious decision, not drift.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Agree on criteria: no related alerts for an agreed observation window,...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Recovery is phased return of service with verification, not a single big bang.",
+      "expanded": false
+    },
+    {
+      "id": "nb85f02bb516fa22",
+      "title": "Customer impact: what to assess and how to decide outreach",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nb35134be8d983b4",
+          "title": "1 Impact assessment",
+          "markdown": "Determine whether **personal data**, **credentials**, **financial data**, **health or regulated categories**, or **business-confidential** material was accessed, altered, or exfiltrated. Map impact to **tenants, regions, and time windows**. Distinguish **confirmed** facts from hypotheses; track both in the incident record. For authentication incidents, assess whether **session tokens** or **refresh tokens** could have been replayed.",
+          "notes": "Determine whether personal data, credentials, financial data, health or regulated categories, or business-confidential material was accessed, altered, or exfiltrated. Map impact to tenants, regions, and time windows. Distinguish confirmed facts from hypotheses; track both in the incident record. For authentication incidents, assess whether session tokens or refresh tokens could have been replayed.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Determine whether personal data, credentials, financial data, health or...",
+          "expanded": false
+        },
+        {
+          "id": "n77719da2ff70389",
+          "title": "2 Customer-facing actions",
+          "markdown": "Depending on severity: forced password resets, session revocation, API key rotation with documentation, in-product banners, direct email, dedicated status page updates, or individualized notices. **Support and success** teams need scripts aligned with legal-approved language. Where appropriate, offer **step-up verification** or **account recovery** flows that resist social engineering.",
+          "notes": "Depending on severity: forced password resets, session revocation, API key rotation with documentation, in-product banners, direct email, dedicated status page updates, or individualized notices. Support and success teams need scripts aligned with legal-approved language. Where appropriate, offer step-up verification or account recovery flows that resist social engineering.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Depending on severity: forced password resets, session revocation, API key...",
+          "expanded": false
+        },
+        {
+          "id": "n7369143ae7ff135",
+          "title": "3 Trust and accuracy",
+          "markdown": "Communicate **what you know, what you are doing, and what customers should do** (for example enable MFA, review integration permissions, rotate webhooks). Avoid speculative attribution or naming threat actors unless validated and approved. Coordinate timing so **engineering fixes** and **customer guidance** do not contradict each other.",
+          "notes": "Communicate what you know, what you are doing, and what customers should do (for example enable MFA, review integration permissions, rotate webhooks). Avoid speculative attribution or naming threat actors unless validated and approved. Coordinate timing so engineering fixes and customer guidance do not contradict each other.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Communicate what you know, what you are doing, and what customers should do...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 1 Impact assessment",
+      "expanded": false
+    },
+    {
+      "id": "n8050b83028f0807",
+      "title": "Logging, monitoring, and forensics",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n3b3e84a8f3d506f",
+          "title": "1 What to collect early",
+          "markdown": "Prioritize **time-synchronized**, tamper-resistant sources: authentication and authorization logs, API gateway and WAF logs, VPC flow logs, DNS logs, EDR telemetry, Kubernetes audit and admission logs, cloud trail or equivalent control-plane logs, application audit trails, database audit logs, CI/CD audit logs, and change-management records. If **log ingestion fails** during an attack, treat that as a potential adversary action, not only an ops glitch.",
+          "notes": "Prioritize time-synchronized, tamper-resistant sources: authentication and authorization logs, API gateway and WAF logs, VPC flow logs, DNS logs, EDR telemetry, Kubernetes audit and admission logs, cloud trail or equivalent control-plane logs, application audit trails, database audit logs, CI/CD audit logs, and change-management records. If log ingestion fails during an attack, treat that as a potential adversary action, not only an ops glitch.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Prioritize time-synchronized, tamper-resistant sources: authentication and...",
+          "expanded": false
+        },
+        {
+          "id": "n2d750ee305af24d",
+          "title": "2 Chain of custody and integrity",
+          "markdown": "Use **write-once** or immutable log buckets, cryptographic retention where available, and restricted access roles. Document **who exported what** and where it is stored. Legal may require **forensic images**; coordinate before wiping disks. Store copies in a **separate account or subscription** from production admin paths when feasible.",
+          "notes": "Use write-once or immutable log buckets, cryptographic retention where available, and restricted access roles. Document who exported what and where it is stored. Legal may require forensic images; coordinate before wiping disks. Store copies in a separate account or subscription from production admin paths when feasible.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Use write-once or immutable log buckets, cryptographic retention where...",
+          "expanded": false
+        },
+        {
+          "id": "n86df413fae2573c",
+          "title": "3 Analysis techniques",
+          "markdown": "Build a **timeline**: first suspicious event -> lateral movement -> exfiltration or impact -> discovery. Correlate **user agent, IP, session, device, and workload identity**. Map actions to **IAM principals** and **human operators**. Use structured queries and saved investigations so the same work benefits **detection engineering** after closure. Where **encryption** is involved, record whether keys were exposed or rotated.",
+          "notes": "Build a timeline: first suspicious event -> lateral movement -> exfiltration or impact -> discovery. Correlate user agent, IP, session, device, and workload identity. Map actions to IAM principals and human operators. Use structured queries and saved investigations so the same work benefits detection engineering after closure. Where encryption is involved, record whether keys were exposed or rotated.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Build a timeline: first suspicious event -> lateral movement -> exfiltration...",
+          "expanded": false
+        },
+        {
+          "id": "nab1985991264d34",
+          "title": "4 Privacy and minimization",
+          "markdown": "Forensic exports may contain **PII**; restrict access, redact where possible for broader sharing, and align with internal privacy policy and jurisdictional rules. Separate **technical deep dives** from **executive summaries** to limit unnecessary exposure of sensitive personal data.",
+          "notes": "Forensic exports may contain PII; restrict access, redact where possible for broader sharing, and align with internal privacy policy and jurisdictional rules. Separate technical deep dives from executive summaries to limit unnecessary exposure of sensitive personal data.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Forensic exports may contain PII; restrict access, redact where possible for...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 1 What to collect early",
+      "expanded": false
+    },
+    {
+      "id": "n14b7ed9e30e8e42",
+      "title": "Communications: internal, executive, external",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n0cabe83b2c6da68",
+          "title": "1 Cadence and channels",
+          "markdown": "Establish a **single authoritative incident channel** (often Slack with legal and HR-aware membership) and a **regular cadence** (for example every 30-60 minutes during the acute phase) for leadership updates. Separate **technical** discussion from **executive summary** threads to reduce noise. Use **encrypted** or enterprise-approved channels when discussing sensitive details.",
+          "notes": "Establish a single authoritative incident channel (often Slack with legal and HR-aware membership) and a regular cadence (for example every 30-60 minutes during the acute phase) for leadership updates. Separate technical discussion from executive summary threads to reduce noise. Use encrypted or enterprise-approved channels when discussing sensitive details.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Establish a single authoritative incident channel (often Slack with legal...",
+          "expanded": false
+        },
+        {
+          "id": "n398a32d622911c1",
+          "title": "2 Executive updates",
+          "markdown": "Lead with **customer and regulatory impact**, current containment status, **unknowns**, next milestones, and **business decisions** needed (for example take service down). Use consistent **RAG status** (red, amber, green) for impact and remediation tracks. Surface **cash-flow or revenue** risks when outages are prolonged.",
+          "notes": "Lead with customer and regulatory impact, current containment status, unknowns, next milestones, and business decisions needed (for example take service down). Use consistent RAG status (red, amber, green) for impact and remediation tracks. Surface cash-flow or revenue risks when outages are prolonged.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Lead with customer and regulatory impact, current containment status,...",
+          "expanded": false
+        },
+        {
+          "id": "nac828758321a387",
+          "title": "3 External communications",
+          "markdown": "Coordinate **status page** language with legal and public relations. For breaches, a **single narrative owner** avoids contradictory statements. Prepare **FAQ** for sales, support, and partners. Public companies may have **securities disclosure** obligations; legal and finance must align on **materiality** and timing-this is fact-specific and jurisdiction-dependent.",
+          "notes": "Coordinate status page language with legal and public relations. For breaches, a single narrative owner avoids contradictory statements. Prepare FAQ for sales, support, and partners. Public companies may have securities disclosure obligations; legal and finance must align on materiality and timing-this is fact-specific and jurisdiction-dependent.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Coordinate status page language with legal and public relations.",
+          "expanded": false
+        },
+        {
+          "id": "nfc667e4bb3845c9",
+          "title": "4 What not to do",
+          "markdown": "Avoid blaming individuals publicly, sharing raw logs externally, or confirming details still under **law enforcement** restriction without counsel. Do not promise **\"no evidence of misuse\"** unless investigation scope truly supports that statement.",
+          "notes": "Avoid blaming individuals publicly, sharing raw logs externally, or confirming details still under law enforcement restriction without counsel. Do not promise \"no evidence of misuse\" unless investigation scope truly supports that statement.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Avoid blaming individuals publicly, sharing raw logs externally, or...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 1 Cadence and channels",
+      "expanded": false
+    },
+    {
+      "id": "nbc5fd32ff238c91",
+      "title": "Legal, regulatory, and contractual context",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n5de6debb81043a8",
+          "title": "1 Engage legal early",
+          "markdown": "Legal and privacy should join when **personal data**, **regulated sectors**, **law enforcement**, **contractual notice**, or **material business risk** is in play. They guide **retention, privilege**, and **notification** timing. Attorney-directed workflows can help protect certain communications where applicable law allows.",
+          "notes": "Legal and privacy should join when personal data, regulated sectors, law enforcement, contractual notice, or material business risk is in play. They guide retention, privilege, and notification timing. Attorney-directed workflows can help protect certain communications where applicable law allows.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Legal and privacy should join when personal data, regulated sectors, law...",
+          "expanded": false
+        },
+        {
+          "id": "n35d92cf491dc8d8",
+          "title": "2 Breach notification triggers",
+          "markdown": "Requirements vary by **jurisdiction and sector** (examples include GDPR-style timelines in the EU and UK, U.S. state comprehensive privacy laws, HIPAA, and sector-specific banking or telecom rules). **Controllers versus processors** obligations differ; multi-tenant SaaS must know **who notifies whom** per contract and whether **subprocessor** notice is required.",
+          "notes": "Requirements vary by jurisdiction and sector (examples include GDPR-style timelines in the EU and UK, U.S. state comprehensive privacy laws, HIPAA, and sector-specific banking or telecom rules). Controllers versus processors obligations differ; multi-tenant SaaS must know who notifies whom per contract and whether subprocessor notice is required.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Requirements vary by jurisdiction and sector (examples include GDPR-style...",
+          "expanded": false
+        },
+        {
+          "id": "nba9d85ad368b890",
+          "title": "3 Law enforcement and insurers",
+          "markdown": "Preserve logs before **public disclosure** that might tip the attacker. Insurance and cyber policies may require **specific evidence**, **cooperation**, and **timelines**; assign an owner to read policy **during** response, not only after. Document **preservation notices** and **legal holds** when litigation or regulatory inquiry is reasonably anticipated.",
+          "notes": "Preserve logs before public disclosure that might tip the attacker. Insurance and cyber policies may require specific evidence, cooperation, and timelines; assign an owner to read policy during response, not only after. Document preservation notices and legal holds when litigation or regulatory inquiry is reasonably anticipated.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Preserve logs before public disclosure that might tip the attacker.",
+          "expanded": false
+        },
+        {
+          "id": "n7771d07bd4b5c05",
+          "title": "4 Documentation for regulators",
+          "markdown": "Maintain a **decision log**: what was known when, what containment options were considered, and why choices were made. This supports **good-faith** demonstrations of diligence. Align records with **privacy impact assessment** or **DPIA** practices where your org uses them.",
+          "notes": "Maintain a decision log: what was known when, what containment options were considered, and why choices were made. This supports good-faith demonstrations of diligence. Align records with privacy impact assessment or DPIA practices where your org uses them.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Maintain a decision log: what was known when, what containment options were...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 1 Engage legal early",
+      "expanded": false
+    },
+    {
+      "id": "n4d181b6aeeab100",
+      "title": "Post-incident: close the loop",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "ne2eaee290358ec7",
+          "title": "1 Root cause and contributing factors",
+          "markdown": "Distinguish **root cause** (why the exploit worked) from **contributing factors** (why detection was slow, why blast radius was large). Use **blameless** review methods focused on systems. Capture **five whys** only when it produces actionable controls, not infinite philosophy.",
+          "notes": "Distinguish root cause (why the exploit worked) from contributing factors (why detection was slow, why blast radius was large). Use blameless review methods focused on systems. Capture five whys only when it produces actionable controls, not infinite philosophy.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Distinguish root cause (why the exploit worked) from contributing factors...",
+          "expanded": false
+        },
+        {
+          "id": "nbbd70f915d09548",
+          "title": "2 Remediation backlog",
+          "markdown": "Track **security debt** as tickets with owners: code fixes, architecture changes such as zero-trust segmentation, IAM hygiene, secret management, improved alerts, and runbook updates. Tie **severity** of unfinished work to incident class so leadership can prioritize.",
+          "notes": "Track security debt as tickets with owners: code fixes, architecture changes such as zero-trust segmentation, IAM hygiene, secret management, improved alerts, and runbook updates. Tie severity of unfinished work to incident class so leadership can prioritize.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Track security debt as tickets with owners: code fixes, architecture changes...",
+          "expanded": false
+        },
+        {
+          "id": "ndc17c8324e0cb23",
+          "title": "3 Metrics",
+          "markdown": "Measure **time to detect**, **time to contain**, **time to recover**, **customer impact duration**, and **recurrence** of similar classes. Trend these quarterly. Compare **exercise outcomes** to real incidents to validate preparedness.",
+          "notes": "Measure time to detect, time to contain, time to recover, customer impact duration, and recurrence of similar classes. Trend these quarterly. Compare exercise outcomes to real incidents to validate preparedness.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Measure time to detect, time to contain, time to recover, customer impact...",
+          "expanded": false
+        },
+        {
+          "id": "ncb4b9850cfb96bf",
+          "title": "4 Learning culture",
+          "markdown": "Share **sanitized lessons** across engineering. Run **tabletops** and game days for scenarios that actually hurt your stack: cloud control plane takeover, CI/CD compromise, database superuser abuse, and identity provider outage or misuse.",
+          "notes": "Share sanitized lessons across engineering. Run tabletops and game days for scenarios that actually hurt your stack: cloud control plane takeover, CI/CD compromise, database superuser abuse, and identity provider outage or misuse.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Share sanitized lessons across engineering.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 1 Root cause and contributing factors",
+      "expanded": false
+    },
+    {
+      "id": "naaaa791a194742d",
+      "title": "Practical checklist (condensed)",
+      "markdown": "**First hour:** declare incident; assign incident commander; preserve logs; contain active harm; notify legal if data or regulatory risk; start timeline.\n\n**First day:** scoped eradication plan; customer impact assessment; communications rhythm; forensic copies secured; monitoring for related IOCs.\n\n**Recovery:** phased restore; validation; rotated secrets; updated detections.\n\n**Closure:** post-incident review; tracked remediations; metrics updated.",
+      "notes": "First hour: declare incident; assign incident commander; preserve logs; contain active harm; notify legal if data or regulatory risk; start timeline.\n\nFirst day: scoped eradication plan; customer impact assessment; communications rhythm; forensic copies secured; monitoring for related IOCs.\n\nRecovery: phased restore; validation; rotated secrets; updated detections.\n\nClosure: post-incident review; tracked remediations; metrics updated.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "First hour: declare incident; assign incident commander; preserve logs;...",
+      "expanded": false
+    },
+    {
+      "id": "nd824c39f594071a",
+      "title": "References for deeper reading",
+      "markdown": "NIST Computer Security Incident Handling (SP 800-61 family-use the revision your org standards cite).",
+      "notes": "NIST Computer Security Incident Handling (SP 800-61 family-use the revision your org standards cite).",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nd54f089c4e22ef1",
+          "title": "NIST Computer Security Incident Handling (SP 800-61 family-use the revision your org sta",
+          "markdown": "- NIST Computer Security Incident Handling (SP 800-61 family-use the revision your org sta",
+          "notes": "NIST Computer Security Incident Handling (SP 800-61 family-use the revision your org sta",
+          "blurb": "NIST Computer Security Incident Handling (SP 800-61 family-use the revision...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nc7f7afcdd1df713",
+          "title": "FIRST CSIRT frameworks and coordination practices.",
+          "markdown": "- FIRST CSIRT frameworks and coordination practices.",
+          "notes": "FIRST CSIRT frameworks and coordination practices.",
+          "blurb": "FIRST CSIRT frameworks and coordination practices.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nb06fed976829d3f",
+          "title": "Your org's privacy notices, data processing agreement templates, status page policy, and",
+          "markdown": "- Your org's privacy notices, data processing agreement templates, status page policy, and",
+          "notes": "Your org's privacy notices, data processing agreement templates, status page policy, and",
+          "blurb": "Your org's privacy notices, data processing agreement templates, status page...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "NIST Computer Security Incident Handling (SP 800-61 family-use the revision...",
+      "expanded": false
+    },
+    {
+      "id": "n9a7b0bdd99cd66c",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nfe3cc121145e5b2",
+          "title": "Incident Response Lifecycle",
+          "markdown": "Preparation - Policies, procedures, tools",
+          "notes": "Preparation - Policies, procedures, tools",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n6c9e689f7539ec6",
+              "title": "Preparation - Policies, procedures, tools",
+              "markdown": "- Preparation - Policies, procedures, tools",
+              "notes": "Preparation - Policies, procedures, tools",
+              "blurb": "Preparation - Policies, procedures, tools",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0d3627579170ca2",
+              "title": "Detection - Identify incidents",
+              "markdown": "- Detection - Identify incidents",
+              "notes": "Detection - Identify incidents",
+              "blurb": "Detection - Identify incidents",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n36ed38b34af2a06",
+              "title": "Containment - Limit scope and impact",
+              "markdown": "- Containment - Limit scope and impact",
+              "notes": "Containment - Limit scope and impact",
+              "blurb": "Containment - Limit scope and impact",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n071293b677ab8b5",
+              "title": "Eradication - Remove threat",
+              "markdown": "- Eradication - Remove threat",
+              "notes": "Eradication - Remove threat",
+              "blurb": "Eradication - Remove threat",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "naa3556a83a63997",
+              "title": "Recovery - Restore operations",
+              "markdown": "- Recovery - Restore operations",
+              "notes": "Recovery - Restore operations",
+              "blurb": "Recovery - Restore operations",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n04fd6faaa17b90d",
+              "title": "Post-Incident - Lessons learned",
+              "markdown": "- Post-Incident - Lessons learned",
+              "notes": "Post-Incident - Lessons learned",
+              "blurb": "Post-Incident - Lessons learned",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Preparation - Policies, procedures, tools",
+          "expanded": false
+        },
+        {
+          "id": "n53fc41a0a46d2a6",
+          "title": "Response Priority Order",
+          "markdown": "Contain - Stop ongoing damage (FIRST)",
+          "notes": "Contain - Stop ongoing damage (FIRST)",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n97dfbb689672e6f",
+              "title": "Contain - Stop ongoing damage (FIRST)",
+              "markdown": "- Contain - Stop ongoing damage (FIRST)",
+              "notes": "Contain - Stop ongoing damage (FIRST)",
+              "blurb": "Contain - Stop ongoing damage (FIRST)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n70af946e2ea95a7",
+              "title": "Investigate - Understand what happened",
+              "markdown": "- Investigate - Understand what happened",
+              "notes": "Investigate - Understand what happened",
+              "blurb": "Investigate - Understand what happened",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n176023c70157983",
+              "title": "Eradicate - Remove threat completely",
+              "markdown": "- Eradicate - Remove threat completely",
+              "notes": "Eradicate - Remove threat completely",
+              "blurb": "Eradicate - Remove threat completely",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n818609234f38cd4",
+              "title": "Recover - Restore normal operations",
+              "markdown": "- Recover - Restore normal operations",
+              "notes": "Recover - Restore normal operations",
+              "blurb": "Recover - Restore normal operations",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nae04db22e6e7ae7",
+              "title": "Remediate - Fix root cause (after containment)",
+              "markdown": "- Remediate - Fix root cause (after containment)",
+              "notes": "Remediate - Fix root cause (after containment)",
+              "blurb": "Remediate - Fix root cause (after containment)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Contain - Stop ongoing damage (FIRST)",
+          "expanded": false
+        },
+        {
+          "id": "n62e8e3b50a16b79",
+          "title": "Containment Strategies (Least to Most Disruptive)",
+          "markdown": "| Strategy | Disruption | When to Use |\n| --- | --- | --- |\n| Isolate affected systems | Low | Specific systems compromised |\n| Disable compromised accounts | Low | Account-level compromise |\n| Block malicious IPs | Low | Known attacker IPs |\n| Quarantine data | Medium | Data-level compromise |\n| Take services offline | High | Widespread compromise |\n| Full system shutdown | Very High | Last resort |",
+          "notes": "| Strategy | Disruption | When to Use |\n| --- | --- | --- |\n| Isolate affected systems | Low | Specific systems compromised |\n| Disable compromised accounts | Low | Account-level compromise |\n| Block malicious IPs | Low | Known attacker IPs |\n| Quarantine data | Medium | Data-level compromise |\n| Take services offline | High | Widespread compromise |\n| Full system shutdown | Very High | Last resort |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Strategy | Disruption | When to Use | | --- | --- | --- | | Isolate...",
+          "expanded": false
+        },
+        {
+          "id": "naf4a6e08d228078",
+          "title": "Incident Classification",
+          "markdown": "| Severity | Description | Response Time |\n| --- | --- | --- |\n| **Critical** | Active exploitation, data breach | Immediate |\n| **High** | Successful attack, potential exposure | < 1 hour |\n| **Medium** | Attack attempt, potential impact | < 4 hours |\n| **Low** | Suspicious activity | < 24 hours |",
+          "notes": "| Severity | Description | Response Time |\n| --- | --- | --- |\n| Critical | Active exploitation, data breach | Immediate |\n| High | Successful attack, potential exposure | < 1 hour |\n| Medium | Attack attempt, potential impact | < 4 hours |\n| Low | Suspicious activity | < 24 hours |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Severity | Description | Response Time | | --- | --- | --- | | Critical |...",
+          "expanded": false
+        },
+        {
+          "id": "n7e752572d77992b",
+          "title": "Communication Checklist",
+          "markdown": "\u2705 Notify incident response team immediately - \u2705 Regular status updates (every 1-2 hours) - \u2705 Stakeholder communication (appropriate level) - \u2705 Document everything - \u2705 Don't speculate, communicate facts",
+          "notes": "\u2705 Notify incident response team immediately - \u2705 Regular status updates (every 1-2 hours) - \u2705 Stakeholder communication (appropriate level) - \u2705 Document everything - \u2705 Don't speculate, communicate facts",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n9142a139116abf8",
+              "title": "Notify incident response team immediately",
+              "markdown": "- Notify incident response team immediately",
+              "notes": "Notify incident response team immediately",
+              "blurb": "Notify incident response team immediately",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nca256f8c478d096",
+              "title": "Regular status updates (every 1-2 hours)",
+              "markdown": "- Regular status updates (every 1-2 hours)",
+              "notes": "Regular status updates (every 1-2 hours)",
+              "blurb": "Regular status updates (every 1-2 hours)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n909d205ba2db807",
+              "title": "Stakeholder communication (appropriate level)",
+              "markdown": "- Stakeholder communication (appropriate level)",
+              "notes": "Stakeholder communication (appropriate level)",
+              "blurb": "Stakeholder communication (appropriate level)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n1cdd12108667c28",
+              "title": "Document everything",
+              "markdown": "- Document everything",
+              "notes": "Document everything",
+              "blurb": "Document everything",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n4da64d266e4b67d",
+              "title": "Don't speculate, communicate facts",
+              "markdown": "- Don't speculate, communicate facts",
+              "notes": "Don't speculate, communicate facts",
+              "blurb": "Don't speculate, communicate facts",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "\u2705 Notify incident response team immediately - \u2705 Regular status updates...",
+          "expanded": false
+        },
+        {
+          "id": "n33b8f2becca2308",
+          "title": "Post-Incident Activities",
+          "markdown": "Root cause analysis - Timeline reconstruction - Remediation of root cause - Process improvements - Lessons learned documentation - Follow-up security assessment",
+          "notes": "Root cause analysis - Timeline reconstruction - Remediation of root cause - Process improvements - Lessons learned documentation - Follow-up security assessment",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n821836782054c42",
+              "title": "Root cause analysis",
+              "markdown": "- Root cause analysis",
+              "notes": "Root cause analysis",
+              "blurb": "Root cause analysis",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n1a94baa608dae1b",
+              "title": "Timeline reconstruction",
+              "markdown": "- Timeline reconstruction",
+              "notes": "Timeline reconstruction",
+              "blurb": "Timeline reconstruction",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5f43d5ff2dff78c",
+              "title": "Remediation of root cause",
+              "markdown": "- Remediation of root cause",
+              "notes": "Remediation of root cause",
+              "blurb": "Remediation of root cause",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n98faca90dfe9ab4",
+              "title": "Process improvements",
+              "markdown": "- Process improvements",
+              "notes": "Process improvements",
+              "blurb": "Process improvements",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n767688932d06663",
+              "title": "Lessons learned documentation",
+              "markdown": "- Lessons learned documentation",
+              "notes": "Lessons learned documentation",
+              "blurb": "Lessons learned documentation",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5e81972f6229604",
+              "title": "Follow-up security assessment",
+              "markdown": "- Follow-up security assessment",
+              "notes": "Follow-up security assessment",
+              "blurb": "Follow-up security assessment",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Root cause analysis - Timeline reconstruction - Remediation of root cause -...",
+          "expanded": false
+        },
+        {
+          "id": "ne7ca64bf0fc13d3",
+          "title": "Key Principles",
+          "markdown": "Contain first, fix root cause later - Document everything - Communicate regularly - Balance security with availability - Learn from every incident",
+          "notes": "Contain first, fix root cause later - Document everything - Communicate regularly - Balance security with availability - Learn from every incident",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n555053465e84edb",
+              "title": "Contain first, fix root cause later",
+              "markdown": "- Contain first, fix root cause later",
+              "notes": "Contain first, fix root cause later",
+              "blurb": "Contain first, fix root cause later",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n019ca481db0e06c",
+              "title": "Document everything",
+              "markdown": "- Document everything",
+              "notes": "Document everything",
+              "blurb": "Document everything",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3ad6da20fa57a38",
+              "title": "Communicate regularly",
+              "markdown": "- Communicate regularly",
+              "notes": "Communicate regularly",
+              "blurb": "Communicate regularly",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9f51ded781e16e4",
+              "title": "Balance security with availability",
+              "markdown": "- Balance security with availability",
+              "notes": "Balance security with availability",
+              "blurb": "Balance security with availability",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ne9d75809626f3f5",
+              "title": "Learn from every incident",
+              "markdown": "- Learn from every incident",
+              "notes": "Learn from every incident",
+              "blurb": "Learn from every incident",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Contain first, fix root cause later - Document everything - Communicate...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Incident Response Lifecycle"
+    },
+    {
+      "id": "nce3beccd4238f29",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n29d450eaff32282",
+          "title": "Common Misconceptions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n195569132a2da5d",
+              "title": "\"The first priority in an incident is to fix the vulnerability\"",
+              "markdown": "**Truth:** The first priority is to **contain the incident** and prevent further damage, not to fix the root cause.\n\n**Proper Incident Response Order:**",
+              "notes": "Truth: The first priority is to contain the incident and prevent further damage, not to fix the root cause.\n\nProper Incident Response Order:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n6f83d5b480b1a5c",
+                  "title": "Contain: Stop the attack from spreading",
+                  "markdown": "- Contain: Stop the attack from spreading",
+                  "notes": "Contain: Stop the attack from spreading",
+                  "blurb": "Contain: Stop the attack from spreading",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nb0e1da426273de7",
+                  "title": "Eradicate: Remove the threat",
+                  "markdown": "- Eradicate: Remove the threat",
+                  "notes": "Eradicate: Remove the threat",
+                  "blurb": "Eradicate: Remove the threat",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ndbc5727fb25ed67",
+                  "title": "Recover: Restore normal operations",
+                  "markdown": "- Recover: Restore normal operations",
+                  "notes": "Recover: Restore normal operations",
+                  "blurb": "Recover: Restore normal operations",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n89fbd2d86340165",
+                  "title": "Remediate: Fix the root cause (happens after containment)",
+                  "markdown": "- Remediate: Fix the root cause (happens after containment)",
+                  "notes": "Remediate: Fix the root cause (happens after containment)",
+                  "blurb": "Remediate: Fix the root cause (happens after containment)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: The first priority is to contain the incident and prevent further...",
+              "expanded": false
+            },
+            {
+              "id": "n0456dcb1e54f5fd",
+              "title": "\"Taking systems offline is always the best containment strategy\"",
+              "markdown": "**Truth:** System shutdown is a **last resort** - use least-disruptive containment methods first.\n\n**Containment Options (Least to Most Disruptive):**",
+              "notes": "Truth: System shutdown is a last resort - use least-disruptive containment methods first.\n\nContainment Options (Least to Most Disruptive):",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "nd3db2906d034e31",
+                  "title": "Isolate affected systems from network",
+                  "markdown": "- Isolate affected systems from network",
+                  "notes": "Isolate affected systems from network",
+                  "blurb": "Isolate affected systems from network",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n2efded3256c6969",
+                  "title": "Disable specific compromised accounts/keys",
+                  "markdown": "- Disable specific compromised accounts/keys",
+                  "notes": "Disable specific compromised accounts/keys",
+                  "blurb": "Disable specific compromised accounts/keys",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n61ecbee2a4a0b8c",
+                  "title": "Block malicious IP addresses",
+                  "markdown": "- Block malicious IP addresses",
+                  "notes": "Block malicious IP addresses",
+                  "blurb": "Block malicious IP addresses",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nbce208510ac55a7",
+                  "title": "Quarantine affected data",
+                  "markdown": "- Quarantine affected data",
+                  "notes": "Quarantine affected data",
+                  "blurb": "Quarantine affected data",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n5e5c3196138dd18",
+                  "title": "Take affected services offline",
+                  "markdown": "- Take affected services offline",
+                  "notes": "Take affected services offline",
+                  "blurb": "Take affected services offline",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "na58794300983c5b",
+                  "title": "Full system shutdown (last resort)",
+                  "markdown": "- Full system shutdown (last resort)",
+                  "notes": "Full system shutdown (last resort)",
+                  "blurb": "Full system shutdown (last resort)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: System shutdown is a last resort - use least-disruptive containment...",
+              "expanded": false
+            },
+            {
+              "id": "n326b9235ec68cb8",
+              "title": "\"Incident response can be improvised when needed\"",
+              "markdown": "**Truth:** Incident response requires **preparation and practice** - you can't improvise under pressure.\n\n**Why Preparation Matters:**",
+              "notes": "Truth: Incident response requires preparation and practice - you can't improvise under pressure.\n\nWhy Preparation Matters:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n21e004f5ce5ad55",
+                  "title": "Clear roles and responsibilities",
+                  "markdown": "- Clear roles and responsibilities",
+                  "notes": "Clear roles and responsibilities",
+                  "blurb": "Clear roles and responsibilities",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n3d2e5308c306308",
+                  "title": "Defined procedures and playbooks",
+                  "markdown": "- Defined procedures and playbooks",
+                  "notes": "Defined procedures and playbooks",
+                  "blurb": "Defined procedures and playbooks",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n2c577c97c8fed5e",
+                  "title": "Established communication channels",
+                  "markdown": "- Established communication channels",
+                  "notes": "Established communication channels",
+                  "blurb": "Established communication channels",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n44c2fa4c3e010c7",
+                  "title": "Pre-approved escalation paths",
+                  "markdown": "- Pre-approved escalation paths",
+                  "notes": "Pre-approved escalation paths",
+                  "blurb": "Pre-approved escalation paths",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n472b1c05c5f4d81",
+                  "title": "Regular practice through drills",
+                  "markdown": "- Regular practice through drills",
+                  "notes": "Regular practice through drills",
+                  "blurb": "Regular practice through drills",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: Incident response requires preparation and practice - you can't...",
+              "expanded": false
+            },
+            {
+              "id": "n2417116b47bebaa",
+              "title": "\"Security incidents should be kept secret from stakeholders\"",
+              "markdown": "**Truth:** **Transparency and communication** are critical, though communication should be controlled and appropriate.\n\n**Communication Strategy:**",
+              "notes": "Truth: Transparency and communication are critical, though communication should be controlled and appropriate.\n\nCommunication Strategy:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "na900abb7826e906",
+                  "title": "Internal stakeholders: Regular updates during incident",
+                  "markdown": "- Internal stakeholders: Regular updates during incident",
+                  "notes": "Internal stakeholders: Regular updates during incident",
+                  "blurb": "Internal stakeholders: Regular updates during incident",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n74badcc4a6c6987",
+                  "title": "Customers: Transparent communication when required (data breaches)",
+                  "markdown": "- Customers: Transparent communication when required (data breaches)",
+                  "notes": "Customers: Transparent communication when required (data breaches)",
+                  "blurb": "Customers: Transparent communication when required (data breaches)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n37c9e5956270784",
+                  "title": "Legal/Compliance: Immediate notification if required",
+                  "markdown": "- Legal/Compliance: Immediate notification if required",
+                  "notes": "Legal/Compliance: Immediate notification if required",
+                  "blurb": "Legal/Compliance: Immediate notification if required",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n1d378c072f9faa6",
+                  "title": "Public: Controlled messaging, avoid speculation",
+                  "markdown": "- Public: Controlled messaging, avoid speculation",
+                  "notes": "Public: Controlled messaging, avoid speculation",
+                  "blurb": "Public: Controlled messaging, avoid speculation",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: Transparency and communication are critical, though communication...",
+              "expanded": false
+            },
+            {
+              "id": "n78b510ea255eb88",
+              "title": "\"Once the incident is resolved, the work is done\"",
+              "markdown": "**Truth:** **Post-incident analysis** and remediation are critical phases of incident response.\n\n**Post-Incident Activities:**",
+              "notes": "Truth: Post-incident analysis and remediation are critical phases of incident response.\n\nPost-Incident Activities:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n821836782054c42",
+                  "title": "Root cause analysis",
+                  "markdown": "- Root cause analysis",
+                  "notes": "Root cause analysis",
+                  "blurb": "Root cause analysis",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n1a94baa608dae1b",
+                  "title": "Timeline reconstruction",
+                  "markdown": "- Timeline reconstruction",
+                  "notes": "Timeline reconstruction",
+                  "blurb": "Timeline reconstruction",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "na3e4977e82ea0a1",
+                  "title": "Impact assessment",
+                  "markdown": "- Impact assessment",
+                  "notes": "Impact assessment",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n97468a6930a1f3f",
+                  "title": "Remediation of root cause",
+                  "markdown": "- Remediation of root cause",
+                  "notes": "Remediation of root cause",
+                  "blurb": "Remediation of root cause",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n2b4373c2a1c0a25",
+                  "title": "Process improvements",
+                  "markdown": "- Process improvements",
+                  "notes": "Process improvements",
+                  "blurb": "Process improvements",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n2ca0d4e38516a19",
+                  "title": "Lessons learned documentation",
+                  "markdown": "- Lessons learned documentation",
+                  "notes": "Lessons learned documentation",
+                  "blurb": "Lessons learned documentation",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n34a0aaf5ffa5f2d",
+                  "title": "Follow-up security assessments",
+                  "markdown": "- Follow-up security assessments",
+                  "notes": "Follow-up security assessments",
+                  "blurb": "Follow-up security assessments",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: Post-incident analysis and remediation are critical phases of...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes \"The first priority in an incident is to fix the vulnerability\"",
+          "expanded": false
+        },
+        {
+          "id": "n539cedbe12b4bcb",
+          "title": "Key Takeaways",
+          "markdown": "Contain First: Contain incident before fixing root cause",
+          "notes": "Contain First: Contain incident before fixing root cause",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nb5750f06d33e857",
+              "title": "Contain First: Contain incident before fixing root cause",
+              "markdown": "- Contain First: Contain incident before fixing root cause",
+              "notes": "Contain First: Contain incident before fixing root cause",
+              "blurb": "Contain First: Contain incident before fixing root cause",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na4684dfb8be3f11",
+              "title": "Least Disruptive: Use least-disruptive containment methods when possible",
+              "markdown": "- Least Disruptive: Use least-disruptive containment methods when possible",
+              "notes": "Least Disruptive: Use least-disruptive containment methods when possible",
+              "blurb": "Least Disruptive: Use least-disruptive containment methods when possible",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nddb4854530afc8e",
+              "title": "Prepare and Practice: Document procedures and practice incident response",
+              "markdown": "- Prepare and Practice: Document procedures and practice incident response",
+              "notes": "Prepare and Practice: Document procedures and practice incident response",
+              "blurb": "Prepare and Practice: Document procedures and practice incident response",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0d1223916f89bda",
+              "title": "Communicate: Transparent, controlled communication with stakeholders",
+              "markdown": "- Communicate: Transparent, controlled communication with stakeholders",
+              "notes": "Communicate: Transparent, controlled communication with stakeholders",
+              "blurb": "Communicate: Transparent, controlled communication with stakeholders",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n4e7247e0a1dc056",
+              "title": "Learn and Improve: Post-incident analysis and remediation are essential",
+              "markdown": "- Learn and Improve: Post-incident analysis and remediation are essential",
+              "notes": "Learn and Improve: Post-incident analysis and remediation are essential",
+              "blurb": "Learn and Improve: Post-incident analysis and remediation are essential",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Contain First: Contain incident before fixing root cause",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Common Misconceptions"
+    },
+    {
+      "id": "n486e7d6451f9e32",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "ne51004657d5ad61",
+          "title": "Fundamentals",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nbe1383c089a3c95",
+              "title": "Walk through how you handle a credible security incident in live...",
+              "markdown": "**Answer:** I treat it as a phased response with explicit ownership. First I **validate and triage**: confirm the signal is real, estimate blast radius, and decide severity using business and data impact, not only technical curiosity. I **declare an incident** early, assign an incident commander, and open a running timeline. If harm might be ongoing, I **contain** with the least destructive effective action-revoke sessions, block indicators at the edge, isolate a subnet or workload, or disable a risky integration-while **preserving evidence** (immutable log export, snapshots where policy allows). In parallel I start **forensic logging** and identity correlation. After containment stabilizes, I plan **eradication** (remove persistence, patch root cause, rotate secrets) and **phased recovery** with extra monitoring. Throughout I loop **legal and communications** when personal data, regulated data, or public trust is involved. I close with **root cause analysis**, a tracked remediation backlog, and metrics such as time to detect and time to contain.",
+              "notes": "Answer: I treat it as a phased response with explicit ownership. First I validate and triage: confirm the signal is real, estimate blast radius, and decide severity using business and data impact, not only technical curiosity. I declare an incident early, assign an incident commander, and open a running timeline. If harm might be ongoing, I contain with the least destructive effective action-revoke sessions, block indicators at the edge, isolate a subnet or workload, or disable a risky integration-while preserving evidence (immutable log export, snapshots where policy allows). In parallel I start forensic logging and identity correlation. After containment stabilizes, I plan eradication (remove persistence, patch root cause, rotate secrets) and phased recovery with extra monitoring. Throughout I loop legal and communications when personal data, regulated data, or public trust is involved. I close with root cause analysis, a tracked remediation backlog, and metrics such as time to detect and time to contain.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: I treat it as a phased response with explicit ownership.",
+              "expanded": false
+            },
+            {
+              "id": "n130ef4c33944888",
+              "title": "How does production security incident response differ from a generic...",
+              "markdown": "**Answer:** A security incident optimizes for **confidentiality and integrity** as well as availability, and actions can **destroy evidence** or **tip off** an attacker. You must balance **speed of containment** with **forensic integrity**, coordinate **legal and regulatory** timelines, and assume **adaptive opposition**-the system is not merely broken; someone may be working against you. Communication is more constrained: you avoid speculative attribution and align external messaging with counsel. Recovery includes **hunting for persistence** and **credential hygiene**, not only restoring replicas.",
+              "notes": "Answer: A security incident optimizes for confidentiality and integrity as well as availability, and actions can destroy evidence or tip off an attacker. You must balance speed of containment with forensic integrity, coordinate legal and regulatory timelines, and assume adaptive opposition-the system is not merely broken; someone may be working against you. Communication is more constrained: you avoid speculative attribution and align external messaging with counsel. Recovery includes hunting for persistence and credential hygiene, not only restoring replicas.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: A security incident optimizes for confidentiality and integrity as...",
+              "expanded": false
+            },
+            {
+              "id": "n0d07ed8901912c2",
+              "title": "What is your severity model for security incidents?",
+              "markdown": "**Answer:** I combine **CIA impact**, **scale** (users, tenants, regions), **privilege** of compromised identities, and **regulatory exposure**. Critical might mean active data exfiltration, production write access by an untrusted party, or cryptographic key material at risk. High could be confirmed compromise of a powerful service account without yet proven data theft. Medium might be contained exploit attempt or limited misconfiguration with sensitive data nearby. Low might be suspicious activity with no confirmed breach. The model should drive **response staffing** and **executive notification**, not sit unused in a wiki.",
+              "notes": "Answer: I combine CIA impact, scale (users, tenants, regions), privilege of compromised identities, and regulatory exposure. Critical might mean active data exfiltration, production write access by an untrusted party, or cryptographic key material at risk. High could be confirmed compromise of a powerful service account without yet proven data theft. Medium might be contained exploit attempt or limited misconfiguration with sensitive data nearby. Low might be suspicious activity with no confirmed breach. The model should drive response staffing and executive notification, not sit unused in a wiki.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: I combine CIA impact, scale (users, tenants, regions), privilege of...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Walk through how you handle a credible security incident in live...",
+          "expanded": false
+        },
+        {
+          "id": "n1c3f3667c5508cd",
+          "title": "Detection and triage",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nd7d65652923fb56",
+              "title": "Where do you expect the first signal of a production compromise to...",
+              "markdown": "**Answer:** Ideally from **layered detection**: SIEM correlation on auth and admin APIs, EDR on hosts, cloud control-plane trails, WAF or API gateway anomalies, and application audit events. In practice many incidents surface via **customer support**, **finance** (fraud or invoice anomalies), or **engineering** noticing odd config drift. I want **detection engineering** to reduce noise so responders trust alerts, and I want **runbooks** that turn \"weird support ticket\" into a structured triage path.",
+              "notes": "Answer: Ideally from layered detection: SIEM correlation on auth and admin APIs, EDR on hosts, cloud control-plane trails, WAF or API gateway anomalies, and application audit events. In practice many incidents surface via customer support, finance (fraud or invoice anomalies), or engineering noticing odd config drift. I want detection engineering to reduce noise so responders trust alerts, and I want runbooks that turn \"weird support ticket\" into a structured triage path.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Ideally from layered detection: SIEM correlation on auth and admin...",
+              "expanded": false
+            },
+            {
+              "id": "n73271935f984283",
+              "title": "How do you decide whether to declare a formal security incident?",
+              "markdown": "**Answer:** I declare when there is **credible risk of harm** or **confirmed wrongdoing**, even if scope is unknown-examples include unexpected superuser actions, new persistence on servers, outbound connections to known C2 patterns, or verified credential leak affecting production. Formal declaration creates **audit trail**, mobilizes **legal and comms**, and prevents silent under-reaction. If it turns out benign, I downgrade with a short **post-triage note**; that is cheaper than missing a breach.",
+              "notes": "Answer: I declare when there is credible risk of harm or confirmed wrongdoing, even if scope is unknown-examples include unexpected superuser actions, new persistence on servers, outbound connections to known C2 patterns, or verified credential leak affecting production. Formal declaration creates audit trail, mobilizes legal and comms, and prevents silent under-reaction. If it turns out benign, I downgrade with a short post-triage note; that is cheaper than missing a breach.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: I declare when there is credible risk of harm or confirmed...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Where do you expect the first signal of a production compromise to...",
+          "expanded": false
+        },
+        {
+          "id": "na87ee6f4f73bb3e",
+          "title": "Containment and investigation",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n438d7fca83bd8e6",
+              "title": "How do you balance fast containment with preserving forensic evidence?",
+              "markdown": "**Answer:** I default to **non-destructive containment** first: invalidate sessions, revoke keys with a staged rollout, block IPs, deny IAM actions, or isolate network segments while **copying logs** to immutable storage. If I must wipe a host, I **image or snapshot** first when policy and time allow. I document every action with timestamps for **chain of custody**. When containment must be destructive, I get explicit **risk acceptance** from incident leadership that we may lose volatile artifacts.",
+              "notes": "Answer: I default to non-destructive containment first: invalidate sessions, revoke keys with a staged rollout, block IPs, deny IAM actions, or isolate network segments while copying logs to immutable storage. If I must wipe a host, I image or snapshot first when policy and time allow. I document every action with timestamps for chain of custody. When containment must be destructive, I get explicit risk acceptance from incident leadership that we may lose volatile artifacts.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: I default to non-destructive containment first: invalidate sessions,...",
+              "expanded": false
+            },
+            {
+              "id": "na72f0453824a0b0",
+              "title": "What containment options do you consider in cloud-native environments?",
+              "markdown": "**Answer:** At the **identity layer**: disable user, remove risky policy attachments, invalidate tokens at the IdP, rotate access keys with dual-publish where needed. At the **network layer**: security groups, private endpoints, firewall rules, organization-level guardrails. At the **workload layer**: stop tasks or instances, cordon and drain Kubernetes nodes, apply restrictive network policies. At the **data layer**: revoke database roles, enable read-only modes where safe, or block application paths via feature flags. I pick the **narrowest** change that stops abuse without unnecessary customer outage.",
+              "notes": "Answer: At the identity layer: disable user, remove risky policy attachments, invalidate tokens at the IdP, rotate access keys with dual-publish where needed. At the network layer: security groups, private endpoints, firewall rules, organization-level guardrails. At the workload layer: stop tasks or instances, cordon and drain Kubernetes nodes, apply restrictive network policies. At the data layer: revoke database roles, enable read-only modes where safe, or block application paths via feature flags. I pick the narrowest change that stops abuse without unnecessary customer outage.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: At the identity layer: disable user, remove risky policy...",
+              "expanded": false
+            },
+            {
+              "id": "nc6556db46f482f7",
+              "title": "A database alert suggests unauthorized access. What is your first-hour...",
+              "markdown": "**Answer:** I confirm the alert against **database audit logs**, **connection sources**, and **application logs**. I assume **credential or network path** compromise until ruled out. I contain by **revoking** suspicious database principals, **restricting** security groups or authorized networks, and **disabling** application paths that might be injecting malicious queries. I preserve **audit trail exports** and identify **which tables** and **time window** are in scope. I notify **legal** if the database holds personal or regulated data. I do **not** immediately restore from backup without understanding whether backup infrastructure is trusted.",
+              "notes": "Answer: I confirm the alert against database audit logs, connection sources, and application logs. I assume credential or network path compromise until ruled out. I contain by revoking suspicious database principals, restricting security groups or authorized networks, and disabling application paths that might be injecting malicious queries. I preserve audit trail exports and identify which tables and time window are in scope. I notify legal if the database holds personal or regulated data. I do not immediately restore from backup without understanding whether backup infrastructure is trusted.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: I confirm the alert against database audit logs, connection sources,...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes How do you balance fast containment with preserving forensic evidence",
+          "expanded": false
+        },
+        {
+          "id": "n30cba000ed4fe1c",
+          "title": "Eradication and recovery",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n5bfeb7b79c3a421",
+              "title": "How do you know eradication is complete?",
+              "markdown": "**Answer:** Eradication is more than \"alerts stopped.\" I look for **persistence**: cron, systemd units, new SSH keys, web shells, unexpected IAM users, shadow containers, or malicious supply-chain hooks in CI. I validate **all regions** and **non-production** environments that share credentials. I confirm **vulnerabilities are patched** and **misconfigurations fixed**, not bandaged. I perform **targeted threat hunting** with the IOCs and TTPs from the incident. Only then do I treat the environment as ready for **normal operations** under heightened monitoring.",
+              "notes": "Answer: Eradication is more than \"alerts stopped.\" I look for persistence: cron, systemd units, new SSH keys, web shells, unexpected IAM users, shadow containers, or malicious supply-chain hooks in CI. I validate all regions and non-production environments that share credentials. I confirm vulnerabilities are patched and misconfigurations fixed, not bandaged. I perform targeted threat hunting with the IOCs and TTPs from the incident. Only then do I treat the environment as ready for normal operations under heightened monitoring.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Eradication is more than \"alerts stopped.\" I look for persistence:...",
+              "expanded": false
+            },
+            {
+              "id": "nd842411fa628620",
+              "title": "Describe a safe recovery strategy after a confirmed host compromise.",
+              "markdown": "**Answer:** I prefer **rebuild from golden images** or fresh autoscaling groups rather than \"cleaning\" in place unless forensic requirements demand preservation. I restore data from **backups whose access logs** show no attacker tampering. I **rotate** all secrets that could have been read from that host, including service account keys and internal API tokens. I bring traffic back with **canaries** and **expanded logging**. I watch for **repeat access** using stolen credentials that were not rotated.",
+              "notes": "Answer: I prefer rebuild from golden images or fresh autoscaling groups rather than \"cleaning\" in place unless forensic requirements demand preservation. I restore data from backups whose access logs show no attacker tampering. I rotate all secrets that could have been read from that host, including service account keys and internal API tokens. I bring traffic back with canaries and expanded logging. I watch for repeat access using stolen credentials that were not rotated.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: I prefer rebuild from golden images or fresh autoscaling groups...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes How do you know eradication is complete?",
+          "expanded": false
+        },
+        {
+          "id": "n34642ad80a778f9",
+          "title": "Customer impact and communications",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nb2a1b58453a0279",
+              "title": "How do you assess customer impact during a security incident?",
+              "markdown": "**Answer:** I map **data categories** (credentials, PII, financial, health, secrets), **tenants and regions**, and **actions taken** (read, write, delete, exfil). I separate **confirmed** facts from **working hypotheses** in the incident record. I estimate whether **session tokens** or **API keys** could have been abused downstream. That assessment feeds **customer notices**, **forced resets**, and **support scripts**. I avoid over-claiming certainty when logs are incomplete.",
+              "notes": "Answer: I map data categories (credentials, PII, financial, health, secrets), tenants and regions, and actions taken (read, write, delete, exfil). I separate confirmed facts from working hypotheses in the incident record. I estimate whether session tokens or API keys could have been abused downstream. That assessment feeds customer notices, forced resets, and support scripts. I avoid over-claiming certainty when logs are incomplete.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: I map data categories (credentials, PII, financial, health,...",
+              "expanded": false
+            },
+            {
+              "id": "n1183fd6881a13fb",
+              "title": "Who needs to be in the loop internally during a serious production...",
+              "markdown": "**Answer:** At minimum: **incident commander**, **technical lead** for affected systems, **on-call engineering**, **security operations or detection**, **legal or privacy**, and a **communications** owner for internal executives. I add **customer success or support leadership** when external messaging is likely, **finance or risk** for insurance and materiality questions at larger companies, and **product** when feature-level containment is needed. I keep a **single executive summary cadence** so leaders are not forced to read raw technical threads.",
+              "notes": "Answer: At minimum: incident commander, technical lead for affected systems, on-call engineering, security operations or detection, legal or privacy, and a communications owner for internal executives. I add customer success or support leadership when external messaging is likely, finance or risk for insurance and materiality questions at larger companies, and product when feature-level containment is needed. I keep a single executive summary cadence so leaders are not forced to read raw technical threads.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: At minimum: incident commander, technical lead for affected systems,...",
+              "expanded": false
+            },
+            {
+              "id": "nbcc6536c48eaa09",
+              "title": "What principles guide external communication during a breach?",
+              "markdown": "**Answer:** **Accuracy over speed** where law allows: say what you know, what you are doing, and what customers should do. **Single narrative owner** coordinates status page, email, and social channels to avoid contradictions. **No speculation** about attribution or intent unless validated. **Legal review** before statements that touch regulatory duties or litigation risk. **Empathy and concrete steps** for affected users beat vague reassurance.",
+              "notes": "Answer: Accuracy over speed where law allows: say what you know, what you are doing, and what customers should do. Single narrative owner coordinates status page, email, and social channels to avoid contradictions. No speculation about attribution or intent unless validated. Legal review before statements that touch regulatory duties or litigation risk. Empathy and concrete steps for affected users beat vague reassurance.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Accuracy over speed where law allows: say what you know, what you...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes How do you assess customer impact during a security incident?",
+          "expanded": false
+        },
+        {
+          "id": "n3db9c871a5a42c2",
+          "title": "Logging, forensics, and legal",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n31bb5e56379172c",
+              "title": "Which logs matter most in production security investigations?",
+              "markdown": "**Answer:** **Identity and authorization** trails (IdP, cloud IAM, Kubernetes RBAC audit), **network** telemetry (flow logs, DNS, WAF), **application** audit events (admin actions, data exports), **database** audit if enabled, **CI/CD** and **deployment** history, and **EDR** process telemetry on workloads. Clock synchronization matters; skewed timestamps break timelines. I also check whether **log pipelines** themselves were tampered with or saturated.",
+              "notes": "Answer: Identity and authorization trails (IdP, cloud IAM, Kubernetes RBAC audit), network telemetry (flow logs, DNS, WAF), application audit events (admin actions, data exports), database audit if enabled, CI/CD and deployment history, and EDR process telemetry on workloads. Clock synchronization matters; skewed timestamps break timelines. I also check whether log pipelines themselves were tampered with or saturated.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Identity and authorization trails (IdP, cloud IAM, Kubernetes RBAC...",
+              "expanded": false
+            },
+            {
+              "id": "n58e2c2a447147e7",
+              "title": "When do you involve legal, and what do you ask them to decide?",
+              "markdown": "**Answer:** I involve legal when **personal or regulated data** may be affected, **contracts** require notice, **law enforcement** is in play, **public disclosure** could harm an investigation, or **securities or regulatory** reporting might apply. I ask them to guide **notification timing and content**, **privilege and documentation** practices, **preservation and legal hold**, and **geographic** nuances when users span multiple jurisdictions.",
+              "notes": "Answer: I involve legal when personal or regulated data may be affected, contracts require notice, law enforcement is in play, public disclosure could harm an investigation, or securities or regulatory reporting might apply. I ask them to guide notification timing and content, privilege and documentation practices, preservation and legal hold, and geographic nuances when users span multiple jurisdictions.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: I involve legal when personal or regulated data may be affected,...",
+              "expanded": false
+            },
+            {
+              "id": "n5c64f8a4b2fb9af",
+              "title": "What contractual ideas matter for SaaS operators during incidents?",
+              "markdown": "**Answer:** **Processor versus controller** roles, **subprocessor** notification clauses, **security incident** definitions and **notice windows**, **customer cooperation** duties (for example shared logging), and **credit or remedy** language. I align technical facts with **DPA** commitments before promising specific timelines to customers. I ensure **support and sales** do not commit to outcomes outside the contract.",
+              "notes": "Answer: Processor versus controller roles, subprocessor notification clauses, security incident definitions and notice windows, customer cooperation duties (for example shared logging), and credit or remedy language. I align technical facts with DPA commitments before promising specific timelines to customers. I ensure support and sales do not commit to outcomes outside the contract.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Processor versus controller roles, subprocessor notification...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Which logs matter most in production security investigations?",
+          "expanded": false
+        },
+        {
+          "id": "n61c7b065f0afe3a",
+          "title": "Post-incident and maturity",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n88b1043d00005ca",
+              "title": "What does a strong post-incident review produce?",
+              "markdown": "**Answer:** A **blameless timeline**, **root cause** and **contributing factors**, a **prioritized remediation list** with owners and dates, **detection gaps** turned into engineering tickets, and **updated runbooks**. It should also capture **what worked** in response so teams repeat good habits. I tie recommendations to **risk acceptance** when fixes cannot land immediately.",
+              "notes": "Answer: A blameless timeline, root cause and contributing factors, a prioritized remediation list with owners and dates, detection gaps turned into engineering tickets, and updated runbooks. It should also capture what worked in response so teams repeat good habits. I tie recommendations to risk acceptance when fixes cannot land immediately.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: A blameless timeline, root cause and contributing factors, a...",
+              "expanded": false
+            },
+            {
+              "id": "na21571724afeb7b",
+              "title": "How would you measure whether incident response is improving?",
+              "markdown": "**Answer:** I track **mean time to detect**, **mean time to contain**, **mean time to recover**, **customer-visible downtime** attributable to security events, **percent of incidents with complete timelines**, and **repeat incident rate** by category. I compare **tabletop** findings to real incidents. I review **post-incident action item** completion rates thirty and ninety days out. Trends matter more than single-event heroics.",
+              "notes": "Answer: I track mean time to detect, mean time to contain, mean time to recover, customer-visible downtime attributable to security events, percent of incidents with complete timelines, and repeat incident rate by category. I compare tabletop findings to real incidents. I review post-incident action item completion rates thirty and ninety days out. Trends matter more than single-event heroics.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: I track mean time to detect, mean time to contain, mean time to...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes What does a strong post-incident review produce?",
+          "expanded": false
+        },
+        {
+          "id": "n2e0e7a4eef48ca4",
+          "title": "Depth: Interview follow-ups \u2014 Production Security Incident Response",
+          "markdown": "**Authoritative references:** [NIST SP 800-61 Rev. 2](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-61r2.pdf) (Computer Security Incident Handling-verify the revision your employer standardizes on); [FIRST](https://www.first.org/) CSIRT practices.\n\n**Follow-ups interviewers often ask:**",
+          "notes": "Authoritative references: NIST SP 800-61 Rev. 2 (Computer Security Incident Handling-verify the revision your employer standardizes on); FIRST CSIRT practices.\n\nFollow-ups interviewers often ask:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n831449684e63f54",
+              "title": "Order of operations when exfiltration is suspected but containment might alert the attac",
+              "markdown": "- Order of operations when exfiltration is suspected but containment might alert the attac",
+              "notes": "Order of operations when exfiltration is suspected but containment might alert the attac",
+              "blurb": "Order of operations when exfiltration is suspected but containment might...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nca5be3febe704d4",
+              "title": "Evidence preservation versus business continuity when leadership wants immediate full re",
+              "markdown": "- Evidence preservation versus business continuity when leadership wants immediate full re",
+              "notes": "Evidence preservation versus business continuity when leadership wants immediate full re",
+              "blurb": "Evidence preservation versus business continuity when leadership wants...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n7f391b5475dc067",
+              "title": "Multi-tenant isolation: how you contain one customer without taking down the fleet.",
+              "markdown": "- Multi-tenant isolation: how you contain one customer without taking down the fleet.",
+              "notes": "Multi-tenant isolation: how you contain one customer without taking down the fleet.",
+              "blurb": "Multi-tenant isolation: how you contain one customer without taking down the...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n940f7a9bcc8b7eb",
+              "title": "Regulatory clocks: who starts the timer and on what factual trigger.",
+              "markdown": "- Regulatory clocks: who starts the timer and on what factual trigger.",
+              "notes": "Regulatory clocks: who starts the timer and on what factual trigger.",
+              "blurb": "Regulatory clocks: who starts the timer and on what factual trigger.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Authoritative references: NIST SP 800-61 Rev.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Fundamentals"
+    }
+  ],
+  "topicId": "production-security-incident-response",
+  "name": "Production Security Incident Response",
+  "structure": "logic-right",
+  "blurb": "This guide describes how product and platform security teams respond when..."
+}

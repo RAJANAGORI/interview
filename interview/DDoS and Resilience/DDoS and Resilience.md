@@ -7,3 +7,5 @@
 [**Critical Clarification: DDoS and Resilience Misconceptions**](Critical%20Clarification%20DDoS%20and%20Resilience%20Misconceptions.md)
 
 [**DDoS and Resilience - Quick Reference**](DDoS%20and%20Resilience%20-%20Quick%20Reference.md)
+
+[**DDoS and Resilience - Mind Map**](DDoS%20and%20Resilience%20-%20Mind%20Map.md)

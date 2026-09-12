@@ -1,0 +1,84 @@
+{
+  "topicId": "http-request-smuggling",
+  "name": "HTTP Request Smuggling",
+  "source": "HTTP Request Smuggling/HTTP Request Smuggling - Interview Questions & Answers.md",
+  "prompts": [
+    {
+      "id": "p57ced8650e9c30",
+      "cluster": "Mechanism and taxonomy",
+      "title": "Q: What is TE.TE?",
+      "seconds": 90,
+      "answerMarkdown": "**A:** Both sides claim to support **`Transfer-Encoding`**, but **obfuscation**-duplicate TE headers, `chunked` with junk, spacing/casing tricks-makes **one** parser normalize to **chunked** and the **other** fall back to **`Content-Length`** or ignore TE. It collapses into another **CL vs TE** split after normalization."
+    },
+    {
+      "id": "p42b2727a9a901c",
+      "cluster": "Mechanism and taxonomy",
+      "title": "Q: How does HTTP/2 relate to smuggling?",
+      "seconds": 90,
+      "answerMarkdown": "**A:** HTTP/2 frames messages differently (no CL/TE on the wire in the same way). Risk appears at **HTTP/2 \u2192 HTTP/1.1 downgrade**: the intermediary translates H2 to H1 and may produce **invalid or ambiguous** CL/TE combinations the **origin** parses differently. Interviewers expect you to mention **downgrade** and **dual-stack** edges, not \"H2 fixes everything.\"\n\n---"
+    },
+    {
+      "id": "p85adffaadcfed6",
+      "cluster": "Impact and exploitation",
+      "title": "Q: What can you actually achieve with smuggling?",
+      "seconds": 90,
+      "answerMarkdown": "**A:** Typical goals: **web cache poisoning** (smuggle a stored response), **credential/header smuggling** (prepend a request with attacker-controlled headers), **routing bypass** (hit internal-only paths), and **filter bypass** (WAF sees request A; origin executes B). **RCE** is **not** guaranteed-it requires a **further** vulnerable component-but teams still rate smuggling **high** because it **breaks isolation assumptions**."
+    },
+    {
+      "id": "p0d77d2c08ea9dc",
+      "cluster": "Impact and exploitation",
+      "title": "Q: Smuggling vs HTTP request splitting?",
+      "seconds": 90,
+      "answerMarkdown": "**A:** **Splitting** often refers to **header injection** via CRLF in a single hop (e.g. bad concatenation). **Smuggling** is specifically **two processors** disagreeing on **body framing** across **tiers**. In practice, **reporting** may blur terms; clarify **trust boundaries**.\n\n---"
+    },
+    {
+      "id": "p375090e732425e",
+      "cluster": "Defense and architecture",
+      "title": "Q: How would you fix smuggling in production?",
+      "seconds": 90,
+      "answerMarkdown": "**A:** Tiered answer: (1) **Patch** proxy and app servers to versions that **reject** RFC-illegal CL+TE combinations. (2) **Configure** the edge to **normalize** or **drop** ambiguous requests. (3) **Avoid** blind H2\u2192H1 if parsers differ. (4) **Testing:** regression **desync** tests in staging. (5) **Operational:** monitor **duplicate CL**, **chunked on odd routes**, and **connection reuse** errors."
+    },
+    {
+      "id": "pb45563cb6ba90e",
+      "cluster": "Defense and architecture",
+      "title": "Q: Who owns the fix\u2014CDN or application team?",
+      "seconds": 90,
+      "answerMarkdown": "**A:** **Both.** The **edge** must enforce **strict** HTTP; the **origin** must not **accept** framing that contradicts the edge. Staff answer: **platform SRE** ships parser upgrades; **app** avoids **assumptions** about body length; **security** runs **purple-team** validation."
+    },
+    {
+      "id": "pe7a7ed1653d1c0",
+      "cluster": "Defense and architecture",
+      "title": "Q: Is disabling keep-alive a valid mitigation?",
+      "seconds": 90,
+      "answerMarkdown": "**A:** It **reduces** impact from **cross-request** desync on one TCP connection but **hurts performance** and may not eliminate all classes. It is a **containment** lever, not a **complete** strategy.\n\n---"
+    },
+    {
+      "id": "p2596ef8f79dba6",
+      "cluster": "Testing and validation",
+      "title": "Q: How do you test for smuggling safely?",
+      "seconds": 90,
+      "answerMarkdown": "**A:** Only with **written authorization** and on **non-prod** or **lab** stacks. Use **Burp HTTP Request Smuggler** / Academy labs; capture **before/after** with **tcpdump** to prove framing. In prod-like envs, coordinate with **SRE** to avoid **availability** impact."
+    },
+    {
+      "id": "p6ff5a99bf3d745",
+      "cluster": "Testing and validation",
+      "title": "Q: What proves remediation worked?",
+      "seconds": 90,
+      "answerMarkdown": "**A:** **Prior** PoC fails **reliably** after change; **automated** negative tests pass; **edge logs** show **rejection** of ambiguous patterns; **no** new desync variants in **follow-up** assessment.\n\n---"
+    },
+    {
+      "id": "p73962d33d246cf",
+      "cluster": "Senior / staff traps",
+      "title": "Q: Our WAF blocks smuggling payloads. Are we safe?",
+      "seconds": 90,
+      "answerMarkdown": "**A:** **No.** If the WAF parses differently than the origin, the WAF can be **bypassed** by smuggling-the **origin** still sees the smuggled request. **Consistent parsing** matters more than a **signature**."
+    },
+    {
+      "id": "p8211fc73de535b",
+      "cluster": "Senior / staff traps",
+      "title": "Q: How do you roll out stricter header validation without an outage?",
+      "seconds": 90,
+      "answerMarkdown": "**A:** **Canary** on a slice of traffic; **monitor** 4xx/5xx and **latency**; **allowlist** known-bad legacy clients if needed; **time-box** exceptions with **compensating** monitoring; **document** residual risk.\n\n---"
+    }
+  ]
+}

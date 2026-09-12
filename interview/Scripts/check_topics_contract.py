@@ -10,7 +10,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 TOPICS_PATH = ROOT / "interview" / "Config" / "topics.json"
 REQUIRED_MIN_KEYS = ("comprehensive", "questions")
-OPTIONAL_KEYS = ("critical", "quickRef", "mastery")
+OPTIONAL_KEYS = ("critical", "quickRef", "mastery", "mindMap")
 
 
 def main() -> int:

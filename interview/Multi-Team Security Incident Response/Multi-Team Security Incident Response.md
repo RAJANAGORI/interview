@@ -7,3 +7,5 @@
 [**Critical Clarification: Multi-Team Security Incident Response Misconceptions**](Critical%20Clarification%20Multi-Team%20Security%20Inciden.md)
 
 [**Multi-Team Security Incident Response - Quick Reference**](Multi-Team%20Security%20Incident%20Response%20-%20Quick%20Refe.md)
+
+[**Multi-Team Security Incident Response - Mind Map**](Multi-Team%20Security%20Incident%20Response%20-%20Mind%20Map.md)

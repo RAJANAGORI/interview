@@ -7,3 +7,5 @@
 [**Critical Clarification: Proactive Security Assessment Misconceptions**](Critical%20Clarification%20Proactive%20Security%20Assessme.md)
 
 [**Proactive Security Assessment - Quick Reference**](Proactive%20Security%20Assessment%20-%20Quick%20Reference.md)
+
+[**Proactive Security Assessment - Mind Map**](Proactive%20Security%20Assessment%20-%20Mind%20Map.md)

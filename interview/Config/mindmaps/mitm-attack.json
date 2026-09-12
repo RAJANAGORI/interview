@@ -1,0 +1,2048 @@
+{
+  "id": "n65122d9d0ce1612",
+  "title": "MITM Attack",
+  "markdown": "This guide explains how adversaries insert themselves on the path between a client and a legitimate peer, what breaks when they succeed, and how modern transport, identity, and enterprise controls reduce (but rarely eliminate) the risk. It focuses on **ARP**, **DNS**, and **Wi\u2011Fi** positioning; **rogue or misplaced trust** in certificates; **SSL stripping**; **detection** patterns; **mutual TLS (mTLS)**; **HSTS**; and **enterprise** hardening.",
+  "notes": "This guide explains how adversaries insert themselves on the path between a client and a legitimate peer, what breaks when they succeed, and how modern transport, identity, and enterprise controls reduce (but rarely eliminate) the risk. It focuses on ARP, DNS, and Wi\u2011Fi positioning; rogue or misplaced trust in certificates; SSL stripping; detection patterns; mutual TLS (mTLS); HSTS; and enterprise hardening.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "n2354144d4d6dc00",
+      "title": "Threat model: what \u201cMITM\u201d means in practice",
+      "markdown": "A **man-in-the-middle** adversary can **observe**, **relay**, and sometimes **modify** traffic between endpoints. Outcomes include credential theft, session hijacking, content injection, and silent downgrade of security assumptions.\n\n**Important distinction:** End-to-end encryption (TLS between client and real server) defeats **passive** wire sniffing on the local segment, but **active** attackers who control naming, routing, or trust can still win if the victim accepts the wrong identity, uses plaintext, or runs compromised software (e.g., malware inside the browser or OS).\n\n```\nLegitimate:  Client \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25ba Server\nMITM path:   Client \u2500\u2500\u25ba Attacker (proxy/decrypt) \u2500\u2500\u25ba Server\n```\n\nThe attacker's job is twofold: **be on the path** (network layer) and **win the trust negotiation** (cryptographic / UX layer), or **avoid TLS entirely** (stripping, cleartext legacy).",
+      "notes": "A man-in-the-middle adversary can observe, relay, and sometimes modify traffic between endpoints. Outcomes include credential theft, session hijacking, content injection, and silent downgrade of security assumptions.\n\nImportant distinction: End-to-end encryption (TLS between client and real server) defeats passive wire sniffing on the local segment, but active attackers who control naming, routing, or trust can still win if the victim accepts the wrong identity, uses plaintext, or runs compromised software (e.g., malware inside the browser or OS).\n\nLegitimate:  Client \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u25ba Server\nMITM path:   Client \u2500\u2500\u25ba Attacker (proxy/decrypt) \u2500\u2500\u25ba Server\n\nThe attacker's job is twofold: be on the path (network layer) and win the trust negotiation (cryptographic / UX layer), or avoid TLS entirely (stripping, cleartext legacy).",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "A man-in-the-middle adversary can observe, relay, and sometimes modify...",
+      "expanded": false
+    },
+    {
+      "id": "n17e82fc5deb513d",
+      "title": "Controls & design",
+      "markdown": "",
+      "notes": "",
+      "expanded": true,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n82322ad3492081b",
+          "title": "SSL/TLS stripping and HTTP downgrade",
+          "markdown": "**SSL stripping** is an **active** attack: the attacker keeps a **plaintext** session with the victim while speaking **TLS** upstream to the real site (or blocks upgrade), often rewriting links and `Location` headers.\n\n**Why it works:** If the user first hits `http://` or if **any** subresource or redirect path allows HTTP, the attacker can keep the browser on HTTP long enough to steal cookies or credentials sent in cleartext.\n\n**HSTS (HTTP Strict Transport Security)** tells browsers \"only use HTTPS for this host (and optionally subdomains) for `max-age` seconds.\" With **`includeSubDomains`**, coverage is broader; **`preload`** (submission to browser preload lists) protects **first visit** scenarios where an attacker might otherwise strip before the first secure response.\n\n**Limits of HSTS:** It does not stop malware, compromised CAs in the trust store, or attackers who already control a **valid** cert for your name. It is a **downgrade resistance** control, not a substitute for correct TLS configuration or app-level auth.\n\n**Server hygiene:** Default HTTPS, **301** to HTTPS, no mixed content, correct redirects, and short-lived HSTS during rollout then ramp `max-age`.",
+          "notes": "SSL stripping is an active attack: the attacker keeps a plaintext session with the victim while speaking TLS upstream to the real site (or blocks upgrade), often rewriting links and Location headers.\n\nWhy it works: If the user first hits http:// or if any subresource or redirect path allows HTTP, the attacker can keep the browser on HTTP long enough to steal cookies or credentials sent in cleartext.\n\nHSTS (HTTP Strict Transport Security) tells browsers \"only use HTTPS for this host (and optionally subdomains) for max-age seconds.\" With includeSubDomains, coverage is broader; preload (submission to browser preload lists) protects first visit scenarios where an attacker might otherwise strip before the first secure response.\n\nLimits of HSTS: It does not stop malware, compromised CAs in the trust store, or attackers who already control a valid cert for your name. It is a downgrade resistance control, not a substitute for correct TLS configuration or app-level auth.\n\nServer hygiene: Default HTTPS, 301 to HTTPS, no mixed content, correct redirects, and short-lived HSTS during rollout then ramp max-age.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "SSL stripping is an active attack: the attacker keeps a plaintext session...",
+          "expanded": false
+        },
+        {
+          "id": "nd932030d863a71a",
+          "title": "Mutual TLS (mTLS)",
+          "markdown": "**mTLS** authenticates **both** client and server with X.509 certificates. It is widely used for **service-to-service** APIs, meshes, and high-assurance B2B integrations.\n\n**MITM relevance:**\n\n- Against **network-only** attackers who lack a **client cert** and a **server-trusted** client identity, mTLS raises the bar substantially.\n- It **does not** help if the attacker **is** the client (stolen key), if **private keys** leak, or if **verification** is misconfigured (e.g., skipping hostname checks, overly broad SANs, shared weak CAs).\n\n**Operational requirements:** Secure **key generation and storage** (HSM, TPM, cloud KMS), **rotation**, **revocation** strategy (OCSP stapling, CRL limitations), and **authorization** after authentication-mTLS proves possession of a cert, not business intent.",
+          "notes": "mTLS authenticates both client and server with X.509 certificates. It is widely used for service-to-service APIs, meshes, and high-assurance B2B integrations.\n\nMITM relevance:\n- Against network-only attackers who lack a client cert and a server-trusted client identity, mTLS raises the bar substantially.\n- It does not help if the attacker is the client (stolen key), if private keys leak, or if verification is misconfigured (e.g., skipping hostname checks, overly broad SANs, shared weak CAs).\n\nOperational requirements: Secure key generation and storage (HSM, TPM, cloud KMS), rotation, revocation strategy (OCSP stapling, CRL limitations), and authorization after authentication-mTLS proves possession of a cert, not business intent.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "mTLS authenticates both client and server with X.509 certificates.",
+          "expanded": false
+        },
+        {
+          "id": "nc2acf26c2f4ef57",
+          "title": "Enterprise control stack (defense in depth)",
+          "markdown": "| Layer | Examples |\n|--------|----------|\n| Identity & device | MDM, conditional access, phishing-resistant MFA, device health attestation |\n| Network | NAC, segmented VLANs, DAI, private Wi\u2011Fi with 802.1X, guest isolation |\n| Transport | TLS 1.2+ (prefer 1.3), strong ciphers, HSTS, OCSP stapling, AEAD-only suites |\n| Application | mTLS for internal APIs, OAuth sender-constraining mechanisms (e.g., DPoP) where applicable, secure cookies (`Secure`, `HttpOnly`, `SameSite`) |\n| Naming | Internal DNS integrity, DoH/DoT policy with approved resolvers, DNSSEC where feasible |\n| Monitoring | NDR, EDR, CT logs, proxy/SIEM correlation |\n\n**Zero Trust pattern:** Assume the local network is hostile; require **authenticated, encrypted** channels to apps and **continuous verification** rather than perimeter trust alone.",
+          "notes": "| Layer | Examples |\n|--------|----------|\n| Identity & device | MDM, conditional access, phishing-resistant MFA, device health attestation |\n| Network | NAC, segmented VLANs, DAI, private Wi\u2011Fi with 802.1X, guest isolation |\n| Transport | TLS 1.2+ (prefer 1.3), strong ciphers, HSTS, OCSP stapling, AEAD-only suites |\n| Application | mTLS for internal APIs, OAuth sender-constraining mechanisms (e.g., DPoP) where applicable, secure cookies (Secure, HttpOnly, SameSite) |\n| Naming | Internal DNS integrity, DoH/DoT policy with approved resolvers, DNSSEC where feasible |\n| Monitoring | NDR, EDR, CT logs, proxy/SIEM correlation |\n\nZero Trust pattern: Assume the local network is hostile; require authenticated, encrypted channels to apps and continuous verification rather than perimeter trust alone.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Layer | Examples | |--------|----------| | Identity & device | MDM,...",
+          "expanded": false
+        },
+        {
+          "id": "nd0738f3de2f0888",
+          "title": "What TLS does and does not guarantee",
+          "markdown": "**TLS provides:** Confidentiality and integrity **on the wire** between endpoints that successfully authenticate the peer per the **client's trust rules**.\n\n**TLS does not alone provide:** Phishing resistance, malware resistance, or protection when the **trust store** is adversarial. Combine TLS with **strong endpoint hygiene**, **naming controls**, **HSTS**, **mTLS** where appropriate, and **application-layer auth** bound to context (device, user, audience).",
+          "notes": "TLS provides: Confidentiality and integrity on the wire between endpoints that successfully authenticate the peer per the client's trust rules.\n\nTLS does not alone provide: Phishing resistance, malware resistance, or protection when the trust store is adversarial. Combine TLS with strong endpoint hygiene, naming controls, HSTS, mTLS where appropriate, and application-layer auth bound to context (device, user, audience).",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n7b358d62e728723",
+              "title": "1 QUIC, HTTP/3, and Encrypted Client Hello (ECH)",
+              "markdown": "**QUIC** (HTTP/3) encrypts more of the handshake than classic TLS over TCP; **SNI** may be encrypted with **ECH** when both client and server support it. These features **raise the cost** of trivial passive profiling on the path but **do not** remove the need for **correct certificate validation** or protection against **local malware** and **rogue trust**. Enterprise proxies that relied on **cleartext SNI** for policy may need updated architectures (e.g., **explicit** client agents, **ZTNA**, or **approved** decryption with user consent and MDM).",
+              "notes": "QUIC (HTTP/3) encrypts more of the handshake than classic TLS over TCP; SNI may be encrypted with ECH when both client and server support it. These features raise the cost of trivial passive profiling on the path but do not remove the need for correct certificate validation or protection against local malware and rogue trust. Enterprise proxies that relied on cleartext SNI for policy may need updated architectures (e.g., explicit client agents, ZTNA, or approved decryption with user consent and MDM).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "QUIC (HTTP/3) encrypts more of the handshake than classic TLS over TCP; SNI...",
+              "expanded": false
+            }
+          ],
+          "blurb": "TLS provides: Confidentiality and integrity on the wire between endpoints...",
+          "expanded": false
+        },
+        {
+          "id": "na197233d2227512",
+          "title": "Testing and validation (short checklist)",
+          "markdown": "Confirm no sensitive paths on HTTP; verify HSTS headers and preload policy if used.",
+          "notes": "Confirm no sensitive paths on HTTP; verify HSTS headers and preload policy if used.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n1405625eb4cffcb",
+              "title": "Confirm no sensitive paths on HTTP; verify HSTS headers and preload policy if used.",
+              "markdown": "- Confirm no sensitive paths on HTTP; verify HSTS headers and preload policy if used.",
+              "notes": "Confirm no sensitive paths on HTTP; verify HSTS headers and preload policy if used.",
+              "blurb": "Confirm no sensitive paths on HTTP; verify HSTS headers and preload policy...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n1a33f609280b5ec",
+              "title": "From an external vantage, review chain, CT presence, CAA, and revocation behavior.",
+              "markdown": "- From an external vantage, review chain, CT presence, CAA, and revocation behavior.",
+              "notes": "From an external vantage, review chain, CT presence, CAA, and revocation behavior.",
+              "blurb": "From an external vantage, review chain, CT presence, CAA, and revocation...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0fbb43ea6444b79",
+              "title": "In enterprise environments, document SSL inspection scope and break-glass procedures.",
+              "markdown": "- In enterprise environments, document SSL inspection scope and break-glass procedures.",
+              "notes": "In enterprise environments, document SSL inspection scope and break-glass procedures.",
+              "blurb": "In enterprise environments, document SSL inspection scope and break-glass...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n034fcbd86af54e6",
+              "title": "Red-team LAN scenarios (authorized tests): ARP positioning + strip attempt vs HSTS-enabl",
+              "markdown": "- Red-team LAN scenarios (authorized tests): ARP positioning + strip attempt vs HSTS-enabl",
+              "notes": "Red-team LAN scenarios (authorized tests): ARP positioning + strip attempt vs HSTS-enabl",
+              "blurb": "Red-team LAN scenarios (authorized tests): ARP positioning + strip attempt...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Confirm no sensitive paths on HTTP; verify HSTS headers and preload policy...",
+          "expanded": false
+        },
+        {
+          "id": "n4950b67f41007b2",
+          "title": "mTLS in platforms (Kubernetes, service mesh, APIs)",
+          "markdown": "**Kubernetes:** Common patterns use a **service mesh** (mutual TLS between sidecars) or **ingress** configurations that require client certificates for admin or internal routes. Ensure **SAN/CN** rules match how clients identify services (DNS names, SPIFFE IDs).\n\n**API gateways:** Offload client cert validation, map **issuer -> consumer**, and apply **rate limits** and **scopes** after TLS handshake success.\n\n**Failure modes to audit:**",
+          "notes": "Kubernetes: Common patterns use a service mesh (mutual TLS between sidecars) or ingress configurations that require client certificates for admin or internal routes. Ensure SAN/CN rules match how clients identify services (DNS names, SPIFFE IDs).\n\nAPI gateways: Offload client cert validation, map issuer -> consumer, and apply rate limits and scopes after TLS handshake success.\n\nFailure modes to audit:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n9b96fba4f7809dc",
+              "title": "Accepting any cert signed by a broad internal CA without SPIFFE/SAN scoping.",
+              "markdown": "- Accepting any cert signed by a broad internal CA without SPIFFE/SAN scoping.",
+              "notes": "Accepting any cert signed by a broad internal CA without SPIFFE/SAN scoping.",
+              "blurb": "Accepting any cert signed by a broad internal CA without SPIFFE/SAN scoping.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n2ebf70a7c3bfcfe",
+              "title": "CRL/OCSP disabled everywhere, so revoked certs still work until gateway config is fixed.",
+              "markdown": "- CRL/OCSP disabled everywhere, so revoked certs still work until gateway config is fixed.",
+              "notes": "CRL/OCSP disabled everywhere, so revoked certs still work until gateway config is fixed.",
+              "blurb": "CRL/OCSP disabled everywhere, so revoked certs still work until gateway...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5a4a28bd8460768",
+              "title": "Shared private keys across environments (dev/stage/prod)-one leak compromises all.",
+              "markdown": "- Shared private keys across environments (dev/stage/prod)-one leak compromises all.",
+              "notes": "Shared private keys across environments (dev/stage/prod)-one leak compromises all.",
+              "blurb": "Shared private keys across environments (dev/stage/prod)-one leak...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Kubernetes: Common patterns use a service mesh (mutual TLS between sidecars)...",
+          "expanded": false
+        },
+        {
+          "id": "nd450695ea4e0801",
+          "title": "Wi\u2011Fi hardening checklist (concise)",
+          "markdown": "Prefer WPA3; for enterprise, 802.1X with EAP methods that validate server certificates on clients.",
+          "notes": "Prefer WPA3; for enterprise, 802.1X with EAP methods that validate server certificates on clients.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n386a21ac698bc65",
+              "title": "Prefer WPA3; for enterprise, 802.1X with EAP methods that validate server certificates o",
+              "markdown": "- Prefer WPA3; for enterprise, 802.1X with EAP methods that validate server certificates o",
+              "notes": "Prefer WPA3; for enterprise, 802.1X with EAP methods that validate server certificates o",
+              "blurb": "Prefer WPA3; for enterprise, 802.1X with EAP methods that validate server...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n7da4972d01e98b8",
+              "title": "Guest network isolation from corporate VLANs; captive portal on a dedicated SSID with cl",
+              "markdown": "- Guest network isolation from corporate VLANs; captive portal on a dedicated SSID with cl",
+              "notes": "Guest network isolation from corporate VLANs; captive portal on a dedicated SSID with cl",
+              "blurb": "Guest network isolation from corporate VLANs; captive portal on a dedicated...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n586f27756a98619",
+              "title": "Disable legacy protocols where possible; patch AP firmware for known attacks against old",
+              "markdown": "- Disable legacy protocols where possible; patch AP firmware for known attacks against old",
+              "notes": "Disable legacy protocols where possible; patch AP firmware for known attacks against old",
+              "blurb": "Disable legacy protocols where possible; patch AP firmware for known attacks...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nfac91dc55188f82",
+              "title": "For remote workers, always-on device tunnel to corporate ZTNA or VPN for access to sensi",
+              "markdown": "- For remote workers, always-on device tunnel to corporate ZTNA or VPN for access to sensi",
+              "notes": "For remote workers, always-on device tunnel to corporate ZTNA or VPN for access to sensi",
+              "blurb": "For remote workers, always-on device tunnel to corporate ZTNA or VPN for...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Prefer WPA3; for enterprise, 802.1X with EAP methods that validate server...",
+          "expanded": false
+        },
+        {
+          "id": "nd55db9253e26a91",
+          "title": "Certificate validation anti-patterns (where MITM survives TLS)",
+          "markdown": "TLS only works when endpoint identity checks are implemented correctly. Common failures:",
+          "notes": "TLS only works when endpoint identity checks are implemented correctly. Common failures:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ne5f8ceb9ad7dd33",
+              "title": "Mobile/backend clients disable certificate verification for convenience in test code and",
+              "markdown": "- Mobile/backend clients disable certificate verification for convenience in test code and",
+              "notes": "Mobile/backend clients disable certificate verification for convenience in test code and",
+              "blurb": "Mobile/backend clients disable certificate verification for convenience in...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n29a9bb63408af50",
+              "title": "Hostname validation skipped while still validating certificate chain.",
+              "markdown": "- Hostname validation skipped while still validating certificate chain.",
+              "notes": "Hostname validation skipped while still validating certificate chain.",
+              "blurb": "Hostname validation skipped while still validating certificate chain.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n71a8ef93ac59f61",
+              "title": "Over-broad trust bundles (accepting internal test roots in production apps).",
+              "markdown": "- Over-broad trust bundles (accepting internal test roots in production apps).",
+              "notes": "Over-broad trust bundles (accepting internal test roots in production apps).",
+              "blurb": "Over-broad trust bundles (accepting internal test roots in production apps).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nca94ca2da4a3690",
+              "title": "Pinned-key rollout mistakes causing emergency bypass toggles that permanently weaken tru",
+              "markdown": "- Pinned-key rollout mistakes causing emergency bypass toggles that permanently weaken tru",
+              "notes": "Pinned-key rollout mistakes causing emergency bypass toggles that permanently weaken tru",
+              "blurb": "Pinned-key rollout mistakes causing emergency bypass toggles that...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5fc6de8ee98ac27",
+              "title": "Enforce verification in shared HTTP/TLS client libraries with no insecure toggle in prod",
+              "markdown": "- Enforce verification in shared HTTP/TLS client libraries with no insecure toggle in prod",
+              "notes": "Enforce verification in shared HTTP/TLS client libraries with no insecure toggle in prod",
+              "blurb": "Enforce verification in shared HTTP/TLS client libraries with no insecure...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n00929926ab8d684",
+              "title": "Gate CI on static checks for verify=false/insecureSkipVerify-style flags.",
+              "markdown": "- Gate CI on static checks for verify=false/insecureSkipVerify-style flags.",
+              "notes": "Gate CI on static checks for verify=false/insecureSkipVerify-style flags.",
+              "blurb": "Gate CI on static checks for verify=false/insecureSkipVerify-style flags.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nec60b9e88a65fd8",
+              "title": "Separate dev/stage/prod trust anchors and automate trust-store hygiene with MDM/platform",
+              "markdown": "- Separate dev/stage/prod trust anchors and automate trust-store hygiene with MDM/platform",
+              "notes": "Separate dev/stage/prod trust anchors and automate trust-store hygiene with MDM/platform",
+              "blurb": "Separate dev/stage/prod trust anchors and automate trust-store hygiene with...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "TLS only works when endpoint identity checks are implemented correctly.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes SSL/TLS stripping and HTTP downgrade"
+    },
+    {
+      "id": "n12a17523e9ec796",
+      "title": "Operations",
+      "markdown": "",
+      "notes": "",
+      "expanded": true,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n801ae01444f472e",
+          "title": "Detection: knowing someone is in the middle",
+          "markdown": "**Network telemetry:**\n\n- **ARP/DHCP anomalies:** sudden gateway MAC changes, duplicate IPs, DHCP exhaustion patterns.\n- **TLS fingerprinting / JA3-style signals** (where legal and privacy-reviewed) for unexpected middleboxes.\n- **NetFlow / Zeek (Bro) / NDR** alerts for internal hosts acting as **routers** or unusual **proxy** traffic.\n- **East-west** flows that **should not** exist: a workstation suddenly **accepts** forwarded sessions from peers (possible **Internet Connection Sharing** abuse or malware).\n- **Latency** step-changes on TLS handshakes when paths move through an **unauthorized** proxy.\n\n**Endpoint signals:**\n\n- Unexpected **system proxy** or **WPAD** changes.\n- New **root certificates** or TLS interception products.\n- Browser **certificate errors** spikes (often ignored-correlate with helpdesk tickets).\n- **Mobile profiles** that add trust anchors or VPN payloads without IT approval.\n\n**Certificate intelligence:**\n\n- **CT monitoring** for your brands and high-value hostnames.\n- Alerts on **issuer** or **key** changes not tied to planned rotation.\n- Compare **public** issuance with **internal CMDB** change tickets.\n\n**Application logs:**\n\n- **TLS version/cipher** shifts, **SNI** mismatches, or clients connecting from **unexpected ASNs** after DNS events.\n- **JWT** or **session** minting from **new** device fingerprints immediately after **DNS** or **network** change events.\n\n**Runbooks:** isolate host, rotate credentials, verify resolver settings, check MDM compliance, compare **authorized** proxy logs, and **re-image** if root trust tampering is confirmed.",
+          "notes": "Network telemetry:\n- ARP/DHCP anomalies: sudden gateway MAC changes, duplicate IPs, DHCP exhaustion patterns.\n- TLS fingerprinting / JA3-style signals (where legal and privacy-reviewed) for unexpected middleboxes.\n- NetFlow / Zeek (Bro) / NDR alerts for internal hosts acting as routers or unusual proxy traffic.\n- East-west flows that should not exist: a workstation suddenly accepts forwarded sessions from peers (possible Internet Connection Sharing abuse or malware).\n- Latency step-changes on TLS handshakes when paths move through an unauthorized proxy.\n\nEndpoint signals:\n- Unexpected system proxy or WPAD changes.\n- New root certificates or TLS interception products.\n- Browser certificate errors spikes (often ignored-correlate with helpdesk tickets).\n- Mobile profiles that add trust anchors or VPN payloads without IT approval.\n\nCertificate intelligence:\n- CT monitoring for your brands and high-value hostnames.\n- Alerts on issuer or key changes not tied to planned rotation.\n- Compare public issuance with internal CMDB change tickets.\n\nApplication logs:\n- TLS version/cipher shifts, SNI mismatches, or clients connecting from unexpected ASNs after DNS events.\n- JWT or session minting from new device fingerprints immediately after DNS or network change events.\n\nRunbooks: isolate host, rotate credentials, verify resolver settings, check MDM compliance, compare authorized proxy logs, and re-image if root trust tampering is confirmed.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nee3bad604b65250",
+              "title": "1 Quick mapping: attack posture vs primary controls",
+              "markdown": "| Attacker position | Typical goal | First-line controls |\n|-------------------|--------------|---------------------|\n| LAN ARP poison | Cleartext capture, strip, or proxy | DAI, 802.1X, segmentation, TLS + HSTS |\n| Rogue DNS / DHCP | Redirect to attacker IP | DHCP snooping, DNSSEC validation, resolver policy, TLS identity |\n| Evil twin Wi\u2011Fi | Capture creds / push config | WPA3-Enterprise, MDM, ZTNA/VPN, user training |\n| Rogue public CA cert | Silent HTTPS MITM | CT monitoring, CAA, short-lived certs, pinning (where justified) |\n| Enterprise inspect CA | Policy visibility | Governance, scoped trust, HSM, audit |",
+              "notes": "| Attacker position | Typical goal | First-line controls |\n|-------------------|--------------|---------------------|\n| LAN ARP poison | Cleartext capture, strip, or proxy | DAI, 802.1X, segmentation, TLS + HSTS |\n| Rogue DNS / DHCP | Redirect to attacker IP | DHCP snooping, DNSSEC validation, resolver policy, TLS identity |\n| Evil twin Wi\u2011Fi | Capture creds / push config | WPA3-Enterprise, MDM, ZTNA/VPN, user training |\n| Rogue public CA cert | Silent HTTPS MITM | CT monitoring, CAA, short-lived certs, pinning (where justified) |\n| Enterprise inspect CA | Policy visibility | Governance, scoped trust, HSM, audit |",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "| Attacker position | Typical goal | First-line controls |...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Network telemetry: - ARP/DHCP anomalies: sudden gateway MAC changes,...",
+          "expanded": false
+        },
+        {
+          "id": "ncab98f480fd0004",
+          "title": "SSL inspection governance",
+          "markdown": "When organizations decrypt TLS, **legal and privacy** reviews should define **what** is inspected, **who** can see decrypted payloads, **retention**, and **exceptions** (banking, health, BYOD). Technically, pin **inspection policies** to **identity groups** and **destinations**, and **log access** to decrypted streams with **separation of duties**.\n\n**Blast-radius controls:** HSM-backed signing for the inspection CA, **offline** root with **online** intermediates, **hardware** security for log stores, and **red-team** tests on proxy bypass via **DNS-over-HTTPS** or **non-standard ports** (then respond with policy and egress controls, not only blocking).",
+          "notes": "When organizations decrypt TLS, legal and privacy reviews should define what is inspected, who can see decrypted payloads, retention, and exceptions (banking, health, BYOD). Technically, pin inspection policies to identity groups and destinations, and log access to decrypted streams with separation of duties.\n\nBlast-radius controls: HSM-backed signing for the inspection CA, offline root with online intermediates, hardware security for log stores, and red-team tests on proxy bypass via DNS-over-HTTPS or non-standard ports (then respond with policy and egress controls, not only blocking).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "When organizations decrypt TLS, legal and privacy reviews should define what...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Detection: knowing someone is in the middle"
+    },
+    {
+      "id": "n9e8a4b5dd688eb3",
+      "title": "ARP/DNS lab indicators (for blue teams)",
+      "markdown": "In controlled exercises, expect:",
+      "notes": "In controlled exercises, expect:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n0e40f4992328e61",
+          "title": "Gratuitous ARP bursts correlating with gateway MAC changes on workstations.",
+          "markdown": "- Gratuitous ARP bursts correlating with gateway MAC changes on workstations.",
+          "notes": "Gratuitous ARP bursts correlating with gateway MAC changes on workstations.",
+          "blurb": "Gratuitous ARP bursts correlating with gateway MAC changes on workstations.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n8565c9c053ec831",
+          "title": "DHCP ACK offering non-standard DNS or gateway addresses.",
+          "markdown": "- DHCP ACK offering non-standard DNS or gateway addresses.",
+          "notes": "DHCP ACK offering non-standard DNS or gateway addresses.",
+          "blurb": "DHCP ACK offering non-standard DNS or gateway addresses.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n5a68cb777c5efcf",
+          "title": "DNS responses with TTL anomalies or answers from unexpected authorities when validation",
+          "markdown": "- DNS responses with TTL anomalies or answers from unexpected authorities when validation",
+          "notes": "DNS responses with TTL anomalies or answers from unexpected authorities when validation",
+          "blurb": "DNS responses with TTL anomalies or answers from unexpected authorities when...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "In controlled exercises, expect:",
+      "expanded": true
+    },
+    {
+      "id": "nd06505ed540488f",
+      "title": "Other",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n2c2a884396ad0ab",
+          "title": "Getting on the path: ARP, DNS, and Wi\u2011Fi",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n23596a03c86e7bf",
+              "title": "1 ARP spoofing (Layer 2 LAN)",
+              "markdown": "On IPv4 Ethernet LANs, hosts resolve **IP -> MAC** via **ARP**. ARP is generally **unauthenticated**; gratuitous ARP replies can **poison** neighbor caches.\n\n**Mechanic:** The attacker announces \"IP *X* is at **my** MAC.\" If *X* is the **default gateway**, victim frames destined off-subnet flow to the attacker first; the attacker forwards them (often via IP forwarding) to the real gateway-classic **transparent MITM**.\n\n**What attackers gain:** A choke point for **cleartext** protocols and for **TLS interception** if they can present a certificate the client trusts (see \u00a74).\n\n**Mitigations (network):** Dynamic ARP inspection (DAI) on managed switches, **802.1X** port access control, segmentation (micro-segmentation, private VLANs where appropriate), monitoring for **ARP flux** or **MAC flapping**. **Client-side** mitigations are weak without controlled infrastructure; **TLS** still matters because it protects payload **if** identity is verified.",
+              "notes": "On IPv4 Ethernet LANs, hosts resolve IP -> MAC via ARP. ARP is generally unauthenticated; gratuitous ARP replies can poison neighbor caches.\n\nMechanic: The attacker announces \"IP X is at my MAC.\" If X is the default gateway, victim frames destined off-subnet flow to the attacker first; the attacker forwards them (often via IP forwarding) to the real gateway-classic transparent MITM.\n\nWhat attackers gain: A choke point for cleartext protocols and for TLS interception if they can present a certificate the client trusts (see \u00a74).\n\nMitigations (network): Dynamic ARP inspection (DAI) on managed switches, 802.1X port access control, segmentation (micro-segmentation, private VLANs where appropriate), monitoring for ARP flux or MAC flapping. Client-side mitigations are weak without controlled infrastructure; TLS still matters because it protects payload if identity is verified.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "On IPv4 Ethernet LANs, hosts resolve IP -> MAC via ARP.",
+              "expanded": false
+            },
+            {
+              "id": "nc23979a02e766ba",
+              "title": "2 DNS manipulation",
+              "markdown": "If the attacker steers the client to the wrong IP, many applications follow-**before** TLS can save the user if the user connects to the attacker's host and trusts its certificate.\n\n**Vectors:**",
+              "notes": "If the attacker steers the client to the wrong IP, many applications follow-before TLS can save the user if the user connects to the attacker's host and trusts its certificate.\n\nVectors:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n7500536f5921e6c",
+                  "title": "Spoofed responses on the LAN (rogue DHCP options pointing to attacker DNS, or MITM on DN",
+                  "markdown": "- Spoofed responses on the LAN (rogue DHCP options pointing to attacker DNS, or MITM on DN",
+                  "notes": "Spoofed responses on the LAN (rogue DHCP options pointing to attacker DNS, or MITM on DN",
+                  "blurb": "Spoofed responses on the LAN (rogue DHCP options pointing to attacker DNS,...",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n251ff171208b09a",
+                  "title": "Compromised resolver or resolver configuration on the endpoint.",
+                  "markdown": "- Compromised resolver or resolver configuration on the endpoint.",
+                  "notes": "Compromised resolver or resolver configuration on the endpoint.",
+                  "blurb": "Compromised resolver or resolver configuration on the endpoint.",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nc4b9c2857e49a6a",
+                  "title": "Malware altering hosts or system resolver policy.",
+                  "markdown": "- Malware altering hosts or system resolver policy.",
+                  "notes": "Malware altering hosts or system resolver policy.",
+                  "blurb": "Malware altering hosts or system resolver policy.",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "If the attacker steers the client to the wrong IP, many applications...",
+              "expanded": false
+            },
+            {
+              "id": "nc1546111791c5d1",
+              "title": "3 Wi\u2011Fi\u2013centric MITM",
+              "markdown": "**Evil twin / rogue AP:** A network with the same or plausible SSID lures clients. Combined with **open** or **weak** authentication, the attacker is the first hop.\n\n**Captive portals:** Users are trained to click through warnings; attackers mimic portal flows to harvest credentials or push malicious profiles.\n\n**Enterprise Wi\u2011Fi:** **WPA3-Enterprise** with **802.1X (EAP-TLS, PEAP, etc.)** ties clients to **authenticated** infrastructure and reduces casual rogue AP association-when configured with **server certificate validation** on the supplicant and strong EAP choices.\n\n**Client policy:** Prefer **managed Wi\u2011Fi**, disable auto-join for untrusted SSIDs, and use **always-on VPN** or **Zero Trust** tunnels for sensitive access from semi-trusted networks.",
+              "notes": "Evil twin / rogue AP: A network with the same or plausible SSID lures clients. Combined with open or weak authentication, the attacker is the first hop.\n\nCaptive portals: Users are trained to click through warnings; attackers mimic portal flows to harvest credentials or push malicious profiles.\n\nEnterprise Wi\u2011Fi: WPA3-Enterprise with 802.1X (EAP-TLS, PEAP, etc.) ties clients to authenticated infrastructure and reduces casual rogue AP association-when configured with server certificate validation on the supplicant and strong EAP choices.\n\nClient policy: Prefer managed Wi\u2011Fi, disable auto-join for untrusted SSIDs, and use always-on VPN or Zero Trust tunnels for sensitive access from semi-trusted networks.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Evil twin / rogue AP: A network with the same or plausible SSID lures clients.",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes 1 ARP spoofing (Layer 2 LAN)",
+          "expanded": false
+        },
+        {
+          "id": "nac780cf7b9908b6",
+          "title": "Rogue CA, misplaced trust, and \u201clegitimate\u201d interception",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "na6ab38cbae0ec5c",
+              "title": "1 Rogue or fraudulent CA",
+              "markdown": "If an attacker obtains a **publicly trusted** certificate for your hostname (compromised CA, mis-issued cert, weak validation workflows), browsers will **not** warn-classic **silent MITM** at scale.\n\n**Controls:**",
+              "notes": "If an attacker obtains a publicly trusted certificate for your hostname (compromised CA, mis-issued cert, weak validation workflows), browsers will not warn-classic silent MITM at scale.\n\nControls:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n2b060c8103bcd7b",
+                  "title": "Certificate Transparency (CT) logs and monitoring for unexpected certs.",
+                  "markdown": "- Certificate Transparency (CT) logs and monitoring for unexpected certs.",
+                  "notes": "Certificate Transparency (CT) logs and monitoring for unexpected certs.",
+                  "blurb": "Certificate Transparency (CT) logs and monitoring for unexpected certs.",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nf4059ed6617b4d4",
+                  "title": "CAA DNS records to constrain which CAs may issue for your zone.",
+                  "markdown": "- CAA DNS records to constrain which CAs may issue for your zone.",
+                  "notes": "CAA DNS records to constrain which CAs may issue for your zone.",
+                  "blurb": "CAA DNS records to constrain which CAs may issue for your zone.",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n12e6f9f4212e3bf",
+                  "title": "Short-lived certificates and automated rotation (ACME).",
+                  "markdown": "- Short-lived certificates and automated rotation (ACME).",
+                  "notes": "Short-lived certificates and automated rotation (ACME).",
+                  "blurb": "Short-lived certificates and automated rotation (ACME).",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n834195fe4a504ae",
+                  "title": "Certificate pinning (careful rollout; pinning wrong keys bricks apps)-often replaced in",
+                  "markdown": "- Certificate pinning (careful rollout; pinning wrong keys bricks apps)-often replaced in",
+                  "notes": "Certificate pinning (careful rollout; pinning wrong keys bricks apps)-often replaced in",
+                  "blurb": "Certificate pinning (careful rollout; pinning wrong keys bricks apps)-often...",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "If an attacker obtains a publicly trusted certificate for your hostname...",
+              "expanded": false
+            },
+            {
+              "id": "n25a6dfcce017f24",
+              "title": "2 Enterprise SSL inspection (\u201cSSL bumping\u201d)",
+              "markdown": "Corporate proxies terminate TLS, inspect, and re-encrypt with an **internal issuing CA** whose root is installed in the **enterprise trust store**. Functionally this is **authorized MITM** for managed devices.\n\n**Security implications:** You have concentrated plaintext and key material at the proxy; compromise there is high blast radius. **Policy:** strict access control, HSM or protected keys, logging boundaries, and alignment with privacy/regulatory constraints.",
+              "notes": "Corporate proxies terminate TLS, inspect, and re-encrypt with an internal issuing CA whose root is installed in the enterprise trust store. Functionally this is authorized MITM for managed devices.\n\nSecurity implications: You have concentrated plaintext and key material at the proxy; compromise there is high blast radius. Policy: strict access control, HSM or protected keys, logging boundaries, and alignment with privacy/regulatory constraints.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Corporate proxies terminate TLS, inspect, and re-encrypt with an internal...",
+              "expanded": false
+            },
+            {
+              "id": "n3f0c182577062cb",
+              "title": "3 User-installed roots and malware",
+              "markdown": "Any software that installs a **custom trust anchor** or injects into the TLS stack can defeat browser warnings. **MDM** should restrict trust store changes where possible; **EDR** looks for suspicious root installs and proxy settings.",
+              "notes": "Any software that installs a custom trust anchor or injects into the TLS stack can defeat browser warnings. MDM should restrict trust store changes where possible; EDR looks for suspicious root installs and proxy settings.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Any software that installs a custom trust anchor or injects into the TLS...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes 1 Rogue or fraudulent CA",
+          "expanded": false
+        },
+        {
+          "id": "nd18baf5c0fedd09",
+          "title": "Related network-scale positioning (context)",
+          "markdown": "**BGP hijacking** and **route leaks** can shift Internet paths so traffic crosses attacker-influenced segments. Defenses are largely **operator-level** (RPKI, BGP monitoring, peering hygiene). For product teams, the lesson is the same as for LAN MITM: **authenticate the remote endpoint with TLS** and monitor for **anomalous certificate issuance** and **latency/path changes** correlated with auth failures.\n\n**Cellular IMSI catchers** coerce phones onto rogue base stations; mitigations include **user education**, **carrier features**, and **app-layer crypto** with **key continuity** policies-not something a typical web property solves alone.",
+          "notes": "BGP hijacking and route leaks can shift Internet paths so traffic crosses attacker-influenced segments. Defenses are largely operator-level (RPKI, BGP monitoring, peering hygiene). For product teams, the lesson is the same as for LAN MITM: authenticate the remote endpoint with TLS and monitor for anomalous certificate issuance and latency/path changes correlated with auth failures.\n\nCellular IMSI catchers coerce phones onto rogue base stations; mitigations include user education, carrier features, and app-layer crypto with key continuity policies-not something a typical web property solves alone.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "BGP hijacking and route leaks can shift Internet paths so traffic crosses...",
+          "expanded": false
+        },
+        {
+          "id": "n12b4fb54ae338c8",
+          "title": "Application-layer parallels (not \u201cwire\u201d MITM but same outcomes)",
+          "markdown": "**Man-in-the-browser (MITB)** malware hooks the DOM or network APIs after TLS decryption inside the process. **Mitigations** lean on **endpoint protection**, **browser isolation**, **phishing-resistant MFA**, and **risk-based step-up**-not on cipher suite tweaks.\n\n**Malicious browser extensions** with broad permissions can read and alter page content. Enterprise **extension allow lists** and **split tunnel** policies reduce exposure.",
+          "notes": "Man-in-the-browser (MITB) malware hooks the DOM or network APIs after TLS decryption inside the process. Mitigations lean on endpoint protection, browser isolation, phishing-resistant MFA, and risk-based step-up-not on cipher suite tweaks.\n\nMalicious browser extensions with broad permissions can read and alter page content. Enterprise extension allow lists and split tunnel policies reduce exposure.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Man-in-the-browser (MITB) malware hooks the DOM or network APIs after TLS...",
+          "expanded": false
+        },
+        {
+          "id": "n0a088bd4a7d7969",
+          "title": "HSTS deployment playbook (operational detail)",
+          "markdown": "**Rollout stages:**\n\n1. Serve HTTPS broadly; fix **mixed content** and **canonical** URLs.\n2. Emit a **short** `max-age` HSTS while monitoring broken clients or hard-coded HTTP.\n3. Increase `max-age` to one year or longer; add `includeSubDomains` when child hosts are ready.\n4. Optionally pursue **preload** after verifying **redirect chains** and **no** unintended HTTP dependencies.\n\n**Directives to understand:**",
+          "notes": "Rollout stages:\n\n1. Serve HTTPS broadly; fix mixed content and canonical URLs.\n2. Emit a short max-age HSTS while monitoring broken clients or hard-coded HTTP.\n3. Increase max-age to one year or longer; add includeSubDomains when child hosts are ready.\n4. Optionally pursue preload after verifying redirect chains and no unintended HTTP dependencies.\n\nDirectives to understand:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n18ea447c659cd93",
+              "title": "max-age: how long the UA must refuse cleartext to this host.",
+              "markdown": "- max-age: how long the UA must refuse cleartext to this host.",
+              "notes": "max-age: how long the UA must refuse cleartext to this host.",
+              "blurb": "max-age: how long the UA must refuse cleartext to this host.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n508d4b358518ed6",
+              "title": "includeSubDomains: applies policy to all subdomains-misconfiguration can brick internal",
+              "markdown": "- includeSubDomains: applies policy to all subdomains-misconfiguration can brick internal",
+              "notes": "includeSubDomains: applies policy to all subdomains-misconfiguration can brick internal",
+              "blurb": "includeSubDomains: applies policy to all subdomains-misconfiguration can...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n290c44c47e916bc",
+              "title": "preload: browsers ship a hard-coded list; removal is slow-treat as irreversible until br",
+              "markdown": "- preload: browsers ship a hard-coded list; removal is slow-treat as irreversible until br",
+              "notes": "preload: browsers ship a hard-coded list; removal is slow-treat as irreversible until br",
+              "blurb": "preload: browsers ship a hard-coded list; removal is slow-treat as...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Rollout stages: 1.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Getting on the path: ARP, DNS, and Wi\u2011Fi"
+    },
+    {
+      "id": "nbd7c90039480335",
+      "title": "Quick recall",
+      "markdown": "- HTTPS doesn't completely prevent MITM\n- Certificate validation is critical\n- Defense in depth approach needed\n- MITM can occur on any network\n- Detection is difficult",
+      "notes": "- HTTPS doesn't completely prevent MITM\n- Certificate validation is critical\n- Defense in depth approach needed\n- MITM can occur on any network\n- Detection is difficult",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n41b7aa66dddb163",
+          "title": "MITM Attack Types",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n27f9706bb010456",
+              "title": "Network-Level MITM",
+              "markdown": "ARP spoofing - DNS spoofing - BGP hijacking - Rogue access points",
+              "notes": "ARP spoofing - DNS spoofing - BGP hijacking - Rogue access points",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n402144ce6a75cc6",
+                  "title": "ARP spoofing",
+                  "markdown": "- ARP spoofing",
+                  "notes": "ARP spoofing",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n074342039b57b60",
+                  "title": "DNS spoofing",
+                  "markdown": "- DNS spoofing",
+                  "notes": "DNS spoofing",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n54ef13f048f9c4f",
+                  "title": "BGP hijacking",
+                  "markdown": "- BGP hijacking",
+                  "notes": "BGP hijacking",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nf96e92562cf0033",
+                  "title": "Rogue access points",
+                  "markdown": "- Rogue access points",
+                  "notes": "Rogue access points",
+                  "blurb": "Rogue access points",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "ARP spoofing - DNS spoofing - BGP hijacking - Rogue access points",
+              "expanded": false
+            },
+            {
+              "id": "n302264cecc77687",
+              "title": "Application-Level MITM",
+              "markdown": "HTTPS interception with fake certificates - Proxy attacks - SSL/TLS stripping",
+              "notes": "HTTPS interception with fake certificates - Proxy attacks - SSL/TLS stripping",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n02a0001c6f24c74",
+                  "title": "HTTPS interception with fake certificates",
+                  "markdown": "- HTTPS interception with fake certificates",
+                  "notes": "HTTPS interception with fake certificates",
+                  "blurb": "HTTPS interception with fake certificates",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n043eb42fd6389f0",
+                  "title": "Proxy attacks",
+                  "markdown": "- Proxy attacks",
+                  "notes": "Proxy attacks",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n9fcfe97fc483f0c",
+                  "title": "SSL/TLS stripping",
+                  "markdown": "- SSL/TLS stripping",
+                  "notes": "SSL/TLS stripping",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "HTTPS interception with fake certificates - Proxy attacks - SSL/TLS stripping",
+              "expanded": false
+            },
+            {
+              "id": "nc6f394129afebbd",
+              "title": "Browser-Level MITM (MITB)",
+              "markdown": "Browser extensions - Malicious plugins - Keyloggers - Session hijackers",
+              "notes": "Browser extensions - Malicious plugins - Keyloggers - Session hijackers",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n3f08294a7cb309a",
+                  "title": "Browser extensions",
+                  "markdown": "- Browser extensions",
+                  "notes": "Browser extensions",
+                  "blurb": "Browser extensions",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n97bc99f2ff1a479",
+                  "title": "Malicious plugins",
+                  "markdown": "- Malicious plugins",
+                  "notes": "Malicious plugins",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "na1cb5c835e71c5e",
+                  "title": "Keyloggers",
+                  "markdown": "- Keyloggers",
+                  "notes": "Keyloggers",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nf5206fca527504b",
+                  "title": "Session hijackers",
+                  "markdown": "- Session hijackers",
+                  "notes": "Session hijackers",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Browser extensions - Malicious plugins - Keyloggers - Session hijackers",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Network-Level MITM",
+          "expanded": false
+        },
+        {
+          "id": "n9624278f642fc88",
+          "title": "Common Attack Techniques",
+          "markdown": "ARP Spoofing: Fake ARP messages redirecting traffic - DNS Spoofing: False DNS responses redirecting users - SSL/TLS Stripping: Downgrade HTTPS to HTTP - Certificate Spoofing: Fake SSL/TLS certificates - Rogue Access...",
+          "notes": "ARP Spoofing: Fake ARP messages redirecting traffic - DNS Spoofing: False DNS responses redirecting users - SSL/TLS Stripping: Downgrade HTTPS to HTTP - Certificate Spoofing: Fake SSL/TLS certificates - Rogue Access...",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n268334bcd4b1234",
+              "title": "ARP Spoofing: Fake ARP messages redirecting traffic",
+              "markdown": "- ARP Spoofing: Fake ARP messages redirecting traffic",
+              "notes": "ARP Spoofing: Fake ARP messages redirecting traffic",
+              "blurb": "ARP Spoofing: Fake ARP messages redirecting traffic",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc855f932e4a18af",
+              "title": "DNS Spoofing: False DNS responses redirecting users",
+              "markdown": "- DNS Spoofing: False DNS responses redirecting users",
+              "notes": "DNS Spoofing: False DNS responses redirecting users",
+              "blurb": "DNS Spoofing: False DNS responses redirecting users",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf8840bfe5ae5e12",
+              "title": "SSL/TLS Stripping: Downgrade HTTPS to HTTP",
+              "markdown": "- SSL/TLS Stripping: Downgrade HTTPS to HTTP",
+              "notes": "SSL/TLS Stripping: Downgrade HTTPS to HTTP",
+              "blurb": "SSL/TLS Stripping: Downgrade HTTPS to HTTP",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0018f3f6ba4bdae",
+              "title": "Certificate Spoofing: Fake SSL/TLS certificates",
+              "markdown": "- Certificate Spoofing: Fake SSL/TLS certificates",
+              "notes": "Certificate Spoofing: Fake SSL/TLS certificates",
+              "blurb": "Certificate Spoofing: Fake SSL/TLS certificates",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n641f77ca44e33ba",
+              "title": "Rogue Access Points: Fake Wi-Fi access points",
+              "markdown": "- Rogue Access Points: Fake Wi-Fi access points",
+              "notes": "Rogue Access Points: Fake Wi-Fi access points",
+              "blurb": "Rogue Access Points: Fake Wi-Fi access points",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "ARP Spoofing: Fake ARP messages redirecting traffic - DNS Spoofing: False...",
+          "expanded": false
+        },
+        {
+          "id": "ndfd897743469697",
+          "title": "MITM Protection Checklist",
+          "markdown": "\u2705 Use HTTPS/TLS (primary defense) - \u2705 Implement certificate pinning - \u2705 Use HSTS (HTTP Strict Transport Security) - \u2705 Validate certificates (don't accept invalid) - \u2705 Use VPN on untrusted networks - \u2705 Use DNSSEC - \u2705...",
+          "notes": "\u2705 Use HTTPS/TLS (primary defense) - \u2705 Implement certificate pinning - \u2705 Use HSTS (HTTP Strict Transport Security) - \u2705 Validate certificates (don't accept invalid) - \u2705 Use VPN on untrusted networks - \u2705 Use DNSSEC - \u2705...",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nd97d2f055c78297",
+              "title": "Use HTTPS/TLS (primary defense)",
+              "markdown": "- Use HTTPS/TLS (primary defense)",
+              "notes": "Use HTTPS/TLS (primary defense)",
+              "blurb": "Use HTTPS/TLS (primary defense)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n55c592d12c6b3e4",
+              "title": "Implement certificate pinning",
+              "markdown": "- Implement certificate pinning",
+              "notes": "Implement certificate pinning",
+              "blurb": "Implement certificate pinning",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n45c7df2b1f9a91f",
+              "title": "Use HSTS (HTTP Strict Transport Security)",
+              "markdown": "- Use HSTS (HTTP Strict Transport Security)",
+              "notes": "Use HSTS (HTTP Strict Transport Security)",
+              "blurb": "Use HSTS (HTTP Strict Transport Security)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc1c4bba9692a870",
+              "title": "Validate certificates (don't accept invalid)",
+              "markdown": "- Validate certificates (don't accept invalid)",
+              "notes": "Validate certificates (don't accept invalid)",
+              "blurb": "Validate certificates (don't accept invalid)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na0733165dde2047",
+              "title": "Use VPN on untrusted networks",
+              "markdown": "- Use VPN on untrusted networks",
+              "notes": "Use VPN on untrusted networks",
+              "blurb": "Use VPN on untrusted networks",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nebf8e9da1d1f9f5",
+              "title": "Use DNSSEC",
+              "markdown": "- Use DNSSEC",
+              "notes": "Use DNSSEC",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3a32c5f79e4ee0f",
+              "title": "Avoid public Wi-Fi for sensitive operations",
+              "markdown": "- Avoid public Wi-Fi for sensitive operations",
+              "notes": "Avoid public Wi-Fi for sensitive operations",
+              "blurb": "Avoid public Wi-Fi for sensitive operations",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n22c6f82f95cdc84",
+              "title": "Network monitoring and detection",
+              "markdown": "- Network monitoring and detection",
+              "notes": "Network monitoring and detection",
+              "blurb": "Network monitoring and detection",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "\u2705 Use HTTPS/TLS (primary defense) - \u2705 Implement certificate pinning - \u2705 Use...",
+          "expanded": false
+        },
+        {
+          "id": "na4e1dde5794857b",
+          "title": "Risk Levels",
+          "markdown": "| Vulnerability | Risk Level |\n| --- | --- |\n| MITM on Public Wi-Fi | Critical |\n| MITM with Certificate Spoofing | Critical |\n| MITB Attack | High |\n| DNS Spoofing | High |",
+          "notes": "| Vulnerability | Risk Level |\n| --- | --- |\n| MITM on Public Wi-Fi | Critical |\n| MITM with Certificate Spoofing | Critical |\n| MITB Attack | High |\n| DNS Spoofing | High |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Vulnerability | Risk Level | | --- | --- | | MITM on Public Wi-Fi |...",
+          "expanded": false
+        }
+      ],
+      "blurb": "HTTPS doesn't completely prevent MITM - Certificate validation is critical -..."
+    },
+    {
+      "id": "ndc1266a2c8eeb6f",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nfc387c35817cce1",
+          "title": "Common Misconceptions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n297826b083f3a0f",
+              "title": "\"HTTPS completely prevents MITM attacks\"",
+              "markdown": "**Truth:** HTTPS provides strong protection but **does not completely prevent** MITM attacks. Attackers can still use various techniques.\n\n**MITM Techniques That Work Against HTTPS:**\n\n1. **Certificate Authority Compromise:**",
+              "notes": "Truth: HTTPS provides strong protection but does not completely prevent MITM attacks. Attackers can still use various techniques.\n\nMITM Techniques That Work Against HTTPS:\n\n1. Certificate Authority Compromise:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "ncd13b7c6b26808c",
+                  "title": "Attacker compromises trusted CA",
+                  "markdown": "- Attacker compromises trusted CA",
+                  "notes": "Attacker compromises trusted CA",
+                  "blurb": "Attacker compromises trusted CA",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "na08d159071429ea",
+                  "title": "Issues valid certificate for target domain",
+                  "markdown": "- Issues valid certificate for target domain",
+                  "notes": "Issues valid certificate for target domain",
+                  "blurb": "Issues valid certificate for target domain",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n1f8fdbd1245db1e",
+                  "title": "Browser trusts certificate",
+                  "markdown": "- Browser trusts certificate",
+                  "notes": "Browser trusts certificate",
+                  "blurb": "Browser trusts certificate",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n4118cafea32ea29",
+                  "title": "Attacker injects self-signed certificate",
+                  "markdown": "- Attacker injects self-signed certificate",
+                  "notes": "Attacker injects self-signed certificate",
+                  "blurb": "Attacker injects self-signed certificate",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n4e5141672dd87be",
+                  "title": "User accepts certificate warning",
+                  "markdown": "- User accepts certificate warning",
+                  "notes": "User accepts certificate warning",
+                  "blurb": "User accepts certificate warning",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n0e0378598383f2b",
+                  "title": "MITM attack succeeds",
+                  "markdown": "- MITM attack succeeds",
+                  "notes": "MITM attack succeeds",
+                  "blurb": "MITM attack succeeds",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n134b15bfeea0e5e",
+                  "title": "Attacker bypasses certificate pinning",
+                  "markdown": "- Attacker bypasses certificate pinning",
+                  "notes": "Attacker bypasses certificate pinning",
+                  "blurb": "Attacker bypasses certificate pinning",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n47823911fb7ad0d",
+                  "title": "Replaces valid certificate with malicious one",
+                  "markdown": "- Replaces valid certificate with malicious one",
+                  "notes": "Replaces valid certificate with malicious one",
+                  "blurb": "Replaces valid certificate with malicious one",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "na19e46f94a4b432",
+                  "title": "Malware in browser intercepts traffic",
+                  "markdown": "- Malware in browser intercepts traffic",
+                  "notes": "Malware in browser intercepts traffic",
+                  "blurb": "Malware in browser intercepts traffic",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n26b26c070ee0a42",
+                  "title": "HTTPS encryption still active",
+                  "markdown": "- HTTPS encryption still active",
+                  "notes": "HTTPS encryption still active",
+                  "blurb": "HTTPS encryption still active",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: HTTPS provides strong protection but does not completely prevent MITM...",
+              "expanded": false
+            },
+            {
+              "id": "n19270347d3e5029",
+              "title": "\"MITM attacks only work on unencrypted connections\"",
+              "markdown": "**Truth:** MITM attacks can work on **both encrypted and unencrypted** connections, using different techniques.\n\n**Unencrypted Connections (HTTP):**",
+              "notes": "Truth: MITM attacks can work on both encrypted and unencrypted connections, using different techniques.\n\nUnencrypted Connections (HTTP):",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n79e77f0fba291f1",
+                  "title": "Attacker intercepts plaintext traffic",
+                  "markdown": "- Attacker intercepts plaintext traffic",
+                  "notes": "Attacker intercepts plaintext traffic",
+                  "blurb": "Attacker intercepts plaintext traffic",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ncfb8a535d6201a8",
+                  "title": "Can read and modify all data",
+                  "markdown": "- Can read and modify all data",
+                  "notes": "Can read and modify all data",
+                  "blurb": "Can read and modify all data",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ne39d5baafd0ec81",
+                  "title": "Attacker uses certificate compromise",
+                  "markdown": "- Attacker uses certificate compromise",
+                  "notes": "Attacker uses certificate compromise",
+                  "blurb": "Attacker uses certificate compromise",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n52e9f467c0e8116",
+                  "title": "Or uses man-in-the-browser techniques",
+                  "markdown": "- Or uses man-in-the-browser techniques",
+                  "notes": "Or uses man-in-the-browser techniques",
+                  "blurb": "Or uses man-in-the-browser techniques",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n71e4eb2d2d63a12",
+                  "title": "Or exploits implementation vulnerabilities",
+                  "markdown": "- Or exploits implementation vulnerabilities",
+                  "notes": "Or exploits implementation vulnerabilities",
+                  "blurb": "Or exploits implementation vulnerabilities",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: MITM attacks can work on both encrypted and unencrypted connections,...",
+              "expanded": false
+            },
+            {
+              "id": "n2e11e0e36acde24",
+              "title": "\"MITM attacks only happen on public Wi-Fi\"",
+              "markdown": "**Truth:** MITM attacks can occur on **any network**, including:",
+              "notes": "Truth: MITM attacks can occur on any network, including:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n37d645f033762ec",
+                  "title": "Public Wi-Fi (common)",
+                  "markdown": "- Public Wi-Fi (common)",
+                  "notes": "Public Wi-Fi (common)",
+                  "blurb": "Public Wi-Fi (common)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n194968be2f6dab3",
+                  "title": "Corporate networks",
+                  "markdown": "- Corporate networks",
+                  "notes": "Corporate networks",
+                  "blurb": "Corporate networks",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n460f150ddba0842",
+                  "title": "Home networks (if compromised)",
+                  "markdown": "- Home networks (if compromised)",
+                  "notes": "Home networks (if compromised)",
+                  "blurb": "Home networks (if compromised)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n783e1386f741f3f",
+                  "title": "Mobile networks (IMSI catchers)",
+                  "markdown": "- Mobile networks (IMSI catchers)",
+                  "notes": "Mobile networks (IMSI catchers)",
+                  "blurb": "Mobile networks (IMSI catchers)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n247d44639ef3cb9",
+                  "title": "Wired networks (if attacker has access)",
+                  "markdown": "- Wired networks (if attacker has access)",
+                  "notes": "Wired networks (if attacker has access)",
+                  "blurb": "Wired networks (if attacker has access)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n00bc988143dfcb1",
+                  "title": "Rogue access points (public Wi-Fi)",
+                  "markdown": "- Rogue access points (public Wi-Fi)",
+                  "notes": "Rogue access points (public Wi-Fi)",
+                  "blurb": "Rogue access points (public Wi-Fi)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nb37080993fa292d",
+                  "title": "ARP spoofing (local network)",
+                  "markdown": "- ARP spoofing (local network)",
+                  "notes": "ARP spoofing (local network)",
+                  "blurb": "ARP spoofing (local network)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n9329cf66c22ec2b",
+                  "title": "DNS spoofing (any network)",
+                  "markdown": "- DNS spoofing (any network)",
+                  "notes": "DNS spoofing (any network)",
+                  "blurb": "DNS spoofing (any network)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nbc3ea5a33974b38",
+                  "title": "BGP hijacking (internet-wide)",
+                  "markdown": "- BGP hijacking (internet-wide)",
+                  "notes": "BGP hijacking (internet-wide)",
+                  "blurb": "BGP hijacking (internet-wide)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: MITM attacks can occur on any network, including:",
+              "expanded": false
+            },
+            {
+              "id": "nfb48d43e1697f0d",
+              "title": "\"VPNs completely prevent MITM attacks\"",
+              "markdown": "**Truth:** VPNs provide protection but **don't completely prevent** MITM attacks.\n\n**VPN Protection:**",
+              "notes": "Truth: VPNs provide protection but don't completely prevent MITM attacks.\n\nVPN Protection:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n1fea392784ac285",
+                  "title": "Encrypts traffic between client and VPN server",
+                  "markdown": "- Encrypts traffic between client and VPN server",
+                  "notes": "Encrypts traffic between client and VPN server",
+                  "blurb": "Encrypts traffic between client and VPN server",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "na2f9e18f26bb977",
+                  "title": "Prevents ISP/local network MITM",
+                  "markdown": "- Prevents ISP/local network MITM",
+                  "notes": "Prevents ISP/local network MITM",
+                  "blurb": "Prevents ISP/local network MITM",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n14919b873c92061",
+                  "title": "Protects against Wi-Fi MITM",
+                  "markdown": "- Protects against Wi-Fi MITM",
+                  "notes": "Protects against Wi-Fi MITM",
+                  "blurb": "Protects against Wi-Fi MITM",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n6784301713b2c1a",
+                  "title": "Doesn't protect against browser-level MITM (malware)",
+                  "markdown": "- Doesn't protect against browser-level MITM (malware)",
+                  "notes": "Doesn't protect against browser-level MITM (malware)",
+                  "blurb": "Doesn't protect against browser-level MITM (malware)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n0862d394dd04406",
+                  "title": "VPN provider could perform MITM",
+                  "markdown": "- VPN provider could perform MITM",
+                  "notes": "VPN provider could perform MITM",
+                  "blurb": "VPN provider could perform MITM",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n7c272bd30010f17",
+                  "title": "Certificate compromise can still work",
+                  "markdown": "- Certificate compromise can still work",
+                  "notes": "Certificate compromise can still work",
+                  "blurb": "Certificate compromise can still work",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n89c58a6158f10a4",
+                  "title": "VPN connection itself can be attacked",
+                  "markdown": "- VPN connection itself can be attacked",
+                  "notes": "VPN connection itself can be attacked",
+                  "blurb": "VPN connection itself can be attacked",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: VPNs provide protection but don't completely prevent MITM attacks.",
+              "expanded": false
+            },
+            {
+              "id": "n769e5fe420db221",
+              "title": "\"MITM attacks are easy to detect\"",
+              "markdown": "**Truth:** MITM attacks can be **very difficult to detect**, especially for non-technical users.\n\n**Why MITM is Hard to Detect:**",
+              "notes": "Truth: MITM attacks can be very difficult to detect, especially for non-technical users.\n\nWhy MITM is Hard to Detect:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n5c9a0939413f14c",
+                  "title": "No obvious indicators",
+                  "markdown": "- No obvious indicators",
+                  "notes": "No obvious indicators",
+                  "blurb": "No obvious indicators",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n8a30e01df06e342",
+                  "title": "Certificate warnings can be ignored",
+                  "markdown": "- Certificate warnings can be ignored",
+                  "notes": "Certificate warnings can be ignored",
+                  "blurb": "Certificate warnings can be ignored",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n0ba6c4c65da66a3",
+                  "title": "Traffic appears normal",
+                  "markdown": "- Traffic appears normal",
+                  "notes": "Traffic appears normal",
+                  "blurb": "Traffic appears normal",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n28020ee977bd569",
+                  "title": "Performance impact may be minimal",
+                  "markdown": "- Performance impact may be minimal",
+                  "notes": "Performance impact may be minimal",
+                  "blurb": "Performance impact may be minimal",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n9432246109e7bd5",
+                  "title": "Users may not understand warnings",
+                  "markdown": "- Users may not understand warnings",
+                  "notes": "Users may not understand warnings",
+                  "blurb": "Users may not understand warnings",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n40e928a9427661f",
+                  "title": "Certificate validation",
+                  "markdown": "- Certificate validation",
+                  "notes": "Certificate validation",
+                  "blurb": "Certificate validation",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nb9feb096221535d",
+                  "title": "Certificate pinning",
+                  "markdown": "- Certificate pinning",
+                  "notes": "Certificate pinning",
+                  "blurb": "Certificate pinning",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n622157194e339b9",
+                  "title": "HSTS (HTTP Strict Transport Security)",
+                  "markdown": "- HSTS (HTTP Strict Transport Security)",
+                  "notes": "HSTS (HTTP Strict Transport Security)",
+                  "blurb": "HSTS (HTTP Strict Transport Security)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n35b0eaf106d93ac",
+                  "title": "Network monitoring",
+                  "markdown": "- Network monitoring",
+                  "notes": "Network monitoring",
+                  "blurb": "Network monitoring",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: MITM attacks can be very difficult to detect, especially for...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes \"HTTPS completely prevents MITM attacks\"",
+          "expanded": false
+        },
+        {
+          "id": "naa348b18829f3c4",
+          "title": "Key Takeaways",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n0a8fe378c315357",
+              "title": "Understanding",
+              "markdown": "HTTPS doesn't completely prevent MITM - certificate compromise, MITB attacks still possi",
+              "notes": "HTTPS doesn't completely prevent MITM - certificate compromise, MITB attacks still possi",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "na5a3cb38ae83e01",
+                  "title": "HTTPS doesn't completely prevent MITM - certificate compromise, MITB attacks still possi",
+                  "markdown": "- HTTPS doesn't completely prevent MITM - certificate compromise, MITB attacks still possi",
+                  "notes": "HTTPS doesn't completely prevent MITM - certificate compromise, MITB attacks still possi",
+                  "blurb": "HTTPS doesn't completely prevent MITM - certificate compromise, MITB attacks...",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ne882ed85df51e5b",
+                  "title": "MITM works on encrypted connections - using certificate compromise or MITB",
+                  "markdown": "- MITM works on encrypted connections - using certificate compromise or MITB",
+                  "notes": "MITM works on encrypted connections - using certificate compromise or MITB",
+                  "blurb": "MITM works on encrypted connections - using certificate compromise or MITB",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "na9a6762d9b476c1",
+                  "title": "MITM isn't limited to public Wi-Fi - any network can be compromised",
+                  "markdown": "- MITM isn't limited to public Wi-Fi - any network can be compromised",
+                  "notes": "MITM isn't limited to public Wi-Fi - any network can be compromised",
+                  "blurb": "MITM isn't limited to public Wi-Fi - any network can be compromised",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nfa2acc44e4fa05e",
+                  "title": "VPNs don't completely prevent MITM - browser-level attacks, VPN provider risks",
+                  "markdown": "- VPNs don't completely prevent MITM - browser-level attacks, VPN provider risks",
+                  "notes": "VPNs don't completely prevent MITM - browser-level attacks, VPN provider risks",
+                  "blurb": "VPNs don't completely prevent MITM - browser-level attacks, VPN provider risks",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n9a2dbd806af76ee",
+                  "title": "MITM is hard to detect - often invisible to users",
+                  "markdown": "- MITM is hard to detect - often invisible to users",
+                  "notes": "MITM is hard to detect - often invisible to users",
+                  "blurb": "MITM is hard to detect - often invisible to users",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "HTTPS doesn't completely prevent MITM - certificate compromise, MITB attacks...",
+              "expanded": false
+            },
+            {
+              "id": "nb39e95ee3eb8fad",
+              "title": "Common Mistakes",
+              "markdown": "\u274c Assuming HTTPS prevents all MITM attacks - \u274c Thinking MITM only works on HTTP - \u274c Believing MITM only happens on public Wi-Fi - \u274c Assuming VPNs prevent all MITM attacks - \u274c Thinking MITM is easy to detect",
+              "notes": "\u274c Assuming HTTPS prevents all MITM attacks - \u274c Thinking MITM only works on HTTP - \u274c Believing MITM only happens on public Wi-Fi - \u274c Assuming VPNs prevent all MITM attacks - \u274c Thinking MITM is easy to detect",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n194274aa8c4728b",
+                  "title": "Assuming HTTPS prevents all MITM attacks",
+                  "markdown": "- Assuming HTTPS prevents all MITM attacks",
+                  "notes": "Assuming HTTPS prevents all MITM attacks",
+                  "blurb": "Assuming HTTPS prevents all MITM attacks",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n6fb37a4b4477a1e",
+                  "title": "Thinking MITM only works on HTTP",
+                  "markdown": "- Thinking MITM only works on HTTP",
+                  "notes": "Thinking MITM only works on HTTP",
+                  "blurb": "Thinking MITM only works on HTTP",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nb07c07fd85d99bd",
+                  "title": "Believing MITM only happens on public Wi-Fi",
+                  "markdown": "- Believing MITM only happens on public Wi-Fi",
+                  "notes": "Believing MITM only happens on public Wi-Fi",
+                  "blurb": "Believing MITM only happens on public Wi-Fi",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n88929108c36bb97",
+                  "title": "Assuming VPNs prevent all MITM attacks",
+                  "markdown": "- Assuming VPNs prevent all MITM attacks",
+                  "notes": "Assuming VPNs prevent all MITM attacks",
+                  "blurb": "Assuming VPNs prevent all MITM attacks",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nee0253d89aabe68",
+                  "title": "Thinking MITM is easy to detect",
+                  "markdown": "- Thinking MITM is easy to detect",
+                  "notes": "Thinking MITM is easy to detect",
+                  "blurb": "Thinking MITM is easy to detect",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "\u274c Assuming HTTPS prevents all MITM attacks - \u274c Thinking MITM only works on...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Understanding",
+          "expanded": false
+        },
+        {
+          "id": "nfee3c71bce5ce5f",
+          "title": "Summary Table",
+          "markdown": "| Misconception | Truth |\n| --- | --- |\n| HTTPS completely prevents MITM | Certificate compromise, MITB attacks still possible |\n| MITM only works on HTTP | Works on HTTPS via certificate compromise |\n| MITM only on public Wi-Fi | Can occur on any network |\n| VPNs completely prevent MITM | Browser-level attacks, VPN provider risks remain |\n| MITM is easy to detect | Often invisible, difficult to detect |\n\n---\n\nRemember: **MITM attacks can occur on any network and even with HTTPS. Use certificate validation, pinning, HSTS, and network security measures for defense in depth!**",
+          "notes": "| Misconception | Truth |\n| --- | --- |\n| HTTPS completely prevents MITM | Certificate compromise, MITB attacks still possible |\n| MITM only works on HTTP | Works on HTTPS via certificate compromise |\n| MITM only on public Wi-Fi | Can occur on any network |\n| VPNs completely prevent MITM | Browser-level attacks, VPN provider risks remain |\n| MITM is easy to detect | Often invisible, difficult to detect |\n\n---\n\nRemember: MITM attacks can occur on any network and even with HTTPS. Use certificate validation, pinning, HSTS, and network security measures for defense in depth!",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Misconception | Truth | | --- | --- | | HTTPS completely prevents MITM |...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Common Misconceptions"
+    },
+    {
+      "id": "n05821efa49728aa",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n7954eef93ae6f0d",
+          "title": "Fundamentals",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n69da10a2ac87046",
+              "title": "What is a man-in-the-middle (MITM) attack?",
+              "markdown": "**Answer:** A MITM adversary sits **on the communication path** between two parties (user and server, or two services) and can **observe**, **relay**, or **modify** traffic. The victim often still completes the interaction, so theft or tampering can go unnoticed. Success usually requires **network positioning** (same LAN, rogue Wi\u2011Fi, DNS steering, compromised router) and/or **breaking trust** (bogus certificate accepted, malware in the browser, or a deliberately installed inspection root).",
+              "notes": "Answer: A MITM adversary sits on the communication path between two parties (user and server, or two services) and can observe, relay, or modify traffic. The victim often still completes the interaction, so theft or tampering can go unnoticed. Success usually requires network positioning (same LAN, rogue Wi\u2011Fi, DNS steering, compromised router) and/or breaking trust (bogus certificate accepted, malware in the browser, or a deliberately installed inspection root).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: A MITM adversary sits on the communication path between two parties...",
+              "expanded": false
+            },
+            {
+              "id": "n56bdc162c23dd7e",
+              "title": "Does HTTPS \u201csolve\u201d MITM?",
+              "markdown": "**Answer:** HTTPS with **correct certificate validation** stops **passive** sniffing on the wire and many **naive** intercept attempts. It does **not** guarantee safety if the client **trusts the wrong CA** (rogue issuance, enterprise inspection root on a managed device, or user bypassing warnings), if traffic is **downgraded** to HTTP (**SSL stripping**), or if malware **decrypts inside the endpoint** after TLS terminates in the process. So HTTPS is **necessary** but not **sufficient** without naming integrity, downgrade resistance, and healthy endpoints.",
+              "notes": "Answer: HTTPS with correct certificate validation stops passive sniffing on the wire and many naive intercept attempts. It does not guarantee safety if the client trusts the wrong CA (rogue issuance, enterprise inspection root on a managed device, or user bypassing warnings), if traffic is downgraded to HTTP (SSL stripping), or if malware decrypts inside the endpoint after TLS terminates in the process. So HTTPS is necessary but not sufficient without naming integrity, downgrade resistance, and healthy endpoints.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: HTTPS with correct certificate validation stops passive sniffing on...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes What is a man-in-the-middle (MITM) attack?",
+          "expanded": false
+        },
+        {
+          "id": "nc5aff91915d982f",
+          "title": "Network-layer positioning",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n3baf7052234f1f6",
+              "title": "How does ARP spoofing enable a MITM on a LAN?",
+              "markdown": "**Answer:** ARP maps **IP addresses to MAC addresses** on Ethernet. Attackers send **gratuitous ARP** claiming \"IP *X* (often the default gateway) is at **my** MAC.\" Victims update their cache and send frames to the attacker first; the attacker **forwards** packets (IP forwarding) to the real gateway for a **transparent** relay. Cleartext protocols are fully exposed; for TLS, the attacker must additionally **terminate** TLS with a **trusted** cert or push the victim to **HTTP**. Defenses include **Dynamic ARP Inspection**, **802.1X**, **segmentation**, and **monitoring** for MAC/gateway churn.",
+              "notes": "Answer: ARP maps IP addresses to MAC addresses on Ethernet. Attackers send gratuitous ARP claiming \"IP X (often the default gateway) is at my MAC.\" Victims update their cache and send frames to the attacker first; the attacker forwards packets (IP forwarding) to the real gateway for a transparent relay. Cleartext protocols are fully exposed; for TLS, the attacker must additionally terminate TLS with a trusted cert or push the victim to HTTP. Defenses include Dynamic ARP Inspection, 802.1X, segmentation, and monitoring for MAC/gateway churn.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: ARP maps IP addresses to MAC addresses on Ethernet.",
+              "expanded": false
+            },
+            {
+              "id": "n41119dfa58597d9",
+              "title": "How can DNS be abused for MITM?",
+              "markdown": "**Answer:** If the client resolves `api.example.com` to the **attacker's IP**, the application initiates TLS to the **wrong host**. A valid cert for the **attacker's** name fails hostname check-but **users** or **misconfigured clients** may ignore errors, or the attacker may obtain a cert for a **typosquat** name. Vectors include **rogue DHCP DNS**, **spoofed responses** on the LAN, **compromised resolvers**, or **malware** editing hosts files. **DNSSEC** (where validated end-to-end) and **locked-down resolver policy** reduce spoofing; **TLS** still must verify the **expected server identity**.",
+              "notes": "Answer: If the client resolves api.example.com to the attacker's IP, the application initiates TLS to the wrong host. A valid cert for the attacker's name fails hostname check-but users or misconfigured clients may ignore errors, or the attacker may obtain a cert for a typosquat name. Vectors include rogue DHCP DNS, spoofed responses on the LAN, compromised resolvers, or malware editing hosts files. DNSSEC (where validated end-to-end) and locked-down resolver policy reduce spoofing; TLS still must verify the expected server identity.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: If the client resolves api.example.com to the attacker's IP, the...",
+              "expanded": false
+            },
+            {
+              "id": "n28d6c923958c183",
+              "title": "What is an \u201cevil twin\u201d Wi\u2011Fi attack?",
+              "markdown": "**Answer:** The attacker broadcasts an access point with a **convincing SSID** (same as a caf\u00e9 or corporate guest network) or a **free** hotspot name. Clients that **auto-join** or users that pick the wrong AP send traffic through the attacker first. Open networks remove encryption on the **first hop**, exposing **unencrypted** protocols and enabling **captive portal** phishing. Mitigations: **WPA3-Enterprise** with **802.1X** for corporate WLANs, **guest isolation**, **MDM** Wi\u2011Fi profiles, **always-on** tunnels to corporate apps, and **training** not to trust unknown APs.",
+              "notes": "Answer: The attacker broadcasts an access point with a convincing SSID (same as a caf\u00e9 or corporate guest network) or a free hotspot name. Clients that auto-join or users that pick the wrong AP send traffic through the attacker first. Open networks remove encryption on the first hop, exposing unencrypted protocols and enabling captive portal phishing. Mitigations: WPA3-Enterprise with 802.1X for corporate WLANs, guest isolation, MDM Wi\u2011Fi profiles, always-on tunnels to corporate apps, and training not to trust unknown APs.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: The attacker broadcasts an access point with a convincing SSID (same...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes How does ARP spoofing enable a MITM on a LAN?",
+          "expanded": false
+        },
+        {
+          "id": "n4d03d986bb575df",
+          "title": "TLS downgrade, trust, and policy",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n138760a8239b51b",
+              "title": "Explain SSL stripping and how HSTS mitigates it.",
+              "markdown": "**Answer:** In **SSL stripping**, an active attacker keeps **HTTP** with the browser while using **HTTPS** upstream (or blocks upgrade), rewriting links and redirects so the user never pins a secure connection. **HSTS** (`Strict-Transport-Security`) instructs supporting clients to **only** use HTTPS for a host for `max-age`, optionally `includeSubDomains`, and can be **preloaded** so even the **first** visit avoids trivial HTTP interception. HSTS does **not** stop **rogue trusted certs** or **malware**; it specifically improves **downgrade resistance** after policy is learned.",
+              "notes": "Answer: In SSL stripping, an active attacker keeps HTTP with the browser while using HTTPS upstream (or blocks upgrade), rewriting links and redirects so the user never pins a secure connection. HSTS (Strict-Transport-Security) instructs supporting clients to only use HTTPS for a host for max-age, optionally includeSubDomains, and can be preloaded so even the first visit avoids trivial HTTP interception. HSTS does not stop rogue trusted certs or malware; it specifically improves downgrade resistance after policy is learned.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: In SSL stripping, an active attacker keeps HTTP with the browser...",
+              "expanded": false
+            },
+            {
+              "id": "ndfe825348b2aaac",
+              "title": "What is a rogue CA scenario, and how do organizations detect it?",
+              "markdown": "**Answer:** A **rogue** or **mis-issued** certificate from a **publicly trusted** CA can make a MITM **silent** in the browser. Detection and prevention lean on **Certificate Transparency** (monitor logs for unexpected certs for your names), **CAA** records (restrict allowed CAs), **short-lived certs** with automated rotation, and **alerting** on issuer or public key changes. For high-risk apps, **pinning** (SPKI hashes) adds assurance but carries **operational risk** if rotation is mishandled.",
+              "notes": "Answer: A rogue or mis-issued certificate from a publicly trusted CA can make a MITM silent in the browser. Detection and prevention lean on Certificate Transparency (monitor logs for unexpected certs for your names), CAA records (restrict allowed CAs), short-lived certs with automated rotation, and alerting on issuer or public key changes. For high-risk apps, pinning (SPKI hashes) adds assurance but carries operational risk if rotation is mishandled.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: A rogue or mis-issued certificate from a publicly trusted CA can...",
+              "expanded": false
+            },
+            {
+              "id": "n1e9bbf7422c91e0",
+              "title": "How does enterprise SSL inspection relate to MITM?",
+              "markdown": "**Answer:** Corporate **TLS intercept proxies** terminate HTTPS, inspect content, and re-encrypt using an **internal CA** distributed via **MDM/GPO**. That is **intentional** MITM on **managed** devices. Risks include **concentration of secrets** at the proxy, **privacy** boundaries, and **high-value** breach targets. Security programs should use **HSM-protected** signing keys, **strict** access controls, **scoped** policies, and **audit** trails. Interviewers often probe whether you treat this as a **trust store** problem and how you **govern** decrypted data.",
+              "notes": "Answer: Corporate TLS intercept proxies terminate HTTPS, inspect content, and re-encrypt using an internal CA distributed via MDM/GPO. That is intentional MITM on managed devices. Risks include concentration of secrets at the proxy, privacy boundaries, and high-value breach targets. Security programs should use HSM-protected signing keys, strict access controls, scoped policies, and audit trails. Interviewers often probe whether you treat this as a trust store problem and how you govern decrypted data.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Corporate TLS intercept proxies terminate HTTPS, inspect content,...",
+              "expanded": false
+            },
+            {
+              "id": "n64a0b5a7e711905",
+              "title": "When is mutual TLS (mTLS) an appropriate MITM defense?",
+              "markdown": "**Answer:** **mTLS** proves **both** client and server identities with X.509. It is strong for **service-to-service** APIs, **meshes**, and **B2B** integrations where both sides issue certs. It raises the bar against **random** LAN attackers who lack a **valid client cert** and a **private key**. It does **not** help if **keys are stolen**, **verification** is loose (overbroad CA trust), or the attacker **is** a legitimate enrolled client. Always pair mTLS with **authorization**, **rotation**, and **revocation** planning.",
+              "notes": "Answer: mTLS proves both client and server identities with X.509. It is strong for service-to-service APIs, meshes, and B2B integrations where both sides issue certs. It raises the bar against random LAN attackers who lack a valid client cert and a private key. It does not help if keys are stolen, verification is loose (overbroad CA trust), or the attacker is a legitimate enrolled client. Always pair mTLS with authorization, rotation, and revocation planning.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: mTLS proves both client and server identities with X.509.",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Explain SSL stripping and how HSTS mitigates it.",
+          "expanded": false
+        },
+        {
+          "id": "n36169c449bc302a",
+          "title": "Detection and response",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n7c528f2c7ae398c",
+              "title": "What telemetry suggests an active MITM on an internal network?",
+              "markdown": "**Answer:** Look for **gateway MAC** changes correlated with **ARP** bursts, **DHCP** offers with **foreign** DNS or gateways, internal hosts **forwarding** traffic unexpectedly, **TLS fingerprint** shifts consistent with a **proxy**, spikes in **certificate errors**, or **new user-trusted roots**. Certificate **CT** alerts for your domains and **NDR** correlation (who became a \"router\" on the segment) are high-signal. Response: isolate, verify resolver and proxy settings, rotate secrets, and re-image if trust stores were tampered with.",
+              "notes": "Answer: Look for gateway MAC changes correlated with ARP bursts, DHCP offers with foreign DNS or gateways, internal hosts forwarding traffic unexpectedly, TLS fingerprint shifts consistent with a proxy, spikes in certificate errors, or new user-trusted roots. Certificate CT alerts for your domains and NDR correlation (who became a \"router\" on the segment) are high-signal. Response: isolate, verify resolver and proxy settings, rotate secrets, and re-image if trust stores were tampered with.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Look for gateway MAC changes correlated with ARP bursts, DHCP offers...",
+              "expanded": false
+            },
+            {
+              "id": "na507cf821eb59ef",
+              "title": "A user must use hotel Wi\u2011Fi for work. What guidance do you give?",
+              "markdown": "**Answer:** Treat the LAN as **hostile**: use an **approved** always-on **VPN or ZTNA** tunnel to reach corporate apps, ensure **HSTS**-protected web apps, never ignore **certificate warnings**, avoid **split** behaviors that leak sensitive traffic locally, and prefer **cellular** for high-risk actions if policy allows. For SaaS, enforce **device compliance** and **phishing-resistant MFA** so stolen passwords from a fake portal matter less.",
+              "notes": "Answer: Treat the LAN as hostile: use an approved always-on VPN or ZTNA tunnel to reach corporate apps, ensure HSTS-protected web apps, never ignore certificate warnings, avoid split behaviors that leak sensitive traffic locally, and prefer cellular for high-risk actions if policy allows. For SaaS, enforce device compliance and phishing-resistant MFA so stolen passwords from a fake portal matter less.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Treat the LAN as hostile: use an approved always-on VPN or ZTNA...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes What telemetry suggests an active MITM on an internal network?",
+          "expanded": false
+        },
+        {
+          "id": "n7055e3b2e228e68",
+          "title": "Depth: controls and tradeoffs",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n5fc5563d6d15053",
+              "title": "What are the tradeoffs of certificate pinning in mobile apps?",
+              "markdown": "**Answer:** Pinning **locks** the app to expected **public keys** or **SPKIs**, blocking **rogue CA** MITM even when the OS trust store is wrong. Tradeoffs: **outage risk** if keys rotate without updating the app, **debugging** difficulty, and **third-party** SDKs that need their own pins. Prefer **backup pins**, staged rollout, and monitoring-many teams rely on **CT + short-lived certs** for web and reserve pinning for **high-value** mobile surfaces.",
+              "notes": "Answer: Pinning locks the app to expected public keys or SPKIs, blocking rogue CA MITM even when the OS trust store is wrong. Tradeoffs: outage risk if keys rotate without updating the app, debugging difficulty, and third-party SDKs that need their own pins. Prefer backup pins, staged rollout, and monitoring-many teams rely on CT + short-lived certs for web and reserve pinning for high-value mobile surfaces.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Pinning locks the app to expected public keys or SPKIs, blocking...",
+              "expanded": false
+            },
+            {
+              "id": "n4d5b3f12498a659",
+              "title": "How does HSTS preload differ from ordinary HSTS?",
+              "markdown": "**Answer:** **Preload** adds the site to **browser hard-coded** lists so the **first connection** cannot be trivially stripped before any HSTS header is seen. It requires **HTTPS everywhere**, correct **redirects**, and `includeSubDomains` in the submitted policy. **Removal is slow**-mistakes can strand users, so it is a **commitment**, not a toggle.",
+              "notes": "Answer: Preload adds the site to browser hard-coded lists so the first connection cannot be trivially stripped before any HSTS header is seen. It requires HTTPS everywhere, correct redirects, and includeSubDomains in the submitted policy. Removal is slow-mistakes can strand users, so it is a commitment, not a toggle.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Preload adds the site to browser hard-coded lists so the first...",
+              "expanded": false
+            },
+            {
+              "id": "n8062881cb5e6cae",
+              "title": "Does DNS over HTTPS (DoH) stop MITM?",
+              "markdown": "**Answer:** DoH **encrypts DNS queries** to a resolver, hiding lookups from casual LAN observers and reducing trivial spoofing on the wire **to that resolver**. It does **not** guarantee integrity if the **endpoint is compromised**, the **resolver** is malicious, or **application** code ignores DNS results. It complements **TLS hostname verification** and **DNSSEC** (where validated) but is not a standalone MITM fix.",
+              "notes": "Answer: DoH encrypts DNS queries to a resolver, hiding lookups from casual LAN observers and reducing trivial spoofing on the wire to that resolver. It does not guarantee integrity if the endpoint is compromised, the resolver is malicious, or application code ignores DNS results. It complements TLS hostname verification and DNSSEC (where validated) but is not a standalone MITM fix.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: DoH encrypts DNS queries to a resolver, hiding lookups from casual...",
+              "expanded": false
+            },
+            {
+              "id": "n6cbb80216bb8ff9",
+              "title": "What enterprise controls complement TLS for MITM resistance?",
+              "markdown": "**Answer:** **NAC** and **802.1X** reduce rogue devices; **DAI/DHCP snooping** counters ARP/DHCP attacks; **MDM** controls trust stores and per-app VPN; **segmentation** limits lateral relay; **NDR** spots internal proxies; **CT monitoring** catches unexpected issuance; **ZTNA** moves policy from \"inside the network\" to **per-session** app access. Layer **device health** and **MFA** so network positioning is not enough for account takeover.",
+              "notes": "Answer: NAC and 802.1X reduce rogue devices; DAI/DHCP snooping counters ARP/DHCP attacks; MDM controls trust stores and per-app VPN; segmentation limits lateral relay; NDR spots internal proxies; CT monitoring catches unexpected issuance; ZTNA moves policy from \"inside the network\" to per-session app access. Layer device health and MFA so network positioning is not enough for account takeover.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: NAC and 802.1X reduce rogue devices; DAI/DHCP snooping counters...",
+              "expanded": false
+            },
+            {
+              "id": "n79ba2a1951bace0",
+              "title": "Why can malware still defeat TLS?",
+              "markdown": "**Answer:** After the browser or OS **decrypts** TLS, malware running in the **user session** can read DOM fields, memory, or API responses-**man-in-the-browser**. The cipher suite is irrelevant. Mitigations are **endpoint detection**, **browser isolation**, **least privilege**, **phishing-resistant MFA**, and **continuous** session risk scoring-not stronger AES alone.",
+              "notes": "Answer: After the browser or OS decrypts TLS, malware running in the user session can read DOM fields, memory, or API responses-man-in-the-browser. The cipher suite is irrelevant. Mitigations are endpoint detection, browser isolation, least privilege, phishing-resistant MFA, and continuous session risk scoring-not stronger AES alone.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: After the browser or OS decrypts TLS, malware running in the user...",
+              "expanded": false
+            },
+            {
+              "id": "nf9a4a3a1a8e34f2",
+              "title": "How would you test MITM defenses in an authorized assessment?",
+              "markdown": "**Answer:** On a **lab** VLAN, attempt **ARP positioning** and **strip** against a site **without** HSTS versus **with** HSTS/preload; verify clients **refuse** HTTP. Test **rogue DHCP DNS** and confirm apps fail closed or use **pinned** resolvers. For **mTLS** services, attempt connection **without** client cert and expect **handshake failure**. Validate **CT** monitoring fires on a **staging** cert from an unexpected issuer. Always align tests with **legal** scope and **production** safety.",
+              "notes": "Answer: On a lab VLAN, attempt ARP positioning and strip against a site without HSTS versus with HSTS/preload; verify clients refuse HTTP. Test rogue DHCP DNS and confirm apps fail closed or use pinned resolvers. For mTLS services, attempt connection without client cert and expect handshake failure. Validate CT monitoring fires on a staging cert from an unexpected issuer. Always align tests with legal scope and production safety.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: On a lab VLAN, attempt ARP positioning and strip against a site...",
+              "expanded": false
+            },
+            {
+              "id": "ne083fc808a7b530",
+              "title": "Give a concise \u201cdefense in depth\u201d summary for MITM.",
+              "markdown": "**Answer:** Assume **untrusted networks**: enforce **TLS 1.2+** (prefer **1.3**), **strong** ciphers, **HSTS**, correct **redirects**, and **hostname validation**. Protect **naming** with **secure DHCP/DNS** policy and validation where possible. On **Wi\u2011Fi**, use **802.1X** and **isolation**. For APIs and mesh traffic, use **mTLS** or equivalent **service identity**. **Instrument** CT, NDR, and endpoint trust changes. **Govern** SSL inspection. No single knob wins; **combine** transport, identity, device health, and monitoring.",
+              "notes": "Answer: Assume untrusted networks: enforce TLS 1.2+ (prefer 1.3), strong ciphers, HSTS, correct redirects, and hostname validation. Protect naming with secure DHCP/DNS policy and validation where possible. On Wi\u2011Fi, use 802.1X and isolation. For APIs and mesh traffic, use mTLS or equivalent service identity. Instrument CT, NDR, and endpoint trust changes. Govern SSL inspection. No single knob wins; combine transport, identity, device health, and monitoring.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Assume untrusted networks: enforce TLS 1.2+ (prefer 1.3), strong...",
+              "expanded": false
+            },
+            {
+              "id": "n47d9cc05e66f1b8",
+              "title": "What is WPAD abuse, and how does it relate to MITM?",
+              "markdown": "**Answer:** **Web Proxy Auto-Discovery** lets clients find a **PAC** file via DHCP or DNS (`wpad` hostnames). Attackers on a LAN can answer **WPAD** lookups and push a **proxy.pac** that routes traffic through a **hostile** proxy-classic **positioning** for TLS intercept or cleartext capture. Defenses include **disabling WPAD** where not required, **internal DNS** registration of `wpad` to a controlled sink, **MDM** proxy lockdown, and **monitoring** for unexpected PAC URLs. Interviewers like this because it bridges **naming/DHCP** misconfig to **browser** trust.",
+              "notes": "Answer: Web Proxy Auto-Discovery lets clients find a PAC file via DHCP or DNS (wpad hostnames). Attackers on a LAN can answer WPAD lookups and push a proxy.pac that routes traffic through a hostile proxy-classic positioning for TLS intercept or cleartext capture. Defenses include disabling WPAD where not required, internal DNS registration of wpad to a controlled sink, MDM proxy lockdown, and monitoring for unexpected PAC URLs. Interviewers like this because it bridges naming/DHCP misconfig to browser trust.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Web Proxy Auto-Discovery lets clients find a PAC file via DHCP or...",
+              "expanded": false
+            },
+            {
+              "id": "naf6d6c1353b65c4",
+              "title": "Contrast passive eavesdropping vs active MITM on an encrypted web...",
+              "markdown": "**Answer:** **Passive** attackers on the wire see **ciphertext** only if TLS is correct end-to-end to the intended server; they cannot read HTTP bodies without breaking crypto. **Active** attackers try to **become** an endpoint: strip to HTTP, present a **different** cert, or proxy with a **trusted** root. The **UX** difference is that passive attacks rarely produce **certificate warnings**; active attacks often do-unless the user **ignores** them or the attacker holds a **valid** chain. Security architecture should assume **active** adversaries on untrusted networks and **close** downgrade and trust gaps accordingly.",
+              "notes": "Answer: Passive attackers on the wire see ciphertext only if TLS is correct end-to-end to the intended server; they cannot read HTTP bodies without breaking crypto. Active attackers try to become an endpoint: strip to HTTP, present a different cert, or proxy with a trusted root. The UX difference is that passive attacks rarely produce certificate warnings; active attacks often do-unless the user ignores them or the attacker holds a valid chain. Security architecture should assume active adversaries on untrusted networks and close downgrade and trust gaps accordingly.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Passive attackers on the wire see ciphertext only if TLS is correct...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes What are the tradeoffs of certificate pinning in mobile apps?",
+          "expanded": false
+        },
+        {
+          "id": "nc708544962ac304",
+          "title": "Depth: Interview follow-ups \u2014 MITM",
+          "markdown": "**Authoritative references:** [TLS 1.3 RFC 8446](https://www.rfc-editor.org/rfc/rfc8446); [OWASP Transport Layer Protection Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Protection_Cheat_Sheet.html).\n\n**Follow-ups:**",
+          "notes": "Authoritative references: TLS 1.3 RFC 8446; OWASP Transport Layer Protection Cheat Sheet.\n\nFollow-ups:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n649bf6b783ad1ba",
+              "title": "TLS alone doesn't fix phishing - distinguish network adversaries vs malicious or misplac",
+              "markdown": "- TLS alone doesn't fix phishing - distinguish network adversaries vs malicious or misplac",
+              "notes": "TLS alone doesn't fix phishing - distinguish network adversaries vs malicious or misplac",
+              "blurb": "TLS alone doesn't fix phishing - distinguish network adversaries vs...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9b954c5392453fd",
+              "title": "Certificate validation failures - custom trust stores in mobile apps and SSL inspection",
+              "markdown": "- Certificate validation failures - custom trust stores in mobile apps and SSL inspection",
+              "notes": "Certificate validation failures - custom trust stores in mobile apps and SSL inspection",
+              "blurb": "Certificate validation failures - custom trust stores in mobile apps and SSL...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9ea3e9a03ec22d7",
+              "title": "HSTS - downgrade resistance, not a substitute for server-side authn/z or endpoint integr",
+              "markdown": "- HSTS - downgrade resistance, not a substitute for server-side authn/z or endpoint integr",
+              "notes": "HSTS - downgrade resistance, not a substitute for server-side authn/z or endpoint integr",
+              "blurb": "HSTS - downgrade resistance, not a substitute for server-side authn/z or...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Authoritative references: TLS 1.3 RFC 8446; OWASP Transport Layer Protection...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Fundamentals"
+    }
+  ],
+  "topicId": "mitm-attack",
+  "name": "MITM Attack",
+  "structure": "logic-right",
+  "blurb": "This guide explains how adversaries insert themselves on the path between a..."
+}

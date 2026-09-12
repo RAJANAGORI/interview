@@ -1,0 +1,84 @@
+{
+  "topicId": "parameterized-and-prepared-statement",
+  "name": "Parameterized and Prepared Statement",
+  "source": "Parameterized and Prepared Statement/Parameterized Queries and Prepared Statements - In.md",
+  "prompts": [
+    {
+      "id": "pc60e57628ee54a",
+      "cluster": "Fundamental Questions",
+      "title": "What are parameterized queries and how do they prevent SQL injection?",
+      "seconds": 120,
+      "answerMarkdown": "Parameterized queries use placeholders (parameters) for values that will be provided at runtime, separating SQL code from data.\n\n**How They Work:**\n\n1. **Query Structure Defined:**\n\n    ```sql\n    SELECT * FROM users WHERE username = ?\n\n    ```\n\n    - `?`\u00a0is a placeholder (constant, safe)\n    - Query structure is defined at development time\n2. **Values Provided Separately:**\n\n    ```python\n    cursor.execute(query, (username,))\n\n    ```\n\n    - Values provided as separate parameters\n    - Database binds values to placeholders\n3. **Database Processing:**\n    - Database treats parameters as data, not SQL code\n    - Parameters are escaped automatically\n    - SQL injection impossible\n\n**Example:**\n\n```python\n# Vulnerable (string concatenation)\nquery = f\"SELECT * FROM users WHERE username = '{username}'\"\ncursor.execute(query)  # SQL injection possible!\n\n# Secure (parameterized query)\nquery = \"SELECT * FROM users WHERE username = ?\"\ncursor.execute(query, (username,))  # Safe! Database treats username as data\n\n```\n\n**Key Point:**\u00a0Parameterized queries prevent SQL injection by separating SQL structure (constant) from data values (user input), ensuring the database treats input as data, never as code.\n\n---"
+    },
+    {
+      "id": "p54ed79eb97de26",
+      "cluster": "Fundamental Questions",
+      "title": "What is the difference between parameterized queries and prepared statements?",
+      "seconds": 120,
+      "answerMarkdown": "**Parameterized Queries:**\n\n- SQL query with placeholders for values\n- Values provided at runtime\n- May be parsed each time (depending on implementation)\n- Primary focus: Security (preventing SQL injection)\n\n**Prepared Statements:**\n\n- Parameterized query that is\u00a0**pre-compiled**\u00a0by database\n- Query parsed and optimized\u00a0**once**\n- Execution plan cached for reuse\n- Primary focus: Security + Performance\n\n**Relationship:**\n\n- All prepared statements use parameters\n- Not all parameterized queries are pre-compiled\n- Prepared statements = parameterized queries + performance optimization\n\n**Example:**\n\n```python\n# Parameterized query (may parse each time)\nquery = \"SELECT * FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n\n# Prepared statement (parsed once, cached)\nstmt = connection.prepare(\"SELECT * FROM users WHERE username = ?\")\nstmt.execute(username)  # Uses cached execution plan\n\n```\n\n---"
+    },
+    {
+      "id": "p454718b554e673",
+      "cluster": "Fundamental Questions",
+      "title": "Can you parameterize table names or column names?",
+      "seconds": 120,
+      "answerMarkdown": "**No, you cannot parameterize table names or column names.**\u00a0These are part of the SQL structure, not data values.\n\n**Why It Doesn't Work:**\n\n```python\n# \u274c WRONG: Can't parameterize table name\ntable_name = request.args.get('table')\nquery = \"SELECT * FROM ?\"  # Syntax error!\ncursor.execute(query, (table_name,))\n\n```\n\n**Correct Approach (Whitelisting):**\n\n```python\n# \u2705 CORRECT: Whitelist table names\nallowed_tables = ['users', 'products', 'orders']\ntable_name = request.args.get('table')\nif table_name not in allowed_tables:\n    raise ValueError(\"Invalid table\")\nquery = f\"SELECT * FROM {table_name}\"  # Safe with whitelist\n\n```\n\n**Key Point:**\u00a0Only data values can be parameterized. SQL structure elements (table names, column names, SQL keywords) must use whitelisting.\n\n---"
+    },
+    {
+      "id": "p80ec4e2587319f",
+      "cluster": "Implementation Questions",
+      "title": "How do prepared statements improve performance?",
+      "seconds": 120,
+      "answerMarkdown": "**Performance Benefits:**\n\n1. **Query Parsing (Once):**\n    - Query parsed and validated once\n    - Execution plan created once\n    - Plan cached for reuse\n2. **Query Optimization (Once):**\n    - Database optimizes query once\n    - Optimization cached\n    - Faster subsequent executions\n3. **Repeated Execution:**\n    - Only parameter values sent to database\n    - Uses cached execution plan\n    - Much faster for repeated queries\n\n**Example:**\n\n```python\n# Regular query (parsed every time)\nfor username in usernames:\n    query = f\"SELECT * FROM users WHERE username = '{username}'\"\n    cursor.execute(query)  # Parsed every time - SLOW\n\n# Prepared statement (parsed once)\nquery = \"SELECT * FROM users WHERE username = ?\"\nstmt = connection.prepare(query)  # Parsed once\nfor username in usernames:\n    stmt.execute(username)  # Uses cached plan - FAST\n\n```\n\n**Performance Impact:**\n\n- Single query: Small overhead (negligible)\n- Repeated queries: Significant performance gain (10x+ faster)\n\n---"
+    },
+    {
+      "id": "p538fd245636a66",
+      "cluster": "Security Questions",
+      "title": "Why is input validation not enough to prevent SQL injection?",
+      "seconds": 120,
+      "answerMarkdown": "**Input validation limitations:**\n\n1. **Context Mismatch:**\n    - Input might be valid but dangerous in SQL context\n    - Validation doesn't know how input will be used\n2. **Bypass Techniques:**\n    - Encoding can bypass validation\n    - Multiple encoding layers\n    - Alternative payload formats\n3. **No Actual Protection:**\n    - Validation doesn't separate code from data\n    - Input still embedded in SQL string\n    - SQL injection still possible\n\n**Example:**\n\n```python\n# \u274c WRONG: Input validation alone\ndef validate_username(username):\n    if \"'\" in username or \";\" in username:\n        raise ValueError(\"Invalid characters\")\n    return username\n\nusername = validate_username(\"admin123\")\nquery = f\"SELECT * FROM users WHERE username = '{username}'\"\n# Still vulnerable! What if username = \"admin' OR '1'='1\"?\n# After validation removal: \"admin OR 1=1\" (still works!)\n\n```\n\n**Correct Approach:**\n\n```python\n# \u2705 CORRECT: Parameterized queries\nquery = \"SELECT * FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n# Always safe, regardless of input content!\n\n```\n\n**Key Point:**\u00a0Input validation helps but doesn't prevent SQL injection. Parameterized queries are the primary defense.\n\n---"
+    },
+    {
+      "id": "p994326607b2e48",
+      "cluster": "Security Questions",
+      "title": "Can you explain how parameterized queries prevent advanced SQL injection techniques?",
+      "seconds": 120,
+      "answerMarkdown": "**Advanced Techniques Prevented:**\n\n**1. Union-Based Injection:**\n\n```python\n# Attack attempt\nusername = \"admin' UNION SELECT * FROM passwords--\"\n\n# With parameterized query\nquery = \"SELECT * FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n# Result: Searches for literal username \"admin' UNION SELECT * FROM passwords--\"\n# No UNION executed! Parameter treated as data.\n\n```\n\n**2. Boolean-Based Blind Injection:**\n\n```python\n# Attack attempt\nusername = \"admin' AND 1=1--\"\n\n# With parameterized query\nquery = \"SELECT * FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n# Result: Searches for literal username \"admin' AND 1=1--\"\n# No boolean logic executed!\n\n```\n\n**3. Time-Based Blind Injection:**\n\n```python\n# Attack attempt\nusername = \"admin'; WAITFOR DELAY '00:00:05'--\"\n\n# With parameterized query\nquery = \"SELECT * FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n# Result: Searches for literal username, no delay executed!\n\n```\n\n**Why It Works:**\n\n- Query structure is constant (no user input)\n- Parameters are treated as data (not code)\n- Database escapes parameters automatically\n- No way to inject SQL code\n\n---"
+    },
+    {
+      "id": "pa1192a68da9e51",
+      "cluster": "Performance Questions",
+      "title": "When should you use prepared statements vs regular parameterized queries?",
+      "seconds": 120,
+      "answerMarkdown": "**Use Prepared Statements When:**\n\n- \u2705 Query executed multiple times (loops, repeated calls)\n- \u2705 Performance is critical\n- \u2705 Database supports prepared statements\n- \u2705 Connection pooling is used\n\n**Use Regular Parameterized Queries When:**\n\n- \u2705 Query executed once (single use)\n- \u2705 Performance not critical\n- \u2705 Simpler implementation preferred\n- \u2705 Database driver doesn't support prepared statements well\n\n**Example (Prepared Statement for Repeated Queries):**\n\n```python\n# \u2705 CORRECT: Prepared statement for repeated execution\nquery = \"INSERT INTO logs (message, timestamp) VALUES (?, ?)\"\nstmt = connection.prepare(query)\n\nfor log_entry in log_entries:  # Many iterations\n    stmt.execute(log_entry.message, log_entry.timestamp)\n    # Uses cached execution plan - FAST\n\n```\n\n**Example (Regular Parameterized Query for Single Use):**\n\n```python\n# \u2705 CORRECT: Regular parameterized query for single execution\nquery = \"SELECT * FROM users WHERE username = ?\"\ncursor.execute(query, (username,))  # Executed once\nresult = cursor.fetchone()\n\n```\n\n---"
+    },
+    {
+      "id": "p0ee34a460c85cf",
+      "cluster": "Scenario-Based Questions",
+      "title": "You discover SQL injection in a login function. How would you fix it?",
+      "seconds": 120,
+      "answerMarkdown": "**Vulnerable Code:**\n\n```python\ndef login(username, password):\n    query = f\"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'\"\n    cursor.execute(query)\n    result = cursor.fetchone()\n    return result is not None\n\n```\n\n**Fix (Parameterized Query):**\n\n```python\ndef login(username, password):\n    query = \"SELECT * FROM users WHERE username = ? AND password = ?\"\n    cursor.execute(query, (username, password))\n    result = cursor.fetchone()\n    return result is not None\n\n```\n\n**Additional Improvements:**\n\n```python\ndef login(username, password):\n    # Input validation (additional layer)\n    if not username or not password:\n        return False\n    if len(username) > 50:\n        return False\n\n    # Parameterized query (primary defense)\n    query = \"SELECT * FROM users WHERE username = ? AND password = ?\"\n    cursor.execute(query, (username, password))\n    result = cursor.fetchone()\n\n    # Additional: Use password hashing, not plaintext comparison\n    if result and verify_password(password, result['password_hash']):\n        return True\n    return False\n\n```\n\n---"
+    },
+    {
+      "id": "p33c1ad0f9ecd5a",
+      "cluster": "Scenario-Based Questions",
+      "title": "How would you handle dynamic table names in a secure way?",
+      "seconds": 120,
+      "answerMarkdown": "**Problem:**\u00a0Table names cannot be parameterized.\n\n**Solution (Whitelisting):**\n\n```python\ndef get_table_data(table_name, filters):\n    # Whitelist allowed tables\n    allowed_tables = ['users', 'products', 'orders']\n    if table_name not in allowed_tables:\n        raise ValueError(f\"Invalid table: {table_name}\")\n\n    # Table name is now safe (whitelisted)\n    # Parameterize the filters (user input)\n    query = f\"SELECT * FROM {table_name} WHERE id = ?\"\n    cursor.execute(query, (filters['id'],))\n    return cursor.fetchall()\n\n```\n\n**Alternative (Mapping):**\n\n```python\ndef get_table_data(table_id, filters):\n    # Map IDs to table names\n    table_mapping = {\n        '1': 'users',\n        '2': 'products',\n        '3': 'orders'\n    }\n\n    if table_id not in table_mapping:\n        raise ValueError(\"Invalid table ID\")\n\n    table_name = table_mapping[table_id]  # Safe (mapped)\n    query = f\"SELECT * FROM {table_name} WHERE id = ?\"\n    cursor.execute(query, (filters['id'],))\n    return cursor.fetchall()\n\n```\n\n**Key Point:**\u00a0Use whitelisting or mapping for SQL structure elements. Only parameterize data values.\n\n---"
+    },
+    {
+      "id": "pea2638f9d22db7",
+      "cluster": "Advanced Questions",
+      "title": "What are the limitations of parameterized queries?",
+      "seconds": 120,
+      "answerMarkdown": "**Limitations:**\n\n1. **Table/Column Names:**\n    - Cannot be parameterized\n    - Must use whitelisting\n2. **SQL Keywords:**\n    - Cannot parameterize ORDER BY, GROUP BY, etc.\n    - Must use whitelisting\n3. **Dynamic SQL Structure:**\n    - Cannot dynamically change SQL structure\n    - Must use whitelisting for structure elements\n4. **Performance Overhead (Single Query):**\n    - Small overhead for single queries\n    - Negligible in most cases\n5. **Database Support:**\n    - Different syntax for different databases\n    - Some databases have limited support\n\n**Workarounds:**\n\n- Use whitelisting for structure elements\n- Use ORMs when possible\n- Use prepared statements for repeated queries\n\n---"
+    },
+    {
+      "id": "p6e9ead16cd2ae1",
+      "cluster": "Advanced Questions",
+      "title": "How do ORMs use parameterized queries?",
+      "seconds": 120,
+      "answerMarkdown": "**ORMs automatically use parameterized queries:**\n\n**Django (Python):**\n\n```python\n# ORM automatically uses parameterized queries\nUser.objects.filter(username=username, password=password)\n# Generated SQL: SELECT * FROM users WHERE username = ? AND password = ?\n\n```\n\n**SQLAlchemy (Python):**\n\n```python\n# ORM automatically uses parameterized queries\nsession.query(User).filter(User.username == username).first()\n# Generated SQL: SELECT * FROM users WHERE username = ?\n\n```\n\n**Hibernate (Java):**\n\n```java\n// ORM automatically uses parameterized queries\nString hql = \"FROM User WHERE username = :username\";\nQuery query = session.createQuery(hql);\nquery.setParameter(\"username\", username);\n// Generated SQL: SELECT * FROM users WHERE username = ?\n\n```\n\n**Benefits:**\n\n- \u2705 Automatic parameterization\n- \u2705 Database agnostic\n- \u2705 Type safety\n- \u2705 Less boilerplate code\n\n**Key Point:**\u00a0ORMs provide a safe abstraction that automatically uses parameterized queries, making it harder to introduce SQL injection vulnerabilities.\n\n---"
+    }
+  ]
+}

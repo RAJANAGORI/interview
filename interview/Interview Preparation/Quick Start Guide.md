@@ -1,83 +1,72 @@
 # Quick Start Guide
 
-# **🚀 Quick Start Guide - Interview Preparation**
+# 🚀 Quick Start Guide - Interview Preparation
+## How this library is organized
+Use [Content Mastery Framework](Content%20Mastery%20Framework.md) for the learning model (basics → expert + interview). Use [Topic Syllabus Index](Topic%20Syllabus%20Index.md) for the full map of topics backed by `interview/Config/topics.json` (65 entries: 23 core, 34 product, 8 special-including navigational/meta items). New here? Start with [Baseline Diagnostic - Interview Preparation](Baseline%20Diagnostic%20-%20Interview%20Preparation.md), then [Role-Based Study Paths](Role-Based%20Study%20Paths.md). For drills by interview round, use [Interview Round Playbook](Interview%20Round%20Playbook.md).
 
-## **How this library is organized**
-
-Use **[Content Mastery Framework](Content%20Mastery%20Framework.md)** for the learning model (basics → expert + interview). Use **[Topic Syllabus Index](Topic%20Syllabus%20Index.md)** for the full map of topics backed by **`interview/Config/topics.json`** (**65** entries: **23** core, **34** product, **8** special—including navigational/meta items). **New here?** Start with **[Baseline Diagnostic - Interview Preparation](Baseline%20Diagnostic%20-%20Interview%20Preparation.md)**, then **[Role-Based Study Paths](Role-Based%20Study%20Paths.md)**. For drills by interview round, use **[Interview Round Playbook](Interview%20Round%20Playbook.md)**.
-
-**Typical files inside a topic folder:** Comprehensive Guide, Interview Questions & Answers, Critical Clarification (where applicable), Quick Reference. Some flagship topics also include a **Mastery Track** (deeper syllabus and drills)—for example, **Microsoft Product Security Engineer II Interview Prep**.
+Typical files inside a topic folder: Comprehensive Guide, Interview Questions & Answers, Critical Clarification (where applicable), Quick Reference, and a Mind Map (`... - Mind Map.md`) for last-minute recall of the whole folder. Some flagship topics also include a Mastery Track (deeper syllabus and drills)-for example, Microsoft Product Security Engineer II Interview Prep.
 
 ---
 
-## **Start Here! (Next 30 Minutes)**
+## Start Here! (Next 30 Minutes)
+### Step 1: Choose Your First Topic (5 min)
+Recommended Starting Order:
 
-### **Step 1: Choose Your First Topic (5 min)**
+1. JWT (JSON Web Token) - Most common, foundational
+2. OAuth - Frequently asked
+3. SQL Injection - Classic vulnerability
+4. XSS - Very common in interviews
 
-**Recommended Starting Order:**
-
-1. **JWT (JSON Web Token)** - Most common, foundational
-2. **OAuth** - Frequently asked
-3. **SQL Injection** - Classic vulnerability
-4. **XSS** - Very common in interviews
-
-**Or start with what you're least familiar with!**
+Or start with what you're least familiar with!
 
 ---
 
-### **Step 2: Open the right module first (10 min)**
-
+### Step 2: Open the right module first (10 min)
 1. Open the topic folder (e.g. `JWT (JSON Web Token)/`).
-2. Start with the **Comprehensive Guide** (or the **Mastery Track** if the topic has one and you want a guided path).
-3. Skim the table of contents; note **Learning outcomes** sections when present.
+2. Start with the Comprehensive Guide (or the Mastery Track if the topic has one and you want a guided path).
+3. Skim the table of contents; note Learning outcomes sections when present.
 
 ---
 
-### **Step 3: Understand Common Mistakes (10 min)**
-
-1. Open the **Critical Clarification** file in that folder (naming varies; often `Critical Clarification … Misconceptions.md`).
+### Step 3: Understand Common Mistakes (10 min)
+1. Open the Critical Clarification file in that folder (naming varies; often `Critical Clarification ... Misconceptions.md`).
     - These are the mistakes interviewers expect you to avoid
     - Take quick notes
     - This prevents embarrassing errors
 
 ---
 
-### **Step 4: Quick Reference Review (5 min)**
-
-1. Skim the **Quick Reference** markdown for the topic (often `… - Quick Reference.md`).
+### Step 4: Quick Reference Review (5 min)
+1. Skim the Quick Reference markdown for the topic (often `... - Quick Reference.md`).
     - Get the big picture
     - See key concepts at a glance
     - Don't memorize yet, just familiarize
+2. Open `{Topic} - Mind Map.md` in the same folder when you want types, defenses, misconceptions, and VAPT steps in one sitting.
 
 ---
 
-## **Your First Study Session (1-2 Hours)**
-
-### **Option A: Deep Dive Approach**
-
-1. **Read the Comprehensive Guide** (60–90 min) — file name usually contains `Comprehensive Guide`.
+## Your First Study Session (1-2 Hours)
+### Option A: Deep Dive Approach
+1. Read the Comprehensive Guide (60-90 min) - file name usually contains `Comprehensive Guide`.
     - Read section by section
     - Take notes in your own words
     - Focus on understanding, not speed
-2. **Practice Questions** (20–30 min)
-    - Open the **Interview Questions** file for that topic
-    - Try answering 3–5 questions
+2. Practice Questions (20-30 min)
+    - Open the Interview Questions file for that topic
+    - Try answering 3-5 questions
     - Compare with provided answers
 
-### **Option B: Quick Overview Approach**
-
-1. **Critical Clarification** (10 min)
-2. **Quick Reference** (15 min)
-3. **Practice Questions** (30 min)
+### Option B: Quick Overview Approach
+1. Critical Clarification (10 min)
+2. Quick Reference (15 min)
+3. Practice Questions (30 min)
     - Answer questions from the Interview Questions file
     - Use the Comprehensive Guide as reference when stuck
 
 ---
 
-## **Daily Study Routine (Choose One)**
-
-### **🏃 Intensive (4-6 hours/day)**
-
+## Daily Study Routine (Choose One)
+### 🏃 Intensive (4-6 hours/day)
 ```
 Morning (2 hours):
 ├─ 30 min: Review previous topics (Quick Reference)
@@ -93,8 +82,7 @@ Evening (1-2 hours):
 
 ```
 
-### **🚶 Moderate (2-3 hours/day)**
-
+### 🚶 Moderate (2-3 hours/day)
 ```
 Morning (1 hour):
 ├─ 20 min: Quick reference review
@@ -106,8 +94,7 @@ Evening (1-2 hours):
 
 ```
 
-### **🐢 Light (1 hour/day)**
-
+### 🐢 Light (1 hour/day)
 ```
 Evening (1 hour):
 ├─ 20 min: Read comprehensive guide
@@ -118,80 +105,70 @@ Evening (1 hour):
 
 ---
 
-## **Topic Priority (Based on Interview Frequency)**
+## Topic Priority (Based on Interview Frequency)
+### 🔴 High Priority - Core Security (Study First)
+1. JWT - Very common, foundational
+2. OAuth - Frequently asked
+3. SQL Injection - Classic, always asked
+4. XSS - Very common
+5. CSRF - Common
+6. Session Fixation and Session Hijacking - Important for auth
+7. Cookie Security - Fundamental web security
+8. CORS and SOP - Essential web security concepts
 
-### **🔴 High Priority - Core Security (Study First)**
+### 🟡 Medium Priority - Core Security
+1. JWT vs OAuth - Comparison questions
+2. Encryption vs Hashing - Fundamental concept
+3. XSS vs CSRF - Comparison questions
+4. Parameterized Statements - Technical detail
+5. Threat Modeling - Important for senior roles
+6. Secure Source Code Review - Process knowledge
 
-1. **JWT** - Very common, foundational
-2. **OAuth** - Frequently asked
-3. **SQL Injection** - Classic, always asked
-4. **XSS** - Very common
-5. **CSRF** - Common
-6. **Session Fixation and Session Hijacking** - Important for auth
-7. **Cookie Security** - Fundamental web security
-8. **CORS and SOP** - Essential web security concepts
+### 🟢 Lower Priority - Advanced Core Security
+1. XXE - Less common but shows depth
+2. SSRF - Advanced topic
+3. MITM Attack - Network security
+4. OSI Layer - Fundamental networking
+5. Digital Signatures - Cryptography topic
+6. TLS - Transport security
+7. Security Headers - Defense mechanisms
 
-### **🟡 Medium Priority - Core Security**
-
-1. **JWT vs OAuth** - Comparison questions
-2. **Encryption vs Hashing** - Fundamental concept
-3. **XSS vs CSRF** - Comparison questions
-4. **Parameterized Statements** - Technical detail
-5. **Threat Modeling** - Important for senior roles
-6. **Secure Source Code Review** - Process knowledge
-
-### **🟢 Lower Priority - Advanced Core Security**
-
-1. **XXE** - Less common but shows depth
-2. **SSRF** - Advanced topic
-3. **MITM Attack** - Network security
-4. **OSI Layer** - Fundamental networking
-5. **Digital Signatures** - Cryptography topic
-6. **TLS** - Transport security
-7. **Security Headers** - Defense mechanisms
-
-### **🔵 Product Security Topics (For Product Security Roles)**
-
-1. **Authorization and Authentication** - Critical for product security
-2. **Product Security Assessment Design** - Core process
-3. **Penetration Testing and Security Assessment** - Essential skills
-4. **Web Application Security Vulnerabilities** - OWASP Top 10 knowledge
-5. **Production Security Incident Response** - Real-world scenarios
-6. **Security-Development Collaboration** - Cross-functional skills
-7. **Third-Party Integration Security** - Common requirement
-8. **Proactive Security Assessment** - Advanced process
-9. **Secure Microservices Communication** - Architecture security
-10. **Multi-Team Security Incident Response** - Collaboration skills
-11. **System vs Personal API Tokens** - Implementation details
-12. **Security vs Usability Balance** - Business considerations
-13. **Agile Security Compliance** - Modern development practices
+### 🔵 Product Security Topics (For Product Security Roles)
+1. Authorization and Authentication - Critical for product security
+2. Product Security Assessment Design - Core process
+3. Penetration Testing and Security Assessment - Essential skills
+4. Web Application Security Vulnerabilities - OWASP Top 10 knowledge
+5. Production Security Incident Response - Real-world scenarios
+6. Security-Development Collaboration - Cross-functional skills
+7. Third-Party Integration Security - Common requirement
+8. Proactive Security Assessment - Advanced process
+9. Secure Microservices Communication - Architecture security
+10. Multi-Team Security Incident Response - Collaboration skills
+11. System vs Personal API Tokens - Implementation details
+12. Security vs Usability Balance - Business considerations
+13. Agile Security Compliance - Modern development practices
 
 ---
 
-## **Study Techniques That Work**
-
-### **1. Active Recall**
-
+## Study Techniques That Work
+### 1. Active Recall
 - Read a section
 - Close the file
 - Explain it out loud
 - Check if you got it right
 
-### **2. Spaced Repetition**
-
+### 2. Spaced Repetition
 - Day 1: Learn new topic
 - Day 2: Quick review (10 min)
 - Day 4: Quick review (10 min)
 - Day 7: Quick review (10 min)
 
-### **3. Teach Someone**
-
+### 3. Teach Someone
 - Explain concepts to a friend/colleague
 - Or record yourself explaining
 - Teaching forces deep understanding
 
-### **4. Practice Questions**
-
+### 4. Practice Questions
 - Don't just read answers
 - Try answering first
 - Then compare
@@ -199,10 +176,8 @@ Evening (1 hour):
 
 ---
 
-## **How to Answer Interview Questions**
-
-### **Structure Your Answer (2-3 minutes)**
-
+## How to Answer Interview Questions
+### Structure Your Answer (2-3 minutes)
 ```
 1. Definition (10-15 sec)
    "SQL Injection is a vulnerability where..."
@@ -221,11 +196,10 @@ Evening (1 hour):
 
 ```
 
-### **Example Answer:**
+### Example Answer:
+Question: "Explain SQL Injection"
 
-**Question:** "Explain SQL Injection"
-
-**Answer:**
+Answer:
 
 > "SQL Injection is a vulnerability where attackers inject malicious SQL code into application inputs.
 > 
@@ -239,10 +213,8 @@ Evening (1 hour):
 
 ---
 
-## **Week-by-Week Plan (8-Week Comprehensive Plan)**
-
-### **Week 1: Foundation - Auth & Sessions**
-
+## Week-by-Week Plan (8-Week Comprehensive Plan)
+### Week 1: Foundation - Auth & Sessions
 - [ ]  JWT
 - [ ]  OAuth
 - [ ]  JWT vs OAuth
@@ -250,8 +222,7 @@ Evening (1 hour):
 - [ ]  Session Fixation and Session Hijacking
 - [ ]  Cookie Security
 
-### **Week 2: Common Vulnerabilities**
-
+### Week 2: Common Vulnerabilities
 - [ ]  SQL Injection
 - [ ]  Parameterized and Prepared Statement
 - [ ]  CSRF
@@ -259,8 +230,7 @@ Evening (1 hour):
 - [ ]  XSS vs CSRF
 - [ ]  CORS and SOP
 
-### **Week 3: Advanced Core Security**
-
+### Week 3: Advanced Core Security
 - [ ]  XXE
 - [ ]  SSRF
 - [ ]  MITM Attack
@@ -268,16 +238,14 @@ Evening (1 hour):
 - [ ]  Digital Signatures
 - [ ]  Secure Source Code Review
 
-### **Week 4: Advanced Topics & Special**
-
+### Week 4: Advanced Topics & Special
 - [ ]  Threat Modeling
 - [ ]  TLS
 - [ ]  Security Headers
 - [ ]  Review all core topics
 - [ ]  Practice questions
 
-### **Week 5: Product Security - Assessment & Processes**
-
+### Week 5: Product Security - Assessment & Processes
 - [ ]  Authorization and Authentication
 - [ ]  Product Security Assessment Design
 - [ ]  Penetration Testing and Security Assessment
@@ -285,8 +253,7 @@ Evening (1 hour):
 - [ ]  Production Security Incident Response
 - [ ]  Multi-Team Security Incident Response
 
-### **Week 6: Product Security - Architecture & Collaboration**
-
+### Week 6: Product Security - Architecture & Collaboration
 - [ ]  Web Application Security Vulnerabilities
 - [ ]  Secure Microservices Communication
 - [ ]  Third-Party Integration Security
@@ -295,8 +262,7 @@ Evening (1 hour):
 - [ ]  Security vs Usability Balance
 - [ ]  Agile Security Compliance
 
-### **Week 7-8: Interview Preparation**
-
+### Week 7-8: Interview Preparation
 - [ ]  Review all topics
 - [ ]  Practice all questions
 - [ ]  Mock interviews (core security)
@@ -307,9 +273,8 @@ Evening (1 hour):
 
 ---
 
-## **Quick Tips**
-
-✅ **DO:**
+## Quick Tips
+✅ DO:
 
 - Study consistently (better than cramming)
 - Practice explaining out loud
@@ -317,7 +282,7 @@ Evening (1 hour):
 - Take notes in your own words
 - Review regularly
 
-❌ **DON'T:**
+❌ DON'T:
 
 - Try to memorize everything
 - Skip the critical clarifications
@@ -327,26 +292,24 @@ Evening (1 hour):
 
 ---
 
-## **Emergency Prep (24 Hours Before Interview)**
-
-### **If you have limited time:**
-
-1. **Quick Reference sweep** (3–4 hours)
-    - Open each topic’s **Quick Reference** (filename varies; often `… - Quick Reference.md`) for **high-priority topics** (see **Topic Priority** section above) first, then expand if time allows.
-    - Full index: **`interview/Config/topics.json`**.
-2. **Critical Clarification sweep** (2–3 hours)
-    - For the same high-priority topics, read **Critical Clarification** (or `Critical Clarification … Misconceptions.md`) to avoid interview-killer mistakes.
-3. **Practice top questions** (2–3 hours)
-    - From each topic’s **Interview Questions & Answers** file; use **[Interview Round Playbook](Interview%20Round%20Playbook.md)** Set A for structure.
+## Emergency Prep (24 Hours Before Interview)
+### If you have limited time:
+1. Quick Reference sweep (3-4 hours)
+    - Open each topic's Quick Reference (filename varies; often `... - Quick Reference.md`) for high-priority topics (see Topic Priority section above) first, then expand if time allows.
+    - If a Mind Map exists in the folder, skim that next. It is the faster way to confirm you did not drop a misconception or a VAPT step.
+    - Full index: `interview/Config/topics.json`.
+2. Critical Clarification sweep (2-3 hours)
+    - For the same high-priority topics, read Critical Clarification (or `Critical Clarification ... Misconceptions.md`) to avoid interview-killer mistakes.
+3. Practice top questions (2-3 hours)
+    - From each topic's Interview Questions & Answers file; use [Interview Round Playbook](Interview%20Round%20Playbook.md) Set A for structure.
     - Focus on: JWT, OAuth, SQL Injection, XSS, CSRF, session/cookie management.
     - Product security roles: add cloud, IAM, and scenario modules from your role path.
-4. **Review your notes** (30 min)
-    - Personal cheat sheet; mistakes you repeat; **[Story Library Template - Behavioral Interviews](Story%20Library%20Template%20-%20Behavioral%20Interviews.md)** headlines.
+4. Review your notes (30 min)
+    - Personal cheat sheet; mistakes you repeat; [Story Library Template - Behavioral Interviews](Story%20Library%20Template%20-%20Behavioral%20Interviews.md) headlines.
 
 ---
 
-## **Success Checklist**
-
+## Success Checklist
 Before your interview, you should be able to:
 
 - [ ]  Explain each topic in simple terms (2-3 min)
@@ -360,40 +323,38 @@ Before your interview, you should be able to:
 
 ---
 
-## **Need Help?**
-
-1. **Stuck on a concept?**
+## Need Help?
+1. Stuck on a concept?
     - Re-read the comprehensive guide
     - Try explaining it simply
     - Look for examples
-2. **Can't remember details?**
+2. Can't remember details?
     - Use quick reference
     - Create mnemonics
     - Practice spaced repetition
-3. **Not confident?**
+3. Not confident?
     - Practice more questions
     - Record yourself explaining
     - Do mock interviews
 
 ---
 
-## **Start Now!**
+## Start Now!
+Your Next 30 Minutes:
 
-**Your Next 30 Minutes:**
-
-1. Optionally run **[Baseline Diagnostic - Interview Preparation](Baseline%20Diagnostic%20-%20Interview%20Preparation.md)** (or pick JWT if you already know your gap list).
+1. Optionally run [Baseline Diagnostic - Interview Preparation](Baseline%20Diagnostic%20-%20Interview%20Preparation.md) (or pick JWT if you already know your gap list).
 2. Open the topic folder (e.g. `JWT (JSON Web Token)/`).
-3. Read **Critical Clarification** for that topic.
-4. Skim **Quick Reference** for that topic.
-5. Answer 2–3 prompts from **Interview Questions & Answers** (timed); score with **[Topic Readiness Rubric - Timed Scoring](Topic%20Readiness%20Rubric%20-%20Timed%20Scoring.md)**.
+3. Read Critical Clarification for that topic.
+4. Skim Quick Reference for that topic. If `{Topic} - Mind Map.md` is there, spend five minutes on the mermaid and the misconception branch.
+5. Answer 2-3 prompts from Interview Questions & Answers (timed); score with [Topic Readiness Rubric - Timed Scoring](Topic%20Readiness%20Rubric%20-%20Timed%20Scoring.md).
 
-**Then:**
+Then:
 
 - Set your study schedule
 - Commit to daily practice
 - Track your progress
 - Stay consistent
 
-**Remember:** Understanding > Memorization. Focus on concepts!
+Remember: Understanding > Memorization. Focus on concepts!
 
 Good luck! 🚀

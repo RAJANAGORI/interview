@@ -1,0 +1,805 @@
+{
+  "id": "n583814333918049",
+  "title": "Fuzzing Methodology and Campaign Design",
+  "markdown": "**Fuzzing methodology** is how you turn ad-hoc fuzzer runs into a **repeatable security program**: choosing targets, building harnesses and corpora, running with **sanitizers**, measuring **coverage**, triaging crashes into **actionable bugs**, and closing the loop with **fixes and regression seeds**. This guide complements **[Fuzzing Security Testing](../Fuzzing%20Security%20Testing/)** (harness mechanics and tools).\n\nAligned with the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+  "notes": "Fuzzing methodology is how you turn ad-hoc fuzzer runs into a repeatable security program: choosing targets, building harnesses and corpora, running with sanitizers, measuring coverage, triaging crashes into actionable bugs, and closing the loop with fixes and regression seeds. This guide complements Fuzzing Security Testing (harness mechanics and tools).\n\nAligned with the Content Mastery Framework.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "n77479d62cf39280",
+      "title": "At a glance",
+      "markdown": "**Fuzzing methodology** is how you turn ad-hoc fuzzer runs into a **repeatable security program**: choosing targets, building harnesses and corpora, running with **sanitizers**, measuring **coverage**, triaging crashes into **actionable bugs**, and closing the loop with **fixes and regression seeds**. This guide complements **[Fuzzing Security Testing](../Fuzzing%20Security%20Testing/)** (harness mechanics and tools).\n\nAligned with the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+      "notes": "Fuzzing methodology is how you turn ad-hoc fuzzer runs into a repeatable security program: choosing targets, building harnesses and corpora, running with sanitizers, measuring coverage, triaging crashes into actionable bugs, and closing the loop with fixes and regression seeds. This guide complements Fuzzing Security Testing (harness mechanics and tools).\n\nAligned with the Content Mastery Framework.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Fuzzing methodology is how you turn ad-hoc fuzzer runs into a repeatable...",
+      "expanded": false
+    },
+    {
+      "id": "n4a76603656ccd8f",
+      "title": "L1 \u2014 Campaign lifecycle (program view)",
+      "markdown": "```\nInventory -> prioritize -> harness + seeds -> run (ASAN/UBSAN/MSAN) -> triage -> fix -> regression corpus\n```",
+      "notes": "Inventory -> prioritize -> harness + seeds -> run (ASAN/UBSAN/MSAN) -> triage -> fix -> regression corpus",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n3099cb7bb814dce",
+          "title": "Inventory native parsers, decoders, CLI tools, and services with high exposure or high p",
+          "markdown": "- Inventory native parsers, decoders, CLI tools, and services with high exposure or high p",
+          "notes": "Inventory native parsers, decoders, CLI tools, and services with high exposure or high p",
+          "blurb": "Inventory native parsers, decoders, CLI tools, and services with high...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "na16052b651b0777",
+          "title": "Prioritize using reachability (network, user uploads), blast radius, and historical defe",
+          "markdown": "- Prioritize using reachability (network, user uploads), blast radius, and historical defe",
+          "notes": "Prioritize using reachability (network, user uploads), blast radius, and historical defe",
+          "blurb": "Prioritize using reachability (network, user uploads), blast radius, and...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ndd9719ffb0c3de1",
+          "title": "Instrument with coverage feedback and at least one sanitizer build where feasible.",
+          "markdown": "- Instrument with coverage feedback and at least one sanitizer build where feasible.",
+          "notes": "Instrument with coverage feedback and at least one sanitizer build where feasible.",
+          "blurb": "Instrument with coverage feedback and at least one sanitizer build where...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nda6d5394bf4b6b0",
+          "title": "Operate continuous or high-frequency batch jobs with alerts on sanitizer crashes.",
+          "markdown": "- Operate continuous or high-frequency batch jobs with alerts on sanitizer crashes.",
+          "notes": "Operate continuous or high-frequency batch jobs with alerts on sanitizer crashes.",
+          "blurb": "Operate continuous or high-frequency batch jobs with alerts on sanitizer...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nc7b9e0f59f2af0e",
+          "title": "Govern: named owners, severity SLAs, and monthly program metrics-not raw crash counts al",
+          "markdown": "- Govern: named owners, severity SLAs, and monthly program metrics-not raw crash counts al",
+          "notes": "Govern: named owners, severity SLAs, and monthly program metrics-not raw crash counts al",
+          "blurb": "Govern: named owners, severity SLAs, and monthly program metrics-not raw...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Inventory -> prioritize -> harness + seeds -> run (ASAN/UBSAN/MSAN) ->...",
+      "expanded": true
+    },
+    {
+      "id": "nc79526a57e36252",
+      "title": "L2 \u2014 Strategy map (variants)",
+      "markdown": "| Class | One-line discriminator | When it shines |\n|-------|------------------------|----------------|\n| **Coverage-guided mutation** | Bit-flip/arith/splice on seeds with edge feedback | Opaque binary formats, C/C++ parsers |\n| **Dictionary-boosted mutation** | Token insertions from protocol keywords | HTTP-like, TLV, textual protocols |\n| **Grammar / structure-aware** | Valid trees mutated or generated | Protobuf, SQL subsets, compilers |\n| **Differential fuzzing** | Same input, compare two implementations | Crypto, image codecs, JSON parsers |\n| **Stateful / protocol fuzzing** | Session state across messages | TLS stacks, RPC, custom daemons |\n\nInterview tip: say **\"input shape and oracle\"** before naming tools.",
+      "notes": "| Class | One-line discriminator | When it shines |\n|-------|------------------------|----------------|\n| Coverage-guided mutation | Bit-flip/arith/splice on seeds with edge feedback | Opaque binary formats, C/C++ parsers |\n| Dictionary-boosted mutation | Token insertions from protocol keywords | HTTP-like, TLV, textual protocols |\n| Grammar / structure-aware | Valid trees mutated or generated | Protobuf, SQL subsets, compilers |\n| Differential fuzzing | Same input, compare two implementations | Crypto, image codecs, JSON parsers |\n| Stateful / protocol fuzzing | Session state across messages | TLS stacks, RPC, custom daemons |\n\nInterview tip: say \"input shape and oracle\" before naming tools.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Class | One-line discriminator | When it shines |...",
+      "expanded": false
+    },
+    {
+      "id": "n7ed18d6b894561a",
+      "title": "Bypass / failure modes of the program itself",
+      "markdown": "No sanitizers -> silent corruption or flaky behavior without clear signals.",
+      "notes": "No sanitizers -> silent corruption or flaky behavior without clear signals.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nade05dd42038805",
+          "title": "No sanitizers -> silent corruption or flaky behavior without clear signals.",
+          "markdown": "- No sanitizers -> silent corruption or flaky behavior without clear signals.",
+          "notes": "No sanitizers -> silent corruption or flaky behavior without clear signals.",
+          "blurb": "No sanitizers -> silent corruption or flaky behavior without clear signals.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nd601464b0987df9",
+          "title": "Shallow seeds -> coverage plateaus; attackers still reach deep paths in prod.",
+          "markdown": "- Shallow seeds -> coverage plateaus; attackers still reach deep paths in prod.",
+          "notes": "Shallow seeds -> coverage plateaus; attackers still reach deep paths in prod.",
+          "blurb": "Shallow seeds -> coverage plateaus; attackers still reach deep paths in prod.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n26127a7288b7602",
+          "title": "Orphan crashes -> no owner -> fixes never land; rot on backlog.",
+          "markdown": "- Orphan crashes -> no owner -> fixes never land; rot on backlog.",
+          "notes": "Orphan crashes -> no owner -> fixes never land; rot on backlog.",
+          "blurb": "Orphan crashes -> no owner -> fixes never land; rot on backlog.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n16a17b3c53f101f",
+          "title": "PII in seeds -> compliance incidents; always scrub or synthesize.",
+          "markdown": "- PII in seeds -> compliance incidents; always scrub or synthesize.",
+          "notes": "PII in seeds -> compliance incidents; always scrub or synthesize.",
+          "blurb": "PII in seeds -> compliance incidents; always scrub or synthesize.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "No sanitizers -> silent corruption or flaky behavior without clear signals.",
+      "expanded": true
+    },
+    {
+      "id": "n59377ea478a4192",
+      "title": "Mitigations (tier order)",
+      "markdown": "Design: minimize native attack surface; prefer memory-safe components for new parsers.",
+      "notes": "Design: minimize native attack surface; prefer memory-safe components for new parsers.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n91a6976606cb2f0",
+          "title": "Design: minimize native attack surface; prefer memory-safe components for new parsers.",
+          "markdown": "- Design: minimize native attack surface; prefer memory-safe components for new parsers.",
+          "notes": "Design: minimize native attack surface; prefer memory-safe components for new parsers.",
+          "blurb": "Design: minimize native attack surface; prefer memory-safe components for...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ne1f3aad5409ef3c",
+          "title": "Code: bounds checks, fuzz-friendly APIs, resettable state, explicit resource limits.",
+          "markdown": "- Code: bounds checks, fuzz-friendly APIs, resettable state, explicit resource limits.",
+          "notes": "Code: bounds checks, fuzz-friendly APIs, resettable state, explicit resource limits.",
+          "blurb": "Code: bounds checks, fuzz-friendly APIs, resettable state, explicit resource...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n5cc7b077839aed4",
+          "title": "Build: default sanitizer builds for fuzzing; hardened production builds separate.",
+          "markdown": "- Build: default sanitizer builds for fuzzing; hardened production builds separate.",
+          "notes": "Build: default sanitizer builds for fuzzing; hardened production builds separate.",
+          "blurb": "Build: default sanitizer builds for fuzzing; hardened production builds...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n3e21eb5948ea3cc",
+          "title": "Process: SLAs for security crashes; regression tests from minimized inputs.",
+          "markdown": "- Process: SLAs for security crashes; regression tests from minimized inputs.",
+          "notes": "Process: SLAs for security crashes; regression tests from minimized inputs.",
+          "blurb": "Process: SLAs for security crashes; regression tests from minimized inputs.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n20f760fd675b461",
+          "title": "Monitoring: alert on crash spikes in staging fuzz pools mirroring prod configs.",
+          "markdown": "- Monitoring: alert on crash spikes in staging fuzz pools mirroring prod configs.",
+          "notes": "Monitoring: alert on crash spikes in staging fuzz pools mirroring prod configs.",
+          "blurb": "Monitoring: alert on crash spikes in staging fuzz pools mirroring prod...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Design: minimize native attack surface; prefer memory-safe components for...",
+      "expanded": true
+    },
+    {
+      "id": "n650fd79f0b2e61c",
+      "title": "Detection and observability",
+      "markdown": "Sanitizer reports: ASAN heap-buffer-overflow, UBSAN shift exponent, MSAN uninitialized read.",
+      "notes": "Sanitizer reports: ASAN heap-buffer-overflow, UBSAN shift exponent, MSAN uninitialized read.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n47398570e67dcaf",
+          "title": "Sanitizer reports: ASAN heap-buffer-overflow, UBSAN shift exponent, MSAN uninitialized r",
+          "markdown": "- Sanitizer reports: ASAN heap-buffer-overflow, UBSAN shift exponent, MSAN uninitialized r",
+          "notes": "Sanitizer reports: ASAN heap-buffer-overflow, UBSAN shift exponent, MSAN uninitialized r",
+          "blurb": "Sanitizer reports: ASAN heap-buffer-overflow, UBSAN shift exponent, MSAN...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n5d6045b67fc009b",
+          "title": "Coverage dashboards: new edges per day; stagnation signals stuck campaigns.",
+          "markdown": "- Coverage dashboards: new edges per day; stagnation signals stuck campaigns.",
+          "notes": "Coverage dashboards: new edges per day; stagnation signals stuck campaigns.",
+          "blurb": "Coverage dashboards: new edges per day; stagnation signals stuck campaigns.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n16cb2bbcd080567",
+          "title": "Crash bucketing: stack hash + dedup to avoid 10k duplicates of one bug.",
+          "markdown": "- Crash bucketing: stack hash + dedup to avoid 10k duplicates of one bug.",
+          "notes": "Crash bucketing: stack hash + dedup to avoid 10k duplicates of one bug.",
+          "blurb": "Crash bucketing: stack hash + dedup to avoid 10k duplicates of one bug.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n5a2c8b3fe64f043",
+          "title": "CI signals: fuzz job failures on PRs when regression files reproduce.",
+          "markdown": "- CI signals: fuzz job failures on PRs when regression files reproduce.",
+          "notes": "CI signals: fuzz job failures on PRs when regression files reproduce.",
+          "blurb": "CI signals: fuzz job failures on PRs when regression files reproduce.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Sanitizer reports: ASAN heap-buffer-overflow, UBSAN shift exponent, MSAN...",
+      "expanded": false
+    },
+    {
+      "id": "n36af0eb9803dae9",
+      "title": "Labs and practice",
+      "markdown": "Google Fuzzing tutorials and libFuzzer docs - harness design.",
+      "notes": "Google Fuzzing tutorials and libFuzzer docs - harness design.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nf8ece730a4e94a6",
+          "title": "Google Fuzzing tutorials and libFuzzer docs - harness design.",
+          "markdown": "- Google Fuzzing tutorials and libFuzzer docs - harness design.",
+          "notes": "Google Fuzzing tutorials and libFuzzer docs - harness design.",
+          "blurb": "Google Fuzzing tutorials and libFuzzer docs - harness design.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n0d43c369f25eb05",
+          "title": "AFL++ crash triage workflows - mutation campaigns.",
+          "markdown": "- AFL++ crash triage workflows - mutation campaigns.",
+          "notes": "AFL++ crash triage workflows - mutation campaigns.",
+          "blurb": "AFL++ crash triage workflows - mutation campaigns.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nc5c0cbdae3d7856",
+          "title": "OSS-Fuzz issue trackers - read minimized reproducers and fix patterns.",
+          "markdown": "- OSS-Fuzz issue trackers - read minimized reproducers and fix patterns.",
+          "notes": "OSS-Fuzz issue trackers - read minimized reproducers and fix patterns.",
+          "blurb": "OSS-Fuzz issue trackers - read minimized reproducers and fix patterns.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Google Fuzzing tutorials and libFuzzer docs - harness design.",
+      "expanded": false
+    },
+    {
+      "id": "n0e85c4365e25b98",
+      "title": "L2 \u2014 Minimal harness sketch (illustrative C)",
+      "markdown": "**Anti-pattern:** parse untrusted bytes in production without a **narrow API** for fuzzing.\n\n```c\n// Vulnerable pattern: global mutable state, no reset between iterations\nstatic ParserState g_state;\n\nextern \"C\" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {\n  parse_packet(&g_state, data, size);  // leaks state across runs\n  return 0;\n}\n```\n\n**Hardened pattern:** isolated state per iteration, bounded allocations, explicit limits.\n\n```c\nextern \"C\" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {\n  ParserState state = {};\n  if (size > MAX_INPUT) return 0;\n  parse_packet(&state, data, size);\n  parser_reset(&state);\n  return 0;\n}\n```",
+      "notes": "Anti-pattern: parse untrusted bytes in production without a narrow API for fuzzing.\n\n// Vulnerable pattern: global mutable state, no reset between iterations\nstatic ParserState gstate;\n\nextern \"C\" int LLVMFuzzerTestOneInput(const uint8t data, sizet size) {\n  parsepacket(&gstate, data, size);  // leaks state across runs\n  return 0;\n}\n\nHardened pattern: isolated state per iteration, bounded allocations, explicit limits.\n\nextern \"C\" int LLVMFuzzerTestOneInput(const uint8t data, sizet size) {\n  ParserState state = {};\n  if (size > MAXINPUT) return 0;\n  parsepacket(&state, data, size);\n  parserreset(&state);\n  return 0;\n}",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Anti-pattern: parse untrusted bytes in production without a narrow API for...",
+      "expanded": false
+    },
+    {
+      "id": "n6cfc6567f6f171e",
+      "title": "Practice & references",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "na909b109cc8906b",
+          "title": "Toolchain (name a few confidently)",
+          "markdown": "**libFuzzer**, **AFL++**, **honggfuzz**, **ClusterFuzz-lite** / **OSS-Fuzz**, **valgrind** (slower), **coverage** **llvm-cov**.",
+          "notes": "libFuzzer, AFL++, honggfuzz, ClusterFuzz-lite / OSS-Fuzz, valgrind (slower), coverage llvm-cov.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "libFuzzer, AFL++, honggfuzz, ClusterFuzz-lite / OSS-Fuzz, valgrind (slower),...",
+          "expanded": false
+        },
+        {
+          "id": "n1f9ea96c53c4e2b",
+          "title": "Authoritative references",
+          "markdown": "CWE-20 (Input Validation) - umbrella for many parser failures uncovered by fuzzing.",
+          "notes": "CWE-20 (Input Validation) - umbrella for many parser failures uncovered by fuzzing.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n0bb22cbab3594a8",
+              "title": "CWE-20 (Input Validation) - umbrella for many parser failures uncovered by fuzzing.",
+              "markdown": "- CWE-20 (Input Validation) - umbrella for many parser failures uncovered by fuzzing.",
+              "notes": "CWE-20 (Input Validation) - umbrella for many parser failures uncovered by fuzzing.",
+              "blurb": "CWE-20 (Input Validation) - umbrella for many parser failures uncovered by...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb89e4417706c37b",
+              "title": "NIST SP 800-218 (SSDF) - secure SDLC practices including testing automation.",
+              "markdown": "- NIST SP 800-218 (SSDF) - secure SDLC practices including testing automation.",
+              "notes": "NIST SP 800-218 (SSDF) - secure SDLC practices including testing automation.",
+              "blurb": "NIST SP 800-218 (SSDF) - secure SDLC practices including testing automation.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc656a1adcb86430",
+              "title": "LLVM SanitizerCoverage, libFuzzer documentation.",
+              "markdown": "- LLVM SanitizerCoverage, libFuzzer documentation.",
+              "notes": "LLVM SanitizerCoverage, libFuzzer documentation.",
+              "blurb": "LLVM SanitizerCoverage, libFuzzer documentation.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "CWE-20 (Input Validation) - umbrella for many parser failures uncovered by...",
+          "expanded": false
+        },
+        {
+          "id": "n07f9395aff7991f",
+          "title": "Verification checklist",
+          "markdown": "- [ ] Draft a one-page charter: scope, owners, metrics, SLAs.\n- [ ] List three reasons a campaign might **plateau** and how you'd respond.",
+          "notes": "- [ ] Draft a one-page charter: scope, owners, metrics, SLAs.\n- [ ] List three reasons a campaign might plateau and how you'd respond.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "[ ] Draft a one-page charter: scope, owners, metrics, SLAs.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Toolchain (name a few confidently)"
+    },
+    {
+      "id": "n70469c9d51aa783",
+      "title": "L2 \u2014 Real-world patterns (not full CVE chain)",
+      "markdown": "OSS-Fuzz ecosystem: thousands of open-source projects under continuous fuzzing with public crash dashboards-useful case study for program scale.",
+      "notes": "OSS-Fuzz ecosystem: thousands of open-source projects under continuous fuzzing with public crash dashboards-useful case study for program scale.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n4bbe9c59c9f1210",
+          "title": "OSS-Fuzz ecosystem: thousands of open-source projects under continuous fuzzing with publ",
+          "markdown": "- OSS-Fuzz ecosystem: thousands of open-source projects under continuous fuzzing with publ",
+          "notes": "OSS-Fuzz ecosystem: thousands of open-source projects under continuous fuzzing with publ",
+          "blurb": "OSS-Fuzz ecosystem: thousands of open-source projects under continuous...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n6f5c27f5c174f70",
+          "title": "ClusterFuzz / internal equivalents: dedup, minimization, and bisection at org scale.",
+          "markdown": "- ClusterFuzz / internal equivalents: dedup, minimization, and bisection at org scale.",
+          "notes": "ClusterFuzz / internal equivalents: dedup, minimization, and bisection at org scale.",
+          "blurb": "ClusterFuzz / internal equivalents: dedup, minimization, and bisection at...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n4aadaaa684153d7",
+          "title": "Image and archive parsers historically yield memory corruption under malformed inputs; c",
+          "markdown": "- Image and archive parsers historically yield memory corruption under malformed inputs; c",
+          "notes": "Image and archive parsers historically yield memory corruption under malformed inputs; c",
+          "blurb": "Image and archive parsers historically yield memory corruption under...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "OSS-Fuzz ecosystem: thousands of open-source projects under continuous...",
+      "expanded": false
+    },
+    {
+      "id": "nc4bb6794c1086c6",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n1e098d1773b1bc1",
+          "title": "Lifecycle",
+          "markdown": "`inventory -> prioritize -> harness + seeds -> run (+sanitizer) -> dedup/triage -> fix -> regression seeds`",
+          "notes": "inventory -> prioritize -> harness + seeds -> run (+sanitizer) -> dedup/triage -> fix -> regression seeds",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "inventory -> prioritize -> harness + seeds -> run (+sanitizer) ->...",
+          "expanded": false
+        },
+        {
+          "id": "n7b5b66879949ee8",
+          "title": "Pick targets",
+          "markdown": "Network exposure \u00b7 user-controlled formats \u00b7 **privilege** \u00b7 historical **bug density** \u00b7 harness cost",
+          "notes": "Network exposure \u00b7 user-controlled formats \u00b7 privilege \u00b7 historical bug density \u00b7 harness cost",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Network exposure \u00b7 user-controlled formats \u00b7 privilege \u00b7 historical bug...",
+          "expanded": false
+        },
+        {
+          "id": "n1e17a949d521c2e",
+          "title": "Strategies",
+          "markdown": "| Input | Lean toward |\n|-------|-------------|\n| Opaque binary | Coverage-guided **mutation** + rich seeds |\n| Textual protocol | **Dictionary** + mutation |\n| Strict grammar | **Generation** / structure-aware |",
+          "notes": "| Input | Lean toward |\n|-------|-------------|\n| Opaque binary | Coverage-guided mutation + rich seeds |\n| Textual protocol | Dictionary + mutation |\n| Strict grammar | Generation / structure-aware |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Input | Lean toward | |-------|-------------| | Opaque binary |...",
+          "expanded": false
+        },
+        {
+          "id": "n7271fc4aed476e3",
+          "title": "Metrics that matter",
+          "markdown": "New **edges**/week \u00b7 **unique** security bugs \u00b7 **MTTR** for crashers \u00b7 job **uptime** \u00b7 open **S0/S1**",
+          "notes": "New edges/week \u00b7 unique security bugs \u00b7 MTTR for crashers \u00b7 job uptime \u00b7 open S0/S1",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "New edges/week \u00b7 unique security bugs \u00b7 MTTR for crashers \u00b7 job uptime \u00b7...",
+          "expanded": false
+        },
+        {
+          "id": "nbb97df9772cd54a",
+          "title": "Governance",
+          "markdown": "**Owner** per target \u00b7 **SLA** \u00b7 dashboards \u00b7 **no** silent **risk accept** without named accountability",
+          "notes": "Owner per target \u00b7 SLA \u00b7 dashboards \u00b7 no silent risk accept without named accountability",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Owner per target \u00b7 SLA \u00b7 dashboards \u00b7 no silent risk accept without named...",
+          "expanded": false
+        },
+        {
+          "id": "nf3aa27d59668324",
+          "title": "Toolchain",
+          "markdown": "libFuzzer \u00b7 AFL++ \u00b7 honggfuzz \u00b7 ClusterFuzz / OSS-Fuzz patterns \u00b7 **llvm-cov**",
+          "notes": "libFuzzer \u00b7 AFL++ \u00b7 honggfuzz \u00b7 ClusterFuzz / OSS-Fuzz patterns \u00b7 llvm-cov",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "libFuzzer \u00b7 AFL++ \u00b7 honggfuzz \u00b7 ClusterFuzz / OSS-Fuzz patterns \u00b7 llvm-cov",
+          "expanded": false
+        },
+        {
+          "id": "nc66a9143a86e607",
+          "title": "Cross-read",
+          "markdown": "`Fuzzing Security Testing` \u00b7 `Crash Analysis for Security` \u00b7 `Secure CI CD Pipeline Security`",
+          "notes": "Fuzzing Security Testing \u00b7 Crash Analysis for Security \u00b7 Secure CI CD Pipeline Security",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Fuzzing Security Testing \u00b7 Crash Analysis for Security \u00b7 Secure CI CD...",
+          "expanded": false
+        },
+        {
+          "id": "n769b3357e74be16",
+          "title": "One-liner",
+          "markdown": "\"**Risk-ranked** inventory, **owned** harnesses with **sanitizers**, **coverage-aware** ops, **deduped** triage, and **regression** seeds so fixes stick.\"",
+          "notes": "\"Risk-ranked inventory, owned harnesses with sanitizers, coverage-aware ops, deduped triage, and regression seeds so fixes stick.\"",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "\"Risk-ranked inventory, owned harnesses with sanitizers, coverage-aware ops,...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Lifecycle"
+    },
+    {
+      "id": "nef48d0fc7cd097d",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "ne95967477efe6bc",
+          "title": "\u201cJust leave the fuzzer running forever.\u201d",
+          "markdown": "**Reality:** **Diminishing returns** are normal. Stagnation means you should **change inputs or strategy**, not only add CPU hours.",
+          "notes": "Reality: Diminishing returns are normal. Stagnation means you should change inputs or strategy, not only add CPU hours.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Diminishing returns are normal.",
+          "expanded": false
+        },
+        {
+          "id": "nf50b55f27d96a44",
+          "title": "\u201cRaw crash count is our KPI.\u201d",
+          "markdown": "**Reality:** **Unique defects fixed**, **coverage growth**, and **regression prevention** outperform **duplicate** crash totals.",
+          "notes": "Reality: Unique defects fixed, coverage growth, and regression prevention outperform duplicate crash totals.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Unique defects fixed, coverage growth, and regression prevention...",
+          "expanded": false
+        },
+        {
+          "id": "n2c5cb277075a3f5",
+          "title": "\u201cSecurity owns fuzzing end-to-end.\u201d",
+          "markdown": "**Reality:** **Engineering** fixes code and often **co-builds** harnesses. Security sets **risk priority**, **bar**, and **verification**.",
+          "notes": "Reality: Engineering fixes code and often co-builds harnesses. Security sets risk priority, bar, and verification.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Engineering fixes code and often co-builds harnesses.",
+          "expanded": false
+        },
+        {
+          "id": "n3f1bd6fa570d399",
+          "title": "\u201cFuzzing replaces code review.\u201d",
+          "markdown": "**Reality:** **Complementary**. Fuzzing finds many **memory** and **parser** issues; **authorization**, **business logic**, and **race** conditions still need human review and targeted tests.",
+          "notes": "Reality: Complementary. Fuzzing finds many memory and parser issues; authorization, business logic, and race conditions still need human review and targeted tests.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Complementary.",
+          "expanded": false
+        },
+        {
+          "id": "nfad413c93cfc828",
+          "title": "\u201cWe can fuzz production traffic captures as seeds.\u201d",
+          "markdown": "**Reality:** **PII** and **contractual** constraints often forbid this. Prefer **scrubbed** or **synthetic** corpora.",
+          "notes": "Reality: PII and contractual constraints often forbid this. Prefer scrubbed or synthetic corpora.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: PII and contractual constraints often forbid this.",
+          "expanded": false
+        },
+        {
+          "id": "n105f3d78b4d6f79",
+          "title": "\u201cNo crashes means we can stop fuzzing.\u201d",
+          "markdown": "**Reality:** **New code**, **compiler changes**, and **config drift** reopen surface. Campaigns should be **continuous** or **regression-gated** in CI.",
+          "notes": "Reality: New code, compiler changes, and config drift reopen surface. Campaigns should be continuous or regression-gated in CI.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: New code, compiler changes, and config drift reopen surface.",
+          "expanded": false
+        },
+        {
+          "id": "n80b78d019258f6f",
+          "title": "\u201cOne global job covers all products.\u201d",
+          "markdown": "**Reality:** **Per-component** harnesses and **owners** scale; monolithic jobs hide accountability and **delay** fixes.",
+          "notes": "Reality: Per-component harnesses and owners scale; monolithic jobs hide accountability and delay fixes.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Per-component harnesses and owners scale; monolithic jobs hide...",
+          "expanded": false
+        },
+        {
+          "id": "nd14cfbbdc8b79f4",
+          "title": "\u201cGrammar fuzzers are set-and-forget.\u201d",
+          "markdown": "**Reality:** **Specs evolve**. Stale grammars **miss** new branches; they need **versioning** like production parsers.",
+          "notes": "Reality: Specs evolve. Stale grammars miss new branches; they need versioning like production parsers.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Specs evolve.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \u201cJust leave the fuzzer running forever.\u201d"
+    },
+    {
+      "id": "n1226a2279c2d3ad",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "neb95da9e38c4508",
+          "title": "60-second answer",
+          "markdown": "**Q: How do you run fuzzing as a program, not a one-off?**\n\n**A:** I start with a **risk-weighted inventory** of parsers and native components, then assign **named owners** and **SLAs** for security-relevant crashes. Each target gets a **harness**, **seed corpus**, and **sanitizer** build where possible; jobs run **continuously or on a tight cadence** with **coverage** and **deduped crash** metrics. I work with engineering on **minimized repros**, **root-cause fixes**, and **regression inputs** checked into tests. Leadership sees **edges over time**, **mean time to fix** for crashers, and **open S0/S1** items-not vanity crash totals.",
+          "notes": "Q: How do you run fuzzing as a program, not a one-off?\n\nA: I start with a risk-weighted inventory of parsers and native components, then assign named owners and SLAs for security-relevant crashes. Each target gets a harness, seed corpus, and sanitizer build where possible; jobs run continuously or on a tight cadence with coverage and deduped crash metrics. I work with engineering on minimized repros, root-cause fixes, and regression inputs checked into tests. Leadership sees edges over time, mean time to fix for crashers, and open S0/S1 items-not vanity crash totals.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Q: How do you run fuzzing as a program, not a one-off?",
+          "expanded": false
+        },
+        {
+          "id": "n1bb0cecdd3bade2",
+          "title": "Scoping and prioritization",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nf9d282f1b142ef8",
+              "title": "Q: What do you fuzz first in a large company?",
+              "markdown": "**A:** **Internet-facing** decoders (images, archives, media), **authentication-adjacent** native code, and anything running **elevated privilege**, weighted by **ease of harnessing** and **past incident/CVE density** in that component class.",
+              "notes": "A: Internet-facing decoders (images, archives, media), authentication-adjacent native code, and anything running elevated privilege, weighted by ease of harnessing and past incident/CVE density in that component class.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Internet-facing decoders (images, archives, media),...",
+              "expanded": false
+            },
+            {
+              "id": "n15f1a05beda9a0b",
+              "title": "Q: How do you know a campaign is \u201cstuck\u201d?",
+              "markdown": "**A:** **Coverage plateau** (no new edges over a meaningful window) with **low unique crash rate**, or crashes **cluster** to known **won't-fix** buckets. Response: **refresh seeds**, add **dictionary** tokens, try **structure-aware** generation, or **refactor** the harness API to unlock new paths.",
+              "notes": "A: Coverage plateau (no new edges over a meaningful window) with low unique crash rate, or crashes cluster to known won't-fix buckets. Response: refresh seeds, add dictionary tokens, try structure-aware generation, or refactor the harness API to unlock new paths.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Coverage plateau (no new edges over a meaningful window) with low unique...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: What do you fuzz first in a large company?",
+          "expanded": false
+        },
+        {
+          "id": "n9152b3b942ace39",
+          "title": "Operations",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nde23a09586c3120",
+              "title": "Q: Who should triage fuzzer output?",
+              "markdown": "**A:** A **joint** model: **security** or **fuzz infra** owns **dedup, severity, and noise filtering**; **service owners** own **fix and validation**; **PSIRT** may gate **external disclosure**.",
+              "notes": "A: A joint model: security or fuzz infra owns dedup, severity, and noise filtering; service owners own fix and validation; PSIRT may gate external disclosure.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: A joint model: security or fuzz infra owns dedup, severity, and noise...",
+              "expanded": false
+            },
+            {
+              "id": "n8fd49d54af497cd",
+              "title": "Q: How do you avoid PII in corpora?",
+              "markdown": "**A:** **Synthetic** seeds first; if production-like data is needed, use **scrubbed** exports, **allow-listed** fields only, and **legal** review for retention.",
+              "notes": "A: Synthetic seeds first; if production-like data is needed, use scrubbed exports, allow-listed fields only, and legal review for retention.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Synthetic seeds first; if production-like data is needed, use scrubbed...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: Who should triage fuzzer output?",
+          "expanded": false
+        },
+        {
+          "id": "n00f5adca6abeca2",
+          "title": "CI and scale",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n7a43edb46e9c1c4",
+              "title": "Q: Should every PR run a full fuzz job?",
+              "markdown": "**A:** Usually **no**-full campaigns are **too slow**. Typical pattern: **nightly** full pools plus **PR-gated** **smoke** (short runs, **regression** corpus only, or **affected-target** subset).",
+              "notes": "A: Usually no-full campaigns are too slow. Typical pattern: nightly full pools plus PR-gated smoke (short runs, regression corpus only, or affected-target subset).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Usually no-full campaigns are too slow.",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: Should every PR run a full fuzz job?",
+          "expanded": false
+        },
+        {
+          "id": "n81875dcfa7673a4",
+          "title": "Staff / principal prompts",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nb43c5086b5ddaec",
+              "title": "Q: What OKRs would you set for year one?",
+              "markdown": "**A:** Examples: **N critical components** under continuous fuzz; **X%** reduction in **open** high-severity parser bugs; **median days** from **first sanitizer report** to **verified fix**; **zero** **unowned** fuzz targets in the inventory.",
+              "notes": "A: Examples: N critical components under continuous fuzz; X% reduction in open high-severity parser bugs; median days from first sanitizer report to verified fix; zero unowned fuzz targets in the inventory.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Examples: N critical components under continuous fuzz; X% reduction in...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: What OKRs would you set for year one?",
+          "expanded": false
+        },
+        {
+          "id": "nf63abda5b04bffa",
+          "title": "Mock ladder",
+          "markdown": "| Level | Question |\n|-------|----------|\n| Junior | Campaign vs single tool run |\n| Mid | Corpus and seed strategy |\n| Senior | CI integration without blocking merges |\n| Staff | Executive metrics and risk acceptance |",
+          "notes": "| Level | Question |\n|-------|----------|\n| Junior | Campaign vs single tool run |\n| Mid | Corpus and seed strategy |\n| Senior | CI integration without blocking merges |\n| Staff | Executive metrics and risk acceptance |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Level | Question | |-------|----------| | Junior | Campaign vs single tool...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 60-second answer"
+    }
+  ],
+  "topicId": "fuzzing-methodology-and-campaign-design",
+  "name": "Fuzzing Methodology and Campaign Design",
+  "structure": "logic-right",
+  "blurb": "Fuzzing methodology is how you turn ad-hoc fuzzer runs into a repeatable..."
+}

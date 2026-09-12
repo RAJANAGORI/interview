@@ -1,0 +1,3639 @@
+{
+  "id": "n74855afdf2c9471",
+  "title": "Parameterized and Prepared Statement",
+  "markdown": "Parameterized queries and prepared statements are the **primary defense** against SQL injection vulnerabilities. They separate SQL code from data, ensuring that user input is always treated as data, never as executable SQL code.",
+  "notes": "Parameterized queries and prepared statements are the primary defense against SQL injection vulnerabilities. They separate SQL code from data, ensuring that user input is always treated as data, never as executable SQL code.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "n0910f9b2fb89adf",
+      "title": "Concept",
+      "markdown": "",
+      "notes": "",
+      "expanded": true,
+      "kind": "group",
+      "children": [
+        {
+          "id": "ne10283e67e1140b",
+          "title": "Overview",
+          "markdown": "Parameterized queries and prepared statements are the **primary defense** against SQL injection vulnerabilities. They separate SQL code from data, ensuring that user input is always treated as data, never as executable SQL code.",
+          "notes": "Parameterized queries and prepared statements are the primary defense against SQL injection vulnerabilities. They separate SQL code from data, ensuring that user input is always treated as data, never as executable SQL code.",
+          "expanded": false,
+          "kind": "group",
+          "children": [],
+          "blurb": "Parameterized queries and prepared statements are the primary defense..."
+        },
+        {
+          "id": "n169981e33947ba4",
+          "title": "Why They Matter",
+          "markdown": "**Security Benefits:**",
+          "notes": "Security Benefits:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n242dfaebab310ab",
+              "title": "Prevents SQL injection - Primary defense mechanism",
+              "markdown": "- Prevents SQL injection - Primary defense mechanism",
+              "notes": "Prevents SQL injection - Primary defense mechanism",
+              "blurb": "Prevents SQL injection - Primary defense mechanism",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n927892c5b2dd135",
+              "title": "Separates code from data - Database treats input as data",
+              "markdown": "- Separates code from data - Database treats input as data",
+              "notes": "Separates code from data - Database treats input as data",
+              "blurb": "Separates code from data - Database treats input as data",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nbbfad8ee7a3498b",
+              "title": "Type safety - Database handles type conversion",
+              "markdown": "- Type safety - Database handles type conversion",
+              "notes": "Type safety - Database handles type conversion",
+              "blurb": "Type safety - Database handles type conversion",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb17c45a092b063c",
+              "title": "No manual escaping needed - Database handles encoding",
+              "markdown": "- No manual escaping needed - Database handles encoding",
+              "notes": "No manual escaping needed - Database handles encoding",
+              "blurb": "No manual escaping needed - Database handles encoding",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9a919f4bf03ce5d",
+              "title": "Query optimization - Database can cache execution plans",
+              "markdown": "- Query optimization - Database can cache execution plans",
+              "notes": "Query optimization - Database can cache execution plans",
+              "blurb": "Query optimization - Database can cache execution plans",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb06bdc713d2bdb5",
+              "title": "Faster repeated queries - Parse once, execute many times",
+              "markdown": "- Faster repeated queries - Parse once, execute many times",
+              "notes": "Faster repeated queries - Parse once, execute many times",
+              "blurb": "Faster repeated queries - Parse once, execute many times",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n4d49d3a7b66d4f1",
+              "title": "Reduced overhead - Less parsing and compilation",
+              "markdown": "- Reduced overhead - Less parsing and compilation",
+              "notes": "Reduced overhead - Less parsing and compilation",
+              "blurb": "Reduced overhead - Less parsing and compilation",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Security Benefits:",
+          "expanded": false
+        },
+        {
+          "id": "n10c90cbcffab4c4",
+          "title": "What are Parameterized Queries",
+          "markdown": "A **parameterized query** is a SQL query that uses placeholders (parameters) for values that will be provided at runtime, rather than embedding values directly in the SQL string.",
+          "notes": "A parameterized query is a SQL query that uses placeholders (parameters) for values that will be provided at runtime, rather than embedding values directly in the SQL string.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "naf8d1f06effef83",
+              "title": "Key Concept",
+              "markdown": "**Separate SQL structure from data values:**\n\n- SQL structure: Defined at development time (safe, constant)\n- Data values: Provided at runtime (user input, treated as data)",
+              "notes": "Separate SQL structure from data values:\n- SQL structure: Defined at development time (safe, constant)\n- Data values: Provided at runtime (user input, treated as data)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Separate SQL structure from data values: - SQL structure: Defined at...",
+              "expanded": false
+            },
+            {
+              "id": "ne39e51641a32fdd",
+              "title": "Basic Example",
+              "markdown": "**\u274c Vulnerable (String Concatenation):**\n\n```python\nusername = request.form['username']\nquery = f\"SELECT * FROM users WHERE username = '{username}'\"\ncursor.execute(query)  # SQL injection possible!\n\n```\n\n**\u2705 Secure (Parameterized Query):**\n\n```python\nusername = request.form['username']\nquery = \"SELECT * FROM users WHERE username = ?\"  # Placeholder\ncursor.execute(query, (username,))  # Safe! Database treats username as data\n\n```",
+              "notes": "\u274c Vulnerable (String Concatenation):\n\nusername = request.form['username']\nquery = f\"SELECT  FROM users WHERE username = '{username}'\"\ncursor.execute(query)  # SQL injection possible!\n\n\u2705 Secure (Parameterized Query):\n\nusername = request.form['username']\nquery = \"SELECT  FROM users WHERE username = ?\"  # Placeholder\ncursor.execute(query, (username,))  # Safe! Database treats username as data",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "\u274c Vulnerable (String Concatenation): username = request.form['username']...",
+              "expanded": false
+            },
+            {
+              "id": "n2d8c66779a3be17",
+              "title": "How It Works",
+              "markdown": "1. **Query Structure Defined:**\n\n    ```sql\n    SELECT * FROM users WHERE username = ?\n\n    ```\n\n    - `?` is a placeholder (parameter marker)\n    - Query structure is constant (no user input)\n2. **Values Provided Separately:**\n\n    ```python\n    cursor.execute(query, (username,))\n\n    ```\n\n    - Values provided as separate parameter\n    - Database substitutes values into placeholders\n3. **Database Processing:**\n    - Database parses query structure (safe, constant)\n    - Database binds parameter values (treated as data, not code)\n    - No possibility of SQL injection",
+              "notes": "1. Query Structure Defined:\n\n    \n    SELECT  FROM users WHERE username = ?\n- ? is a placeholder (parameter marker)\n- Query structure is constant (no user input)\n2. Values Provided Separately:\n\n    \n    cursor.execute(query, (username,))\n- Values provided as separate parameter\n- Database substitutes values into placeholders\n3. Database Processing:\n- Database parses query structure (safe, constant)\n- Database binds parameter values (treated as data, not code)\n- No possibility of SQL injection",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            }
+          ],
+          "blurb": "A parameterized query is a SQL query that uses placeholders (parameters) for...",
+          "expanded": false
+        },
+        {
+          "id": "ncfbfef9bad8d70f",
+          "title": "What are Prepared Statements",
+          "markdown": "A **prepared statement** is a parameterized query that is **pre-compiled** by the database server for better performance.",
+          "notes": "A prepared statement is a parameterized query that is pre-compiled by the database server for better performance.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "na31ea58a042e7fa",
+              "title": "Key Concept",
+              "markdown": "**Pre-compilation + Parameter Binding:**",
+              "notes": "Pre-compilation + Parameter Binding:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n9e3f9cef8a989c4",
+                  "title": "Query parsed and optimized once by database",
+                  "markdown": "- Query parsed and optimized once by database",
+                  "notes": "Query parsed and optimized once by database",
+                  "blurb": "Query parsed and optimized once by database",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n2fb52c3d03cc42b",
+                  "title": "Execution plan cached for reuse",
+                  "markdown": "- Execution plan cached for reuse",
+                  "notes": "Execution plan cached for reuse",
+                  "blurb": "Execution plan cached for reuse",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nf04582dacb84f48",
+                  "title": "Only parameter values change between executions",
+                  "markdown": "- Only parameter values change between executions",
+                  "notes": "Only parameter values change between executions",
+                  "blurb": "Only parameter values change between executions",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Pre-compilation + Parameter Binding:",
+              "expanded": false
+            },
+            {
+              "id": "n71717dd949cc340",
+              "title": "Basic Example",
+              "markdown": "**Python (sqlite3 - Prepared Statement):**\n\n```python\n# Prepare statement (parsed once)\nquery = \"SELECT * FROM users WHERE username = ?\"\ncursor = connection.cursor()\n\n# Execute with different values (parsed once, executed many times)\ncursor.execute(query, ('alice',))\ncursor.execute(query, ('bob',))\ncursor.execute(query, ('charlie',))\n\n```\n\n**Java (JDBC - Prepared Statement):**\n\n```java\n// Prepare statement (sent to database, parsed once)\nString sql = \"SELECT * FROM users WHERE username = ?\";\nPreparedStatement stmt = connection.prepareStatement(sql);\n\n// Execute with different values\nstmt.setString(1, \"alice\");\nResultSet rs = stmt.executeQuery();\n\nstmt.setString(1, \"bob\");\nrs = stmt.executeQuery();\n\n```",
+              "notes": "Python (sqlite3 - Prepared Statement):\n\nPrepare statement (parsed once)\nquery = \"SELECT  FROM users WHERE username = ?\"\ncursor = connection.cursor()\n\nExecute with different values (parsed once, executed many times)\ncursor.execute(query, ('alice',))\ncursor.execute(query, ('bob',))\ncursor.execute(query, ('charlie',))\n\nJava (JDBC - Prepared Statement):\n\n// Prepare statement (sent to database, parsed once)\nString sql = \"SELECT  FROM users WHERE username = ?\";\nPreparedStatement stmt = connection.prepareStatement(sql);\n\n// Execute with different values\nstmt.setString(1, \"alice\");\nResultSet rs = stmt.executeQuery();\n\nstmt.setString(1, \"bob\");\nrs = stmt.executeQuery();",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Python (sqlite3 - Prepared Statement): Prepare statement (parsed once) query...",
+              "expanded": false
+            },
+            {
+              "id": "n1885f2f08350cdd",
+              "title": "How It Works",
+              "markdown": "1. **Preparation Phase:**\n    - Query sent to database server\n    - Database parses and validates query structure\n    - Database creates execution plan\n    - Execution plan cached\n2. **Execution Phase:**\n    - Only parameter values sent to database\n    - Database uses cached execution plan\n    - Values bound to placeholders\n    - Query executed\n3. **Performance Benefit:**\n    - Parse/optimize once, execute many times\n    - Faster for repeated queries",
+              "notes": "1. Preparation Phase:\n- Query sent to database server\n- Database parses and validates query structure\n- Database creates execution plan\n- Execution plan cached\n2. Execution Phase:\n- Only parameter values sent to database\n- Database uses cached execution plan\n- Values bound to placeholders\n- Query executed\n3. Performance Benefit:\n- Parse/optimize once, execute many times\n- Faster for repeated queries",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            }
+          ],
+          "blurb": "A prepared statement is a parameterized query that is pre-compiled by the...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Overview"
+    },
+    {
+      "id": "n25f713e27a85798",
+      "title": "Advanced Exploitation Prevention",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n34a0c602d55aeed",
+          "title": "Why Parameterized Queries Prevent Advanced Attacks",
+          "markdown": "**Advanced SQL Injection Techniques Prevented:**",
+          "notes": "Advanced SQL Injection Techniques Prevented:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nbc23b4380a0669f",
+              "title": "Union-Based Injection",
+              "markdown": "- Union-Based Injection",
+              "notes": "Union-Based Injection",
+              "blurb": "Union-Based Injection",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd8f86bd1d800803",
+              "title": "Boolean-Based Blind Injection",
+              "markdown": "- Boolean-Based Blind Injection",
+              "notes": "Boolean-Based Blind Injection",
+              "blurb": "Boolean-Based Blind Injection",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n4e5ae3f7f631c1c",
+              "title": "Time-Based Blind Injection",
+              "markdown": "- Time-Based Blind Injection",
+              "notes": "Time-Based Blind Injection",
+              "blurb": "Time-Based Blind Injection",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Advanced SQL Injection Techniques Prevented:",
+          "expanded": false
+        },
+        {
+          "id": "neecd025ceae8912",
+          "title": "Why Escaping Is Not Enough",
+          "markdown": "**Manual Escaping (Vulnerable):**\n\n```python\n# \u274c WRONG: Manual escaping can fail\ndef escape_sql(value):\n    return value.replace(\"'\", \"''\")\n\nusername = escape_sql(user_input)\nquery = f\"SELECT * FROM users WHERE username = '{username}'\"\n# Still vulnerable to: admin' OR '1'='1 (escaped incorrectly)\n\n```\n\n**Parameterized Queries (Secure):**\n\n```python\n# \u2705 CORRECT: Database handles escaping correctly\nquery = \"SELECT * FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n# Always safe!\n\n```",
+          "notes": "Manual Escaping (Vulnerable):\n\n\u274c WRONG: Manual escaping can fail\ndef escapesql(value):\n    return value.replace(\"'\", \"''\")\n\nusername = escapesql(userinput)\nquery = f\"SELECT  FROM users WHERE username = '{username}'\"\nStill vulnerable to: admin' OR '1'='1 (escaped incorrectly)\n\nParameterized Queries (Secure):\n\n\u2705 CORRECT: Database handles escaping correctly\nquery = \"SELECT  FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\nAlways safe!",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Manual Escaping (Vulnerable): \u274c WRONG: Manual escaping can fail def...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Why Parameterized Queries Prevent Advanced Attacks",
+      "expanded": true
+    },
+    {
+      "id": "n866a735344647ac",
+      "title": "Risk Assessment",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n3c60b46f09dde2d",
+          "title": "Risk Matrix",
+          "markdown": "| Vulnerability | Likelihood | Impact | Risk Level | Business Impact |\n| --- | --- | --- | --- | --- |\n| **SQL Injection (No Protection)** | High | Critical | **Critical** | Complete system compromise |\n| **Weak Parameterization** | Medium | High | **High** | Partial data access |\n| **Missing Input Validation** | High | Medium | **High** | Data integrity issues |\n| **No Prepared Statements** | Medium | Medium | **Medium** | Performance degradation |",
+          "notes": "| Vulnerability | Likelihood | Impact | Risk Level | Business Impact |\n| --- | --- | --- | --- | --- |\n| SQL Injection (No Protection) | High | Critical | Critical | Complete system compromise |\n| Weak Parameterization | Medium | High | High | Partial data access |\n| Missing Input Validation | High | Medium | High | Data integrity issues |\n| No Prepared Statements | Medium | Medium | Medium | Performance degradation |",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "| Vulnerability | Likelihood | Impact | Risk Level | Business Impact | | ---...",
+          "expanded": false
+        },
+        {
+          "id": "n6c8d67f31b690fe",
+          "title": "Risk Calculation",
+          "markdown": "**Example: SQL Injection in Authentication**\n\n**Likelihood:** High (0.9)",
+          "notes": "Example: SQL Injection in Authentication\n\nLikelihood: High (0.9)",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n0fb65eb4cf9c797",
+              "title": "Common vulnerability",
+              "markdown": "- Common vulnerability",
+              "notes": "Common vulnerability",
+              "blurb": "Common vulnerability",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8f417a176a9ef67",
+              "title": "Easy to exploit",
+              "markdown": "- Easy to exploit",
+              "notes": "Easy to exploit",
+              "blurb": "",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "naf52254c27eb3a1",
+              "title": "Widespread impact",
+              "markdown": "- Widespread impact",
+              "notes": "Widespread impact",
+              "blurb": "",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n4594055ce698d5f",
+              "title": "Complete authentication bypass",
+              "markdown": "- Complete authentication bypass",
+              "notes": "Complete authentication bypass",
+              "blurb": "Complete authentication bypass",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6ca471cc22a1d06",
+              "title": "Unauthorized access",
+              "markdown": "- Unauthorized access",
+              "notes": "Unauthorized access",
+              "blurb": "Unauthorized access",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na008bf4063f4233",
+              "title": "Data breach potential",
+              "markdown": "- Data breach potential",
+              "notes": "Data breach potential",
+              "blurb": "Data breach potential",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3d9a42e07efe802",
+              "title": "Financial: Unauthorized access, fraud",
+              "markdown": "- Financial: Unauthorized access, fraud",
+              "notes": "Financial: Unauthorized access, fraud",
+              "blurb": "Financial: Unauthorized access, fraud",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb0fae0d26187431",
+              "title": "Reputation: Loss of customer trust",
+              "markdown": "- Reputation: Loss of customer trust",
+              "notes": "Reputation: Loss of customer trust",
+              "blurb": "Reputation: Loss of customer trust",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na62e7c9086f688a",
+              "title": "Legal: Data breach notifications, liability",
+              "markdown": "- Legal: Data breach notifications, liability",
+              "notes": "Legal: Data breach notifications, liability",
+              "blurb": "Legal: Data breach notifications, liability",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n30599f4354bf481",
+              "title": "Operational: System compromise, downtime",
+              "markdown": "- Operational: System compromise, downtime",
+              "notes": "Operational: System compromise, downtime",
+              "blurb": "Operational: System compromise, downtime",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Example: SQL Injection in Authentication Likelihood: High (0.9)",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Risk Matrix",
+      "expanded": true
+    },
+    {
+      "id": "nf9d685da90c8458",
+      "title": "Defenses",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nbb75935f299957b",
+          "title": "How They Prevent SQL Injection",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nbc4f61fd87ce7d7",
+              "title": "SQL Injection Attack",
+              "markdown": "**Vulnerable Code:**\n\n```python\nusername = request.form['username']\nquery = f\"SELECT * FROM users WHERE username = '{username}'\"\ncursor.execute(query)\n\n```\n\n**Attack:**\n\n```\nInput: admin' OR '1'='1\nResulting Query: SELECT * FROM users WHERE username = 'admin' OR '1'='1'\nResult: Returns all users (authentication bypass!)\n\n```",
+              "notes": "Vulnerable Code:\n\nusername = request.form['username']\nquery = f\"SELECT  FROM users WHERE username = '{username}'\"\ncursor.execute(query)\n\nAttack:\n\nInput: admin' OR '1'='1\nResulting Query: SELECT  FROM users WHERE username = 'admin' OR '1'='1'\nResult: Returns all users (authentication bypass!)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Vulnerable Code: username = request.form['username'] query = f\"SELECT FROM...",
+              "expanded": false
+            },
+            {
+              "id": "ncfafc7fde077611",
+              "title": "How Parameterized Queries Prevent It",
+              "markdown": "**Secure Code:**\n\n```python\nusername = request.form['username']\nquery = \"SELECT * FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n\n```\n\n**Attack Attempt:**\n\n```\nInput: admin' OR '1'='1\nDatabase Processing:\n```",
+              "notes": "Secure Code:\n\nusername = request.form['username']\nquery = \"SELECT  FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n\nAttack Attempt:\n\nInput: admin' OR '1'='1\nDatabase Processing:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n9b4e782095f0400",
+                  "title": "Query structure parsed: SELECT * FROM users WHERE username = ?",
+                  "markdown": "- Query structure parsed: SELECT * FROM users WHERE username = ?",
+                  "notes": "Query structure parsed: SELECT * FROM users WHERE username = ?",
+                  "blurb": "Query structure parsed: SELECT FROM users WHERE username = ?",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n3f44034f4d56185",
+                  "title": "Parameter value bound: 'admin\\' OR \\'1\\'=\\'1' (escaped as data)",
+                  "markdown": "- Parameter value bound: 'admin\\' OR \\'1\\'=\\'1' (escaped as data)",
+                  "notes": "Parameter value bound: 'admin\\' OR \\'1\\'=\\'1' (escaped as data)",
+                  "blurb": "Parameter value bound: 'admin\\' OR \\'1\\'=\\'1' (escaped as data)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n4c8801b70883900",
+                  "title": "Executed query: SELECT * FROM users WHERE username = 'admin\\' OR \\'1\\'=\\'1'",
+                  "markdown": "- Executed query: SELECT * FROM users WHERE username = 'admin\\' OR \\'1\\'=\\'1'",
+                  "notes": "Executed query: SELECT * FROM users WHERE username = 'admin\\' OR \\'1\\'=\\'1'",
+                  "blurb": "Executed query: SELECT FROM users WHERE username = 'admin\\' OR \\'1\\'=\\'1'",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Secure Code: username = request.form['username'] query = \"SELECT FROM users...",
+              "expanded": false
+            },
+            {
+              "id": "n7af3a71736875fc",
+              "title": "Why It Works",
+              "markdown": "1. **Query Structure is Constant:**",
+              "notes": "1. Query Structure is Constant:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n0b89de32ecf447a",
+                  "title": "SQL structure defined at development time",
+                  "markdown": "- SQL structure defined at development time",
+                  "notes": "SQL structure defined at development time",
+                  "blurb": "SQL structure defined at development time",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "neab70c411611ac9",
+                  "title": "No user input in SQL structure",
+                  "markdown": "- No user input in SQL structure",
+                  "notes": "No user input in SQL structure",
+                  "blurb": "No user input in SQL structure",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n8cc16601354bd63",
+                  "title": "Cannot be manipulated",
+                  "markdown": "- Cannot be manipulated",
+                  "notes": "Cannot be manipulated",
+                  "blurb": "Cannot be manipulated",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nebbd7d5626fdbbe",
+                  "title": "Database escapes parameters automatically",
+                  "markdown": "- Database escapes parameters automatically",
+                  "notes": "Database escapes parameters automatically",
+                  "blurb": "Database escapes parameters automatically",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n1e33ce897567c9b",
+                  "title": "Parameters cannot change query structure",
+                  "markdown": "- Parameters cannot change query structure",
+                  "notes": "Parameters cannot change query structure",
+                  "blurb": "Parameters cannot change query structure",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n42b132df4a7c115",
+                  "title": "SQL injection impossible",
+                  "markdown": "- SQL injection impossible",
+                  "notes": "SQL injection impossible",
+                  "blurb": "SQL injection impossible",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n8ac335dcab6df4c",
+                  "title": "Database handles type conversion",
+                  "markdown": "- Database handles type conversion",
+                  "notes": "Database handles type conversion",
+                  "blurb": "Database handles type conversion",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n3032e13b57f27b8",
+                  "title": "Prevents type confusion attacks",
+                  "markdown": "- Prevents type confusion attacks",
+                  "notes": "Prevents type confusion attacks",
+                  "blurb": "Prevents type confusion attacks",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Includes SQL structure defined at development time",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes SQL Injection Attack",
+          "expanded": false
+        },
+        {
+          "id": "ncc6d3f73077a0a4",
+          "title": "Best Practices",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nb138a7f3b4e7303",
+              "title": "Always Use Parameterized Queries",
+              "markdown": "**\u2705 CORRECT:**\n\n```python\nquery = \"SELECT * FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n\n```\n\n**\u274c WRONG:**\n\n```python\nquery = f\"SELECT * FROM users WHERE username = '{username}'\"\ncursor.execute(query)\n\n```",
+              "notes": "\u2705 CORRECT:\n\nquery = \"SELECT  FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n\n\u274c WRONG:\n\nquery = f\"SELECT  FROM users WHERE username = '{username}'\"\ncursor.execute(query)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "\u2705 CORRECT: query = \"SELECT FROM users WHERE username = ?\"...",
+              "expanded": false
+            },
+            {
+              "id": "n675de3952bd0722",
+              "title": "Use Prepared Statements for Repeated Queries",
+              "markdown": "**\u2705 CORRECT (Repeated Execution):**\n\n```python\nquery = \"INSERT INTO logs (message, timestamp) VALUES (?, ?)\"\ncursor = connection.cursor()\n\n# Prepare once, execute many times\nfor log_entry in log_entries:\n    cursor.execute(query, (log_entry.message, log_entry.timestamp))\n\n```",
+              "notes": "\u2705 CORRECT (Repeated Execution):\n\nquery = \"INSERT INTO logs (message, timestamp) VALUES (?, ?)\"\ncursor = connection.cursor()\n\nPrepare once, execute many times\nfor logentry in logentries:\n    cursor.execute(query, (logentry.message, logentry.timestamp))",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "\u2705 CORRECT (Repeated Execution): query = \"INSERT INTO logs (message,...",
+              "expanded": false
+            },
+            {
+              "id": "n9539bccdbeca67a",
+              "title": "Don't Try to Parameterize Table/Column Names",
+              "markdown": "**\u274c WRONG:**\n\n```python\n# Can't parameterize table names\ntable_name = request.args.get('table')\nquery = f\"SELECT * FROM {table_name}\"  # Still vulnerable!\n\n```\n\n**\u2705 CORRECT (Whitelist Approach):**\n\n```python\nallowed_tables = ['users', 'products', 'orders']\ntable_name = request.args.get('table')\nif table_name not in allowed_tables:\n    raise ValueError(\"Invalid table\")\nquery = f\"SELECT * FROM {table_name}\"  # Safe with whitelist\n\n```",
+              "notes": "\u274c WRONG:\n\nCan't parameterize table names\ntablename = request.args.get('table')\nquery = f\"SELECT  FROM {tablename}\"  # Still vulnerable!\n\n\u2705 CORRECT (Whitelist Approach):\n\nallowedtables = ['users', 'products', 'orders']\ntablename = request.args.get('table')\nif tablename not in allowedtables:\n    raise ValueError(\"Invalid table\")\nquery = f\"SELECT  FROM {tablename}\"  # Safe with whitelist",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "\u274c WRONG: Can't parameterize table names tablename =...",
+              "expanded": false
+            },
+            {
+              "id": "n92496cb3cb04c38",
+              "title": "Use ORM When Possible",
+              "markdown": "**\u2705 CORRECT (ORM - Django):**\n\n```python\nfrom django.db import models\n\n# ORM handles parameterization automatically\nUser.objects.filter(username=username, password=password)\n\n```",
+              "notes": "\u2705 CORRECT (ORM - Django):\n\nfrom django.db import models\n\nORM handles parameterization automatically\nUser.objects.filter(username=username, password=password)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "\u2705 CORRECT (ORM - Django): from django.db import models ORM handles...",
+              "expanded": false
+            },
+            {
+              "id": "n36377eb68c15376",
+              "title": "Validate Input Types",
+              "markdown": "**\u2705 CORRECT:**\n\n```python\n# Validate input type\nuser_id = request.args.get('id')\ntry:\n    user_id = int(user_id)  # Ensure it's an integer\nexcept ValueError:\n    raise ValueError(\"Invalid user ID\")\n\nquery = \"SELECT * FROM users WHERE id = ?\"\ncursor.execute(query, (user_id,))\n\n```",
+              "notes": "\u2705 CORRECT:\n\nValidate input type\nuserid = request.args.get('id')\ntry:\n    userid = int(userid)  # Ensure it's an integer\nexcept ValueError:\n    raise ValueError(\"Invalid user ID\")\n\nquery = \"SELECT  FROM users WHERE id = ?\"\ncursor.execute(query, (userid,))",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "\u2705 CORRECT: Validate input type userid = request.args.get('id') try: userid =...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Always Use Parameterized Queries",
+          "expanded": false
+        },
+        {
+          "id": "nfe3ed1f36bb0a33",
+          "title": "Advanced Mitigations",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n5d0288c6be42213",
+              "title": "Defense in Depth Strategy",
+              "markdown": "**Layer 1: Parameterized Queries (Primary Defense)**\n\n```python\nquery = \"SELECT * FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n\n```\n\n**Layer 2: Input Validation (Additional Layer)**\n\n```python\ndef validate_username(username):\n    if not re.match(r'^[a-zA-Z0-9_]+$', username):\n        raise ValueError(\"Invalid username\")\n    if len(username) > 50:\n        raise ValueError(\"Username too long\")\n    return username\n\nusername = validate_username(request.form['username'])\nquery = \"SELECT * FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n\n```\n\n**Layer 3: Principle of Least Privilege**\n\n```sql\n-- Database user has minimal privileges\nGRANT SELECT ON users TO app_user;\n-- Cannot execute DROP, DELETE, etc.\n\n```\n\n**Layer 4: ORM Usage (When Possible)**\n\n```python\n# ORM automatically uses parameterized queries\nUser.objects.filter(username=username)\n\n```",
+              "notes": "Layer 1: Parameterized Queries (Primary Defense)\n\nquery = \"SELECT  FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n\nLayer 2: Input Validation (Additional Layer)\n\ndef validateusername(username):\n    if not re.match(r'^[a-zA-Z0-9]+$', username):\n        raise ValueError(\"Invalid username\")\n    if len(username) > 50:\n        raise ValueError(\"Username too long\")\n    return username\n\nusername = validateusername(request.form['username'])\nquery = \"SELECT  FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n\nLayer 3: Principle of Least Privilege\n\n-- Database user has minimal privileges\nGRANT SELECT ON users TO appuser;\n-- Cannot execute DROP, DELETE, etc.\n\nLayer 4: ORM Usage (When Possible)\n\nORM automatically uses parameterized queries\nUser.objects.filter(username=username)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Layer 1: Parameterized Queries (Primary Defense) query = \"SELECT FROM users...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Defense in Depth Strategy",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes How They Prevent SQL Injection"
+    },
+    {
+      "id": "nfc4258238864171",
+      "title": "SAST/DAST Detection",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n5fbb3ddd1c1fc73",
+          "title": "SAST (Static Application Security Testing)",
+          "markdown": "**Vulnerable Code Patterns:**\n\n**1. String Concatenation:**\n\n```python\n# \u274c VULNERABLE\nquery = f\"SELECT * FROM users WHERE username = '{username}'\"\n\n# SAST Detection:\n# - Pattern: String concatenation in SQL query\n# - Severity: Critical\n# - CWE: CWE-89 (SQL Injection)\n\n```\n\n**2. String Formatting:**\n\n```python\n# \u274c VULNERABLE\nquery = \"SELECT * FROM users WHERE username = '%s'\" % username\n\n# SAST Detection:\n# - Pattern: String formatting in SQL query\n# - Severity: Critical\n# - CWE: CWE-89\n\n```\n\n**3. Missing Parameter Binding:**\n\n```python\n# \u274c VULNERABLE\nquery = \"SELECT * FROM users WHERE username = ?\"\ncursor.execute(query)  # Missing parameter!\n\n# SAST Detection:\n# - Pattern: Placeholder without parameter binding\n# - Severity: High\n# - CWE: CWE-89\n\n```",
+          "notes": "Vulnerable Code Patterns:\n\n1. String Concatenation:\n\n\u274c VULNERABLE\nquery = f\"SELECT  FROM users WHERE username = '{username}'\"\n\nSAST Detection:\n- Pattern: String concatenation in SQL query\n- Severity: Critical\n- CWE: CWE-89 (SQL Injection)\n\n2. String Formatting:\n\n\u274c VULNERABLE\nquery = \"SELECT  FROM users WHERE username = '%s'\" % username\n\nSAST Detection:\n- Pattern: String formatting in SQL query\n- Severity: Critical\n- CWE: CWE-89\n\n3. Missing Parameter Binding:\n\n\u274c VULNERABLE\nquery = \"SELECT  FROM users WHERE username = ?\"\ncursor.execute(query)  # Missing parameter!\n\nSAST Detection:\n- Pattern: Placeholder without parameter binding\n- Severity: High\n- CWE: CWE-89",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Vulnerable Code Patterns: 1.",
+          "expanded": false
+        },
+        {
+          "id": "n66c868f3d4a7594",
+          "title": "DAST (Dynamic Application Security Testing)",
+          "markdown": "**Testing Methodology:**\n\n**1. Identify Input Points:**",
+          "notes": "Testing Methodology:\n\n1. Identify Input Points:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n30b83f9d94222e6",
+              "title": "Test all form inputs",
+              "markdown": "- Test all form inputs",
+              "notes": "Test all form inputs",
+              "blurb": "Test all form inputs",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9c626a6aef54617",
+              "title": "Test URL parameters",
+              "markdown": "- Test URL parameters",
+              "notes": "Test URL parameters",
+              "blurb": "Test URL parameters",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n065e47c67edeff4",
+              "title": "Test headers and cookies",
+              "markdown": "- Test headers and cookies",
+              "notes": "Test headers and cookies",
+              "blurb": "Test headers and cookies",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na799917e1ea0734",
+              "title": "Check for SQL errors",
+              "markdown": "- Check for SQL errors",
+              "notes": "Check for SQL errors",
+              "blurb": "Check for SQL errors",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8559da4d43d1e6d",
+              "title": "Check for unexpected behavior",
+              "markdown": "- Check for unexpected behavior",
+              "notes": "Check for unexpected behavior",
+              "blurb": "Check for unexpected behavior",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n08e610a2236d5ba",
+              "title": "Check for data extraction",
+              "markdown": "- Check for data extraction",
+              "notes": "Check for data extraction",
+              "blurb": "Check for data extraction",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n2a60eab38226b15",
+              "title": "Payloads should be treated as literal values",
+              "markdown": "- Payloads should be treated as literal values",
+              "notes": "Payloads should be treated as literal values",
+              "blurb": "Payloads should be treated as literal values",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9116a13ebf5220e",
+              "title": "No SQL errors should occur",
+              "markdown": "- No SQL errors should occur",
+              "notes": "No SQL errors should occur",
+              "blurb": "No SQL errors should occur",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n154f584d7f84046",
+              "title": "No data should be extracted",
+              "markdown": "- No data should be extracted",
+              "notes": "No data should be extracted",
+              "blurb": "No data should be extracted",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Testing Methodology: 1.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes SAST (Static Application Security Testing)",
+      "expanded": false
+    },
+    {
+      "id": "n289b8a969bb870d",
+      "title": "Penetration Testing Methodology",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n5647f9318dbaef6",
+          "title": "Testing for SQL Injection Protection",
+          "markdown": "**1. Identify Database Queries:**",
+          "notes": "1. Identify Database Queries:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n6c6eae675f1ed6c",
+              "title": "Find all database interactions",
+              "markdown": "- Find all database interactions",
+              "notes": "Find all database interactions",
+              "blurb": "Find all database interactions",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n7ec4a17bca23feb",
+              "title": "Identify user input points",
+              "markdown": "- Identify user input points",
+              "notes": "Identify user input points",
+              "blurb": "Identify user input points",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n65e3c50d0ff8f54",
+              "title": "Map input to SQL queries",
+              "markdown": "- Map input to SQL queries",
+              "notes": "Map input to SQL queries",
+              "blurb": "Map input to SQL queries",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ned13f60ed022225",
+              "title": "Check if queries use placeholders",
+              "markdown": "- Check if queries use placeholders",
+              "notes": "Check if queries use placeholders",
+              "blurb": "Check if queries use placeholders",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "naaba9175127760b",
+              "title": "Verify parameters bound correctly",
+              "markdown": "- Verify parameters bound correctly",
+              "notes": "Verify parameters bound correctly",
+              "blurb": "Verify parameters bound correctly",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0b4c412f067979f",
+              "title": "Test with SQL injection payloads",
+              "markdown": "- Test with SQL injection payloads",
+              "notes": "Test with SQL injection payloads",
+              "blurb": "Test with SQL injection payloads",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf93eba7bcda6105",
+              "title": "String concatenation: f\"SELECT * FROM users WHERE username = '{username}'\"",
+              "markdown": "- String concatenation: f\"SELECT * FROM users WHERE username = '{username}'\"",
+              "notes": "String concatenation: f\"SELECT * FROM users WHERE username = '{username}'\"",
+              "blurb": "String concatenation: f\"SELECT FROM users WHERE username = '{username}'\"",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ncec866c954839bb",
+              "title": "String formatting: \"SELECT * FROM users WHERE username = '%s'\" % username",
+              "markdown": "- String formatting: \"SELECT * FROM users WHERE username = '%s'\" % username",
+              "notes": "String formatting: \"SELECT * FROM users WHERE username = '%s'\" % username",
+              "blurb": "String formatting: \"SELECT FROM users WHERE username = '%s'\" % username",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n4d271079b36f0d0",
+              "title": "String replacement: query.replace('{username}', username)",
+              "markdown": "- String replacement: query.replace('{username}', username)",
+              "notes": "String replacement: query.replace('{username}', username)",
+              "blurb": "String replacement: query.replace('{username}', username)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ndca8f973358dfad",
+              "title": "Placeholders: \"SELECT * FROM users WHERE username = ?\"",
+              "markdown": "- Placeholders: \"SELECT * FROM users WHERE username = ?\"",
+              "notes": "Placeholders: \"SELECT * FROM users WHERE username = ?\"",
+              "blurb": "Placeholders: \"SELECT FROM users WHERE username = ?\"",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Find all database interactions",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Testing for SQL Injection Protection",
+      "expanded": false
+    },
+    {
+      "id": "n3603b01b8e46a1c",
+      "title": "Threat Modeling (STRIDE Framework)",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n4f24acf180c8f20",
+          "title": "Spoofing",
+          "markdown": "**Threat:** Attacker spoofs legitimate user via SQL injection.\n\n**Attack Vectors:**",
+          "notes": "Threat: Attacker spoofs legitimate user via SQL injection.\n\nAttack Vectors:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nb3d788e54220665",
+              "title": "Authentication bypass via SQL injection",
+              "markdown": "- Authentication bypass via SQL injection",
+              "notes": "Authentication bypass via SQL injection",
+              "blurb": "Authentication bypass via SQL injection",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n36dd18730a8bea0",
+              "title": "Impersonation through manipulated queries",
+              "markdown": "- Impersonation through manipulated queries",
+              "notes": "Impersonation through manipulated queries",
+              "blurb": "Impersonation through manipulated queries",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9b3daa82a015b44",
+              "title": "Parameterized queries prevent SQL injection",
+              "markdown": "- Parameterized queries prevent SQL injection",
+              "notes": "Parameterized queries prevent SQL injection",
+              "blurb": "Parameterized queries prevent SQL injection",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nfe5c2d7103c7cf3",
+              "title": "Proper authentication mechanisms",
+              "markdown": "- Proper authentication mechanisms",
+              "notes": "Proper authentication mechanisms",
+              "blurb": "Proper authentication mechanisms",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nccd939df635c4d8",
+              "title": "Input validation (additional layer)",
+              "markdown": "- Input validation (additional layer)",
+              "notes": "Input validation (additional layer)",
+              "blurb": "Input validation (additional layer)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Threat: Attacker spoofs legitimate user via SQL injection.",
+          "expanded": false
+        },
+        {
+          "id": "nbd1c97d4dd0857b",
+          "title": "Tampering",
+          "markdown": "**Threat:** Attacker modifies data via SQL injection.\n\n**Attack Vectors:**",
+          "notes": "Threat: Attacker modifies data via SQL injection.\n\nAttack Vectors:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n48e0b345c43b0bc",
+              "title": "UPDATE/DELETE statements via SQL injection",
+              "markdown": "- UPDATE/DELETE statements via SQL injection",
+              "notes": "UPDATE/DELETE statements via SQL injection",
+              "blurb": "UPDATE/DELETE statements via SQL injection",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na4c64e4d0d41626",
+              "title": "Data manipulation through injected queries",
+              "markdown": "- Data manipulation through injected queries",
+              "notes": "Data manipulation through injected queries",
+              "blurb": "Data manipulation through injected queries",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9b3daa82a015b44",
+              "title": "Parameterized queries prevent SQL injection",
+              "markdown": "- Parameterized queries prevent SQL injection",
+              "notes": "Parameterized queries prevent SQL injection",
+              "blurb": "Parameterized queries prevent SQL injection",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n45f1e25e1b5e7ad",
+              "title": "Principle of least privilege",
+              "markdown": "- Principle of least privilege",
+              "notes": "Principle of least privilege",
+              "blurb": "Principle of least privilege",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n1e25c27bbfb3d4a",
+              "title": "Input validation",
+              "markdown": "- Input validation",
+              "notes": "Input validation",
+              "blurb": "",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Threat: Attacker modifies data via SQL injection.",
+          "expanded": false
+        },
+        {
+          "id": "ncfff8b645492dd2",
+          "title": "Repudiation",
+          "markdown": "**Threat:** Actions via SQL injection cannot be attributed.\n\n**Attack Vectors:**",
+          "notes": "Threat: Actions via SQL injection cannot be attributed.\n\nAttack Vectors:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "ndd219719405c38d",
+              "title": "Malicious queries appear as legitimate",
+              "markdown": "- Malicious queries appear as legitimate",
+              "notes": "Malicious queries appear as legitimate",
+              "blurb": "Malicious queries appear as legitimate",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n570b7cf2c516f6e",
+              "title": "No audit trail for injected queries",
+              "markdown": "- No audit trail for injected queries",
+              "notes": "No audit trail for injected queries",
+              "blurb": "No audit trail for injected queries",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9b3daa82a015b44",
+              "title": "Parameterized queries prevent SQL injection",
+              "markdown": "- Parameterized queries prevent SQL injection",
+              "notes": "Parameterized queries prevent SQL injection",
+              "blurb": "Parameterized queries prevent SQL injection",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc59cc1b2996cd7a",
+              "title": "Comprehensive logging",
+              "markdown": "- Comprehensive logging",
+              "notes": "Comprehensive logging",
+              "blurb": "Comprehensive logging",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nfc10e5bbd0a18b8",
+              "title": "Audit trails",
+              "markdown": "- Audit trails",
+              "notes": "Audit trails",
+              "blurb": "",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Threat: Actions via SQL injection cannot be attributed.",
+          "expanded": false
+        },
+        {
+          "id": "na0a6b35823cfc90",
+          "title": "Information Disclosure",
+          "markdown": "**Threat:** Attacker accesses sensitive data via SQL injection.\n\n**Attack Vectors:**",
+          "notes": "Threat: Attacker accesses sensitive data via SQL injection.\n\nAttack Vectors:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n362547a153aa49b",
+              "title": "SELECT statements via SQL injection",
+              "markdown": "- SELECT statements via SQL injection",
+              "notes": "SELECT statements via SQL injection",
+              "blurb": "SELECT statements via SQL injection",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n013567f1e195a27",
+              "title": "Data extraction through injected queries",
+              "markdown": "- Data extraction through injected queries",
+              "notes": "Data extraction through injected queries",
+              "blurb": "Data extraction through injected queries",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9b3daa82a015b44",
+              "title": "Parameterized queries prevent SQL injection",
+              "markdown": "- Parameterized queries prevent SQL injection",
+              "notes": "Parameterized queries prevent SQL injection",
+              "blurb": "Parameterized queries prevent SQL injection",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n45f1e25e1b5e7ad",
+              "title": "Principle of least privilege",
+              "markdown": "- Principle of least privilege",
+              "notes": "Principle of least privilege",
+              "blurb": "Principle of least privilege",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf3ce4c58d5e42cb",
+              "title": "Data encryption",
+              "markdown": "- Data encryption",
+              "notes": "Data encryption",
+              "blurb": "",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Threat: Attacker accesses sensitive data via SQL injection.",
+          "expanded": false
+        },
+        {
+          "id": "n8547dff7f26f981",
+          "title": "Denial of Service",
+          "markdown": "**Threat:** Attacker causes DoS via SQL injection.\n\n**Attack Vectors:**",
+          "notes": "Threat: Attacker causes DoS via SQL injection.\n\nAttack Vectors:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nb4024f5c2ec9c20",
+              "title": "Resource exhaustion via complex queries",
+              "markdown": "- Resource exhaustion via complex queries",
+              "notes": "Resource exhaustion via complex queries",
+              "blurb": "Resource exhaustion via complex queries",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n29a263b5a18411f",
+              "title": "Database overload through injected queries",
+              "markdown": "- Database overload through injected queries",
+              "notes": "Database overload through injected queries",
+              "blurb": "Database overload through injected queries",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9b3daa82a015b44",
+              "title": "Parameterized queries prevent SQL injection",
+              "markdown": "- Parameterized queries prevent SQL injection",
+              "notes": "Parameterized queries prevent SQL injection",
+              "blurb": "Parameterized queries prevent SQL injection",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n545d3b89827ae9d",
+              "title": "Query timeout limits",
+              "markdown": "- Query timeout limits",
+              "notes": "Query timeout limits",
+              "blurb": "Query timeout limits",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6f1e5504d4915fa",
+              "title": "Resource limits",
+              "markdown": "- Resource limits",
+              "notes": "Resource limits",
+              "blurb": "",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Threat: Attacker causes DoS via SQL injection.",
+          "expanded": false
+        },
+        {
+          "id": "ndb8810f3135029c",
+          "title": "Elevation of Privilege",
+          "markdown": "**Threat:** Attacker gains elevated privileges via SQL injection.\n\n**Attack Vectors:**",
+          "notes": "Threat: Attacker gains elevated privileges via SQL injection.\n\nAttack Vectors:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nfb36f0933f834e9",
+              "title": "Privilege escalation through injected queries",
+              "markdown": "- Privilege escalation through injected queries",
+              "notes": "Privilege escalation through injected queries",
+              "blurb": "Privilege escalation through injected queries",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0f630dda3277998",
+              "title": "Administrative access via SQL injection",
+              "markdown": "- Administrative access via SQL injection",
+              "notes": "Administrative access via SQL injection",
+              "blurb": "Administrative access via SQL injection",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9b3daa82a015b44",
+              "title": "Parameterized queries prevent SQL injection",
+              "markdown": "- Parameterized queries prevent SQL injection",
+              "notes": "Parameterized queries prevent SQL injection",
+              "blurb": "Parameterized queries prevent SQL injection",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n45f1e25e1b5e7ad",
+              "title": "Principle of least privilege",
+              "markdown": "- Principle of least privilege",
+              "notes": "Principle of least privilege",
+              "blurb": "Principle of least privilege",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n97e498cae19c545",
+              "title": "Proper access controls",
+              "markdown": "- Proper access controls",
+              "notes": "Proper access controls",
+              "blurb": "Proper access controls",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Threat: Attacker gains elevated privileges via SQL injection.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Spoofing",
+      "expanded": false
+    },
+    {
+      "id": "n7ff110b544b2fb4",
+      "title": "Real-World Case Studies",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n5bf62560c6162d8",
+          "title": "Case Study 1: Authentication Bypass",
+          "markdown": "**Background:** During penetration test, discovered SQL injection in login functionality.\n\n**Vulnerable Code:**\n\n```python\nusername = request.form['username']\npassword = request.form['password']\nquery = f\"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'\"\ncursor.execute(query)\nresult = cursor.fetchone()\nif result:\n    return \"Login successful\"\n\n```\n\n**Exploitation:**\n\n```\nUsername: admin' OR '1'='1\nPassword: anything\nResulting Query: SELECT * FROM users WHERE username = 'admin' OR '1'='1' AND password = 'anything'\nResult: Returns first user (authentication bypass!)\n\n```\n\n**Impact:**",
+          "notes": "Background: During penetration test, discovered SQL injection in login functionality.\n\nVulnerable Code:\n\nusername = request.form['username']\npassword = request.form['password']\nquery = f\"SELECT  FROM users WHERE username = '{username}' AND password = '{password}'\"\ncursor.execute(query)\nresult = cursor.fetchone()\nif result:\n    return \"Login successful\"\n\nExploitation:\n\nUsername: admin' OR '1'='1\nPassword: anything\nResulting Query: SELECT  FROM users WHERE username = 'admin' OR '1'='1' AND password = 'anything'\nResult: Returns first user (authentication bypass!)\n\nImpact:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nc4c9fb73a0c2dcc",
+              "title": "Confidentiality: Critical - Unauthorized access",
+              "markdown": "- Confidentiality: Critical - Unauthorized access",
+              "notes": "Confidentiality: Critical - Unauthorized access",
+              "blurb": "Confidentiality: Critical - Unauthorized access",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n75d87ea6b22dc0a",
+              "title": "Integrity: High - Could modify data",
+              "markdown": "- Integrity: High - Could modify data",
+              "notes": "Integrity: High - Could modify data",
+              "blurb": "Integrity: High - Could modify data",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n50563dfe1954349",
+              "title": "Business Impact: Critical - Complete authentication bypass",
+              "markdown": "- Business Impact: Critical - Complete authentication bypass",
+              "notes": "Business Impact: Critical - Complete authentication bypass",
+              "blurb": "Business Impact: Critical - Complete authentication bypass",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Background: During penetration test, discovered SQL injection in login...",
+          "expanded": false
+        },
+        {
+          "id": "n003e93177144618",
+          "title": "Case Study 2: Data Extraction",
+          "markdown": "**Background:** Security assessment revealed SQL injection in search functionality.\n\n**Vulnerable Code:**\n\n```python\nsearch_term = request.args.get('q')\nquery = f\"SELECT * FROM products WHERE name LIKE '%{search_term}%'\"\ncursor.execute(query)\nresults = cursor.fetchall()\n\n```\n\n**Exploitation:**\n\n```\nSearch: ' UNION SELECT username, password FROM users--\nResulting Query: SELECT * FROM products WHERE name LIKE '%' UNION SELECT username, password FROM users--%'\nResult: Extracts all usernames and passwords!\n\n```\n\n**Impact:**",
+          "notes": "Background: Security assessment revealed SQL injection in search functionality.\n\nVulnerable Code:\n\nsearchterm = request.args.get('q')\nquery = f\"SELECT  FROM products WHERE name LIKE '%{searchterm}%'\"\ncursor.execute(query)\nresults = cursor.fetchall()\n\nExploitation:\n\nSearch: ' UNION SELECT username, password FROM users--\nResulting Query: SELECT  FROM products WHERE name LIKE '%' UNION SELECT username, password FROM users--%'\nResult: Extracts all usernames and passwords!\n\nImpact:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nc458e2400234db3",
+              "title": "Confidentiality: Critical - Data breach",
+              "markdown": "- Confidentiality: Critical - Data breach",
+              "notes": "Confidentiality: Critical - Data breach",
+              "blurb": "Confidentiality: Critical - Data breach",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n75d87ea6b22dc0a",
+              "title": "Integrity: High - Could modify data",
+              "markdown": "- Integrity: High - Could modify data",
+              "notes": "Integrity: High - Could modify data",
+              "blurb": "Integrity: High - Could modify data",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n150ac62a8bda486",
+              "title": "Business Impact: Critical - Complete data compromise",
+              "markdown": "- Business Impact: Critical - Complete data compromise",
+              "notes": "Business Impact: Critical - Complete data compromise",
+              "blurb": "Business Impact: Critical - Complete data compromise",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Background: Security assessment revealed SQL injection in search...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Case Study 1: Authentication Bypass",
+      "expanded": false
+    },
+    {
+      "id": "n5b24405dd03e222",
+      "title": "Code examples",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nb7071822f085e54",
+          "title": "Python (SQLite)",
+          "markdown": "**Prepared Statement:**\n\n```python\nimport sqlite3\n\nconnection = sqlite3.connect('database.db')\ncursor = connection.cursor()\n\n# Prepared statement\nquery = \"SELECT * FROM users WHERE username = ? AND password = ?\"\ncursor.execute(query, (username, password))\nresult = cursor.fetchone()\n\n```",
+          "notes": "Prepared Statement:\n\nimport sqlite3\n\nconnection = sqlite3.connect('database.db')\ncursor = connection.cursor()\n\nPrepared statement\nquery = \"SELECT  FROM users WHERE username = ? AND password = ?\"\ncursor.execute(query, (username, password))\nresult = cursor.fetchone()",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Prepared Statement: import sqlite3 connection =...",
+          "expanded": false
+        },
+        {
+          "id": "n3e1bd4b384b9b5b",
+          "title": "Python (PostgreSQL - psycopg2)",
+          "markdown": "**Parameterized Query:**\n\n```python\nimport psycopg2\n\nconnection = psycopg2.connect(database=\"mydb\")\ncursor = connection.cursor()\n\n# Parameterized query (uses %s)\nquery = \"SELECT * FROM users WHERE username = %s AND password = %s\"\ncursor.execute(query, (username, password))\nresult = cursor.fetchone()\n\n```",
+          "notes": "Parameterized Query:\n\nimport psycopg2\n\nconnection = psycopg2.connect(database=\"mydb\")\ncursor = connection.cursor()\n\nParameterized query (uses %s)\nquery = \"SELECT  FROM users WHERE username = %s AND password = %s\"\ncursor.execute(query, (username, password))\nresult = cursor.fetchone()",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Parameterized Query: import psycopg2 connection =...",
+          "expanded": false
+        },
+        {
+          "id": "ne80ae7a7de510ef",
+          "title": "Java (JDBC)",
+          "markdown": "**Prepared Statement:**\n\n```java\nString sql = \"SELECT * FROM users WHERE username = ? AND password = ?\";\nPreparedStatement stmt = connection.prepareStatement(sql);\nstmt.setString(1, username);\nstmt.setString(2, password);\nResultSet rs = stmt.executeQuery();\n\n```",
+          "notes": "Prepared Statement:\n\nString sql = \"SELECT  FROM users WHERE username = ? AND password = ?\";\nPreparedStatement stmt = connection.prepareStatement(sql);\nstmt.setString(1, username);\nstmt.setString(2, password);\nResultSet rs = stmt.executeQuery();",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Prepared Statement: String sql = \"SELECT FROM users WHERE username = ?",
+          "expanded": false
+        },
+        {
+          "id": "n769b3cd600c5f9d",
+          "title": "Node.js (mysql2)",
+          "markdown": "**Prepared Statement:**\n\n```jsx\nconst query = \"SELECT * FROM users WHERE username = ? AND password = ?\";\nconnection.execute(query, [username, password], (err, results) => {\n    // Handle results\n});\n\n```",
+          "notes": "Prepared Statement:\n\nconst query = \"SELECT  FROM users WHERE username = ? AND password = ?\";\nconnection.execute(query, [username, password], (err, results) => {\n    // Handle results\n});",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Prepared Statement: const query = \"SELECT FROM users WHERE username = ?",
+          "expanded": false
+        },
+        {
+          "id": "ne1256fca72f2f40",
+          "title": "PHP (PDO)",
+          "markdown": "**Prepared Statement:**\n\n```php\n$query = \"SELECT * FROM users WHERE username = ? AND password = ?\";\n$stmt = $pdo->prepare($query);\n$stmt->execute([$username, $password]);\n$result = $stmt->fetch();\n\n```",
+          "notes": "Prepared Statement:\n\n$query = \"SELECT  FROM users WHERE username = ? AND password = ?\";\n$stmt = $pdo->prepare($query);\n$stmt->execute([$username, $password]);\n$result = $stmt->fetch();",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Prepared Statement: $query = \"SELECT FROM users WHERE username = ?",
+          "expanded": false
+        },
+        {
+          "id": "n47b31280349c004",
+          "title": "Differences and Similarities",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n9f9cfd0247f4018",
+              "title": "Parameterized Queries vs Prepared Statements",
+              "markdown": "| Aspect | Parameterized Queries | Prepared Statements |\n| --- | --- | --- |\n| **Definition** | SQL with placeholders | Pre-compiled parameterized query |\n| **Security** | \u2705 Prevents SQL injection | \u2705 Prevents SQL injection |\n| **Performance** | \u26a0\ufe0f Parsed each time | \u2705 Parsed once, cached |\n| **Database Support** | \u2705 All databases | \u2705 Most databases |\n| **Use Case** | Single queries | Repeated queries |",
+              "notes": "| Aspect | Parameterized Queries | Prepared Statements |\n| --- | --- | --- |\n| Definition | SQL with placeholders | Pre-compiled parameterized query |\n| Security | \u2705 Prevents SQL injection | \u2705 Prevents SQL injection |\n| Performance | \u26a0\ufe0f Parsed each time | \u2705 Parsed once, cached |\n| Database Support | \u2705 All databases | \u2705 Most databases |\n| Use Case | Single queries | Repeated queries |",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "| Aspect | Parameterized Queries | Prepared Statements | | --- | --- | --- |...",
+              "expanded": false
+            },
+            {
+              "id": "ne67c469a38e9b15",
+              "title": "Relationship",
+              "markdown": "**Prepared statements are a type of parameterized query:**",
+              "notes": "Prepared statements are a type of parameterized query:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n82d7a9dd1911b01",
+                  "title": "All prepared statements use parameters",
+                  "markdown": "- All prepared statements use parameters",
+                  "notes": "All prepared statements use parameters",
+                  "blurb": "All prepared statements use parameters",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n069f8b5425ccaeb",
+                  "title": "Not all parameterized queries are pre-compiled",
+                  "markdown": "- Not all parameterized queries are pre-compiled",
+                  "notes": "Not all parameterized queries are pre-compiled",
+                  "blurb": "Not all parameterized queries are pre-compiled",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd9dd5284060645e",
+                  "title": "Prepared statements add performance optimization",
+                  "markdown": "- Prepared statements add performance optimization",
+                  "notes": "Prepared statements add performance optimization",
+                  "blurb": "Prepared statements add performance optimization",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Prepared statements are a type of parameterized query:",
+              "expanded": false
+            },
+            {
+              "id": "n9517be990c21220",
+              "title": "Implementation Differences",
+              "markdown": "**Different Syntax for Placeholders:**",
+              "notes": "Different Syntax for Placeholders:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n18bb71bbce0d452",
+                  "title": "SQLite, MySQLi, ODBC: ?",
+                  "markdown": "- SQLite, MySQLi, ODBC: ?",
+                  "notes": "SQLite, MySQLi, ODBC: ?",
+                  "blurb": "SQLite, MySQLi, ODBC: ?",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n87e95c626a5e8cf",
+                  "title": "MySQL (Python), PostgreSQL: %s",
+                  "markdown": "- MySQL (Python), PostgreSQL: %s",
+                  "notes": "MySQL (Python), PostgreSQL: %s",
+                  "blurb": "MySQL (Python), PostgreSQL: %s",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n1eaf0e5a5a4c869",
+                  "title": "Oracle, .NET: :name (named parameters)",
+                  "markdown": "- Oracle, .NET: :name (named parameters)",
+                  "notes": "Oracle, .NET: :name (named parameters)",
+                  "blurb": "Oracle, .NET: :name (named parameters)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Different Syntax for Placeholders:",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Parameterized Queries vs Prepared Statements",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Python (SQLite)",
+      "expanded": false
+    },
+    {
+      "id": "nbb5ec9104c898be",
+      "title": "Quick recall",
+      "markdown": "- Cannot parameterize table/column names (use whitelisting)\n- Cannot parameterize SQL keywords (use whitelisting)\n- Small overhead for single queries (negligible)\n- Different syntax for different databases",
+      "notes": "- Cannot parameterize table/column names (use whitelisting)\n- Cannot parameterize SQL keywords (use whitelisting)\n- Small overhead for single queries (negligible)\n- Different syntax for different databases",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n3aff2236118a770",
+          "title": "Key Concepts",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n196d54fb7defc54",
+              "title": "Parameterized Queries",
+              "markdown": "SQL query with placeholders (?, %s, :name) - Values provided separately - Prevents SQL injection - Security benefit",
+              "notes": "SQL query with placeholders (?, %s, :name) - Values provided separately - Prevents SQL injection - Security benefit",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "nb17449496015035",
+                  "title": "SQL query with placeholders (?, %s, :name)",
+                  "markdown": "- SQL query with placeholders (?, %s, :name)",
+                  "notes": "SQL query with placeholders (?, %s, :name)",
+                  "blurb": "SQL query with placeholders (?, %s, :name)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nbbbec4d9bcd5dc2",
+                  "title": "Values provided separately",
+                  "markdown": "- Values provided separately",
+                  "notes": "Values provided separately",
+                  "blurb": "Values provided separately",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "naf947fde0b206fd",
+                  "title": "Prevents SQL injection",
+                  "markdown": "- Prevents SQL injection",
+                  "notes": "Prevents SQL injection",
+                  "blurb": "Prevents SQL injection",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "na0a544382ad7708",
+                  "title": "Security benefit",
+                  "markdown": "- Security benefit",
+                  "notes": "Security benefit",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "SQL query with placeholders (?, %s, :name) - Values provided separately -...",
+              "expanded": false
+            },
+            {
+              "id": "n0f086be0b2acb55",
+              "title": "Prepared Statements",
+              "markdown": "Pre-compiled parameterized query - Parsed once, executed many times - Prevents SQL injection + performance - Security + performance benefits",
+              "notes": "Pre-compiled parameterized query - Parsed once, executed many times - Prevents SQL injection + performance - Security + performance benefits",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n93269395476ba5c",
+                  "title": "Pre-compiled parameterized query",
+                  "markdown": "- Pre-compiled parameterized query",
+                  "notes": "Pre-compiled parameterized query",
+                  "blurb": "Pre-compiled parameterized query",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n2413add927f6401",
+                  "title": "Parsed once, executed many times",
+                  "markdown": "- Parsed once, executed many times",
+                  "notes": "Parsed once, executed many times",
+                  "blurb": "Parsed once, executed many times",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd02d91f7950d2c3",
+                  "title": "Prevents SQL injection + performance",
+                  "markdown": "- Prevents SQL injection + performance",
+                  "notes": "Prevents SQL injection + performance",
+                  "blurb": "Prevents SQL injection + performance",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n3b35d28bc3cb238",
+                  "title": "Security + performance benefits",
+                  "markdown": "- Security + performance benefits",
+                  "notes": "Security + performance benefits",
+                  "blurb": "Security + performance benefits",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Pre-compiled parameterized query - Parsed once, executed many times -...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Parameterized Queries",
+          "expanded": false
+        },
+        {
+          "id": "n91b205eaf62238c",
+          "title": "Syntax by Database",
+          "markdown": "| Database | Placeholder | Example |\n| --- | --- | --- |\n| **SQLite** | `?` | `cursor.execute(query, (value,))` |\n| **MySQL (Python)** | `%s` | `cursor.execute(query, (value,))` |\n| **PostgreSQL** | `%s` | `cursor.execute(query, (value,))` |\n| **Oracle** | `:name` | `cursor.execute(query, {'name': value})` |\n| **SQL Server (.NET)** | `@name` | `cmd.Parameters.Add(\"@name\", value)` |",
+          "notes": "| Database | Placeholder | Example |\n| --- | --- | --- |\n| SQLite | ? | cursor.execute(query, (value,)) |\n| MySQL (Python) | %s | cursor.execute(query, (value,)) |\n| PostgreSQL | %s | cursor.execute(query, (value,)) |\n| Oracle | :name | cursor.execute(query, {'name': value}) |\n| SQL Server (.NET) | @name | cmd.Parameters.Add(\"@name\", value) |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Database | Placeholder | Example | | --- | --- | --- | | SQLite | ?",
+          "expanded": false
+        },
+        {
+          "id": "nb24d0759bdefbca",
+          "title": "Code Patterns",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n92135df0f50152c",
+              "title": "Vulnerable (String Concatenation)",
+              "markdown": "```python\nquery = f\"SELECT * FROM users WHERE username = '{username}'\"\ncursor.execute(query)\n\n```",
+              "notes": "query = f\"SELECT  FROM users WHERE username = '{username}'\"\ncursor.execute(query)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "query = f\"SELECT FROM users WHERE username = '{username}'\"...",
+              "expanded": false
+            },
+            {
+              "id": "na18e8dd06724e85",
+              "title": "Secure (Parameterized Query)",
+              "markdown": "```python\nquery = \"SELECT * FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n\n```",
+              "notes": "query = \"SELECT  FROM users WHERE username = ?\"\ncursor.execute(query, (username,))",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "query = \"SELECT FROM users WHERE username = ?\" cursor.execute(query,...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Vulnerable (String Concatenation)",
+          "expanded": false
+        },
+        {
+          "id": "nad4b18bccf993b7",
+          "title": "Protection Checklist",
+          "markdown": "\u2705 Use parameterized queries for all user input - \u2705 Use prepared statements for repeated queries - \u2705 Whitelist table/column names (can't parameterize) - \u2705 Validate input types (additional layer) - \u2705 Use ORMs when...",
+          "notes": "\u2705 Use parameterized queries for all user input - \u2705 Use prepared statements for repeated queries - \u2705 Whitelist table/column names (can't parameterize) - \u2705 Validate input types (additional layer) - \u2705 Use ORMs when...",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n19278d6e5b26da1",
+              "title": "Use parameterized queries for all user input",
+              "markdown": "- Use parameterized queries for all user input",
+              "notes": "Use parameterized queries for all user input",
+              "blurb": "Use parameterized queries for all user input",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3387c8eb1c00f0e",
+              "title": "Use prepared statements for repeated queries",
+              "markdown": "- Use prepared statements for repeated queries",
+              "notes": "Use prepared statements for repeated queries",
+              "blurb": "Use prepared statements for repeated queries",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8fd5f0765e6777e",
+              "title": "Whitelist table/column names (can't parameterize)",
+              "markdown": "- Whitelist table/column names (can't parameterize)",
+              "notes": "Whitelist table/column names (can't parameterize)",
+              "blurb": "Whitelist table/column names (can't parameterize)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n889df7e5b38886c",
+              "title": "Validate input types (additional layer)",
+              "markdown": "- Validate input types (additional layer)",
+              "notes": "Validate input types (additional layer)",
+              "blurb": "Validate input types (additional layer)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n96e7b966e75f969",
+              "title": "Use ORMs when possible (automatic parameterization)",
+              "markdown": "- Use ORMs when possible (automatic parameterization)",
+              "notes": "Use ORMs when possible (automatic parameterization)",
+              "blurb": "Use ORMs when possible (automatic parameterization)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n063734559205405",
+              "title": "Follow principle of least privilege",
+              "markdown": "- Follow principle of least privilege",
+              "notes": "Follow principle of least privilege",
+              "blurb": "Follow principle of least privilege",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n98b494ca6d7180a",
+              "title": "Test with SQL injection payloads",
+              "markdown": "- Test with SQL injection payloads",
+              "notes": "Test with SQL injection payloads",
+              "blurb": "Test with SQL injection payloads",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "\u2705 Use parameterized queries for all user input - \u2705 Use prepared statements...",
+          "expanded": false
+        },
+        {
+          "id": "n6fa33dd5ccd6121",
+          "title": "Common Mistakes",
+          "markdown": "\u274c Trying to parameterize table/column names - \u274c Using string concatenation with user input - \u274c Relying on input validation alone - \u274c Escaping manually instead of parameterizing - \u274c Not using prepared statements for...",
+          "notes": "\u274c Trying to parameterize table/column names - \u274c Using string concatenation with user input - \u274c Relying on input validation alone - \u274c Escaping manually instead of parameterizing - \u274c Not using prepared statements for...",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n55276568b7a4198",
+              "title": "Trying to parameterize table/column names",
+              "markdown": "- Trying to parameterize table/column names",
+              "notes": "Trying to parameterize table/column names",
+              "blurb": "Trying to parameterize table/column names",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0b8fdec88bbf1b5",
+              "title": "Using string concatenation with user input",
+              "markdown": "- Using string concatenation with user input",
+              "notes": "Using string concatenation with user input",
+              "blurb": "Using string concatenation with user input",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd7128cb82e4af3c",
+              "title": "Relying on input validation alone",
+              "markdown": "- Relying on input validation alone",
+              "notes": "Relying on input validation alone",
+              "blurb": "Relying on input validation alone",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na588bda651b2216",
+              "title": "Escaping manually instead of parameterizing",
+              "markdown": "- Escaping manually instead of parameterizing",
+              "notes": "Escaping manually instead of parameterizing",
+              "blurb": "Escaping manually instead of parameterizing",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n15928680148515c",
+              "title": "Not using prepared statements for repeated queries",
+              "markdown": "- Not using prepared statements for repeated queries",
+              "notes": "Not using prepared statements for repeated queries",
+              "blurb": "Not using prepared statements for repeated queries",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "\u274c Trying to parameterize table/column names - \u274c Using string concatenation...",
+          "expanded": false
+        },
+        {
+          "id": "n6a0fc6fbb217120",
+          "title": "When to Use",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n3875619dacd3bf9",
+              "title": "Use Prepared Statements When",
+              "markdown": "Query executed multiple times - Performance is critical - Database supports it well",
+              "notes": "Query executed multiple times - Performance is critical - Database supports it well",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "nb152f3e3e6abdad",
+                  "title": "Query executed multiple times",
+                  "markdown": "- Query executed multiple times",
+                  "notes": "Query executed multiple times",
+                  "blurb": "Query executed multiple times",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd4adf7defc73a6a",
+                  "title": "Performance is critical",
+                  "markdown": "- Performance is critical",
+                  "notes": "Performance is critical",
+                  "blurb": "Performance is critical",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n1fc503ffdb6b423",
+                  "title": "Database supports it well",
+                  "markdown": "- Database supports it well",
+                  "notes": "Database supports it well",
+                  "blurb": "Database supports it well",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Query executed multiple times - Performance is critical - Database supports...",
+              "expanded": false
+            },
+            {
+              "id": "n31fe9f6381bc74e",
+              "title": "Use Parameterized Queries When",
+              "markdown": "Query executed once - Simpler implementation preferred - Database support is limited",
+              "notes": "Query executed once - Simpler implementation preferred - Database support is limited",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "nfb6c396e30d90ac",
+                  "title": "Query executed once",
+                  "markdown": "- Query executed once",
+                  "notes": "Query executed once",
+                  "blurb": "Query executed once",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n64e8a326d0990e8",
+                  "title": "Simpler implementation preferred",
+                  "markdown": "- Simpler implementation preferred",
+                  "notes": "Simpler implementation preferred",
+                  "blurb": "Simpler implementation preferred",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n424b121ef4347e6",
+                  "title": "Database support is limited",
+                  "markdown": "- Database support is limited",
+                  "notes": "Database support is limited",
+                  "blurb": "Database support is limited",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Query executed once - Simpler implementation preferred - Database support is...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Use Prepared Statements When",
+          "expanded": false
+        }
+      ],
+      "blurb": "Cannot parameterize table/column names (use whitelisting) - Cannot..."
+    },
+    {
+      "id": "nf1e5165240c55c2",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n7cc9d288d03474f",
+          "title": "Common Misconceptions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n03a900ff7db1f5b",
+              "title": "\"Parameterized queries and prepared statements are the same thing\"",
+              "markdown": "**Truth:** They are **related but different concepts**:",
+              "notes": "Truth: They are related but different concepts:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "ne85bb915984f607",
+                  "title": "Parameterized Queries: A general concept of separating SQL code from data",
+                  "markdown": "- Parameterized Queries: A general concept of separating SQL code from data",
+                  "notes": "Parameterized Queries: A general concept of separating SQL code from data",
+                  "blurb": "Parameterized Queries: A general concept of separating SQL code from data",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nc4d0c52d96c0ba1",
+                  "title": "Prepared Statements: A specific implementation of parameterized queries with performance",
+                  "markdown": "- Prepared Statements: A specific implementation of parameterized queries with performance",
+                  "notes": "Prepared Statements: A specific implementation of parameterized queries with performance",
+                  "blurb": "Prepared Statements: A specific implementation of parameterized queries with...",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n8f135e67b54145b",
+                  "title": "Parameterized queries can be implemented without prepared statements",
+                  "markdown": "- Parameterized queries can be implemented without prepared statements",
+                  "notes": "Parameterized queries can be implemented without prepared statements",
+                  "blurb": "Parameterized queries can be implemented without prepared statements",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n81fe81d26128f8e",
+                  "title": "Prepared statements are a type of parameterized query",
+                  "markdown": "- Prepared statements are a type of parameterized query",
+                  "notes": "Prepared statements are a type of parameterized query",
+                  "blurb": "Prepared statements are a type of parameterized query",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n5e9277a73286124",
+                  "title": "Both prevent SQL injection when used correctly",
+                  "markdown": "- Both prevent SQL injection when used correctly",
+                  "notes": "Both prevent SQL injection when used correctly",
+                  "blurb": "Both prevent SQL injection when used correctly",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ne76d29e7c63fa1c",
+                  "title": "Prepared statements provide additional performance benefits",
+                  "markdown": "- Prepared statements provide additional performance benefits",
+                  "notes": "Prepared statements provide additional performance benefits",
+                  "blurb": "Prepared statements provide additional performance benefits",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: They are related but different concepts:",
+              "expanded": false
+            },
+            {
+              "id": "n36d6d2b3456e55b",
+              "title": "\"Prepared statements are only for performance\"",
+              "markdown": "**Truth:** Prepared statements provide **both security and performance** benefits.\n\n**Security Benefits:**",
+              "notes": "Truth: Prepared statements provide both security and performance benefits.\n\nSecurity Benefits:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n6cd7aac43b30247",
+                  "title": "Prevents SQL injection",
+                  "markdown": "- Prevents SQL injection",
+                  "notes": "Prevents SQL injection",
+                  "blurb": "Prevents SQL injection",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nacd27f883513b35",
+                  "title": "Separates code from data",
+                  "markdown": "- Separates code from data",
+                  "notes": "Separates code from data",
+                  "blurb": "Separates code from data",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n063e810193b12ed",
+                  "title": "Database treats input as data, not code",
+                  "markdown": "- Database treats input as data, not code",
+                  "notes": "Database treats input as data, not code",
+                  "blurb": "Database treats input as data, not code",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nb6dd99c08f7cf81",
+                  "title": "Query parsed once",
+                  "markdown": "- Query parsed once",
+                  "notes": "Query parsed once",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n6a62a5c421a7175",
+                  "title": "Execution plan cached",
+                  "markdown": "- Execution plan cached",
+                  "notes": "Execution plan cached",
+                  "blurb": "Execution plan cached",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n868d02d0d2eb3e5",
+                  "title": "Faster for repeated queries",
+                  "markdown": "- Faster for repeated queries",
+                  "notes": "Faster for repeated queries",
+                  "blurb": "Faster for repeated queries",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n65ae30a0b825bb1",
+                  "title": "Reduced database load",
+                  "markdown": "- Reduced database load",
+                  "notes": "Reduced database load",
+                  "blurb": "Reduced database load",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: Prepared statements provide both security and performance benefits.",
+              "expanded": false
+            },
+            {
+              "id": "n9f6d5610e932015",
+              "title": "\"Input validation can replace parameterized queries\"",
+              "markdown": "**Truth:** Input validation **cannot replace** parameterized queries. They serve different purposes.\n\n**Why Input Validation is Not Enough:**\n\n```python\n# \u274c WRONG: Input validation alone\ndef validate_username(username):\n    if \"'\" in username or \";\" in username:\n        raise ValueError(\"Invalid characters\")\n    return username\n\nusername = validate_username(\"admin123\")\nquery = f\"SELECT * FROM users WHERE username = '{username}'\"\n# Still vulnerable! What if username = \"admin' OR '1'='1\"?\n# After validation: \"admin OR 1=1\" (still works!)\n\n```\n\n**Correct Approach:**\n\n```python\n# \u2705 CORRECT: Parameterized queries\nquery = \"SELECT * FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n# Input validation is additional layer, not primary defense\n\n```\n\n**Key Point:** Parameterized queries prevent SQL injection. Input validation helps but doesn't prevent it.",
+              "notes": "Truth: Input validation cannot replace parameterized queries. They serve different purposes.\n\nWhy Input Validation is Not Enough:\n\n\u274c WRONG: Input validation alone\ndef validateusername(username):\n    if \"'\" in username or \";\" in username:\n        raise ValueError(\"Invalid characters\")\n    return username\n\nusername = validateusername(\"admin123\")\nquery = f\"SELECT  FROM users WHERE username = '{username}'\"\nStill vulnerable! What if username = \"admin' OR '1'='1\"?\nAfter validation: \"admin OR 1=1\" (still works!)\n\nCorrect Approach:\n\n\u2705 CORRECT: Parameterized queries\nquery = \"SELECT  FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\nInput validation is additional layer, not primary defense\n\nKey Point: Parameterized queries prevent SQL injection. Input validation helps but doesn't prevent it.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Truth: Input validation cannot replace parameterized queries.",
+              "expanded": false
+            },
+            {
+              "id": "ncb95de0570c9e7e",
+              "title": "\"Parameterized queries work for all SQL operations\"",
+              "markdown": "**Truth:** Parameterized queries work for **most SQL operations**, but there are **limitations** for some cases.\n\n**Works For:**",
+              "notes": "Truth: Parameterized queries work for most SQL operations, but there are limitations for some cases.\n\nWorks For:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n3c08ccc985af866",
+                  "title": "SELECT queries",
+                  "markdown": "- SELECT queries",
+                  "notes": "SELECT queries",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nb8efaad4b7adcf2",
+                  "title": "INSERT statements",
+                  "markdown": "- INSERT statements",
+                  "notes": "INSERT statements",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n1c1d1f667c080af",
+                  "title": "UPDATE statements",
+                  "markdown": "- UPDATE statements",
+                  "notes": "UPDATE statements",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nf947398cff952ad",
+                  "title": "DELETE statements",
+                  "markdown": "- DELETE statements",
+                  "notes": "DELETE statements",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n3a9504722393a4c",
+                  "title": "WHERE clauses",
+                  "markdown": "- WHERE clauses",
+                  "notes": "WHERE clauses",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n014d412f5a7a339",
+                  "title": "VALUES clauses",
+                  "markdown": "- VALUES clauses",
+                  "notes": "VALUES clauses",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n4578b3f2ddd88cb",
+                  "title": "Table/column names (must use whitelisting)",
+                  "markdown": "- Table/column names (must use whitelisting)",
+                  "notes": "Table/column names (must use whitelisting)",
+                  "blurb": "Table/column names (must use whitelisting)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nc6f492c3c9b3df8",
+                  "title": "ORDER BY clauses (must use whitelisting)",
+                  "markdown": "- ORDER BY clauses (must use whitelisting)",
+                  "notes": "ORDER BY clauses (must use whitelisting)",
+                  "blurb": "ORDER BY clauses (must use whitelisting)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n402a608ee533a4c",
+                  "title": "Dynamic SQL structure",
+                  "markdown": "- Dynamic SQL structure",
+                  "notes": "Dynamic SQL structure",
+                  "blurb": "Dynamic SQL structure",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: Parameterized queries work for most SQL operations, but there are...",
+              "expanded": false
+            },
+            {
+              "id": "nf24163b5405481d",
+              "title": "\"All database drivers support prepared statements the same way\"",
+              "markdown": "**Truth:** Different databases and drivers implement prepared statements **differently**.\n\n**MySQL (mysql-connector-python):**\n\n```python\nquery = \"SELECT * FROM users WHERE username = %s\"\ncursor.execute(query, (username,))\n\n```\n\n**PostgreSQL (psycopg2):**\n\n```python\nquery = \"SELECT * FROM users WHERE username = %s\"\ncursor.execute(query, (username,))\n\n```\n\n**SQLite:**\n\n```python\nquery = \"SELECT * FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n\n```\n\n**MSSQL (pyodbc):**\n\n```python\nquery = \"SELECT * FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n\n```\n\n**Key Point:** Syntax varies (`?`, `%s`, `:name`), but the concept is the same.",
+              "notes": "Truth: Different databases and drivers implement prepared statements differently.\n\nMySQL (mysql-connector-python):\n\nquery = \"SELECT  FROM users WHERE username = %s\"\ncursor.execute(query, (username,))\n\nPostgreSQL (psycopg2):\n\nquery = \"SELECT  FROM users WHERE username = %s\"\ncursor.execute(query, (username,))\n\nSQLite:\n\nquery = \"SELECT  FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n\nMSSQL (pyodbc):\n\nquery = \"SELECT  FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n\nKey Point: Syntax varies (?, %s, :name), but the concept is the same.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Truth: Different databases and drivers implement prepared statements...",
+              "expanded": false
+            },
+            {
+              "id": "n982fd316a59b922",
+              "title": "\"Prepared statements are slower for single queries\"",
+              "markdown": "**Truth:** For **single queries**, there may be a small overhead, but for **repeated queries**, prepared statements are **much faster**.\n\n**Single Query:**",
+              "notes": "Truth: For single queries, there may be a small overhead, but for repeated queries, prepared statements are much faster.\n\nSingle Query:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "nb4f2b68db7a9dc9",
+                  "title": "Prepared statement: Slight overhead (parsing, compilation)",
+                  "markdown": "- Prepared statement: Slight overhead (parsing, compilation)",
+                  "notes": "Prepared statement: Slight overhead (parsing, compilation)",
+                  "blurb": "Prepared statement: Slight overhead (parsing, compilation)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n9c5f1342cec3eef",
+                  "title": "Regular query: No overhead",
+                  "markdown": "- Regular query: No overhead",
+                  "notes": "Regular query: No overhead",
+                  "blurb": "Regular query: No overhead",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n4375bc9db07095a",
+                  "title": "Difference: Negligible in most cases",
+                  "markdown": "- Difference: Negligible in most cases",
+                  "notes": "Difference: Negligible in most cases",
+                  "blurb": "Difference: Negligible in most cases",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n94aef62ae4d8706",
+                  "title": "Prepared statement: Parse once, execute many times",
+                  "markdown": "- Prepared statement: Parse once, execute many times",
+                  "notes": "Prepared statement: Parse once, execute many times",
+                  "blurb": "Prepared statement: Parse once, execute many times",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n2c15a14fe80d45e",
+                  "title": "Regular query: Parse every time",
+                  "markdown": "- Regular query: Parse every time",
+                  "notes": "Regular query: Parse every time",
+                  "blurb": "Regular query: Parse every time",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n1d29c5954a2d5c3",
+                  "title": "Difference: Significant performance gain",
+                  "markdown": "- Difference: Significant performance gain",
+                  "notes": "Difference: Significant performance gain",
+                  "blurb": "Difference: Significant performance gain",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: For single queries, there may be a small overhead, but for repeated...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes \"Parameterized queries and prepared statements are the same thing\"",
+          "expanded": false
+        },
+        {
+          "id": "ncbcc910c6bd3399",
+          "title": "Key Takeaways",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nc9bc7d4b483f0ae",
+              "title": "Understanding",
+              "markdown": "Parameterized queries and prepared statements are related but different",
+              "notes": "Parameterized queries and prepared statements are related but different",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "ndfd7fa8d9b2483d",
+                  "title": "Parameterized queries and prepared statements are related but different",
+                  "markdown": "- Parameterized queries and prepared statements are related but different",
+                  "notes": "Parameterized queries and prepared statements are related but different",
+                  "blurb": "Parameterized queries and prepared statements are related but different",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n58fb8beb27d3442",
+                  "title": "Prepared statements provide both security and performance benefits",
+                  "markdown": "- Prepared statements provide both security and performance benefits",
+                  "notes": "Prepared statements provide both security and performance benefits",
+                  "blurb": "Prepared statements provide both security and performance benefits",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n4a2abb29019a49d",
+                  "title": "Input validation cannot replace parameterized queries",
+                  "markdown": "- Input validation cannot replace parameterized queries",
+                  "notes": "Input validation cannot replace parameterized queries",
+                  "blurb": "Input validation cannot replace parameterized queries",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n2bce2c5a86fb2a7",
+                  "title": "Parameterized queries work for most SQL operations",
+                  "markdown": "- Parameterized queries work for most SQL operations",
+                  "notes": "Parameterized queries work for most SQL operations",
+                  "blurb": "Parameterized queries work for most SQL operations",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd5de65fdf130b1d",
+                  "title": "Different databases use different syntax",
+                  "markdown": "- Different databases use different syntax",
+                  "notes": "Different databases use different syntax",
+                  "blurb": "Different databases use different syntax",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nc47170bc209569a",
+                  "title": "Prepared statements excel with repeated queries",
+                  "markdown": "- Prepared statements excel with repeated queries",
+                  "notes": "Prepared statements excel with repeated queries",
+                  "blurb": "Prepared statements excel with repeated queries",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Parameterized queries and prepared statements are related but different",
+              "expanded": false
+            },
+            {
+              "id": "n2b5ce86ecb64a80",
+              "title": "Common Mistakes",
+              "markdown": "\u274c Confusing parameterized queries with prepared statements - \u274c Thinking input validation is sufficient - \u274c Trying to parameterize table/column names - \u274c Not using prepared statements for repeated queries - \u274c Assuming...",
+              "notes": "\u274c Confusing parameterized queries with prepared statements - \u274c Thinking input validation is sufficient - \u274c Trying to parameterize table/column names - \u274c Not using prepared statements for repeated queries - \u274c Assuming...",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n95761eda248c5dc",
+                  "title": "Confusing parameterized queries with prepared statements",
+                  "markdown": "- Confusing parameterized queries with prepared statements",
+                  "notes": "Confusing parameterized queries with prepared statements",
+                  "blurb": "Confusing parameterized queries with prepared statements",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n43806bf55b642da",
+                  "title": "Thinking input validation is sufficient",
+                  "markdown": "- Thinking input validation is sufficient",
+                  "notes": "Thinking input validation is sufficient",
+                  "blurb": "Thinking input validation is sufficient",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n9d6ad8b68b5aab7",
+                  "title": "Trying to parameterize table/column names",
+                  "markdown": "- Trying to parameterize table/column names",
+                  "notes": "Trying to parameterize table/column names",
+                  "blurb": "Trying to parameterize table/column names",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n1be447a47218a4b",
+                  "title": "Not using prepared statements for repeated queries",
+                  "markdown": "- Not using prepared statements for repeated queries",
+                  "notes": "Not using prepared statements for repeated queries",
+                  "blurb": "Not using prepared statements for repeated queries",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n163a5bedb800b58",
+                  "title": "Assuming all databases work the same way",
+                  "markdown": "- Assuming all databases work the same way",
+                  "notes": "Assuming all databases work the same way",
+                  "blurb": "Assuming all databases work the same way",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "\u274c Confusing parameterized queries with prepared statements - \u274c Thinking...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Understanding",
+          "expanded": false
+        },
+        {
+          "id": "n38687df17c34980",
+          "title": "Summary Table",
+          "markdown": "| Concept | Definition | Security | Performance |\n| --- | --- | --- | --- |\n| **Parameterized Queries** | Separating SQL code from data | \u2705 Prevents SQL injection | \u26a0\ufe0f Varies |\n| **Prepared Statements** | Pre-compiled parameterized queries | \u2705 Prevents SQL injection | \u2705 Faster for repeated queries |\n\n---\n\nRemember: **Parameterized queries (prepared statements) are the primary defense against SQL injection, not input validation or sanitization!**",
+          "notes": "| Concept | Definition | Security | Performance |\n| --- | --- | --- | --- |\n| Parameterized Queries | Separating SQL code from data | \u2705 Prevents SQL injection | \u26a0\ufe0f Varies |\n| Prepared Statements | Pre-compiled parameterized queries | \u2705 Prevents SQL injection | \u2705 Faster for repeated queries |\n\n---\n\nRemember: Parameterized queries (prepared statements) are the primary defense against SQL injection, not input validation or sanitization!",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Concept | Definition | Security | Performance | | --- | --- | --- | --- |...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Common Misconceptions"
+    },
+    {
+      "id": "nad03344b9f0e3a0",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nd6626bc355c08dc",
+          "title": "Fundamental Questions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n5503c4097726f52",
+              "title": "What are parameterized queries and how do they prevent SQL injection?",
+              "markdown": "**Answer:**\n\nParameterized queries use placeholders (parameters) for values that will be provided at runtime, separating SQL code from data.\n\n**How They Work:**\n\n1. **Query Structure Defined:**\n\n    ```sql\n    SELECT * FROM users WHERE username = ?\n\n    ```",
+              "notes": "Answer:\n\nParameterized queries use placeholders (parameters) for values that will be provided at runtime, separating SQL code from data.\n\nHow They Work:\n\n1. Query Structure Defined:\n\n    \n    SELECT  FROM users WHERE username = ?",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n2b42a0a4b4fe1a8",
+                  "title": "? is a placeholder (constant, safe)",
+                  "markdown": "- ? is a placeholder (constant, safe)",
+                  "notes": "? is a placeholder (constant, safe)",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nb4cd1f139ba5022",
+                  "title": "Query structure is defined at development time",
+                  "markdown": "- Query structure is defined at development time",
+                  "notes": "Query structure is defined at development time",
+                  "blurb": "Query structure is defined at development time",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n29e41212a39ca08",
+                  "title": "Values provided as separate parameters",
+                  "markdown": "- Values provided as separate parameters",
+                  "notes": "Values provided as separate parameters",
+                  "blurb": "Values provided as separate parameters",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nc0775f7264d6ff4",
+                  "title": "Database binds values to placeholders",
+                  "markdown": "- Database binds values to placeholders",
+                  "notes": "Database binds values to placeholders",
+                  "blurb": "Database binds values to placeholders",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n40e110818542baa",
+                  "title": "Database treats parameters as data, not SQL code",
+                  "markdown": "- Database treats parameters as data, not SQL code",
+                  "notes": "Database treats parameters as data, not SQL code",
+                  "blurb": "Database treats parameters as data, not SQL code",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n10f6704499e7d1e",
+                  "title": "Parameters are escaped automatically",
+                  "markdown": "- Parameters are escaped automatically",
+                  "notes": "Parameters are escaped automatically",
+                  "blurb": "Parameters are escaped automatically",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n437e04a54038720",
+                  "title": "SQL injection impossible",
+                  "markdown": "- SQL injection impossible",
+                  "notes": "SQL injection impossible",
+                  "blurb": "SQL injection impossible",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Answer: Parameterized queries use placeholders (parameters) for values that...",
+              "expanded": false
+            },
+            {
+              "id": "nfc317eca0fb5711",
+              "title": "What is the difference between parameterized queries and prepared...",
+              "markdown": "**Answer:**\n\n**Parameterized Queries:**",
+              "notes": "Answer:\n\nParameterized Queries:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n4ef06948c373033",
+                  "title": "SQL query with placeholders for values",
+                  "markdown": "- SQL query with placeholders for values",
+                  "notes": "SQL query with placeholders for values",
+                  "blurb": "SQL query with placeholders for values",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n9e37bad0f76f64f",
+                  "title": "Values provided at runtime",
+                  "markdown": "- Values provided at runtime",
+                  "notes": "Values provided at runtime",
+                  "blurb": "Values provided at runtime",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nae312694ae3b1ec",
+                  "title": "May be parsed each time (depending on implementation)",
+                  "markdown": "- May be parsed each time (depending on implementation)",
+                  "notes": "May be parsed each time (depending on implementation)",
+                  "blurb": "May be parsed each time (depending on implementation)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n0e632f0e2f7db7f",
+                  "title": "Primary focus: Security (preventing SQL injection)",
+                  "markdown": "- Primary focus: Security (preventing SQL injection)",
+                  "notes": "Primary focus: Security (preventing SQL injection)",
+                  "blurb": "Primary focus: Security (preventing SQL injection)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nc10c8c6c560017f",
+                  "title": "Parameterized query that is pre-compiled by database",
+                  "markdown": "- Parameterized query that is pre-compiled by database",
+                  "notes": "Parameterized query that is pre-compiled by database",
+                  "blurb": "Parameterized query that is pre-compiled by database",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n247a17ca4599de6",
+                  "title": "Query parsed and optimized once",
+                  "markdown": "- Query parsed and optimized once",
+                  "notes": "Query parsed and optimized once",
+                  "blurb": "Query parsed and optimized once",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n9ab2d64aaaced88",
+                  "title": "Execution plan cached for reuse",
+                  "markdown": "- Execution plan cached for reuse",
+                  "notes": "Execution plan cached for reuse",
+                  "blurb": "Execution plan cached for reuse",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n67a6dc801e6f220",
+                  "title": "Primary focus: Security + Performance",
+                  "markdown": "- Primary focus: Security + Performance",
+                  "notes": "Primary focus: Security + Performance",
+                  "blurb": "Primary focus: Security + Performance",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nba4c63bd5689d3d",
+                  "title": "All prepared statements use parameters",
+                  "markdown": "- All prepared statements use parameters",
+                  "notes": "All prepared statements use parameters",
+                  "blurb": "All prepared statements use parameters",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n093e4fe137506e4",
+                  "title": "Not all parameterized queries are pre-compiled",
+                  "markdown": "- Not all parameterized queries are pre-compiled",
+                  "notes": "Not all parameterized queries are pre-compiled",
+                  "blurb": "Not all parameterized queries are pre-compiled",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Answer: Parameterized Queries:",
+              "expanded": false
+            },
+            {
+              "id": "n876aa1599085d15",
+              "title": "Can you parameterize table names or column names?",
+              "markdown": "**Answer:**\n\n**No, you cannot parameterize table names or column names.** These are part of the SQL structure, not data values.\n\n**Why It Doesn't Work:**\n\n```python\n# \u274c WRONG: Can't parameterize table name\ntable_name = request.args.get('table')\nquery = \"SELECT * FROM ?\"  # Syntax error!\ncursor.execute(query, (table_name,))\n\n```\n\n**Correct Approach (Whitelisting):**\n\n```python\n# \u2705 CORRECT: Whitelist table names\nallowed_tables = ['users', 'products', 'orders']\ntable_name = request.args.get('table')\nif table_name not in allowed_tables:\n    raise ValueError(\"Invalid table\")\nquery = f\"SELECT * FROM {table_name}\"  # Safe with whitelist\n\n```\n\n**Key Point:** Only data values can be parameterized. SQL structure elements (table names, column names, SQL keywords) must use whitelisting.",
+              "notes": "Answer:\n\nNo, you cannot parameterize table names or column names. These are part of the SQL structure, not data values.\n\nWhy It Doesn't Work:\n\n\u274c WRONG: Can't parameterize table name\ntablename = request.args.get('table')\nquery = \"SELECT  FROM ?\"  # Syntax error!\ncursor.execute(query, (tablename,))\n\nCorrect Approach (Whitelisting):\n\n\u2705 CORRECT: Whitelist table names\nallowedtables = ['users', 'products', 'orders']\ntablename = request.args.get('table')\nif tablename not in allowedtables:\n    raise ValueError(\"Invalid table\")\nquery = f\"SELECT  FROM {tablename}\"  # Safe with whitelist\n\nKey Point: Only data values can be parameterized. SQL structure elements (table names, column names, SQL keywords) must use whitelisting.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: No, you cannot parameterize table names or column names.",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes What are parameterized queries and how do they prevent SQL injection?",
+          "expanded": false
+        },
+        {
+          "id": "n0df157666361045",
+          "title": "Implementation Questions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n61dae914e3a2951",
+              "title": "Show examples of parameterized queries in different...",
+              "markdown": "**Answer:**\n\n**Python (SQLite):**\n\n```python\nimport sqlite3\n\nconnection = sqlite3.connect('database.db')\ncursor = connection.cursor()\n\nquery = \"SELECT * FROM users WHERE username = ? AND password = ?\"\ncursor.execute(query, (username, password))\nresult = cursor.fetchone()\n\n```\n\n**Python (PostgreSQL - psycopg2):**\n\n```python\nimport psycopg2\n\nconnection = psycopg2.connect(database=\"mydb\")\ncursor = connection.cursor()\n\nquery = \"SELECT * FROM users WHERE username = %s AND password = %s\"\ncursor.execute(query, (username, password))\nresult = cursor.fetchone()\n\n```\n\n**Java (JDBC):**\n\n```java\nString sql = \"SELECT * FROM users WHERE username = ? AND password = ?\";\nPreparedStatement stmt = connection.prepareStatement(sql);\nstmt.setString(1, username);\nstmt.setString(2, password);\nResultSet rs = stmt.executeQuery();\n\n```\n\n**Node.js (mysql2):**\n\n```jsx\nconst query = \"SELECT * FROM users WHERE username = ? AND password = ?\";\nconnection.execute(query, [username, password], (err, results) => {\n    // Handle results\n});\n\n```\n\n**PHP (PDO):**\n\n```php\n$query = \"SELECT * FROM users WHERE username = ? AND password = ?\";\n$stmt = $pdo->prepare($query);\n$stmt->execute([$username, $password]);\n$result = $stmt->fetch();\n\n```\n\n**Note:** Syntax varies (`?`, `%s`, `:name`), but the concept is the same - separate SQL structure from data values.",
+              "notes": "Answer:\n\nPython (SQLite):\n\nimport sqlite3\n\nconnection = sqlite3.connect('database.db')\ncursor = connection.cursor()\n\nquery = \"SELECT  FROM users WHERE username = ? AND password = ?\"\ncursor.execute(query, (username, password))\nresult = cursor.fetchone()\n\nPython (PostgreSQL - psycopg2):\n\nimport psycopg2\n\nconnection = psycopg2.connect(database=\"mydb\")\ncursor = connection.cursor()\n\nquery = \"SELECT  FROM users WHERE username = %s AND password = %s\"\ncursor.execute(query, (username, password))\nresult = cursor.fetchone()\n\nJava (JDBC):\n\nString sql = \"SELECT  FROM users WHERE username = ? AND password = ?\";\nPreparedStatement stmt = connection.prepareStatement(sql);\nstmt.setString(1, username);\nstmt.setString(2, password);\nResultSet rs = stmt.executeQuery();\n\nNode.js (mysql2):\n\nconst query = \"SELECT  FROM users WHERE username = ? AND password = ?\";\nconnection.execute(query, [username, password], (err, results) => {\n    // Handle results\n});\n\nPHP (PDO):\n\n$query = \"SELECT  FROM users WHERE username = ? AND password = ?\";\n$stmt = $pdo->prepare($query);\n$stmt->execute([$username, $password]);\n$result = $stmt->fetch();\n\nNote: Syntax varies (?, %s, :name), but the concept is the same - separate SQL structure from data values.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Python (SQLite): import sqlite3 connection =...",
+              "expanded": false
+            },
+            {
+              "id": "nd1d3526a998f42d",
+              "title": "How do prepared statements improve performance?",
+              "markdown": "**Answer:**\n\n**Performance Benefits:**\n\n1. **Query Parsing (Once):**",
+              "notes": "Answer:\n\nPerformance Benefits:\n\n1. Query Parsing (Once):",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n4b9afad2bb37580",
+                  "title": "Query parsed and validated once",
+                  "markdown": "- Query parsed and validated once",
+                  "notes": "Query parsed and validated once",
+                  "blurb": "Query parsed and validated once",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n6e2e58149477194",
+                  "title": "Execution plan created once",
+                  "markdown": "- Execution plan created once",
+                  "notes": "Execution plan created once",
+                  "blurb": "Execution plan created once",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n1433f1aa6ab2d84",
+                  "title": "Plan cached for reuse",
+                  "markdown": "- Plan cached for reuse",
+                  "notes": "Plan cached for reuse",
+                  "blurb": "Plan cached for reuse",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "neae09c48fa95ae3",
+                  "title": "Database optimizes query once",
+                  "markdown": "- Database optimizes query once",
+                  "notes": "Database optimizes query once",
+                  "blurb": "Database optimizes query once",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nfa9809d76f6b8cb",
+                  "title": "Optimization cached",
+                  "markdown": "- Optimization cached",
+                  "notes": "Optimization cached",
+                  "blurb": "Optimization cached",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n31d84492615b8d9",
+                  "title": "Faster subsequent executions",
+                  "markdown": "- Faster subsequent executions",
+                  "notes": "Faster subsequent executions",
+                  "blurb": "Faster subsequent executions",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n157446f700a6c3e",
+                  "title": "Only parameter values sent to database",
+                  "markdown": "- Only parameter values sent to database",
+                  "notes": "Only parameter values sent to database",
+                  "blurb": "Only parameter values sent to database",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd12dc0b9a2af93e",
+                  "title": "Uses cached execution plan",
+                  "markdown": "- Uses cached execution plan",
+                  "notes": "Uses cached execution plan",
+                  "blurb": "Uses cached execution plan",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n4962859b7e7ae89",
+                  "title": "Much faster for repeated queries",
+                  "markdown": "- Much faster for repeated queries",
+                  "notes": "Much faster for repeated queries",
+                  "blurb": "Much faster for repeated queries",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ncbda6cb3c0de3bf",
+                  "title": "Single query: Small overhead (negligible)",
+                  "markdown": "- Single query: Small overhead (negligible)",
+                  "notes": "Single query: Small overhead (negligible)",
+                  "blurb": "Single query: Small overhead (negligible)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Answer: Performance Benefits: 1.",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Show examples of parameterized queries in different...",
+          "expanded": false
+        },
+        {
+          "id": "n6b7ce60491b8a48",
+          "title": "Security Questions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n315bb3882b7c251",
+              "title": "Why is input validation not enough to prevent SQL injection?",
+              "markdown": "**Answer:**\n\n**Input validation limitations:**\n\n1. **Context Mismatch:**",
+              "notes": "Answer:\n\nInput validation limitations:\n\n1. Context Mismatch:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n7f57efc3b179fd4",
+                  "title": "Input might be valid but dangerous in SQL context",
+                  "markdown": "- Input might be valid but dangerous in SQL context",
+                  "notes": "Input might be valid but dangerous in SQL context",
+                  "blurb": "Input might be valid but dangerous in SQL context",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n05e63452578cb43",
+                  "title": "Validation doesn't know how input will be used",
+                  "markdown": "- Validation doesn't know how input will be used",
+                  "notes": "Validation doesn't know how input will be used",
+                  "blurb": "Validation doesn't know how input will be used",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n135fdcd1afd2c4b",
+                  "title": "Encoding can bypass validation",
+                  "markdown": "- Encoding can bypass validation",
+                  "notes": "Encoding can bypass validation",
+                  "blurb": "Encoding can bypass validation",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n2562e112b552f2b",
+                  "title": "Multiple encoding layers",
+                  "markdown": "- Multiple encoding layers",
+                  "notes": "Multiple encoding layers",
+                  "blurb": "Multiple encoding layers",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd906d6b8203ac76",
+                  "title": "Alternative payload formats",
+                  "markdown": "- Alternative payload formats",
+                  "notes": "Alternative payload formats",
+                  "blurb": "Alternative payload formats",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n8e7a6f6def488bc",
+                  "title": "Validation doesn't separate code from data",
+                  "markdown": "- Validation doesn't separate code from data",
+                  "notes": "Validation doesn't separate code from data",
+                  "blurb": "Validation doesn't separate code from data",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nddda21b6020c98c",
+                  "title": "Input still embedded in SQL string",
+                  "markdown": "- Input still embedded in SQL string",
+                  "notes": "Input still embedded in SQL string",
+                  "blurb": "Input still embedded in SQL string",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n687ccf66b9ef767",
+                  "title": "SQL injection still possible",
+                  "markdown": "- SQL injection still possible",
+                  "notes": "SQL injection still possible",
+                  "blurb": "SQL injection still possible",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Answer: Input validation limitations: 1.",
+              "expanded": false
+            },
+            {
+              "id": "n6176293c38a860a",
+              "title": "Can you explain how parameterized queries prevent advanced SQL...",
+              "markdown": "**Answer:**\n\n**Advanced Techniques Prevented:**\n\n**1. Union-Based Injection:**\n\n```python\n# Attack attempt\nusername = \"admin' UNION SELECT * FROM passwords--\"\n\n# With parameterized query\nquery = \"SELECT * FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n# Result: Searches for literal username \"admin' UNION SELECT * FROM passwords--\"\n# No UNION executed! Parameter treated as data.\n\n```\n\n**2. Boolean-Based Blind Injection:**\n\n```python\n# Attack attempt\nusername = \"admin' AND 1=1--\"\n\n# With parameterized query\nquery = \"SELECT * FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n# Result: Searches for literal username \"admin' AND 1=1--\"\n# No boolean logic executed!\n\n```\n\n**3. Time-Based Blind Injection:**\n\n```python\n# Attack attempt\nusername = \"admin'; WAITFOR DELAY '00:00:05'--\"\n\n# With parameterized query\nquery = \"SELECT * FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\n# Result: Searches for literal username, no delay executed!\n\n```\n\n**Why It Works:**",
+              "notes": "Answer:\n\nAdvanced Techniques Prevented:\n\n1. Union-Based Injection:\n\nAttack attempt\nusername = \"admin' UNION SELECT  FROM passwords--\"\n\nWith parameterized query\nquery = \"SELECT  FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\nResult: Searches for literal username \"admin' UNION SELECT  FROM passwords--\"\nNo UNION executed! Parameter treated as data.\n\n2. Boolean-Based Blind Injection:\n\nAttack attempt\nusername = \"admin' AND 1=1--\"\n\nWith parameterized query\nquery = \"SELECT  FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\nResult: Searches for literal username \"admin' AND 1=1--\"\nNo boolean logic executed!\n\n3. Time-Based Blind Injection:\n\nAttack attempt\nusername = \"admin'; WAITFOR DELAY '00:00:05'--\"\n\nWith parameterized query\nquery = \"SELECT  FROM users WHERE username = ?\"\ncursor.execute(query, (username,))\nResult: Searches for literal username, no delay executed!\n\nWhy It Works:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n087d2a8992ac43b",
+                  "title": "Query structure is constant (no user input)",
+                  "markdown": "- Query structure is constant (no user input)",
+                  "notes": "Query structure is constant (no user input)",
+                  "blurb": "Query structure is constant (no user input)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n7399866aea0fcb8",
+                  "title": "Parameters are treated as data (not code)",
+                  "markdown": "- Parameters are treated as data (not code)",
+                  "notes": "Parameters are treated as data (not code)",
+                  "blurb": "Parameters are treated as data (not code)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nbca5e11590b7354",
+                  "title": "Database escapes parameters automatically",
+                  "markdown": "- Database escapes parameters automatically",
+                  "notes": "Database escapes parameters automatically",
+                  "blurb": "Database escapes parameters automatically",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nb06f54cdf64e534",
+                  "title": "No way to inject SQL code",
+                  "markdown": "- No way to inject SQL code",
+                  "notes": "No way to inject SQL code",
+                  "blurb": "No way to inject SQL code",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Answer: Advanced Techniques Prevented: 1.",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Why is input validation not enough to prevent SQL injection?",
+          "expanded": false
+        },
+        {
+          "id": "ne21dafa20c6d253",
+          "title": "Performance Questions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nde0b2c417a710ea",
+              "title": "When should you use prepared statements vs regular parameterized...",
+              "markdown": "**Answer:**\n\n**Use Prepared Statements When:**",
+              "notes": "Answer:\n\nUse Prepared Statements When:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n89aa46ed925a4a6",
+                  "title": "Query executed multiple times (loops, repeated calls)",
+                  "markdown": "- Query executed multiple times (loops, repeated calls)",
+                  "notes": "Query executed multiple times (loops, repeated calls)",
+                  "blurb": "Query executed multiple times (loops, repeated calls)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd4adf7defc73a6a",
+                  "title": "Performance is critical",
+                  "markdown": "- Performance is critical",
+                  "notes": "Performance is critical",
+                  "blurb": "Performance is critical",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n726c8908ec13506",
+                  "title": "Database supports prepared statements",
+                  "markdown": "- Database supports prepared statements",
+                  "notes": "Database supports prepared statements",
+                  "blurb": "Database supports prepared statements",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "na51ab5e4f91542b",
+                  "title": "Connection pooling is used",
+                  "markdown": "- Connection pooling is used",
+                  "notes": "Connection pooling is used",
+                  "blurb": "Connection pooling is used",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n0588becacf40226",
+                  "title": "Query executed once (single use)",
+                  "markdown": "- Query executed once (single use)",
+                  "notes": "Query executed once (single use)",
+                  "blurb": "Query executed once (single use)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n486f1ba9a7527d5",
+                  "title": "Performance not critical",
+                  "markdown": "- Performance not critical",
+                  "notes": "Performance not critical",
+                  "blurb": "Performance not critical",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n56ee898373ade79",
+                  "title": "Simpler implementation preferred",
+                  "markdown": "- Simpler implementation preferred",
+                  "notes": "Simpler implementation preferred",
+                  "blurb": "Simpler implementation preferred",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ndbd115a2c37012e",
+                  "title": "Database driver doesn't support prepared statements well",
+                  "markdown": "- Database driver doesn't support prepared statements well",
+                  "notes": "Database driver doesn't support prepared statements well",
+                  "blurb": "Database driver doesn't support prepared statements well",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Answer: Use Prepared Statements When:",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes When should you use prepared statements vs regular parameterized...",
+          "expanded": false
+        },
+        {
+          "id": "ndda479a692b80d9",
+          "title": "Scenario-Based Questions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n29bcb95ec40652f",
+              "title": "You discover SQL injection in a login function. How would you fix it?",
+              "markdown": "**Answer:**\n\n**Vulnerable Code:**\n\n```python\ndef login(username, password):\n    query = f\"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'\"\n    cursor.execute(query)\n    result = cursor.fetchone()\n    return result is not None\n\n```\n\n**Fix (Parameterized Query):**\n\n```python\ndef login(username, password):\n    query = \"SELECT * FROM users WHERE username = ? AND password = ?\"\n    cursor.execute(query, (username, password))\n    result = cursor.fetchone()\n    return result is not None\n\n```\n\n**Additional Improvements:**\n\n```python\ndef login(username, password):\n    # Input validation (additional layer)\n    if not username or not password:\n        return False\n    if len(username) > 50:\n        return False\n\n    # Parameterized query (primary defense)\n    query = \"SELECT * FROM users WHERE username = ? AND password = ?\"\n    cursor.execute(query, (username, password))\n    result = cursor.fetchone()\n\n    # Additional: Use password hashing, not plaintext comparison\n    if result and verify_password(password, result['password_hash']):\n        return True\n    return False\n\n```",
+              "notes": "Answer:\n\nVulnerable Code:\n\ndef login(username, password):\n    query = f\"SELECT  FROM users WHERE username = '{username}' AND password = '{password}'\"\n    cursor.execute(query)\n    result = cursor.fetchone()\n    return result is not None\n\nFix (Parameterized Query):\n\ndef login(username, password):\n    query = \"SELECT  FROM users WHERE username = ? AND password = ?\"\n    cursor.execute(query, (username, password))\n    result = cursor.fetchone()\n    return result is not None\n\nAdditional Improvements:\n\ndef login(username, password):\n    # Input validation (additional layer)\n    if not username or not password:\n        return False\n    if len(username) > 50:\n        return False\n\n    # Parameterized query (primary defense)\n    query = \"SELECT  FROM users WHERE username = ? AND password = ?\"\n    cursor.execute(query, (username, password))\n    result = cursor.fetchone()\n\n    # Additional: Use password hashing, not plaintext comparison\n    if result and verifypassword(password, result['passwordhash']):\n        return True\n    return False",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Vulnerable Code: def login(username, password): query = f\"SELECT...",
+              "expanded": false
+            },
+            {
+              "id": "nd2e992b18511dfe",
+              "title": "How would you handle dynamic table names in a secure way?",
+              "markdown": "**Answer:**\n\n**Problem:** Table names cannot be parameterized.\n\n**Solution (Whitelisting):**\n\n```python\ndef get_table_data(table_name, filters):\n    # Whitelist allowed tables\n    allowed_tables = ['users', 'products', 'orders']\n    if table_name not in allowed_tables:\n        raise ValueError(f\"Invalid table: {table_name}\")\n\n    # Table name is now safe (whitelisted)\n    # Parameterize the filters (user input)\n    query = f\"SELECT * FROM {table_name} WHERE id = ?\"\n    cursor.execute(query, (filters['id'],))\n    return cursor.fetchall()\n\n```\n\n**Alternative (Mapping):**\n\n```python\ndef get_table_data(table_id, filters):\n    # Map IDs to table names\n    table_mapping = {\n        '1': 'users',\n        '2': 'products',\n        '3': 'orders'\n    }\n\n    if table_id not in table_mapping:\n        raise ValueError(\"Invalid table ID\")\n\n    table_name = table_mapping[table_id]  # Safe (mapped)\n    query = f\"SELECT * FROM {table_name} WHERE id = ?\"\n    cursor.execute(query, (filters['id'],))\n    return cursor.fetchall()\n\n```\n\n**Key Point:** Use whitelisting or mapping for SQL structure elements. Only parameterize data values.",
+              "notes": "Answer:\n\nProblem: Table names cannot be parameterized.\n\nSolution (Whitelisting):\n\ndef gettabledata(tablename, filters):\n    # Whitelist allowed tables\n    allowedtables = ['users', 'products', 'orders']\n    if tablename not in allowedtables:\n        raise ValueError(f\"Invalid table: {tablename}\")\n\n    # Table name is now safe (whitelisted)\n    # Parameterize the filters (user input)\n    query = f\"SELECT  FROM {tablename} WHERE id = ?\"\n    cursor.execute(query, (filters['id'],))\n    return cursor.fetchall()\n\nAlternative (Mapping):\n\ndef gettabledata(tableid, filters):\n    # Map IDs to table names\n    tablemapping = {\n        '1': 'users',\n        '2': 'products',\n        '3': 'orders'\n    }\n\n    if tableid not in tablemapping:\n        raise ValueError(\"Invalid table ID\")\n\n    tablename = tablemapping[tableid]  # Safe (mapped)\n    query = f\"SELECT  FROM {tablename} WHERE id = ?\"\n    cursor.execute(query, (filters['id'],))\n    return cursor.fetchall()\n\nKey Point: Use whitelisting or mapping for SQL structure elements. Only parameterize data values.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Problem: Table names cannot be parameterized.",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes You discover SQL injection in a login function. How would you fix it?",
+          "expanded": false
+        },
+        {
+          "id": "nb0b7c47a34ecaed",
+          "title": "Advanced Questions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n6f3549b996194ef",
+              "title": "What are the limitations of parameterized queries?",
+              "markdown": "**Answer:**\n\n**Limitations:**\n\n1. **Table/Column Names:**",
+              "notes": "Answer:\n\nLimitations:\n\n1. Table/Column Names:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n25faf6f3dd768f3",
+                  "title": "Cannot be parameterized",
+                  "markdown": "- Cannot be parameterized",
+                  "notes": "Cannot be parameterized",
+                  "blurb": "Cannot be parameterized",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ncbac42c50ec371c",
+                  "title": "Must use whitelisting",
+                  "markdown": "- Must use whitelisting",
+                  "notes": "Must use whitelisting",
+                  "blurb": "Must use whitelisting",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n66b36a4461ee1ac",
+                  "title": "Cannot parameterize ORDER BY, GROUP BY, etc.",
+                  "markdown": "- Cannot parameterize ORDER BY, GROUP BY, etc.",
+                  "notes": "Cannot parameterize ORDER BY, GROUP BY, etc.",
+                  "blurb": "Cannot parameterize ORDER BY, GROUP BY, etc.",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n46f9a22081f8a23",
+                  "title": "Cannot dynamically change SQL structure",
+                  "markdown": "- Cannot dynamically change SQL structure",
+                  "notes": "Cannot dynamically change SQL structure",
+                  "blurb": "Cannot dynamically change SQL structure",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nbbfedf5e4e09258",
+                  "title": "Must use whitelisting for structure elements",
+                  "markdown": "- Must use whitelisting for structure elements",
+                  "notes": "Must use whitelisting for structure elements",
+                  "blurb": "Must use whitelisting for structure elements",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n1c97e6c039c1cff",
+                  "title": "Small overhead for single queries",
+                  "markdown": "- Small overhead for single queries",
+                  "notes": "Small overhead for single queries",
+                  "blurb": "Small overhead for single queries",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n6b2716009ee0c27",
+                  "title": "Negligible in most cases",
+                  "markdown": "- Negligible in most cases",
+                  "notes": "Negligible in most cases",
+                  "blurb": "Negligible in most cases",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n1ae70125b0b6aa6",
+                  "title": "Different syntax for different databases",
+                  "markdown": "- Different syntax for different databases",
+                  "notes": "Different syntax for different databases",
+                  "blurb": "Different syntax for different databases",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n0c8af953fcf5a41",
+                  "title": "Some databases have limited support",
+                  "markdown": "- Some databases have limited support",
+                  "notes": "Some databases have limited support",
+                  "blurb": "Some databases have limited support",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n3cd6a5009a4d45c",
+                  "title": "Use whitelisting for structure elements",
+                  "markdown": "- Use whitelisting for structure elements",
+                  "notes": "Use whitelisting for structure elements",
+                  "blurb": "Use whitelisting for structure elements",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Answer: Limitations: 1.",
+              "expanded": false
+            },
+            {
+              "id": "n4c754bca5314925",
+              "title": "How do ORMs use parameterized queries?",
+              "markdown": "**Answer:**\n\n**ORMs automatically use parameterized queries:**\n\n**Django (Python):**\n\n```python\n# ORM automatically uses parameterized queries\nUser.objects.filter(username=username, password=password)\n# Generated SQL: SELECT * FROM users WHERE username = ? AND password = ?\n\n```\n\n**SQLAlchemy (Python):**\n\n```python\n# ORM automatically uses parameterized queries\nsession.query(User).filter(User.username == username).first()\n# Generated SQL: SELECT * FROM users WHERE username = ?\n\n```\n\n**Hibernate (Java):**\n\n```java\n// ORM automatically uses parameterized queries\nString hql = \"FROM User WHERE username = :username\";\nQuery query = session.createQuery(hql);\nquery.setParameter(\"username\", username);\n// Generated SQL: SELECT * FROM users WHERE username = ?\n\n```\n\n**Benefits:**",
+              "notes": "Answer:\n\nORMs automatically use parameterized queries:\n\nDjango (Python):\n\nORM automatically uses parameterized queries\nUser.objects.filter(username=username, password=password)\nGenerated SQL: SELECT  FROM users WHERE username = ? AND password = ?\n\nSQLAlchemy (Python):\n\nORM automatically uses parameterized queries\nsession.query(User).filter(User.username == username).first()\nGenerated SQL: SELECT  FROM users WHERE username = ?\n\nHibernate (Java):\n\n// ORM automatically uses parameterized queries\nString hql = \"FROM User WHERE username = :username\";\nQuery query = session.createQuery(hql);\nquery.setParameter(\"username\", username);\n// Generated SQL: SELECT  FROM users WHERE username = ?\n\nBenefits:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "nc1a7ab448badc80",
+                  "title": "Automatic parameterization",
+                  "markdown": "- Automatic parameterization",
+                  "notes": "Automatic parameterization",
+                  "blurb": "Automatic parameterization",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n001a32a88bcead5",
+                  "title": "Database agnostic",
+                  "markdown": "- Database agnostic",
+                  "notes": "Database agnostic",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nb117dd6a178dc72",
+                  "title": "Type safety",
+                  "markdown": "- Type safety",
+                  "notes": "Type safety",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nc1cd58a16982cbd",
+                  "title": "Less boilerplate code",
+                  "markdown": "- Less boilerplate code",
+                  "notes": "Less boilerplate code",
+                  "blurb": "Less boilerplate code",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Answer: ORMs automatically use parameterized queries: Django (Python): ORM...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes What are the limitations of parameterized queries?",
+          "expanded": false
+        },
+        {
+          "id": "n9b5dfb82b4367fe",
+          "title": "Depth: Interview follow-ups \u2014 Parameterized / Prepared Statements",
+          "markdown": "**Authoritative references:** [OWASP SQL Injection Prevention CS](https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html) (prepared statements + safe APIs).\n\n**Follow-ups:**",
+          "notes": "Authoritative references: OWASP SQL Injection Prevention CS (prepared statements + safe APIs).\n\nFollow-ups:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n3645ea58c272858",
+              "title": "Dynamic table/column names - cannot bind identifiers; how do you allowlist?",
+              "markdown": "- Dynamic table/column names - cannot bind identifiers; how do you allowlist?",
+              "notes": "Dynamic table/column names - cannot bind identifiers; how do you allowlist?",
+              "blurb": "Dynamic table/column names - cannot bind identifiers; how do you allowlist?",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n390bae1c36f25b7",
+              "title": "Stored procedures - still risky if dynamic SQL inside.",
+              "markdown": "- Stored procedures - still risky if dynamic SQL inside.",
+              "notes": "Stored procedures - still risky if dynamic SQL inside.",
+              "blurb": "Stored procedures - still risky if dynamic SQL inside.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nfe1aaccf0805c65",
+              "title": "ORM edge cases: whereRaw, string-built order by.",
+              "markdown": "- ORM edge cases: whereRaw, string-built order by.",
+              "notes": "ORM edge cases: whereRaw, string-built order by.",
+              "blurb": "ORM edge cases: whereRaw, string-built order by.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Authoritative references: OWASP SQL Injection Prevention CS (prepared...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Fundamental Questions"
+    }
+  ],
+  "topicId": "parameterized-and-prepared-statement",
+  "name": "Parameterized and Prepared Statement",
+  "structure": "logic-right",
+  "blurb": "Parameterized queries and prepared statements are the primary defense..."
+}

@@ -1,0 +1,112 @@
+{
+  "topicId": "secure-source-code-review",
+  "name": "Secure Source Code Review",
+  "source": "Secure Source Code Review/Secure Source Code Review - Interview Questions &.md",
+  "prompts": [
+    {
+      "id": "pfec5ed80b80560",
+      "cluster": "Fundamental Questions",
+      "title": "What is your approach to conducting a secure source code review?",
+      "seconds": 120,
+      "answerMarkdown": "**Systematic Approach:**\n\n1. **Preparation**\n    - Understand application architecture and technology stack\n    - Review documentation and security requirements\n    - Identify critical components and data flows\n    - Set up review environment and tools\n2. **Authentication and Authorization Review**\n    - Map authentication flows (login, registration, password reset)\n    - Review password policies and hashing mechanisms\n    - Identify all authorization checkpoints\n    - Test for privilege escalation vulnerabilities\n3. **Input Validation and Output Encoding**\n    - Identify all input entry points\n    - Trace data flow from input to output\n    - Review validation and encoding implementation\n    - Test for injection vulnerabilities\n4. **Security Features Review**\n    - Review cryptographic implementation\n    - Check configuration security\n    - Verify file handling security\n    - Assess logging and error handling\n5. **Documentation**\n    - Document findings with code references\n    - Provide remediation guidance\n    - Prioritize by risk severity\n    - Include proof-of-concept examples\n\n**Key Principles:**\n\n- Follow systematic methodology\n- Understand context and business logic\n- Combine automated tools with manual review\n- Think like an attacker\n- Document thoroughly\n\n---"
+    },
+    {
+      "id": "p56591a9e1f9018",
+      "cluster": "Fundamental Questions",
+      "title": "How do you balance automated SAST tools with manual code review?",
+      "seconds": 120,
+      "answerMarkdown": "**Complementary Approach:**\n\n**Automated SAST Tools:**\n\n- Use for finding known vulnerability patterns\n- Efficient for large codebases\n- Consistent coverage across codebase\n- Identifies common issues quickly\n- Helps prioritize manual review efforts\n\n**Manual Code Review:**\n\n- Essential for business logic flaws\n- Understands context and intent\n- Identifies complex vulnerability chains\n- Reviews design and architecture\n- Validates automated tool findings\n\n**Combined Strategy:**\n\n1. Run automated SAST tools first\n2. Review and prioritize automated findings\n3. Manual review of high-risk areas\n4. Manual review for business logic\n5. Manual review of complex code paths\n6. Validate automated findings manually\n\n**Key Point:**\u00a0Automated tools are valuable but cannot replace manual review - use both for comprehensive coverage.\n\n---"
+    },
+    {
+      "id": "paefad4d1782dfc",
+      "cluster": "Authentication Review Questions",
+      "title": "What are the different authentication flows you review?",
+      "seconds": 120,
+      "answerMarkdown": "**Authentication Flows to Review:**\n\n1. **User Login Flow**\n    - Credential validation\n    - Session creation\n    - Failed login handling\n    - Brute force protection\n    - User enumeration prevention\n2. **User Registration Flow**\n    - Input validation\n    - Password policy enforcement\n    - Email verification\n    - Duplicate user prevention\n    - Rate limiting\n3. **Forgot Password Flow**\n    - Secure token generation\n    - Token expiration\n    - Single-use tokens\n    - User enumeration prevention\n    - Secure password reset\n4. **Two-Factor Authentication (2FA)**\n    - TOTP implementation\n    - Backup codes\n    - 2FA enforcement for sensitive operations\n    - Rate limiting on 2FA verification\n\n**For Each Flow, Check:**\n\n- Input validation\n- Error handling\n- Rate limiting\n- User enumeration prevention\n- Session management\n- Security of credentials\n\n---"
+    },
+    {
+      "id": "p6712e2df8048b1",
+      "cluster": "Authentication Review Questions",
+      "title": "How do you review password hashing mechanisms?",
+      "seconds": 120,
+      "answerMarkdown": "**Review Checklist:**\n\n1. **Algorithm Selection**\n    - Uses strong algorithm: bcrypt, Argon2, PBKDF2, or scrypt\n    - Not using MD5, SHA1, or SHA256 alone\n    - Algorithm is appropriate for password storage\n2. **Salt Usage**\n    - Unique salt per password\n    - Salt is cryptographically random\n    - Salt length is sufficient (16+ bytes)\n3. **Iterations/Rounds**\n    - bcrypt: 12+ rounds\n    - PBKDF2: 100,000+ iterations\n    - Argon2: Appropriate memory and time parameters\n4. **Implementation**\n    - Library usage (not custom implementation)\n    - Proper comparison function (constant-time)\n    - Password hash stored securely\n\n**Code Example Review:**\n\n```python\n# Good: Strong password hashing\nimport bcrypt\n\ndef hash_password(password):\n    salt = bcrypt.gensalt(rounds=12)  # 12+ rounds\n    return bcrypt.hashpw(password.encode('utf-8'), salt)\n\ndef verify_password(password, hashed):\n    return bcrypt.checkpw(password.encode('utf-8'), hashed)\n\n# Bad: Weak hashing\nimport hashlib\ndef hash_password(password):\n    return hashlib.md5(password.encode()).hexdigest()  # INSECURE\n\n```\n\n**Red Flags:**\n\n- MD5, SHA1, SHA256 alone (no key derivation)\n- No salt or static salt\n- Insufficient rounds/iterations\n- Custom crypto implementation\n- Non-constant-time comparison\n\n---"
+    },
+    {
+      "id": "p3e4ccdd367a5d3",
+      "cluster": "Authentication Review Questions",
+      "title": "How do you test for timing attacks in authentication code?",
+      "seconds": 120,
+      "answerMarkdown": "**Timing Attack Vulnerabilities:**\n\n1. **Username/Password Comparison**\n    - Early returns reveal user existence\n    - String comparison reveals match length\n    - Constant-time comparison needed\n2. **HMAC Verification**\n    - Token/signature comparison\n    - Key verification\n    - Must use constant-time comparison\n\n**Review Pattern:**\n\n```python\n# Vulnerable: Timing attack\nif stored_hmac == provided_hmac:  # Reveals match length\n    return True\n\n# Secure: Constant-time comparison\nimport secrets\nif secrets.compare_digest(stored_hmac, provided_hmac):\n    return True\n\n```\n\n**Testing Approach:**\n\n- Look for direct equality comparisons (`==`)\n- Check for early returns in comparison loops\n- Verify constant-time functions used (e.g.,\u00a0`secrets.compare_digest`,\u00a0`hash_equals`)\n- Test with timing measurements (if possible)\n\n---"
+    },
+    {
+      "id": "p5ad4b65682ab01",
+      "cluster": "Authentication Review Questions",
+      "title": "What do you check in service-to-service authentication?",
+      "seconds": 120,
+      "answerMarkdown": "**Service-to-Service Authentication Checklist:**\n\n1. **Authentication Mechanism**\n    - Uses strong method (mTLS, JWT, API keys with proper storage)\n    - Not relying on network location alone\n2. **Implementation Security**\n    - Constant-time comparison for HMAC/token verification\n    - HMAC uses secure algorithm (SHA256+, not SHA1/MD5)\n    - Requests occur over SSL/TLS\n    - SSL/TLS verification not disabled\n3. **Token/Session Management**\n    - Reasonable TTL (1 hour or less)\n    - Accounts for time skew in validation\n    - Shared secrets stored in vault (not hardcoded)\n    - Token rotation implemented\n4. **Unit Tests**\n    - Fails if token/HMAC/nonce is missing\n    - Fails if token/HMAC/nonce is mismatched\n    - Fails if timestamp is missing or expired\n    - Fails if signature verification fails\n\n**Code Pattern:**\n\n```python\n# Good: Secure service authentication\nimport hmac\nimport secrets\nimport time\n\ndef verify_service_request(token, timestamp, signature, secret):\n    # Check timestamp (account for skew)\n    current_time = time.time()\n    if abs(current_time - timestamp) > 3600:  # 1 hour TTL\n        return False\n\n    # Verify signature (constant-time)\n    expected_signature = hmac.new(\n        secret.encode(),\n        f\"{token}:{timestamp}\".encode(),\n        hashlib.sha256\n    ).hexdigest()\n\n    return secrets.compare_digest(expected_signature, signature)\n\n```\n\n---"
+    },
+    {
+      "id": "p586aeadfe07d00",
+      "cluster": "Authorization Review Questions",
+      "title": "How do you identify and review authorization issues?",
+      "seconds": 120,
+      "answerMarkdown": "**Authorization Review Process:**\n\n1. **Identify Roles and Permissions**\n    - Map all user roles\n    - Identify permission levels\n    - Understand role hierarchy\n2. **Identify Sensitive Endpoints**\n    - Administrative functions\n    - Financial transactions\n    - Data modification operations\n    - Sensitive data access\n3. **Review Authorization Checks**\n    - Every sensitive operation has authorization check\n    - Authorization happens before business logic\n    - Authorization checks cannot be bypassed\n    - Horizontal and vertical privilege escalation prevented\n4. **Test for Broken Access Control**\n    - IDOR (Insecure Direct Object Reference)\n    - Missing function-level access control\n    - Authorization bypass attempts\n    - Business logic authorization flaws\n\n**Common Vulnerabilities:**\n\n1. **IDOR (Insecure Direct Object Reference)**\n\n    ```python\n    # Vulnerable: No authorization check\n    @app.route('/user/<int:user_id>')\n    def get_user(user_id):\n        user = User.query.get(user_id)  # Anyone can access any user\n        return jsonify(user.to_dict())\n\n    # Secure: Authorization check\n    @app.route('/user/<int:user_id>')\n    @require_auth\n    def get_user(user_id):\n        if current_user.id != user_id and not current_user.is_admin:\n            return {\"error\": \"Unauthorized\"}, 403\n        user = User.query.get(user_id)\n        return jsonify(user.to_dict())\n\n    ```\n\n2. **Missing Function-Level Access Control**\n    - Admin functions accessible without admin role\n    - API endpoints without authorization\n    - Sensitive operations without checks\n\n---"
+    },
+    {
+      "id": "pc35e5f64201c23",
+      "cluster": "Authorization Review Questions",
+      "title": "How do you review for IDOR (Insecure Direct Object Reference) vulnerabilities?",
+      "seconds": 120,
+      "answerMarkdown": "**IDOR Review Process:**\n\n1. **Identify Direct Object References**\n    - Search for patterns:\u00a0`find_by(id)`,\u00a0`find(id)`,\u00a0`findOne(id)`,\u00a0`findAll(id)`\n    - Look for IDs in URL parameters\n    - Identify object retrieval by ID\n2. **Check Authorization**\n    - Does code verify user owns the object?\n    - Does code verify user has permission to access object?\n    - Is there any authorization check before object retrieval?\n3. **Test Scenarios**\n    - User A accessing User B's data\n    - Regular user accessing admin-only resources\n    - Horizontal privilege escalation\n    - Vertical privilege escalation\n\n**Review Pattern:**\n\n```python\n# Pattern to look for\nuser_id = request.args.get('user_id')\nuser = User.query.get(user_id)  # DANGER: No authorization check!\n\n# Secure pattern\nuser_id = request.args.get('user_id')\nif current_user.id != user_id and not current_user.is_admin:\n    return {\"error\": \"Unauthorized\"}, 403\nuser = User.query.get(user_id)\n\n```\n\n**Prevention:**\n\n- Always verify object ownership or permissions\n- Use indirect object references where possible\n- Centralize authorization logic\n- Test with different user accounts\n\n---"
+    },
+    {
+      "id": "p67b783fa6bb848",
+      "cluster": "Input Validation Questions",
+      "title": "What is your approach to reviewing input validation?",
+      "seconds": 120,
+      "answerMarkdown": "**Comprehensive Input Validation Review:**\n\n1. **Identify All Input Points**\n    - Form fields\n    - URL parameters\n    - HTTP headers (User-Agent, Referer, etc.)\n    - Cookies\n    - File uploads\n    - API request bodies\n    - WebSocket messages\n2. **Validation Approach**\n    - Whitelist validation (preferred)\n    - Blacklist validation (avoid)\n    - Type validation (integer, date, email)\n    - Format validation\n    - Length validation\n3. **Client vs. Server**\n    - Server-side validation is security (required)\n    - Client-side validation is UX (optional)\n    - Both should be consistent\n4. **Common Issues**\n    - Missing validation\n    - Weak validation (blacklist)\n    - Inconsistent validation\n    - Validation bypasses\n\n**Code Example:**\n\n```python\n# Good: Whitelist validation\nALLOWED_COLORS = {'red', 'green', 'blue'}\ndef validate_color(color):\n    return color in ALLOWED_COLORS\n\n# Bad: Blacklist validation\nFORBIDDEN_CHARS = ['<', '>', 'script']\ndef validate_input(input_str):\n    return not any(char in input_str for char in FORBIDDEN_CHARS)  # Easy to bypass\n\n```\n\n---"
+    },
+    {
+      "id": "p30db07258fc8cd",
+      "cluster": "Input Validation Questions",
+      "title": "How do you review regular expression usage for security?",
+      "seconds": 120,
+      "answerMarkdown": "**Regular Expression Security Review:**\n\n1. **Validation Approach**\n    - Whitelist patterns (preferred)\n    - Blacklist patterns (avoid)\n    - Patterns don't have bypasses\n2. **ReDoS (Regular Expression Denial of Service)**\n    - Catastrophic backtracking vulnerabilities\n    - Complex patterns that can cause exponential time\n    - Test with long input strings\n\n**Vulnerable Pattern:**\n\n```python\n# Vulnerable: ReDoS\nimport re\npattern = r'(a+)+b'  # Catastrophic backtracking\nre.match(pattern, 'a' * 1000)  # Will take very long\n\n# Safer: Specific pattern\npattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'\n\n```\n\n**Review Checklist:**\n\n- Avoid nested quantifiers (`(a+)+`,\u00a0`(a*)*`)\n- Use specific patterns when possible\n- Test with various input lengths\n- Consider regex engine limitations\n\n---"
+    },
+    {
+      "id": "p6bdbfa47890816",
+      "cluster": "Injection Vulnerability Questions",
+      "title": "How do you review code for SQL injection vulnerabilities?",
+      "seconds": 120,
+      "answerMarkdown": "**SQL Injection Review Process:**\n\n1. **Identify Database Interactions**\n    - Find all SQL queries\n    - Identify query construction patterns\n    - Look for string concatenation\n2. **Review Query Construction**\n    - Parameterized queries used (good)\n    - String concatenation (bad)\n    - Dynamic SQL construction (risky)\n3. **Search Patterns**\n    - String concatenation:\u00a0`+`,\u00a0`&`,\u00a0`.format()`,\u00a0`%`, f-strings\n    - `execute()`\u00a0with string formatting\n    - `query()`\u00a0with string concatenation\n\n**Vulnerable Pattern:**\n\n```python\n# Vulnerable: SQL injection\ncursor.execute(f\"SELECT * FROM users WHERE id = {user_id}\")\n# If user_id = \"1 OR 1=1\", returns all users\n\n# Secure: Parameterized query\ncursor.execute(\"SELECT * FROM users WHERE id = %s\", (user_id,))\n\n# Secure: ORM\nuser = User.query.filter_by(id=user_id).first()\n\n```\n\n**Review Checklist:**\n\n- All queries use parameterized queries\n- No string concatenation in SQL\n- ORM used correctly (no raw SQL)\n- Dynamic SQL properly sanitized (if necessary)\n\n---"
+    },
+    {
+      "id": "p19f91fbb92e62f",
+      "cluster": "Injection Vulnerability Questions",
+      "title": "How do you review for NoSQL injection vulnerabilities?",
+      "seconds": 120,
+      "answerMarkdown": "**NoSQL Injection Review:**\n\n1. **NoSQL Query Patterns**\n    - Operator injection (`$ne`,\u00a0`$gt`,\u00a0`$regex`, etc.)\n    - JavaScript injection (MongoDB)\n    - Array/object manipulation\n2. **Vulnerable Patterns**\n\n```python\n# Vulnerable: NoSQL injection\nusers = User.objects.find({\"username\": request.json['username']})\n# If username is {\"$ne\": null}, returns all users\n\n# Secure: Type validation\nusername = str(request.json['username'])  # Ensure it's a string\nusers = User.objects.find({\"username\": username})\n\n```\n\n1. **Review Checklist**\n    - User input type-validated\n    - Operator injection prevented\n    - JavaScript injection prevented (MongoDB)\n    - Key-value store manipulation prevented\n\n---"
+    },
+    {
+      "id": "p3e8ed552108bef",
+      "cluster": "Cryptographic Review Questions",
+      "title": "What do you check when reviewing cryptographic implementation?",
+      "seconds": 120,
+      "answerMarkdown": "**Cryptographic Review Checklist:**\n\n1. **Library Usage**\n    - Standard, well-maintained libraries used\n    - No custom crypto implementations\n    - Libraries up-to-date\n2. **Password Hashing**\n    - Strong algorithms: bcrypt, Argon2, PBKDF2, scrypt\n    - Not MD5, SHA1, SHA256 alone\n    - Sufficient rounds/iterations\n    - Unique salt per password\n3. **Encryption**\n    - Strong algorithms: AES-256, ChaCha20-Poly1305\n    - Authenticated encryption (GCM mode)\n    - Random, unique IVs/nonces\n    - Proper key management\n4. **Key and Secret Management**\n    - Keys stored in vault (not hardcoded)\n    - Keys not in configuration files\n    - Keys rotated regularly\n    - Key access logged\n5. **SSL/TLS**\n    - TLS 1.2+ required (TLS 1.3 preferred)\n    - Strong cipher suites\n    - Certificate validation enabled\n\n**Code Pattern:**\n\n```python\n# Bad: Hardcoded key\nAPI_KEY = \"sk_live_abc123...\"  # NEVER DO THIS\n\n# Good: From vault\nfrom vault import get_secret\nAPI_KEY = get_secret('api-key')\n\n```\n\n---"
+    },
+    {
+      "id": "pe308723121892a",
+      "cluster": "Process and Methodology Questions",
+      "title": "Walk me through how you would review authentication code for security issues.",
+      "seconds": 120,
+      "answerMarkdown": "**Step-by-Step Review:**\n\n1. **Map Authentication Flow**\n    - Identify login endpoint\n    - Trace authentication process\n    - Identify credential validation\n    - Map session creation\n2. **Review Credential Handling**\n    - Password hashing algorithm\n    - Salt generation and usage\n    - Hashing rounds/iterations\n    - Password comparison (constant-time)\n3. **Review Security Controls**\n    - Brute force protection\n    - Rate limiting\n    - Account lockout\n    - User enumeration prevention\n4. **Review Session Management**\n    - Session ID generation (cryptographically random)\n    - Session fixation prevention\n    - Session timeout\n    - Session security (Secure, HttpOnly, SameSite cookies)\n5. **Test for Vulnerabilities**\n    - Timing attacks\n    - User enumeration\n    - Session hijacking\n    - Brute force attacks\n\n**Example Review:**\n\n```python\n# Review this code\ndef login(username, password):\n    user = User.find_by_username(username)\n    if not user:\n        return {\"error\": \"Invalid credentials\"}\n\n    if user.password_hash == hash_password(password):  # ISSUES:\n        session['user_id'] = user.id                   # 1. Timing attack\n        return {\"success\": True}                       # 2. User enumeration\n    return {\"error\": \"Invalid credentials\"}           # 3. Weak password comparison\n\n# Issues found:\n# 1. Timing attack: == comparison reveals match length\n# 2. User enumeration: Different error for non-existent user\n# 3. Weak password comparison: Not constant-time\n\n```\n\n---"
+    },
+    {
+      "id": "p8b8f828b253c16",
+      "cluster": "Process and Methodology Questions",
+      "title": "How do you prioritize findings in a code review?",
+      "seconds": 120,
+      "answerMarkdown": "**Prioritization Framework:**\n\n1. **Risk Assessment**\n    - **Critical**: Active exploitation possible, data breach risk\n    - **High**: Significant impact, exploitable\n    - **Medium**: Moderate impact, requires effort to exploit\n    - **Low**: Low impact, difficult to exploit\n2. **Factors Considered**\n    - Exploitability\n    - Impact (confidentiality, integrity, availability)\n    - Affected data/systems\n    - Attack surface\n    - Business context\n3. **Priority Order**\n    - Critical: Immediate remediation\n    - High: Fix in current sprint\n    - Medium: Fix in next sprint\n    - Low: Fix in backlog\n\n**Example Prioritization:**\n\n- **Critical**: SQL injection in authentication (allows account takeover)\n- **High**: IDOR vulnerability (users can access other users' data)\n- **Medium**: Weak password policy (allows weak passwords)\n- **Low**: Missing security headers (defense in depth)\n\n---\n\n**Note:**\u00a0This is a template. Expand with more detailed answers, code examples, and real-world scenarios as needed.\n\n---"
+    }
+  ]
+}

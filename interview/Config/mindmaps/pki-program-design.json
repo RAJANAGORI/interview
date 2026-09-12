@@ -1,0 +1,669 @@
+{
+  "id": "n19bf5faf1bec76c",
+  "title": "PKI Program Design",
+  "markdown": "**PKI program design** is how organizations **issue, distribute, rotate, revoke, and audit certificates** at scale without **outage incidents** or **silent trust failures**. Interviews test whether you can architect a **root/intermediate hierarchy**, choose **HSM vs software keys**, automate **ACME/internal enrollment**, operate **CRL/OCSP**, and run **incident response** when a CA or intermediate is compromised-not merely explain what TLS does.\n\nThis guide follows the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+  "notes": "PKI program design is how organizations issue, distribute, rotate, revoke, and audit certificates at scale without outage incidents or silent trust failures. Interviews test whether you can architect a root/intermediate hierarchy, choose HSM vs software keys, automate ACME/internal enrollment, operate CRL/OCSP, and run incident response when a CA or intermediate is compromised-not merely explain what TLS does.\n\nThis guide follows the Content Mastery Framework.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "n83e4b907ec7a4c8",
+      "title": "At a glance",
+      "markdown": "**PKI program design** is how organizations **issue, distribute, rotate, revoke, and audit certificates** at scale without **outage incidents** or **silent trust failures**. Interviews test whether you can architect a **root/intermediate hierarchy**, choose **HSM vs software keys**, automate **ACME/internal enrollment**, operate **CRL/OCSP**, and run **incident response** when a CA or intermediate is compromised-not merely explain what TLS does.\n\nThis guide follows the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+      "notes": "PKI program design is how organizations issue, distribute, rotate, revoke, and audit certificates at scale without outage incidents or silent trust failures. Interviews test whether you can architect a root/intermediate hierarchy, choose HSM vs software keys, automate ACME/internal enrollment, operate CRL/OCSP, and run incident response when a CA or intermediate is compromised-not merely explain what TLS does.\n\nThis guide follows the Content Mastery Framework.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "PKI program design is how organizations issue, distribute, rotate, revoke,...",
+      "expanded": false
+    },
+    {
+      "id": "nb0fc16b5d4745d1",
+      "title": "L1 \u2014 Trust hierarchy",
+      "markdown": "```\n                    \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n                    \u2502  Root CA    \u2502  offline, HSM, rare ceremony\n                    \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n           \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n           \u25bc               \u25bc               \u25bc\n    \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n    \u2502 Issuing CA \u2502  \u2502 Issuing CA \u2502  \u2502 Issuing CA \u2502\n    \u2502 (prod TLS) \u2502  \u2502 (dev/stage)\u2502  \u2502 (mTLS mesh)\u2502\n    \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2518  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n           \u2502\n     leaf certificates (servers, services, devices)\n```\n\n**Principles:**",
+      "notes": "\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n                    \u2502  Root CA    \u2502  offline, HSM, rare ceremony\n                    \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n           \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n           \u25bc               \u25bc               \u25bc\n    \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n    \u2502 Issuing CA \u2502  \u2502 Issuing CA \u2502  \u2502 Issuing CA \u2502\n    \u2502 (prod TLS) \u2502  \u2502 (dev/stage)\u2502  \u2502 (mTLS mesh)\u2502\n    \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2518  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n           \u2502\n     leaf certificates (servers, services, devices)\n\nPrinciples:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nc0c36eb153b8e88",
+          "title": "Root private key never online; air-gapped or HSM with dual control.",
+          "markdown": "- Root private key never online; air-gapped or HSM with dual control.",
+          "notes": "Root private key never online; air-gapped or HSM with dual control.",
+          "blurb": "Root private key never online; air-gapped or HSM with dual control.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n0cc94fc3e2ebe56",
+          "title": "Separate intermediates by environment and purpose-never one intermediate for prod + dev.",
+          "markdown": "- Separate intermediates by environment and purpose-never one intermediate for prod + dev.",
+          "notes": "Separate intermediates by environment and purpose-never one intermediate for prod + dev.",
+          "blurb": "Separate intermediates by environment and purpose-never one intermediate for...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n44239e5fa91f116",
+          "title": "Cross-signing only when migration requires; document trust store updates.",
+          "markdown": "- Cross-signing only when migration requires; document trust store updates.",
+          "notes": "Cross-signing only when migration requires; document trust store updates.",
+          "blurb": "Cross-signing only when migration requires; document trust store updates.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510 \u2502 Root CA \u2502 offline, HSM, rare ceremony \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2518...",
+      "expanded": true
+    },
+    {
+      "id": "n6cbb60683ea5427",
+      "title": "L2 \u2014 Certificate profiles and identity proofing",
+      "markdown": "| Use case | Typical profile | Lifetime |\n|----------|-----------------|----------|\n| **Public web TLS** | DV/OV/EV via public CA or Let's Encrypt | 90 days (industry trend: shorter) |\n| **Internal service TLS** | Private CA, SAN = DNS + SPIFFE ID | 24h-90d (automated) |\n| **mTLS client auth** | Client cert EKU, CN/SAN = service identity | Short; tied to workload identity |\n| **Code signing** | Hardware token/HSM, timestamping | 1-3 years with strict ceremony |\n| **Email S/MIME** | User identity verification | Per policy |\n\n**Identity proofing:** Who may request which SAN? **Automated** enrollment via **SPIFFE/SPIRE**, **IAM role -> cert mapping**, or **manual** for legacy.\n\n**Anti-patterns:**",
+      "notes": "| Use case | Typical profile | Lifetime |\n|----------|-----------------|----------|\n| Public web TLS | DV/OV/EV via public CA or Let's Encrypt | 90 days (industry trend: shorter) |\n| Internal service TLS | Private CA, SAN = DNS + SPIFFE ID | 24h-90d (automated) |\n| mTLS client auth | Client cert EKU, CN/SAN = service identity | Short; tied to workload identity |\n| Code signing | Hardware token/HSM, timestamping | 1-3 years with strict ceremony |\n| Email S/MIME | User identity verification | Per policy |\n\nIdentity proofing: Who may request which SAN? Automated enrollment via SPIFFE/SPIRE, IAM role -> cert mapping, or manual for legacy.\n\nAnti-patterns:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n7c7343d9c1fcf59",
+          "title": "Wildcard *.prod.example.com on shared intermediate with no audit.",
+          "markdown": "- Wildcard *.prod.example.com on shared intermediate with no audit.",
+          "notes": "Wildcard *.prod.example.com on shared intermediate with no audit.",
+          "blurb": "Wildcard .prod.example.com on shared intermediate with no audit.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n62d4271b6ff4b19",
+          "title": "Shared private key across load balancers (copy/paste PEM).",
+          "markdown": "- Shared private key across load balancers (copy/paste PEM).",
+          "notes": "Shared private key across load balancers (copy/paste PEM).",
+          "blurb": "Shared private key across load balancers (copy/paste PEM).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n5560f00fdec9d67",
+          "title": "Years-long internal cert lifetimes because rotation is hard.",
+          "markdown": "- Years-long internal cert lifetimes because rotation is hard.",
+          "notes": "Years-long internal cert lifetimes because rotation is hard.",
+          "blurb": "Years-long internal cert lifetimes because rotation is hard.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "| Use case | Typical profile | Lifetime |...",
+      "expanded": true
+    },
+    {
+      "id": "nda70e02416fcd3c",
+      "title": "L2 \u2014 Key storage: HSM vs software",
+      "markdown": "| Storage | When | Risk |\n|---------|------|------|\n| **FIPS 140-2/3 HSM** | Root CA, code signing, high-value issuing CA | Cost, operational ceremony |\n| **Cloud HSM** (CloudHSM, Managed HSM) | Issuing CA in AWS/Azure/GCP | Tenant isolation, regional DR |\n| **Software CA (step-ca, cfssl)** | Dev/lab, low-risk internal | Key theft if host compromised |\n\n**Interview:** Root on **offline HSM**; issuing intermediates on **online HSM** with **M-of-N** ceremony for root signing events.",
+      "notes": "| Storage | When | Risk |\n|---------|------|------|\n| FIPS 140-2/3 HSM | Root CA, code signing, high-value issuing CA | Cost, operational ceremony |\n| Cloud HSM (CloudHSM, Managed HSM) | Issuing CA in AWS/Azure/GCP | Tenant isolation, regional DR |\n| Software CA (step-ca, cfssl) | Dev/lab, low-risk internal | Key theft if host compromised |\n\nInterview: Root on offline HSM; issuing intermediates on online HSM with M-of-N ceremony for root signing events.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Storage | When | Risk | |---------|------|------| | FIPS 140-2/3 HSM |...",
+      "expanded": false
+    },
+    {
+      "id": "n26bef68969c7588",
+      "title": "L2 \u2014 Lifecycle automation",
+      "markdown": "**Discovery problem:** Most PKI outages are **unknown inventory** until expiry.\n\n| Tool / pattern | Role |\n|----------------|------|\n| **ACME** (Let's Encrypt, Boulder) | Automated DV for public names |\n| **cert-manager** (Kubernetes) | Ingress/service cert renewal |\n| **SPIRE / SPIFFE** | Workload identity + cert rotation |\n| **Venafi / DigiCert automation** | Enterprise policy + discovery |\n| **step-ca** | Internal CA with ACME provisioner |\n\n**Renewal SLO:** e.g. **alert at 30/14/7 days**, auto-renew at **60% lifetime**, **canary deploy** after cert change.\n\n```yaml\n# cert-manager Certificate (illustrative)\napiVersion: cert-manager.io/v1\nkind: Certificate\nmetadata:\n  name: api-tls\nspec:\n  secretName: api-tls-secret\n  duration: 2160h # 90d\n  renewBefore: 720h # 30d\n  dnsNames:\n    - api.example.com\n  issuerRef:\n    name: letsencrypt-prod\n    kind: ClusterIssuer\n```",
+      "notes": "Discovery problem: Most PKI outages are unknown inventory until expiry.\n\n| Tool / pattern | Role |\n|----------------|------|\n| ACME (Let's Encrypt, Boulder) | Automated DV for public names |\n| cert-manager (Kubernetes) | Ingress/service cert renewal |\n| SPIRE / SPIFFE | Workload identity + cert rotation |\n| Venafi / DigiCert automation | Enterprise policy + discovery |\n| step-ca | Internal CA with ACME provisioner |\n\nRenewal SLO: e.g. alert at 30/14/7 days, auto-renew at 60% lifetime, canary deploy after cert change.\n\ncert-manager Certificate (illustrative)\napiVersion: cert-manager.io/v1\nkind: Certificate\nmetadata:\n  name: api-tls\nspec:\n  secretName: api-tls-secret\n  duration: 2160h # 90d\n  renewBefore: 720h # 30d\n  dnsNames:\n- api.example.com\n  issuerRef:\n    name: letsencrypt-prod\n    kind: ClusterIssuer",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Discovery problem: Most PKI outages are unknown inventory until expiry.",
+      "expanded": false
+    },
+    {
+      "id": "nfe3c402c3eca63f",
+      "title": "L2 \u2014 Revocation: CRL vs OCSP vs short-lived certs",
+      "markdown": "| Mechanism | Pros | Cons |\n|-----------|------|------|\n| **CRL** | Simple | Large files, stale caches |\n| **OCSP** | Real-time-ish | Privacy, responder availability, **soft-fail** browsers |\n| **OCSP stapling** | Server attaches OCSP response | Must refresh staple |\n| **Short-lived certs (hours/days)** | Limits revocation need | Requires robust automation |\n\n**Incident:** Compromised intermediate -> **revoke intermediate**, publish **CRL/OCSP**, push **trust store** updates, re-issue all leaf certs. **Chrome CRLSet** and **Apple trust updates** for public CAs.\n\n**Must-staple** (`TLS Feature` extension): forces stapling-ops cost if misconfigured.",
+      "notes": "| Mechanism | Pros | Cons |\n|-----------|------|------|\n| CRL | Simple | Large files, stale caches |\n| OCSP | Real-time-ish | Privacy, responder availability, soft-fail browsers |\n| OCSP stapling | Server attaches OCSP response | Must refresh staple |\n| Short-lived certs (hours/days) | Limits revocation need | Requires robust automation |\n\nIncident: Compromised intermediate -> revoke intermediate, publish CRL/OCSP, push trust store updates, re-issue all leaf certs. Chrome CRLSet and Apple trust updates for public CAs.\n\nMust-staple (TLS Feature extension): forces stapling-ops cost if misconfigured.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Mechanism | Pros | Cons | |-----------|------|------| | CRL | Simple |...",
+      "expanded": false
+    },
+    {
+      "id": "n14d343d6e153cee",
+      "title": "L2 \u2014 Public vs private CA in cloud",
+      "markdown": "| Option | Notes |\n|--------|-------|\n| **ACM / App Service certs** | Managed public certs for ELB/App Gateway |\n| **AWS PCA / Google CAS / Azure CA** | Private CA integrated with cloud IAM |\n| **Bring your own CA** | Maximum control, maximum ops burden |\n\n**Private CA use cases:** **mTLS east-west**, **VPN**, **802.1X**, **code signing** internal tools.",
+      "notes": "| Option | Notes |\n|--------|-------|\n| ACM / App Service certs | Managed public certs for ELB/App Gateway |\n| AWS PCA / Google CAS / Azure CA | Private CA integrated with cloud IAM |\n| Bring your own CA | Maximum control, maximum ops burden |\n\nPrivate CA use cases: mTLS east-west, VPN, 802.1X, code signing internal tools.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Option | Notes | |--------|-------| | ACM / App Service certs | Managed...",
+      "expanded": false
+    },
+    {
+      "id": "n087ee73c48246d0",
+      "title": "L2 \u2014 Common failure modes (interview stories)",
+      "markdown": "Expiry outage - forgotten cert on load balancer or API gateway (monitor all SANs includi",
+      "notes": "Expiry outage - forgotten cert on load balancer or API gateway (monitor all SANs includi",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n6db5def473553fc",
+          "title": "Expiry outage - forgotten cert on load balancer or API gateway (monitor all SANs includi",
+          "markdown": "- Expiry outage - forgotten cert on load balancer or API gateway (monitor all SANs includi",
+          "notes": "Expiry outage - forgotten cert on load balancer or API gateway (monitor all SANs includi",
+          "blurb": "Expiry outage - forgotten cert on load balancer or API gateway (monitor all...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nc7aa4ac70fb54a0",
+          "title": "Chain incomplete - missing intermediate in deploy bundle.",
+          "markdown": "- Chain incomplete - missing intermediate in deploy bundle.",
+          "notes": "Chain incomplete - missing intermediate in deploy bundle.",
+          "blurb": "Chain incomplete - missing intermediate in deploy bundle.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n18208ee8162f5dc",
+          "title": "Weak key - RSA 1024, SHA-1 signatures (legacy).",
+          "markdown": "- Weak key - RSA 1024, SHA-1 signatures (legacy).",
+          "notes": "Weak key - RSA 1024, SHA-1 signatures (legacy).",
+          "blurb": "Weak key - RSA 1024, SHA-1 signatures (legacy).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n732dec2e3365f7d",
+          "title": "Shared dev cert in prod - wrong intermediate trust.",
+          "markdown": "- Shared dev cert in prod - wrong intermediate trust.",
+          "notes": "Shared dev cert in prod - wrong intermediate trust.",
+          "blurb": "Shared dev cert in prod - wrong intermediate trust.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nb50d329b4aa2eea",
+          "title": "Compromised CA - DigiNotar, TrustCor distrust events-need migration plan.",
+          "markdown": "- Compromised CA - DigiNotar, TrustCor distrust events-need migration plan.",
+          "notes": "Compromised CA - DigiNotar, TrustCor distrust events-need migration plan.",
+          "blurb": "Compromised CA - DigiNotar, TrustCor distrust events-need migration plan.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n5fb8639c47b70bf",
+          "title": "CT log gaps - public mis-issuance detection via Certificate Transparency.",
+          "markdown": "- CT log gaps - public mis-issuance detection via Certificate Transparency.",
+          "notes": "CT log gaps - public mis-issuance detection via Certificate Transparency.",
+          "blurb": "CT log gaps - public mis-issuance detection via Certificate Transparency.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Expiry outage - forgotten cert on load balancer or API gateway (monitor all...",
+      "expanded": true
+    },
+    {
+      "id": "nbfba8217277de49",
+      "title": "L3 \u2014 Governance and audit",
+      "markdown": "Certificate inventory CMDB: owner, SAN, expiry, CA, key location.",
+      "notes": "Certificate inventory CMDB: owner, SAN, expiry, CA, key location.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n101555d6b3265b6",
+          "title": "Certificate inventory CMDB: owner, SAN, expiry, CA, key location.",
+          "markdown": "- Certificate inventory CMDB: owner, SAN, expiry, CA, key location.",
+          "notes": "Certificate inventory CMDB: owner, SAN, expiry, CA, key location.",
+          "blurb": "Certificate inventory CMDB: owner, SAN, expiry, CA, key location.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ne585001c76ccd71",
+          "title": "Separation of duties: requester \u2260 approver \u2260 installer.",
+          "markdown": "- Separation of duties: requester \u2260 approver \u2260 installer.",
+          "notes": "Separation of duties: requester \u2260 approver \u2260 installer.",
+          "blurb": "Separation of duties: requester \u2260 approver \u2260 installer.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nb9d2431a23e0aea",
+          "title": "Audit log of CA operations (issue, revoke, policy change).",
+          "markdown": "- Audit log of CA operations (issue, revoke, policy change).",
+          "notes": "Audit log of CA operations (issue, revoke, policy change).",
+          "blurb": "Audit log of CA operations (issue, revoke, policy change).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n7f8fbe927918f4c",
+          "title": "Quarterly review of wildcard and long-lived exceptions.",
+          "markdown": "- Quarterly review of wildcard and long-lived exceptions.",
+          "notes": "Quarterly review of wildcard and long-lived exceptions.",
+          "blurb": "Quarterly review of wildcard and long-lived exceptions.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Certificate inventory CMDB: owner, SAN, expiry, CA, key location.",
+      "expanded": false
+    },
+    {
+      "id": "nc4b126125a941ce",
+      "title": "L3 \u2014 mTLS and service mesh",
+      "markdown": "**Istio/Linkerd/App Mesh** use **SDS** to rotate certs. **SPIFFE ID** in SAN (`spiffe://trust/domain/workload/id`) enables **portable identity**.\n\n**Interview:** mTLS **encryption** + **authentication**; still need **authZ** at app layer.",
+      "notes": "Istio/Linkerd/App Mesh use SDS to rotate certs. SPIFFE ID in SAN (spiffe://trust/domain/workload/id) enables portable identity.\n\nInterview: mTLS encryption + authentication; still need authZ at app layer.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Istio/Linkerd/App Mesh use SDS to rotate certs.",
+      "expanded": false
+    },
+    {
+      "id": "n4c3276269de550e",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nc5380f62f3e1f93",
+          "title": "Hierarchy",
+          "markdown": "**Offline root (HSM)** -> **Issuing intermediates** (prod/dev/mTLS) -> **Leaf certs**",
+          "notes": "Offline root (HSM) -> Issuing intermediates (prod/dev/mTLS) -> Leaf certs",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Offline root (HSM) -> Issuing intermediates (prod/dev/mTLS) -> Leaf certs",
+          "expanded": false
+        },
+        {
+          "id": "n1b15c2df9a725bf",
+          "title": "Lifetimes",
+          "markdown": "Public web: \u226490d, automated (ACME) - Internal/mTLS: 24h-90d, SPIRE/cert-manager - Code signing: years, HSM, strict ceremony",
+          "notes": "Public web: \u226490d, automated (ACME) - Internal/mTLS: 24h-90d, SPIRE/cert-manager - Code signing: years, HSM, strict ceremony",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n447e1e74e32800b",
+              "title": "Public web: \u226490d, automated (ACME)",
+              "markdown": "- Public web: \u226490d, automated (ACME)",
+              "notes": "Public web: \u226490d, automated (ACME)",
+              "blurb": "Public web: \u226490d, automated (ACME)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5d824a1d2dc44af",
+              "title": "Internal/mTLS: 24h-90d, SPIRE/cert-manager",
+              "markdown": "- Internal/mTLS: 24h-90d, SPIRE/cert-manager",
+              "notes": "Internal/mTLS: 24h-90d, SPIRE/cert-manager",
+              "blurb": "Internal/mTLS: 24h-90d, SPIRE/cert-manager",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n40010161a6f2865",
+              "title": "Code signing: years, HSM, strict ceremony",
+              "markdown": "- Code signing: years, HSM, strict ceremony",
+              "notes": "Code signing: years, HSM, strict ceremony",
+              "blurb": "Code signing: years, HSM, strict ceremony",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Public web: \u226490d, automated (ACME) - Internal/mTLS: 24h-90d,...",
+          "expanded": false
+        },
+        {
+          "id": "nf68232ab7a561f2",
+          "title": "Revocation",
+          "markdown": "**Short-lived > OCSP staple > OCSP > CRL** for most designs",
+          "notes": "Short-lived > OCSP staple > OCSP > CRL for most designs",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Short-lived > OCSP staple > OCSP > CRL for most designs",
+          "expanded": false
+        },
+        {
+          "id": "n7ed9fde89792ef2",
+          "title": "Automation",
+          "markdown": "**cert-manager** \u00b7 **SPIRE/SPIFFE** \u00b7 **step-ca** \u00b7 **Venafi** \u00b7 **AWS PCA**",
+          "notes": "cert-manager \u00b7 SPIRE/SPIFFE \u00b7 step-ca \u00b7 Venafi \u00b7 AWS PCA",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "cert-manager \u00b7 SPIRE/SPIFFE \u00b7 step-ca \u00b7 Venafi \u00b7 AWS PCA",
+          "expanded": false
+        },
+        {
+          "id": "n939eb7f6c7fdebd",
+          "title": "Outage prevention",
+          "markdown": "Inventory \u00b7 renewBefore 33% lifetime \u00b7 30/14/7d alerts \u00b7 game days",
+          "notes": "Inventory \u00b7 renewBefore 33% lifetime \u00b7 30/14/7d alerts \u00b7 game days",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Inventory \u00b7 renewBefore 33% lifetime \u00b7 30/14/7d alerts \u00b7 game days",
+          "expanded": false
+        },
+        {
+          "id": "n27908767cd47f20",
+          "title": "Incident (intermediate compromise)",
+          "markdown": "Revoke -> re-issue -> trust store update -> CT/audit -> comms",
+          "notes": "Revoke -> re-issue -> trust store update -> CT/audit -> comms",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Revoke -> re-issue -> trust store update -> CT/audit -> comms",
+          "expanded": false
+        },
+        {
+          "id": "n11ac31ec80fb291",
+          "title": "Interview one-liner",
+          "markdown": "*\"PKI is an availability program disguised as crypto-automate renewal and know every SAN.\"*",
+          "notes": "\"PKI is an availability program disguised as crypto-automate renewal and know every SAN.\"",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "\"PKI is an availability program disguised as crypto-automate renewal and...",
+          "expanded": false
+        },
+        {
+          "id": "nc2b39caa1654ed0",
+          "title": "Cross-reads",
+          "markdown": "`TLS` \u00b7 `Secrets Management and Key Lifecycle` \u00b7 `Kubernetes Security Hardening`",
+          "notes": "TLS \u00b7 Secrets Management and Key Lifecycle \u00b7 Kubernetes Security Hardening",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "TLS \u00b7 Secrets Management and Key Lifecycle \u00b7 Kubernetes Security Hardening",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Hierarchy"
+    },
+    {
+      "id": "n619e28c85a52da9",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n4d7e5517ba62350",
+          "title": "\"Let's Encrypt handles PKI so we don't need a program.\"",
+          "markdown": "**Wrong.** Public ACME solves **public DV TLS** only-not **mTLS**, **code signing**, **internal service identity**, or **inventory/discipline** for non-ACME certs.",
+          "notes": "Wrong. Public ACME solves public DV TLS only-not mTLS, code signing, internal service identity, or inventory/discipline for non-ACME certs.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "nac9f4f8878df1bb",
+          "title": "\"Longer certificate lifetime reduces operational risk.\"",
+          "markdown": "**Wrong.** Long lifetimes **delay rotation skill** and **extend compromise window**. Industry moves to **90-day or shorter** with automation.",
+          "notes": "Wrong. Long lifetimes delay rotation skill and extend compromise window. Industry moves to 90-day or shorter with automation.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "nfa70db104ba6edd",
+          "title": "\"Wildcard certs simplify security.\"",
+          "markdown": "**Wrong.** Wildcards **expand blast radius**-one private key protects all subdomains; strict **issuance policy** and **monitoring** required.",
+          "notes": "Wrong. Wildcards expand blast radius-one private key protects all subdomains; strict issuance policy and monitoring required.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "n32796742c8c36f5",
+          "title": "\"Revocation always saves you.\"",
+          "markdown": "**Wrong.** Clients **soft-fail OCSP**; **revocation is slow**. **Short-lived certs + automation** are primary; revocation is **incident response**.",
+          "notes": "Wrong. Clients soft-fail OCSP; revocation is slow. Short-lived certs + automation are primary; revocation is incident response.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "n2e3a854a6cf8a30",
+          "title": "\"Copying the same cert to all load balancers is fine.\"",
+          "markdown": "**Wrong.** **Key proliferation** increases leak risk; prefer **centralized issuance** or **per-node short-lived** certs via automation.",
+          "notes": "Wrong. Key proliferation increases leak risk; prefer centralized issuance or per-node short-lived certs via automation.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "n1f163b417ae77fc",
+          "title": "\"Private CA means we don't need to monitor expiry.\"",
+          "markdown": "**Wrong.** Internal certs cause **major outages** when forgotten-often worse visibility than public CAs.",
+          "notes": "Wrong. Internal certs cause major outages when forgotten-often worse visibility than public CAs.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "n2a01625420dfa6f",
+          "title": "\"mTLS replaces application authorization.\"",
+          "markdown": "**Wrong.** mTLS proves **service identity** at transport layer; **authZ** for data/actions still required.",
+          "notes": "Wrong. mTLS proves service identity at transport layer; authZ for data/actions still required.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "n1f038291e521713",
+          "title": "\"CT logs are only for public CAs.\"",
+          "markdown": "**Mostly public**, but the **mis-issuance detection** mindset applies-audit **internal CA logs** similarly.",
+          "notes": "Mostly public, but the mis-issuance detection mindset applies-audit internal CA logs similarly.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Mostly public, but the mis-issuance detection mindset applies-audit internal...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \"Let's Encrypt handles PKI so we don't need a program.\""
+    },
+    {
+      "id": "nf2326a892c2f343",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n0add9a03b53f8c3",
+          "title": "60-second answer",
+          "markdown": "**Q: How do you prevent certificate expiry outages at scale?**\n\n**A:** Maintain a **complete inventory** (discovery scans + CMDB), **automate renewal** (ACME, cert-manager, SPIRE) with **renewBefore** windows, alert at **30/14/7 days**, and run **game days** for rotation. Separate **prod/dev CAs**, never share keys across environments, and monitor **all SANs** including internal load balancers.",
+          "notes": "Q: How do you prevent certificate expiry outages at scale?\n\nA: Maintain a complete inventory (discovery scans + CMDB), automate renewal (ACME, cert-manager, SPIRE) with renewBefore windows, alert at 30/14/7 days, and run game days for rotation. Separate prod/dev CAs, never share keys across environments, and monitor all SANs including internal load balancers.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nc4ec863815e5895",
+              "title": "Why use an offline root CA?",
+              "markdown": "**A:** Limits **blast radius**-if an online issuing CA is compromised, you **revoke the intermediate** without trusting a potentially stolen **root**. Root signs intermediates rarely under **dual-control ceremony**.",
+              "notes": "A: Limits blast radius-if an online issuing CA is compromised, you revoke the intermediate without trusting a potentially stolen root. Root signs intermediates rarely under dual-control ceremony.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Limits blast radius-if an online issuing CA is compromised, you revoke...",
+              "expanded": false
+            },
+            {
+              "id": "n95e557bb1bb696f",
+              "title": "CRL vs OCSP vs short-lived certs?",
+              "markdown": "**A:** **Short-lived certs** (hours-days) with automation reduce reliance on revocation. **OCSP stapling** helps clients without soft-fail risk of live OCSP lookups. **CRLs** grow large and stale. Pick based on **client types** and **automation maturity**.",
+              "notes": "A: Short-lived certs (hours-days) with automation reduce reliance on revocation. OCSP stapling helps clients without soft-fail risk of live OCSP lookups. CRLs grow large and stale. Pick based on client types and automation maturity.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Short-lived certs (hours-days) with automation reduce reliance on...",
+              "expanded": false
+            },
+            {
+              "id": "n7e7aae9df1f4214",
+              "title": "What breaks when an intermediate CA is compromised?",
+              "markdown": "**A:** Revoke intermediate, publish **CRL/OCSP**, **re-issue all leaf certs** from new intermediate, update **trust stores** on clients/services, audit **mis-issued** certs via **CT logs**, communicate to customers if public-facing.",
+              "notes": "A: Revoke intermediate, publish CRL/OCSP, re-issue all leaf certs from new intermediate, update trust stores on clients/services, audit mis-issued certs via CT logs, communicate to customers if public-facing.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Revoke intermediate, publish CRL/OCSP, re-issue all leaf certs from new...",
+              "expanded": false
+            },
+            {
+              "id": "n686d68ed63b24ef",
+              "title": "HSM vs software keys for internal CA?",
+              "markdown": "**A:** **HSM** (FIPS, M-of-N) for root and high-value issuing CAs; **software CA** acceptable for **dev/lab** with clear policy. Cloud **Managed HSM / PCA** balances ops and security.",
+              "notes": "A: HSM (FIPS, M-of-N) for root and high-value issuing CAs; software CA acceptable for dev/lab with clear policy. Cloud Managed HSM / PCA balances ops and security.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: HSM (FIPS, M-of-N) for root and high-value issuing CAs; software CA...",
+              "expanded": false
+            },
+            {
+              "id": "n46f53749c920f4f",
+              "title": "How does cert-manager fit into Kubernetes PKI?",
+              "markdown": "**A:** **cert-manager** requests/renews certs from **ClusterIssuer** (Let's Encrypt, private CA), stores in **Secrets**, mounts into Ingress/service mesh. Set **duration** and **renewBefore**; monitor **CertificateReady** status.",
+              "notes": "A: cert-manager requests/renews certs from ClusterIssuer (Let's Encrypt, private CA), stores in Secrets, mounts into Ingress/service mesh. Set duration and renewBefore; monitor CertificateReady status.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: cert-manager requests/renews certs from ClusterIssuer (Let's Encrypt,...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Q: How do you prevent certificate expiry outages at scale?",
+          "expanded": false
+        },
+        {
+          "id": "n6f58d6c544208b5",
+          "title": "Senior: Design internal mTLS for 500 microservices",
+          "markdown": "**A:** Deploy **private CA** or **SPIRE** for **SPIFFE IDs** in SANs; **short-lived** workload certs (24h); **mesh SDS** for rotation; **network policy** + **mTLS** for encryption/authentication; **authZ** still at app layer; **break-glass** certs audited; **inventory** via mesh control plane.",
+          "notes": "A: Deploy private CA or SPIRE for SPIFFE IDs in SANs; short-lived workload certs (24h); mesh SDS for rotation; network policy + mTLS for encryption/authentication; authZ still at app layer; break-glass certs audited; inventory via mesh control plane.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "A: Deploy private CA or SPIRE for SPIFFE IDs in SANs; short-lived workload...",
+          "expanded": false
+        },
+        {
+          "id": "n6bb6096bdc06344",
+          "title": "Authoritative references",
+          "markdown": "RFC 5280, RFC 6960, RFC 8555 (ACME) - NIST SP 800-57 - cert-manager docs",
+          "notes": "RFC 5280, RFC 6960, RFC 8555 (ACME) - NIST SP 800-57 - cert-manager docs",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n16fac6e3f71414b",
+              "title": "RFC 5280, RFC 6960, RFC 8555 (ACME)",
+              "markdown": "- RFC 5280, RFC 6960, RFC 8555 (ACME)",
+              "notes": "RFC 5280, RFC 6960, RFC 8555 (ACME)",
+              "blurb": "RFC 5280, RFC 6960, RFC 8555 (ACME)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n20b20fb788afbc3",
+              "title": "NIST SP 800-57",
+              "markdown": "- NIST SP 800-57",
+              "notes": "NIST SP 800-57",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc9eaeeb730fbc0b",
+              "title": "cert-manager docs",
+              "markdown": "- cert-manager docs",
+              "notes": "cert-manager docs",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "RFC 5280, RFC 6960, RFC 8555 (ACME) - NIST SP 800-57 - cert-manager docs",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 60-second answer"
+    }
+  ],
+  "topicId": "pki-program-design",
+  "name": "PKI Program Design",
+  "structure": "logic-right",
+  "blurb": "PKI program design is how organizations issue, distribute, rotate, revoke,..."
+}

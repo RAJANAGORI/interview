@@ -1,0 +1,815 @@
+{
+  "id": "nbf985de85df082c",
+  "title": "Web Cache Poisoning and Deception",
+  "markdown": "**Web cache poisoning** tricks a **shared cache** (CDN, reverse proxy, browser) into **storing** a **malicious** **response** **keyed** incorrectly, so **other** **users** receive **attacker-controlled** content. **Web cache deception** tricks a cache into **storing** **private** **data** at a **URL** that looks **static** or **public**, enabling **unauthorized** **retrieval**. Research by **James Kettle** (PortSwigger) defined much of the modern taxonomy-interviewers expect **unkeyed** **inputs** vocabulary.\n\nAligned with the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+  "notes": "Web cache poisoning tricks a shared cache (CDN, reverse proxy, browser) into storing a malicious response keyed incorrectly, so other users receive attacker-controlled content. Web cache deception tricks a cache into storing private data at a URL that looks static or public, enabling unauthorized retrieval. Research by James Kettle (PortSwigger) defined much of the modern taxonomy-interviewers expect unkeyed inputs vocabulary.\n\nAligned with the Content Mastery Framework.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "nbd92b317ed0d1e0",
+      "title": "At a glance",
+      "markdown": "**Web cache poisoning** tricks a **shared cache** (CDN, reverse proxy, browser) into **storing** a **malicious** **response** **keyed** incorrectly, so **other** **users** receive **attacker-controlled** content. **Web cache deception** tricks a cache into **storing** **private** **data** at a **URL** that looks **static** or **public**, enabling **unauthorized** **retrieval**. Research by **James Kettle** (PortSwigger) defined much of the modern taxonomy-interviewers expect **unkeyed** **inputs** vocabulary.\n\nAligned with the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+      "notes": "Web cache poisoning tricks a shared cache (CDN, reverse proxy, browser) into storing a malicious response keyed incorrectly, so other users receive attacker-controlled content. Web cache deception tricks a cache into storing private data at a URL that looks static or public, enabling unauthorized retrieval. Research by James Kettle (PortSwigger) defined much of the modern taxonomy-interviewers expect unkeyed inputs vocabulary.\n\nAligned with the Content Mastery Framework.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Web cache poisoning tricks a shared cache (CDN, reverse proxy, browser) into...",
+      "expanded": false
+    },
+    {
+      "id": "n49538799b13cd63",
+      "title": "L1 \u2014 How caches decide \u201csame object\u201d",
+      "markdown": "Caches **hash** a **request** into a **key** (implementation-specific). Typical ingredients:",
+      "notes": "Caches hash a request into a key (implementation-specific). Typical ingredients:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n556f709a8f9b65d",
+          "title": "Host, path, query string (sometimes sorted or not)",
+          "markdown": "- Host, path, query string (sometimes sorted or not)",
+          "notes": "Host, path, query string (sometimes sorted or not)",
+          "blurb": "Host, path, query string (sometimes sorted or not)",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nfd2faf5bd339e27",
+          "title": "Selected headers (Authorization, Cookie, Accept-Encoding, Accept-Language) via Vary",
+          "markdown": "- Selected headers (Authorization, Cookie, Accept-Encoding, Accept-Language) via Vary",
+          "notes": "Selected headers (Authorization, Cookie, Accept-Encoding, Accept-Language) via Vary",
+          "blurb": "Selected headers (Authorization, Cookie, Accept-Encoding, Accept-Language)...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n594b62f8a82777c",
+          "title": "HTTP method (GET vs HEAD)",
+          "markdown": "- HTTP method (GET vs HEAD)",
+          "notes": "HTTP method (GET vs HEAD)",
+          "blurb": "HTTP method (GET vs HEAD)",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Caches hash a request into a key (implementation-specific).",
+      "expanded": true
+    },
+    {
+      "id": "n2968b9a4d756b08",
+      "title": "L2 \u2014 Web cache poisoning (concept)",
+      "markdown": "Attacker sends **request** with **unkeyed** **header** or **parameter** that **changes** **response** **body** (e.g., **reflected** **XSS** in **error** page). **Cache** **stores** **poisoned** **object** under a **key** that **victims** **share**. **Victims** **receive** **stored** **XSS**.\n\n**Unkeyed** **inputs** are the **enemy**: headers like `X-Forwarded-Host`, `X-Original-URL`, fat `Accept` headers, etc.-**exact** list is **app** and **CDN** **specific**.",
+      "notes": "Attacker sends request with unkeyed header or parameter that changes response body (e.g., reflected XSS in error page). Cache stores poisoned object under a key that victims share. Victims receive stored XSS.\n\nUnkeyed inputs are the enemy: headers like X-Forwarded-Host, X-Original-URL, fat Accept headers, etc.-exact list is app and CDN specific.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Attacker sends request with unkeyed header or parameter that changes...",
+      "expanded": false
+    },
+    {
+      "id": "nec251962dc4d27d",
+      "title": "L2 \u2014 Web cache deception (concept)",
+      "markdown": "Application **reflects** **sensitive** **content** under a **path** that **looks** **cacheable** (`/static/profile`, `.css` **suffix** tricks) while **cache** **ignores** **cookies** in the **key**. **Attacker** **elicits** **storage** of **private** **page** in **cache**, then **retrieves** it **without** **auth**.",
+      "notes": "Application reflects sensitive content under a path that looks cacheable (/static/profile, .css suffix tricks) while cache ignores cookies in the key. Attacker elicits storage of private page in cache, then retrieves it without auth.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Application reflects sensitive content under a path that looks cacheable...",
+      "expanded": false
+    },
+    {
+      "id": "nd57fe730ae9be9c",
+      "title": "L2 \u2014 Fat Get / cache DoS (adjacent)",
+      "markdown": "**Huge** **query** strings or **header** **bombs** **create** **distinct** **cache** **keys** -> **low** **hit** **rate** -> **origin** **overload**. **Ops** interview tie-in.",
+      "notes": "Huge query strings or header bombs create distinct cache keys -> low hit rate -> origin overload. Ops interview tie-in.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Huge query strings or header bombs create distinct cache keys -> low hit...",
+      "expanded": false
+    },
+    {
+      "id": "n2263c22191dd079",
+      "title": "L3 \u2014 Edge/origin parser differential matrix",
+      "markdown": "Most high-impact cases come from **normalization mismatches** between CDN, reverse proxy, and origin app.\n\n| Input class | Edge behavior | Origin behavior | Risk |\n|-------------|---------------|-----------------|------|\n| **Duplicate headers** | Keeps first / merges | Keeps last | Cache key and rendered response diverge |\n| **Host variants** (`example.com.`, mixed case, port suffix) | Canonicalized | Treated distinct | Poisoning by host confusion |\n| **Path normalization** (`//`, `%2F`, dot segments) | Normalized | Not normalized (or opposite) | Deception and key bypass |\n| **Query normalization** (ordering, duplicate params) | Sorted/deduped | Preserves order/duplicates | Cache key collision |\n| **Hop-by-hop headers** forwarded accidentally | Ignored for key | Used in app logic | Unkeyed input exploitation |\n\nTesting strategy: build a request matrix and compare `Cache-Status`, response hash, and origin app behavior for each mutation.",
+      "notes": "Most high-impact cases come from normalization mismatches between CDN, reverse proxy, and origin app.\n\n| Input class | Edge behavior | Origin behavior | Risk |\n|-------------|---------------|-----------------|------|\n| Duplicate headers | Keeps first / merges | Keeps last | Cache key and rendered response diverge |\n| Host variants (example.com., mixed case, port suffix) | Canonicalized | Treated distinct | Poisoning by host confusion |\n| Path normalization (//, %2F, dot segments) | Normalized | Not normalized (or opposite) | Deception and key bypass |\n| Query normalization (ordering, duplicate params) | Sorted/deduped | Preserves order/duplicates | Cache key collision |\n| Hop-by-hop headers forwarded accidentally | Ignored for key | Used in app logic | Unkeyed input exploitation |\n\nTesting strategy: build a request matrix and compare Cache-Status, response hash, and origin app behavior for each mutation.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Most high-impact cases come from normalization mismatches between CDN,...",
+      "expanded": false
+    },
+    {
+      "id": "ne3f1c6d25bd9fa7",
+      "title": "L3 \u2014 HTTP/2 and HTTP/3 nuances",
+      "markdown": "Pseudo-headers vs legacy headers: translation layers (:authority to Host) can create inconsistencies.",
+      "notes": "Pseudo-headers vs legacy headers: translation layers (:authority to Host) can create inconsistencies.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n6668f14371b420c",
+          "title": "Pseudo-headers vs legacy headers: translation layers (:authority to Host) can create inc",
+          "markdown": "- Pseudo-headers vs legacy headers: translation layers (:authority to Host) can create inc",
+          "notes": "Pseudo-headers vs legacy headers: translation layers (:authority to Host) can create inc",
+          "blurb": "Pseudo-headers vs legacy headers: translation layers (:authority to Host)...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n3ce95acefd2946e",
+          "title": "Connection coalescing: shared cert/SAN can route multiple origins over one connection; m",
+          "markdown": "- Connection coalescing: shared cert/SAN can route multiple origins over one connection; m",
+          "notes": "Connection coalescing: shared cert/SAN can route multiple origins over one connection; m",
+          "blurb": "Connection coalescing: shared cert/SAN can route multiple origins over one...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n14ec11ce2e58ad9",
+          "title": "Header compression effects: not directly exploitable alone, but can hide high-cardinalit",
+          "markdown": "- Header compression effects: not directly exploitable alone, but can hide high-cardinalit",
+          "notes": "Header compression effects: not directly exploitable alone, but can hide high-cardinalit",
+          "blurb": "Header compression effects: not directly exploitable alone, but can hide...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n5baed8895f6fc31",
+          "title": "Protocol downgrade boundaries: h2/h3 at edge and h1 to origin means two parsers; keying",
+          "markdown": "- Protocol downgrade boundaries: h2/h3 at edge and h1 to origin means two parsers; keying",
+          "notes": "Protocol downgrade boundaries: h2/h3 at edge and h1 to origin means two parsers; keying",
+          "blurb": "Protocol downgrade boundaries: h2/h3 at edge and h1 to origin means two...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Pseudo-headers vs legacy headers: translation layers (:authority to Host)...",
+      "expanded": true
+    },
+    {
+      "id": "n93446091494af72",
+      "title": "L3 \u2014 CPDoS and cache key-space exhaustion",
+      "markdown": "Two operationally important abuse classes:\n\n1. **Cache poisoning DoS (CPDoS):** induce cache to store error pages for legitimate URLs.\n2. **Key-space explosion:** force near-zero hit rate by generating many cache-unique variants.\n\nDetection signals:",
+      "notes": "Two operationally important abuse classes:\n\n1. Cache poisoning DoS (CPDoS): induce cache to store error pages for legitimate URLs.\n2. Key-space explosion: force near-zero hit rate by generating many cache-unique variants.\n\nDetection signals:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n2cc1f887241eea2",
+          "title": "Sudden rise in MISS with stable request volume.",
+          "markdown": "- Sudden rise in MISS with stable request volume.",
+          "notes": "Sudden rise in MISS with stable request volume.",
+          "blurb": "Sudden rise in MISS with stable request volume.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n5b9452cf2a46e2e",
+          "title": "Spike in unique cache keys per route.",
+          "markdown": "- Spike in unique cache keys per route.",
+          "notes": "Spike in unique cache keys per route.",
+          "blurb": "Spike in unique cache keys per route.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n5e5c20c1e9a26fc",
+          "title": "4xx/5xx object caching where policy should bypass cache.",
+          "markdown": "- 4xx/5xx object caching where policy should bypass cache.",
+          "notes": "4xx/5xx object caching where policy should bypass cache.",
+          "blurb": "4xx/5xx object caching where policy should bypass cache.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Two operationally important abuse classes: 1.",
+      "expanded": true
+    },
+    {
+      "id": "n9893964211a3850",
+      "title": "Detection",
+      "markdown": "CDN logs: same URL key serving different content hashes to different users without expected Vary.",
+      "notes": "CDN logs: same URL key serving different content hashes to different users without expected Vary.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "na6060b0a10fe4a5",
+          "title": "CDN logs: same URL key serving different content hashes to different users without expec",
+          "markdown": "- CDN logs: same URL key serving different content hashes to different users without expec",
+          "notes": "CDN logs: same URL key serving different content hashes to different users without expec",
+          "blurb": "CDN logs: same URL key serving different content hashes to different users...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n9489f7f2f53a29a",
+          "title": "Security tests: param miner reports, diff responses with header mutations.",
+          "markdown": "- Security tests: param miner reports, diff responses with header mutations.",
+          "notes": "Security tests: param miner reports, diff responses with header mutations.",
+          "blurb": "Security tests: param miner reports, diff responses with header mutations.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nef9ab0addf7fb42",
+          "title": "Alerts on surge in cache MISS ratio after deploy.",
+          "markdown": "- Alerts on surge in cache MISS ratio after deploy.",
+          "notes": "Alerts on surge in cache MISS ratio after deploy.",
+          "blurb": "Alerts on surge in cache MISS ratio after deploy.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "CDN logs: same URL key serving different content hashes to different users...",
+      "expanded": false
+    },
+    {
+      "id": "nc6f15cbc9793592",
+      "title": "L4 \u2014 Telemetry blueprint (what to log)",
+      "markdown": "For mature programs, keep structured fields at edge and origin:",
+      "notes": "For mature programs, keep structured fields at edge and origin:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nd1b97d2f1a505bc",
+          "title": "Request canonical form: normalized host/path/query used for keying.",
+          "markdown": "- Request canonical form: normalized host/path/query used for keying.",
+          "notes": "Request canonical form: normalized host/path/query used for keying.",
+          "blurb": "Request canonical form: normalized host/path/query used for keying.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n01fd74e5a797a6c",
+          "title": "Cache key id (hash) and cache status (HIT, MISS, BYPASS, STALE).",
+          "markdown": "- Cache key id (hash) and cache status (HIT, MISS, BYPASS, STALE).",
+          "notes": "Cache key id (hash) and cache status (HIT, MISS, BYPASS, STALE).",
+          "blurb": "Cache key id (hash) and cache status (HIT, MISS, BYPASS, STALE).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nd3d45acd108e620",
+          "title": "Vary decision inputs actually used.",
+          "markdown": "- Vary decision inputs actually used.",
+          "notes": "Vary decision inputs actually used.",
+          "blurb": "Vary decision inputs actually used.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n58dd95abb493415",
+          "title": "Response body checksum (short hash) for same key comparisons.",
+          "markdown": "- Response body checksum (short hash) for same key comparisons.",
+          "notes": "Response body checksum (short hash) for same key comparisons.",
+          "blurb": "Response body checksum (short hash) for same key comparisons.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nf0fefc001b62d13",
+          "title": "Origin route id and auth context flags (authenticated/anonymous).",
+          "markdown": "- Origin route id and auth context flags (authenticated/anonymous).",
+          "notes": "Origin route id and auth context flags (authenticated/anonymous).",
+          "blurb": "Origin route id and auth context flags (authenticated/anonymous).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "For mature programs, keep structured fields at edge and origin:",
+      "expanded": false
+    },
+    {
+      "id": "nb06af71111f4966",
+      "title": "Mitigations (tier order)",
+      "markdown": "Disable edge caching for dynamic/authenticated routes.",
+      "notes": "Disable edge caching for dynamic/authenticated routes.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n875cdedd1380203",
+          "title": "Disable edge caching for dynamic/authenticated routes.",
+          "markdown": "- Disable edge caching for dynamic/authenticated routes.",
+          "notes": "Disable edge caching for dynamic/authenticated routes.",
+          "blurb": "Disable edge caching for dynamic/authenticated routes.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n036d3197c3a70f9",
+          "title": "Normalize cache keys at CDN; explicit Vary only where needed.",
+          "markdown": "- Normalize cache keys at CDN; explicit Vary only where needed.",
+          "notes": "Normalize cache keys at CDN; explicit Vary only where needed.",
+          "blurb": "Normalize cache keys at CDN; explicit Vary only where needed.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n366f159e39d0b32",
+          "title": "Reject ambiguous host/path combinations at origin.",
+          "markdown": "- Reject ambiguous host/path combinations at origin.",
+          "notes": "Reject ambiguous host/path combinations at origin.",
+          "blurb": "Reject ambiguous host/path combinations at origin.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nede88e4e122caec",
+          "title": "Strip or ignore dangerous unkeyed headers at edge (careful with legit traffic).",
+          "markdown": "- Strip or ignore dangerous unkeyed headers at edge (careful with legit traffic).",
+          "notes": "Strip or ignore dangerous unkeyed headers at edge (careful with legit traffic).",
+          "blurb": "Strip or ignore dangerous unkeyed headers at edge (careful with legit...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n418d55ea5de136d",
+          "title": "CSP still helps contain XSS impact if poisoning occurs.",
+          "markdown": "- CSP still helps contain XSS impact if poisoning occurs.",
+          "notes": "CSP still helps contain XSS impact if poisoning occurs.",
+          "blurb": "CSP still helps contain XSS impact if poisoning occurs.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Disable edge caching for dynamic/authenticated routes.",
+      "expanded": false
+    },
+    {
+      "id": "n3a7cfb69d8b4398",
+      "title": "Labs (authorized)",
+      "markdown": "**PortSwigger Web Security Academy** - Web cache poisoning / deception modules.",
+      "notes": "PortSwigger Web Security Academy - Web cache poisoning / deception modules.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "PortSwigger Web Security Academy - Web cache poisoning / deception modules.",
+      "expanded": false
+    },
+    {
+      "id": "nbffc2eaa01ec131",
+      "title": "Toolchain",
+      "markdown": "**Burp Suite** (Param Miner, Intruder) \u00b7 **curl** with **header** **matrices** \u00b7 **CDN** vendor **cache** **key** **docs**",
+      "notes": "Burp Suite (Param Miner, Intruder) \u00b7 curl with header matrices \u00b7 CDN vendor cache key docs",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Burp Suite (Param Miner, Intruder) \u00b7 curl with header matrices \u00b7 CDN vendor...",
+      "expanded": false
+    },
+    {
+      "id": "nbddc07d10c94772",
+      "title": "Authoritative references",
+      "markdown": "PortSwigger research (Kettle) on web cache poisoning / deception.",
+      "notes": "PortSwigger research (Kettle) on web cache poisoning / deception.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nc87782857d0835c",
+          "title": "PortSwigger research (Kettle) on web cache poisoning / deception.",
+          "markdown": "- PortSwigger research (Kettle) on web cache poisoning / deception.",
+          "notes": "PortSwigger research (Kettle) on web cache poisoning / deception.",
+          "blurb": "PortSwigger research (Kettle) on web cache poisoning / deception.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n899b866ac4352e1",
+          "title": "RFC 9111 (HTTP Caching) - freshness, Vary, invalidation concepts.",
+          "markdown": "- RFC 9111 (HTTP Caching) - freshness, Vary, invalidation concepts.",
+          "notes": "RFC 9111 (HTTP Caching) - freshness, Vary, invalidation concepts.",
+          "blurb": "RFC 9111 (HTTP Caching) - freshness, Vary, invalidation concepts.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nf312a506b02c5eb",
+          "title": "CWE-444 (Inconsistent Interpretation of HTTP Requests) - cousin to smuggling; overlaps i",
+          "markdown": "- CWE-444 (Inconsistent Interpretation of HTTP Requests) - cousin to smuggling; overlaps i",
+          "notes": "CWE-444 (Inconsistent Interpretation of HTTP Requests) - cousin to smuggling; overlaps i",
+          "blurb": "CWE-444 (Inconsistent Interpretation of HTTP Requests) - cousin to...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "PortSwigger research (Kettle) on web cache poisoning / deception.",
+      "expanded": false
+    },
+    {
+      "id": "n10a5e198c1c663a",
+      "title": "Verification checklist",
+      "markdown": "[ ] Name three inputs that often sit outside cache keys.",
+      "notes": "[ ] Name three inputs that often sit outside cache keys.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n18e9c31a924e71a",
+          "title": "[ ] Name three inputs that often sit outside cache keys.",
+          "markdown": "- [ ] Name three inputs that often sit outside cache keys.",
+          "notes": "[ ] Name three inputs that often sit outside cache keys.",
+          "blurb": "[ ] Name three inputs that often sit outside cache keys.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n390a364af16d73e",
+          "title": "[ ] Explain why Vary: Cookie can fix or break caching.",
+          "markdown": "- [ ] Explain why Vary: Cookie can fix or break caching.",
+          "notes": "[ ] Explain why Vary: Cookie can fix or break caching.",
+          "blurb": "[ ] Explain why Vary: Cookie can fix or break caching.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n683ba0ddeb365b9",
+          "title": "[ ] Describe one edge/origin normalization mismatch and its impact.",
+          "markdown": "- [ ] Describe one edge/origin normalization mismatch and its impact.",
+          "notes": "[ ] Describe one edge/origin normalization mismatch and its impact.",
+          "blurb": "[ ] Describe one edge/origin normalization mismatch and its impact.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nbb644c730e94105",
+          "title": "[ ] Explain CPDoS vs key-space exhaustion in under 60 seconds.",
+          "markdown": "- [ ] Explain CPDoS vs key-space exhaustion in under 60 seconds.",
+          "notes": "[ ] Explain CPDoS vs key-space exhaustion in under 60 seconds.",
+          "blurb": "[ ] Explain CPDoS vs key-space exhaustion in under 60 seconds.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "[ ] Name three inputs that often sit outside cache keys.",
+      "expanded": false
+    },
+    {
+      "id": "n3da8151b1075b6e",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nbdaf6122b560ac0",
+          "title": "Poisoning vs deception",
+          "markdown": "| Type | Goal |\n|------|------|\n| **Poisoning** | **Store** **bad** **representation** under **victim-shared** **key** |\n| **Deception** | **Store** **private** **data** where **unauthenticated** **clients** **hit** |",
+          "notes": "| Type | Goal |\n|------|------|\n| Poisoning | Store bad representation under victim-shared key |\n| Deception | Store private data where unauthenticated clients hit |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Type | Goal | |------|------| | Poisoning | Store bad representation under...",
+          "expanded": false
+        },
+        {
+          "id": "na6da7705a61929a",
+          "title": "Key concepts",
+          "markdown": "**Cache** **key** \u00b7 **unkeyed** **input** \u00b7 **`Vary`** \u00b7 **`Cache-Control`** **`private`/`no-store`**",
+          "notes": "Cache key \u00b7 unkeyed input \u00b7 Vary \u00b7 Cache-Control private/no-store",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Cache key \u00b7 unkeyed input \u00b7 Vary \u00b7 Cache-Control private/no-store",
+          "expanded": false
+        },
+        {
+          "id": "ne730163057e51e1",
+          "title": "Test idea (authorized)",
+          "markdown": "**Burp** **Param** **Miner** \u00b7 **diff** **responses** on **fat** **headers** (`X-Forwarded-Host`, `X-Forwarded-Scheme`, `Accept`)",
+          "notes": "Burp Param Miner \u00b7 diff responses on fat headers (X-Forwarded-Host, X-Forwarded-Scheme, Accept)",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Burp Param Miner \u00b7 diff responses on fat headers (X-Forwarded-Host,...",
+          "expanded": false
+        },
+        {
+          "id": "n023a39bbbb10a09",
+          "title": "Fix patterns",
+          "markdown": "**No** **edge** **cache** for **session** **HTML** \u00b7 **normalize** **host** \u00b7 **strip** **dangerous** **headers** at **edge** (carefully) \u00b7 **explicit** **key** **recipe** per route",
+          "notes": "No edge cache for session HTML \u00b7 normalize host \u00b7 strip dangerous headers at edge (carefully) \u00b7 explicit key recipe per route",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "No edge cache for session HTML \u00b7 normalize host \u00b7 strip dangerous headers at...",
+          "expanded": false
+        },
+        {
+          "id": "n19bce7f026177b2",
+          "title": "Spec",
+          "markdown": "**RFC 9111** HTTP Caching",
+          "notes": "RFC 9111 HTTP Caching",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "RFC 9111 HTTP Caching",
+          "expanded": false
+        },
+        {
+          "id": "n081a81e653b9e72",
+          "title": "Cross-read",
+          "markdown": "`HTTP Request Smuggling` \u00b7 `XSS` \u00b7 `WAF Bypass`",
+          "notes": "HTTP Request Smuggling \u00b7 XSS \u00b7 WAF Bypass",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "HTTP Request Smuggling \u00b7 XSS \u00b7 WAF Bypass",
+          "expanded": false
+        },
+        {
+          "id": "n57ebdb1c6c58ac4",
+          "title": "One-liner",
+          "markdown": "\"If the **origin** **varies** on **fields** the **cache** **ignores**, **attackers** **share** **their** **response** with **everyone**.\"",
+          "notes": "\"If the origin varies on fields the cache ignores, attackers share their response with everyone.\"",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "\"If the origin varies on fields the cache ignores, attackers share their...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Poisoning vs deception"
+    },
+    {
+      "id": "n575e66dc1cc5133",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nd393982d5029940",
+          "title": "\u201cCDNs only cache static files.\u201d",
+          "markdown": "**Reality:** **Misconfigurations** **cache** **HTML** and **JSON** **dangerously**.",
+          "notes": "Reality: Misconfigurations cache HTML and JSON dangerously.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Misconfigurations cache HTML and JSON dangerously.",
+          "expanded": false
+        },
+        {
+          "id": "n91e3cc43141909c",
+          "title": "\u201cCache poisoning is the same as HTTP smuggling.\u201d",
+          "markdown": "**Reality:** **Different** **mechanisms**-**smuggling** is **message** **framing**; **poisoning** is **key** **derivation** vs **response** **variance**.",
+          "notes": "Reality: Different mechanisms-smuggling is message framing; poisoning is key derivation vs response variance.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Different mechanisms-smuggling is message framing; poisoning is key...",
+          "expanded": false
+        },
+        {
+          "id": "nf41c34bc35d3174",
+          "title": "\u201cVary: * fixes everything.\u201d",
+          "markdown": "**Reality:** **Over-broad** **`Vary`** **kills** **hit** **rates** and **may** **still** **miss** **inputs**; **precision** **matters**.",
+          "notes": "Reality: Over-broad Vary kills hit rates and may still miss inputs; precision matters.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Over-broad Vary kills hit rates and may still miss inputs;...",
+          "expanded": false
+        },
+        {
+          "id": "n1bcb0c387b4d408",
+          "title": "\u201cPrivate cache-control means CDN won\u2019t store it.\u201d",
+          "markdown": "**Reality:** **Vendors** **interpret** **directives** **differently**-**validate** with **tests**, **not** **assumptions**.",
+          "notes": "Reality: Vendors interpret directives differently-validate with tests, not assumptions.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Vendors interpret directives differently-validate with tests, not...",
+          "expanded": false
+        },
+        {
+          "id": "n8c7dcf866192204",
+          "title": "\u201cOnly giant sites need to care.\u201d",
+          "markdown": "**Reality:** **Any** **shared** **reverse** **proxy** **or** **microcache** in **front** of **monoliths** **can** **be** **vulnerable**.",
+          "notes": "Reality: Any shared reverse proxy or microcache in front of monoliths can be vulnerable.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Any shared reverse proxy or microcache in front of monoliths can be...",
+          "expanded": false
+        },
+        {
+          "id": "n10171aa5f7b7878",
+          "title": "\u201cWAF blocks cache attacks.\u201d",
+          "markdown": "**Reality:** **Logical** **cache** **bugs** **survive** **WAF**; **fix** **keying** and **origin** **behavior**.",
+          "notes": "Reality: Logical cache bugs survive WAF; fix keying and origin behavior.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Logical cache bugs survive WAF; fix keying and origin behavior.",
+          "expanded": false
+        },
+        {
+          "id": "n12054d48005779a",
+          "title": "\u201cBrowser cache equals CDN cache.\u201d",
+          "markdown": "**Reality:** **Different** **threat** **models**; **deception** often **targets** **shared** **edge** **caches**.",
+          "notes": "Reality: Different threat models; deception often targets shared edge caches.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Different threat models; deception often targets shared edge caches.",
+          "expanded": false
+        },
+        {
+          "id": "n09b9004031d870e",
+          "title": "\u201cPurging CDN fixes root cause.\u201d",
+          "markdown": "**Reality:** **Purging** is **incident** **response**; **engineering** **must** **change** **key** **or** **origin** **logic**.",
+          "notes": "Reality: Purging is incident response; engineering must change key or origin logic.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Purging is incident response; engineering must change key or origin...",
+          "expanded": false
+        },
+        {
+          "id": "nd82ef266fd8e32d",
+          "title": "\u201cParam Miner green means safe.\u201d",
+          "markdown": "**Reality:** **Tools** **hint**; **manual** **differential** **testing** and **code** **review** **still** **required**.",
+          "notes": "Reality: Tools hint; manual differential testing and code review still required.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Tools hint; manual differential testing and code review still...",
+          "expanded": false
+        },
+        {
+          "id": "nfa05bb61319ad60",
+          "title": "\u201cCache deception requires XSS.\u201d",
+          "markdown": "**Reality:** **Deception** **often** **exfiltrates** **HTML/JSON** **directly**, not **script** **execution**.",
+          "notes": "Reality: Deception often exfiltrates HTML/JSON directly, not script execution.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Deception often exfiltrates HTML/JSON directly, not script execution.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \u201cCDNs only cache static files.\u201d"
+    },
+    {
+      "id": "nfad584516729770",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n7cfcf6f3091cc98",
+          "title": "60-second answer",
+          "markdown": "**Q: Explain web cache poisoning vs cache deception.**\n\n**A:** **Poisoning** makes a **shared** **cache** **store** a **malicious** **response** because some **unkeyed** **header** or **parameter** **changes** the **body** while the **cache** **key** **stays** the **same**-other users **get** **that** **payload**. **Deception** tricks the **cache** into **treating** a **private** **page** as **cacheable** (path tricks, **extension** confusion, **missing** **cookies** in the **key**) so an **attacker** **retrieves** **cached** **secrets**. **Defenses** are **correct** **cache** **keying**, **`Vary`** **discipline**, **no-store** on **sensitive** **routes**, and **CDN** **normalization**.",
+          "notes": "Q: Explain web cache poisoning vs cache deception.\n\nA: Poisoning makes a shared cache store a malicious response because some unkeyed header or parameter changes the body while the cache key stays the same-other users get that payload. Deception tricks the cache into treating a private page as cacheable (path tricks, extension confusion, missing cookies in the key) so an attacker retrieves cached secrets. Defenses are correct cache keying, Vary discipline, no-store on sensitive routes, and CDN normalization.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Q: Explain web cache poisoning vs cache deception.",
+          "expanded": false
+        },
+        {
+          "id": "na1f8a8c83fb4303",
+          "title": "Mechanics",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n2d397954beb62b9",
+              "title": "Q: What is an unkeyed input?",
+              "markdown": "**A:** Any **request** **field** the **origin** **uses** to **build** the **response** that the **cache** **does** **not** include in its **lookup** **key**-often **obscure** **headers**.",
+              "notes": "A: Any request field the origin uses to build the response that the cache does not include in its lookup key-often obscure headers.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Any request field the origin uses to build the response that the cache...",
+              "expanded": false
+            },
+            {
+              "id": "n24e4a90db286cb6",
+              "title": "Q: Does HTTPS stop cache poisoning?",
+              "markdown": "**A:** **No**-**edge** **TLS** **termination** **still** **caches** **HTTP** **representations**; **bugs** are in **keying**, not **encryption**.",
+              "notes": "A: No-edge TLS termination still caches HTTP representations; bugs are in keying, not encryption.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: No-edge TLS termination still caches HTTP representations; bugs are in...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: What is an unkeyed input?",
+          "expanded": false
+        },
+        {
+          "id": "n139d284c64c6cfa",
+          "title": "Defense",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ne90446e46770895",
+              "title": "Q: Quick policy for authenticated HTML?",
+              "markdown": "**A:** **`Cache-Control: private, no-store`** on **HTML** **that** **varies** by **session**; **only** **cache** **static** **assets** with **immutable** **where** **safe**.",
+              "notes": "A: Cache-Control: private, no-store on HTML that varies by session; only cache static assets with immutable where safe.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Cache-Control: private, no-store on HTML that varies by session; only...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: Quick policy for authenticated HTML?",
+          "expanded": false
+        },
+        {
+          "id": "n5c4afa29118a88c",
+          "title": "Mock ladder",
+          "markdown": "| Level | Question |\n|-------|----------|\n| Junior | Define cache key |\n| Mid | Unkeyed header example |\n| Senior | CDN key design |\n| Staff | Global caching policy |",
+          "notes": "| Level | Question |\n|-------|----------|\n| Junior | Define cache key |\n| Mid | Unkeyed header example |\n| Senior | CDN key design |\n| Staff | Global caching policy |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Level | Question | |-------|----------| | Junior | Define cache key | |...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 60-second answer"
+    }
+  ],
+  "topicId": "web-cache-poisoning-and-deception",
+  "name": "Web Cache Poisoning and Deception",
+  "structure": "logic-right",
+  "blurb": "Web cache poisoning tricks a shared cache (CDN, reverse proxy, browser) into..."
+}

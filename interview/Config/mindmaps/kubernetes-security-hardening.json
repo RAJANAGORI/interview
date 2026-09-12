@@ -1,0 +1,1660 @@
+{
+  "id": "ne0a68ba92961840",
+  "title": "Kubernetes Security Hardening",
+  "markdown": "**Kubernetes security hardening** is a multi\u2011layer discipline that spans the **software supply chain**, **cluster control plane**, **admission policies**, **network controls**, **identity & access management**, **secrets handling**, **node hardening**, **runtime detection**, and **continuous verification**. While basic guides often focus on a handful of built\u2011in controls, interviewers at **senior and staff levels** expect you to design a full defence\u2011in\u2011depth architecture - from the developer's laptop to production and back again.\n\nThis expanded guide integrates **container image trust**, **CI/CD pipeline security**, **service mesh**, **external identity federation**, **runtime anomaly detection**, and **automated remediation** on top of the standard K8s\u2011native controls. It follows the **Content Mastery Framework**.\n\nTo help you build a mental model, we start with two complementary visual workflows: the **\"Kubernetes City\" analogy** (a beginner\u2011friendly picture) and the **full technical end\u2011to\u2011end workflow** (the detailed engineer's map).",
+  "notes": "Kubernetes security hardening is a multi\u2011layer discipline that spans the software supply chain, cluster control plane, admission policies, network controls, identity & access management, secrets handling, node hardening, runtime detection, and continuous verification. While basic guides often focus on a handful of built\u2011in controls, interviewers at senior and staff levels expect you to design a full defence\u2011in\u2011depth architecture - from the developer's laptop to production and back again.\n\nThis expanded guide integrates container image trust, CI/CD pipeline security, service mesh, external identity federation, runtime anomaly detection, and automated remediation on top of the standard K8s\u2011native controls. It follows the Content Mastery Framework.\n\nTo help you build a mental model, we start with two complementary visual workflows: the \"Kubernetes City\" analogy (a beginner\u2011friendly picture) and the full technical end\u2011to\u2011end workflow (the detailed engineer's map).",
+  "expanded": true,
+  "children": [
+    {
+      "id": "n119d5c5da65b5e4",
+      "title": "At a glance",
+      "markdown": "**Kubernetes security hardening** is a multi\u2011layer discipline that spans the **software supply chain**, **cluster control plane**, **admission policies**, **network controls**, **identity & access management**, **secrets handling**, **node hardening**, **runtime detection**, and **continuous verification**. While basic guides often focus on a handful of built\u2011in controls, interviewers at **senior and staff levels** expect you to design a full defence\u2011in\u2011depth architecture - from the developer's laptop to production and back again.\n\nThis expanded guide integrates **container image trust**, **CI/CD pipeline security**, **service mesh**, **external identity federation**, **runtime anomaly detection**, and **automated remediation** on top of the standard K8s\u2011native controls. It follows the **Content Mastery Framework**.\n\nTo help you build a mental model, we start with two complementary visual workflows: the **\"Kubernetes City\" analogy** (a beginner\u2011friendly picture) and the **full technical end\u2011to\u2011end workflow** (the detailed engineer's map).",
+      "notes": "Kubernetes security hardening is a multi\u2011layer discipline that spans the software supply chain, cluster control plane, admission policies, network controls, identity & access management, secrets handling, node hardening, runtime detection, and continuous verification. While basic guides often focus on a handful of built\u2011in controls, interviewers at senior and staff levels expect you to design a full defence\u2011in\u2011depth architecture - from the developer's laptop to production and back again.\n\nThis expanded guide integrates container image trust, CI/CD pipeline security, service mesh, external identity federation, runtime anomaly detection, and automated remediation on top of the standard K8s\u2011native controls. It follows the Content Mastery Framework.\n\nTo help you build a mental model, we start with two complementary visual workflows: the \"Kubernetes City\" analogy (a beginner\u2011friendly picture) and the full technical end\u2011to\u2011end workflow (the detailed engineer's map).",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Kubernetes security hardening is a multi\u2011layer discipline that spans the...",
+      "expanded": false
+    },
+    {
+      "id": "n986538fc1cf246d",
+      "title": "Visual Workflow 1 \u2014 The \u201cKubernetes City\u201d (Analogy)",
+      "markdown": "```\n   \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n   \u2502              THE CONTROL PLANE (City Hall)                   \u2502\n   \u2502  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510   \u2502\n   \u2502  \u2502 API Server  \u2502  \u2502  Scheduler  \u2502  \u2502 Controller Manager  \u2502   \u2502\n   \u2502  \u2502(Front Desk) \u2502  \u2502(City Plan)  \u2502  \u2502 (Repair Crew)       \u2502   \u2502\n   \u2502  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2518  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2518  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518   \u2502\n   \u2502         \u2502                \u2502                    \u2502              \u2502\n   \u2502         \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518              \u2502\n   \u2502                          \u2502                                   \u2502\n   \u2502                   \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u25bc\u2500\u2500\u2500\u2500\u2500\u2500\u2510                            \u2502\n   \u2502                   \u2502    etcd     \u2502  (City's Memory / Ledger)  \u2502\n   \u2502                   \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518                            \u2502\n   \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                             \u2502 (commands & reports)\n                             \u25bc\n   \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n   \u2502            WORKER NODES (Apartment Buildings)               \u2502\n   \u2502                                                             \u2502\n   \u2502  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510   \u250c\u2500\n```",
+      "notes": "\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n   \u2502              THE CONTROL PLANE (City Hall)                   \u2502\n   \u2502  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510   \u2502\n   \u2502  \u2502 API Server  \u2502  \u2502  Scheduler  \u2502  \u2502 Controller Manager  \u2502   \u2502\n   \u2502  \u2502(Front Desk) \u2502  \u2502(City Plan)  \u2502  \u2502 (Repair Crew)       \u2502   \u2502\n   \u2502  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2518  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2518  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518   \u2502\n   \u2502         \u2502                \u2502                    \u2502              \u2502\n   \u2502         \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518              \u2502\n   \u2502                          \u2502                                   \u2502\n   \u2502                   \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u25bc\u2500\u2500\u2500\u2500\u2500\u2500\u2510                            \u2502\n   \u2502                   \u2502    etcd     \u2502  (City's Memory / Ledger)  \u2502\n   \u2502                   \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518                            \u2502\n   \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n                             \u2502 (commands & reports)\n                             \u25bc\n   \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n   \u2502            WORKER NODES (Apartment Buildings)               \u2502\n   \u2502                                                             \u2502\n   \u2502  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510   \u250c\u2500",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nef73d7953cfc24f",
+          "title": "City Hall (Control Plane) handles all requests and remembers everything.",
+          "markdown": "- City Hall (Control Plane) handles all requests and remembers everything.",
+          "notes": "City Hall (Control Plane) handles all requests and remembers everything.",
+          "blurb": "City Hall (Control Plane) handles all requests and remembers everything.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n71a804590caebc1",
+          "title": "Apartment Buildings (Worker Nodes) host the actual living spaces (Pods).",
+          "markdown": "- Apartment Buildings (Worker Nodes) host the actual living spaces (Pods).",
+          "notes": "Apartment Buildings (Worker Nodes) host the actual living spaces (Pods).",
+          "blurb": "Apartment Buildings (Worker Nodes) host the actual living spaces (Pods).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n3b7ab269abc3ce2",
+          "title": "Phone Directory (Service) and Main Gate (Ingress) route traffic.",
+          "markdown": "- Phone Directory (Service) and Main Gate (Ingress) route traffic.",
+          "notes": "Phone Directory (Service) and Main Gate (Ingress) route traffic.",
+          "blurb": "Phone Directory (Service) and Main Gate (Ingress) route traffic.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n182b0bd89eb1634",
+          "title": "Security Guards (the layers below) check IDs, enforce rules, and patrol the streets.",
+          "markdown": "- Security Guards (the layers below) check IDs, enforce rules, and patrol the streets.",
+          "notes": "Security Guards (the layers below) check IDs, enforce rules, and patrol the streets.",
+          "blurb": "Security Guards (the layers below) check IDs, enforce rules, and patrol the...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510 \u2502 THE...",
+      "expanded": true
+    },
+    {
+      "id": "nd06c7f6f9cd8126",
+      "title": "Visual Workflow 2 \u2014 Technical End\u2011to\u2011End Map (Implementation \u2192 Deployment \u2192 Security)",
+      "markdown": "```\n  KUBERNETES END-TO-END WORKFLOW (Implementation -> Deployment -> Security)\n  =======================================================================\n\n  IMPLEMENTATION (Cluster Setup)\n  ------------------------------\n  +-----------------+       +----------------------+       +---------------------------+\n  | Infrastructure  | ----> | Cluster Provisioning | ----> | Control Plane (Master)    |\n  | - Physical/VMs  |       | - kubeadm            |       | - API Server (REST)       |\n  | - Cloud inst.   |       | - Managed (EKS, AKS, |       | - etcd (key-value store)  |\n  | - Networks,     |       |   GKE, OpenShift)    |       | - Scheduler               |\n  |   Storage       |       | - Kops, Kubespray    |       | - Controller Manager      |\n  +-----------------+       +----------------------+       | - Cloud Controller Mgr    |\n                                                           +---------------------------+\n                                                                     |\n                                                                     | configures / manages\n                                                                     v\n                                                           +---------------------------+\n                                                           | Worker Nodes (Data Plane) |\n                                                           | - kubelet (node agent)    |\n                                                           | - kube-proxy (networking) |\n                                                           | - Container Runtime       |\n                                                           |   (containerd, CRI-O)     |\n                                                           +---------------------------+\n                                                                     |\n                                                                     | runs\n                                                                     v\n                                                           +---------------------------+\n                                                           | Cluster Add-ons           |\n                                                           | - CoreDNS (service disc.) |\n                                                           | - CNI plugin (Calico,     |\n                                                           |   Flannel, Cilium)        |\n                                                           | - Ingress Controller      |\n                                                           |   (nginx, Traefik)        |\n                                                           | - Metrics Server          |\n                                                           | - Dashboard               |\n                                                           +---------------------------+\n\n  DEPLOYMENT (Application Lifecycle)\n  ----------------------------------\n  +------------------+    +--------------------+    +---------------------------+\n  | Developer pushes |    | CI/CD Pipeline     |    | Image Registry            |\n  | code to Git      |--->| - Build image      |--->| - Docker Hub              |\n  | (with Dockerfile)|    | - Run tests        |    | - ECR, GCR, ACR           |\n  +------------------+    | - Scan (SAST, vuln)|    | - Private Harbor          |\n                          | - Push image       |    +---------------------------+\n                          +--------------------+\n                                                                 |\n                                                                 v\n  +-----------------------------+    +--------------------------------------+\n  | kubectl / Helm / Kustomize  |--->| Kubernetes API Server (REST endpoint)|\n  | apply -f deployment.yaml    |    |  - Authentication (X.509, OIDC, ...)   |\n  +-----------------------------+    |  - Authorization (RBAC, Node, ABAC)  |\n                                     +--------------------------------------+\n                                                     |\n                                                     v\n                                     +--------------------------------------+\n                                     | Admission Controllers                |\n                                     | - Mutating Webhooks (inject sidecar, |\n                                     |   set defaults, vault secrets)       |\n                                     | - Validating Webhooks (Pod Security  |\n                                     |   Standards, OPA/Gatekeeper,         |\n                                     |   resource quotas, deny latest tag)  |\n                                     +--------------------------------------+\n                                                     |\n                                                     v\n                                     +--------------------------------------+\n                                     | etcd (desired state stored)          |\n                                     +--------------------------------------+\n                                                     |\n                                                     v\n                                     +--------------------------------------+\n                                     | Scheduler (watches unassigned Pods)  |\n                                     | - Filters feasible nodes (resources  |\n                                     |   taints/tolerations, affinity)      |\n                                     | - Scores nodes and assigns Pod       |\n                                     +--------------------------------------+\n                                                     |\n                                                     v\n                                     +--------------------------------------+\n                                     | kubelet on chosen node               |\n                                     | - Pull image (using imagePullSecrets |\n                                     |   if private registry)               |\n                                     | - Mount volumes (PVC, ConfigMap,    |\n                                     |   Secrets)                          |\n                                     | - Create container via CRI           |\n                                     | - Start health probes (liveness,     |\n                                     |   readiness, startup)                |\n                                     +--------------------------------------+\n                                                     |\n                                                     v\n                                     +--------------------------------------+\n                                     | Running Pod (one or more containers) |\n                                     +--------------------------------------+\n                                                     |\n                                     +-----------------+--------------------+\n                                     |                 |                    |\n                                     v                 v                    v\n                           +-------------+  +-------------------+  +----------------+\n                           | Service     |  | Ingress           |  | External       |\n                           | (ClusterIP, |  | (host/path rules, |  | LoadBalancer   |\n                           |  NodePort,  |  |  TLS termination) |  | (cloud LB,     |\n                           |  Headless)  |  |                   |  |  MetalLB)      |\n                           +-------------+  +-------------------+  +----------------+\n\n  SECURITY (Defence-in-Depth - applied throughout the flow)\n  ---------------------------------------------------------\n  +---------------------------------------------------------------------+\n  | 1. CLUSTER HARDENING                                                |\n  |   - API Server: TLS, port 6443, always pull policy                  |\n  |   - etcd: encryption at rest, dedicated CA, mTLS, private network   |\n  |   - Audit logging: log all API requests to file/webhook             |\n  |   - Node security: CIS benchmarks, minimal OS, disable password auth|\n  +---------------------------------------------------------------------+\n\n  +---------------------------------------------------------------------+\n  | 2. ACCESS CONTROL (AuthN & AuthZ)                                   |\n  |   - RBAC: Roles/Bindings for least privilege                        |\n  |   - ServiceAccounts (per pod, automount disable if not needed)      |\n  |   - OIDC/LDAP integration for user identity                         |\n  |   - Admission webhook for dynamic authz (e.g., image signing)       |\n  +---------------------------------------------------------------------+\n\n  +---------------------------------------------------------------------+\n  | 3. POD/WORKLOAD SECURITY                                            |\n  |   - Pod Security Standards: privileged / baseline / restricted      |\n  |   - securityContext: runAsNonRoot, readOnlyRootFilesystem,          |\n  |     allowPrivilegeEscalation=false                                  |\n  |   - Seccomp, AppArmor, SELinux profiles                             |\n  |   - Capabilities dropping (drop: ALL)                               |\n  +---------------------------------------------------------------------+\n\n  +---------------------------------------------------------------------+\n  | 4. IMAGE SECURITY                                                   |\n  |   - Scan for CVEs in CI (Trivy, Clair, Snyk)                        |\n  |   - Sign images (Cosign + Sigstore)                                 |\n  |   - Private registry with pull secrets                              |\n  |   - Admission policy: deny unsigned or high-severity images         |\n  +---------------------------------------------------------------------+\n\n  +---------------------------------------------------------------------+\n  | 5. NETWORK SECURITY                                                 |\n  |   - Network Policies (CNI-aware, zero-trust model)                  |\n  |   - Ingress: TLS termination, HTTP->HTTPS redirect                  |\n  |   - Egress restriction (limit outbound to approved endpoints)       |\n  |   - Service Mesh (Istio/Linkerd) for mTLS, traffic policies         |\n  +---------------------------------------------------------------------+\n\n  +---------------------------------------------------------------------+\n  | 6. SECRET MANAGEMENT                                                |\n  |   - Kubernetes Secrets (base64, not encryption alone)               |\n  |   - Encryption at rest (envelope encryption with KMS)               |\n  |   - External vault (HashiCorp Vault, AWS Secrets Manager)         |\n  |   - CSI drivers to mount secrets as volumes/memory                  |\n  +---------------------------------------------------------------------+\n\n  +---------------------------------------------------------------------+\n  | 7. POLICY ENFORCEMENT (Admission)                                   |\n  |   - OPA Gatekeeper (ConstraintTemplates + Constraints, Rego)        |\n  |   - Kyverno (Kubernetes-native policies)                            |\n  |   - Built-in: PodSecurity admission, ResourceQuota, LimitRange      |\n  +---------------------------------------------------------------------+\n\n  +---------------------------------------------------------------------+\n  | 8. RUNTIME SECURITY & MONITORING                                    |\n  |   - Falco (syscall anomaly detection, alert on exec into container) |\n  |   - Prometheus/Grafana for resource anomalies                       |\n  |   - Log aggregation (EFK/Loki) with alerting                        |\n  |   - Compliance: kube-bench, kube-hunter, Popeye                     |\n  |   - Automatic rollback on policy violation (Flux, ArgoCD)           |\n  +---------------------------------------------------------------------+\n```\n\n**How to read this:**\n- **Top left to bottom right** follows the path from raw infrastructure, through cluster provisioning, into deployment, and finally to the security layers that wrap every stage.\n- The **Security** box at the bottom is a map of all eight defence\u2011in\u2011depth layers - each is enforced at the appropriate point in the flow (e.g., admission controllers sit right after the API server, runtime monitoring watches the running pod).\n\nNow that you have these two mental maps, the detailed sections that follow explain each security layer in depth.",
+      "notes": "KUBERNETES END-TO-END WORKFLOW (Implementation -> Deployment -> Security)\n  =======================================================================\n\n  IMPLEMENTATION (Cluster Setup)\n  ------------------------------\n  +-----------------+       +----------------------+       +---------------------------+\n  | Infrastructure  | ----> | Cluster Provisioning | ----> | Control Plane (Master)    |\n  | - Physical/VMs  |       | - kubeadm            |       | - API Server (REST)       |\n  | - Cloud inst.   |       | - Managed (EKS, AKS, |       | - etcd (key-value store)  |\n  | - Networks,     |       |   GKE, OpenShift)    |       | - Scheduler               |\n  |   Storage       |       | - Kops, Kubespray    |       | - Controller Manager      |\n  +-----------------+       +----------------------+       | - Cloud Controller Mgr    |\n                                                           +---------------------------+\n                                                                     |\n                                                                     | configures / manages\n                                                                     v\n                                                           +---------------------------+\n                                                           | Worker Nodes (Data Plane) |\n                                                           | - kubelet (node agent)    |\n                                                           | - kube-proxy (networking) |\n                                                           | - Container Runtime       |\n                                                           |   (containerd, CRI-O)     |\n                                                           +---------------------------+\n                                                                     |\n                                                                     | runs\n                                                                     v\n                                                           +---------------------------+\n                                                           | Cluster Add-ons           |\n                                                           | - CoreDNS (service disc.) |\n                                                           | - CNI plugin (Calico,     |\n                                                           |   Flannel, Cilium)        |\n                                                           | - Ingress Controller      |\n                                                           |   (nginx, Traefik)        |\n                                                           | - Metrics Server          |\n                                                           | - Dashboard               |\n                                                           +---------------------------+\n\n  DEPLOYMENT (Application Lifecycle)\n  ----------------------------------\n  +------------------+    +--------------------+    +---------------------------+\n  | Developer pushes |    | CI/CD Pipeline     |    | Image Registry            |\n  | code to Git      |--->| - Build image      |--->| - Docker Hub              |\n  | (with Dockerfile)|    | - Run tests        |    | - ECR, GCR, ACR           |\n  +------------------+    | - Scan (SAST, vuln)|    | - Private Harbor          |\n                          | - Push image       |    +---------------------------+\n                          +--------------------+\n                                                                 |\n                                                                 v\n  +-----------------------------+    +--------------------------------------+\n  | kubectl / Helm / Kustomize  |--->| Kubernetes API Server (REST endpoint)|\n  | apply -f deployment.yaml    |    |  - Authentication (X.509, OIDC, ...)   |\n  +-----------------------------+    |  - Authorization (RBAC, Node, ABAC)  |\n                                     +--------------------------------------+\n                                                     |\n                                                     v\n                                     +--------------------------------------+\n                                     | Admission Controllers                |\n                                     | - Mutating Webhooks (inject sidecar, |\n                                     |   set defaults, vault secrets)       |\n                                     | - Validating Webhooks (Pod Security  |\n                                     |   Standards, OPA/Gatekeeper,         |\n                                     |   resource quotas, deny latest tag)  |\n                                     +--------------------------------------+\n                                                     |\n                                                     v\n                                     +--------------------------------------+\n                                     | etcd (desired state stored)          |\n                                     +--------------------------------------+\n                                                     |\n                                                     v\n                                     +--------------------------------------+\n                                     | Scheduler (watches unassigned Pods)  |\n                                     | - Filters feasible nodes (resources  |\n                                     |   taints/tolerations, affinity)      |\n                                     | - Scores nodes and assigns Pod       |\n                                     +--------------------------------------+\n                                                     |\n                                                     v\n                                     +--------------------------------------+\n                                     | kubelet on chosen node               |\n                                     | - Pull image (using imagePullSecrets |\n                                     |   if private registry)               |\n                                     | - Mount volumes (PVC, ConfigMap,    |\n                                     |   Secrets)                          |\n                                     | - Create container via CRI           |\n                                     | - Start health probes (liveness,     |\n                                     |   readiness, startup)                |\n                                     +--------------------------------------+\n                                                     |\n                                                     v\n                                     +--------------------------------------+\n                                     | Running Pod (one or more containers) |\n                                     +--------------------------------------+\n                                                     |\n                                     +-----------------+--------------------+\n                                     |                 |                    |\n                                     v                 v                    v\n                           +-------------+  +-------------------+  +----------------+\n                           | Service     |  | Ingress           |  | External       |\n                           | (ClusterIP, |  | (host/path rules, |  | LoadBalancer   |\n                           |  NodePort,  |  |  TLS termination) |  | (cloud LB,     |\n                           |  Headless)  |  |                   |  |  MetalLB)      |\n                           +-------------+  +-------------------+  +----------------+\n\n  SECURITY (Defence-in-Depth - applied throughout the flow)\n  ---------------------------------------------------------\n  +---------------------------------------------------------------------+\n  | 1. CLUSTER HARDENING                                                |\n  | ",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "KUBERNETES END-TO-END WORKFLOW (Implementation -> Deployment -> Security)...",
+      "expanded": false
+    },
+    {
+      "id": "ndda33ab35af4640",
+      "title": "L1 \u2014 Cluster trust model",
+      "markdown": "```\nDeveloper / CI \u2500\u2500\u25ba API Server \u25c4\u2500\u2500\u25ba etcd (cluster state & secrets)\n                        \u2502\n            \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n            \u25bc           \u25bc           \u25bc\n        kubelet     scheduler    admission webhooks\n            \u2502\n        Pods (your workloads)\n```\n\n**Attacker goals:** steal secrets from etcd/API, escalate privileges via mis\u2011configured RBAC, escape to the node, move laterally through a flat network, or inject malicious code through untrusted images.\n\n*For a more intuitive understanding, refer back to the **\"Kubernetes City\"** diagram above: the API Server is the Front Desk, etcd is the City Memory, and the scheduler/controller manager are the City Planner and Repair Crew.*",
+      "notes": "Developer / CI \u2500\u2500\u25ba API Server \u25c4\u2500\u2500\u25ba etcd (cluster state & secrets)\n                        \u2502\n            \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n            \u25bc           \u25bc           \u25bc\n        kubelet     scheduler    admission webhooks\n            \u2502\n        Pods (your workloads)\n\nAttacker goals: steal secrets from etcd/API, escalate privileges via mis\u2011configured RBAC, escape to the node, move laterally through a flat network, or inject malicious code through untrusted images.\n\nFor a more intuitive understanding, refer back to the \"Kubernetes City\" diagram above: the API Server is the Front Desk, etcd is the City Memory, and the scheduler/controller manager are the City Planner and Repair Crew.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Developer / CI \u2500\u2500\u25ba API Server \u25c4\u2500\u2500\u25ba etcd (cluster state & secrets) \u2502...",
+      "expanded": false
+    },
+    {
+      "id": "n81dd7a8212d4e75",
+      "title": "L2 \u2014 Pod Security Admission (PSA)",
+      "markdown": "Replaces deprecated PodSecurityPolicy. Three enforcement levels per namespace:\n\n| Level        | Summary                                                      |\n|--------------|--------------------------------------------------------------|\n| **Privileged** | Unrestricted - only for system namespaces                  |\n| **Baseline**   | Blocks known privilege escalations (hostPath, hostNetwork) |\n| **Restricted** | Hardened: non\u2011root, drop all capabilities, seccomp, read\u2011only root FS |\n\n```yaml\napiVersion: v1\nkind: Namespace\nmetadata:\n  name: app-prod\n  labels:\n    pod-security.kubernetes.io/enforce: restricted\n    pod-security.kubernetes.io/audit: restricted\n    pod-security.kubernetes.io/warn: restricted\n```\n\n**Interview tip:** Enforce **restricted** for all application namespaces. Use **baseline** with `warn` mode during migration of legacy workloads. For true defence\u2011in\u2011depth, complement PSA with admission policies (Kyverno/Gatekeeper) that go beyond what PSA can enforce (e.g., requiring specific labels, denying `latest` tag, checking image signatures).",
+      "notes": "Replaces deprecated PodSecurityPolicy. Three enforcement levels per namespace:\n\n| Level        | Summary                                                      |\n|--------------|--------------------------------------------------------------|\n| Privileged | Unrestricted - only for system namespaces                  |\n| Baseline   | Blocks known privilege escalations (hostPath, hostNetwork) |\n| Restricted | Hardened: non\u2011root, drop all capabilities, seccomp, read\u2011only root FS |\n\napiVersion: v1\nkind: Namespace\nmetadata:\n  name: app-prod\n  labels:\n    pod-security.kubernetes.io/enforce: restricted\n    pod-security.kubernetes.io/audit: restricted\n    pod-security.kubernetes.io/warn: restricted\n\nInterview tip: Enforce restricted for all application namespaces. Use baseline with warn mode during migration of legacy workloads. For true defence\u2011in\u2011depth, complement PSA with admission policies (Kyverno/Gatekeeper) that go beyond what PSA can enforce (e.g., requiring specific labels, denying latest tag, checking image signatures).",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Replaces deprecated PodSecurityPolicy.",
+      "expanded": false
+    },
+    {
+      "id": "n1f29667490d70b0",
+      "title": "L2 \u2014 Advanced Admission Control & Policy as Code",
+      "markdown": "Admission controllers inspect and potentially mutate/reject API requests **before** they are persisted into etcd. Use them to enforce custom guardrails.\n\n*Where do they sit in the technical workflow? Right after API authentication and authorization - see the **Admission Controllers** box in the end\u2011to\u2011end map.*",
+      "notes": "Admission controllers inspect and potentially mutate/reject API requests before they are persisted into etcd. Use them to enforce custom guardrails.\n\nWhere do they sit in the technical workflow? Right after API authentication and authorization - see the Admission Controllers box in the end\u2011to\u2011end map.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n1c97b3a97e80512",
+          "title": "Kyverno \u2014 Example: Deny latest tag and require resource limits",
+          "markdown": "```yaml\napiVersion: kyverno.io/v1\nkind: ClusterPolicy\nmetadata:\n  name: require-images-not-latest\nspec:\n  validationFailureAction: enforce\n  rules:\n```",
+          "notes": "apiVersion: kyverno.io/v1\nkind: ClusterPolicy\nmetadata:\n  name: require-images-not-latest\nspec:\n  validationFailureAction: enforce\n  rules:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n7097d4eb30520db",
+              "title": "name: check-image-tag",
+              "markdown": "- name: check-image-tag",
+              "notes": "name: check-image-tag",
+              "blurb": "name: check-image-tag",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n18c9501db5e3419",
+              "title": "image: \"!*:latest\"",
+              "markdown": "- image: \"!*:latest\"",
+              "notes": "image: \"!*:latest\"",
+              "blurb": "",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8491fc7d05fe7d9",
+              "title": "name: check-resources",
+              "markdown": "- name: check-resources",
+              "notes": "name: check-resources",
+              "blurb": "name: check-resources",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "apiVersion: kyverno.io/v1 kind: ClusterPolicy metadata: name:...",
+          "expanded": false
+        },
+        {
+          "id": "n1c899f653c0d5fc",
+          "title": "OPA Gatekeeper (Rego) \u2014 Require images from a trusted registry",
+          "markdown": "```rego\npackage k8strustedregistry\n\nviolation[{\"msg\": msg}] {\n  container := input.review.object.spec.containers[_]\n  not startswith(container.image, \"my-registry.example.com/\")\n  msg := sprintf(\"image %v is not from trusted registry\", [container.image])\n}\n```",
+          "notes": "package k8strustedregistry\n\nviolation[{\"msg\": msg}] {\n  container := input.review.object.spec.containers[]\n  not startswith(container.image, \"my-registry.example.com/\")\n  msg := sprintf(\"image %v is not from trusted registry\", [container.image])\n}",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "package k8strustedregistry violation[{\"msg\": msg}] { container :=...",
+          "expanded": false
+        },
+        {
+          "id": "n39c9a813fa87f3b",
+          "title": "Mutating Webhooks \u2014 Automatic sidecar injection or default security contexts",
+          "markdown": "You can use a mutating admission webhook to:",
+          "notes": "You can use a mutating admission webhook to:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nb61a258e2225aa6",
+              "title": "Inject an Istio sidecar proxy",
+              "markdown": "- Inject an Istio sidecar proxy",
+              "notes": "Inject an Istio sidecar proxy",
+              "blurb": "Inject an Istio sidecar proxy",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n7c1b8e32e900539",
+              "title": "Add vault agent containers for secret injection",
+              "markdown": "- Add vault agent containers for secret injection",
+              "notes": "Add vault agent containers for secret injection",
+              "blurb": "Add vault agent containers for secret injection",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nae83ed0df80dab4",
+              "title": "Automatically set runAsNonRoot: true if not specified",
+              "markdown": "- Automatically set runAsNonRoot: true if not specified",
+              "notes": "Automatically set runAsNonRoot: true if not specified",
+              "blurb": "Automatically set runAsNonRoot: true if not specified",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "You can use a mutating admission webhook to:",
+          "expanded": false
+        },
+        {
+          "id": "nf339ca4fd4ed3e8",
+          "title": "Image signature verification",
+          "markdown": "Both Kyverno and Gatekeeper can verify image signatures (e.g., Cosign) at admission time. Example Kyverno policy:\n\n```yaml\napiVersion: kyverno.io/v1\nkind: ClusterPolicy\nmetadata:\n  name: verify-image-signature\nspec:\n  validationFailureAction: enforce\n  rules:\n    - name: check-image\n      match:\n        resources:\n          kinds: [Pod]\n      verifyImages:\n      - image: \"*\"\n        key: |-\n          -----BEGIN PUBLIC KEY-----\n          ...\n          -----END PUBLIC KEY-----\n```",
+          "notes": "Both Kyverno and Gatekeeper can verify image signatures (e.g., Cosign) at admission time. Example Kyverno policy:\n\napiVersion: kyverno.io/v1\nkind: ClusterPolicy\nmetadata:\n  name: verify-image-signature\nspec:\n  validationFailureAction: enforce\n  rules:\n- name: check-image\n      match:\n        resources:\n          kinds: [Pod]\n      verifyImages:\n- image: \"\"\n        key: |-\n          -----BEGIN PUBLIC KEY-----\n          ...\n          -----END PUBLIC KEY-----",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Both Kyverno and Gatekeeper can verify image signatures (e.g., Cosign) at...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Admission controllers inspect and potentially mutate/reject API requests...",
+      "expanded": true
+    },
+    {
+      "id": "ndf2b2d118e82f01",
+      "title": "L2 \u2014 Image Security & Software Supply Chain",
+      "markdown": "**Before** a pod runs, you must ensure the container image itself is trustworthy.\n\n*In the end\u2011to\u2011end workflow, this starts in the **CI/CD Pipeline** (image build & scan) and continues through the **Image Registry** and **Admission Controllers**.*",
+      "notes": "Before a pod runs, you must ensure the container image itself is trustworthy.\n\nIn the end\u2011to\u2011end workflow, this starts in the CI/CD Pipeline (image build & scan) and continues through the Image Registry and Admission Controllers.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n61b8d7dffe22eeb",
+          "title": "Build\u2011time scanning",
+          "markdown": "Scan for CVEs with Trivy, Clair, or Snyk in the CI pipeline.",
+          "notes": "Scan for CVEs with Trivy, Clair, or Snyk in the CI pipeline.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n56fe98ce2da45cb",
+              "title": "Scan for CVEs with Trivy, Clair, or Snyk in the CI pipeline.",
+              "markdown": "- Scan for CVEs with Trivy, Clair, or Snyk in the CI pipeline.",
+              "notes": "Scan for CVEs with Trivy, Clair, or Snyk in the CI pipeline.",
+              "blurb": "Scan for CVEs with Trivy, Clair, or Snyk in the CI pipeline.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n1c42ef4c1fadd1f",
+              "title": "Break the build on critical/high vulnerabilities (set a severity threshold).",
+              "markdown": "- Break the build on critical/high vulnerabilities (set a severity threshold).",
+              "notes": "Break the build on critical/high vulnerabilities (set a severity threshold).",
+              "blurb": "Break the build on critical/high vulnerabilities (set a severity threshold).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n53386013564421f",
+              "title": "Generate a Software Bill of Materials (SBOM) for each image (CycloneDX, SPDX).",
+              "markdown": "- Generate a Software Bill of Materials (SBOM) for each image (CycloneDX, SPDX).",
+              "notes": "Generate a Software Bill of Materials (SBOM) for each image (CycloneDX, SPDX).",
+              "blurb": "Generate a Software Bill of Materials (SBOM) for each image (CycloneDX, SPDX).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Scan for CVEs with Trivy, Clair, or Snyk in the CI pipeline.",
+          "expanded": false
+        },
+        {
+          "id": "n601c886745ed63e",
+          "title": "Minimal base images",
+          "markdown": "- Use **distroless**, **scratch**, or **Alpine** images.\n- Remove shells, package managers, and unnecessary tools to reduce attack surface.",
+          "notes": "- Use distroless, scratch, or Alpine images.\n- Remove shells, package managers, and unnecessary tools to reduce attack surface.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Use distroless, scratch, or Alpine images.",
+          "expanded": false
+        },
+        {
+          "id": "n8550e8292b5ef75",
+          "title": "Cryptographic signing",
+          "markdown": "Sign every image using Cosign (Sigstore).",
+          "notes": "Sign every image using Cosign (Sigstore).",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n384092ad540d2d1",
+              "title": "Sign every image using Cosign (Sigstore).",
+              "markdown": "- Sign every image using Cosign (Sigstore).",
+              "notes": "Sign every image using Cosign (Sigstore).",
+              "blurb": "Sign every image using Cosign (Sigstore).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n79c79e2bf847c5c",
+              "title": "Store signing keys in a KMS or use keyless signing with OIDC.",
+              "markdown": "- Store signing keys in a KMS or use keyless signing with OIDC.",
+              "notes": "Store signing keys in a KMS or use keyless signing with OIDC.",
+              "blurb": "Store signing keys in a KMS or use keyless signing with OIDC.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n30aeaf770e63706",
+              "title": "Verify signatures in the admission controller before the image runs.",
+              "markdown": "- Verify signatures in the admission controller before the image runs.",
+              "notes": "Verify signatures in the admission controller before the image runs.",
+              "blurb": "Verify signatures in the admission controller before the image runs.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Sign every image using Cosign (Sigstore).",
+          "expanded": false
+        },
+        {
+          "id": "n6b6bb3982924b9f",
+          "title": "Immutable image tags",
+          "markdown": "- Never use `:latest` in production.\n- Use digest references (`image@sha256:...`) for guaranteed immutability.",
+          "notes": "- Never use :latest in production.\n- Use digest references (image@sha256:...) for guaranteed immutability.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Never use :latest in production.",
+          "expanded": false
+        },
+        {
+          "id": "n9ce111ae309cf59",
+          "title": "Private registry",
+          "markdown": "Store images in a private registry (Harbor, ECR, ACR, GCR).",
+          "notes": "Store images in a private registry (Harbor, ECR, ACR, GCR).",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n72fa4e53da089d1",
+              "title": "Store images in a private registry (Harbor, ECR, ACR, GCR).",
+              "markdown": "- Store images in a private registry (Harbor, ECR, ACR, GCR).",
+              "notes": "Store images in a private registry (Harbor, ECR, ACR, GCR).",
+              "blurb": "Store images in a private registry (Harbor, ECR, ACR, GCR).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nbb2a7f0b891de6d",
+              "title": "Use imagePullSecrets scoped to specific namespaces.",
+              "markdown": "- Use imagePullSecrets scoped to specific namespaces.",
+              "notes": "Use imagePullSecrets scoped to specific namespaces.",
+              "blurb": "Use imagePullSecrets scoped to specific namespaces.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n2e219ef01772267",
+              "title": "Enable registry\u2011native vulnerability scanning as an extra layer.",
+              "markdown": "- Enable registry\u2011native vulnerability scanning as an extra layer.",
+              "notes": "Enable registry\u2011native vulnerability scanning as an extra layer.",
+              "blurb": "Enable registry\u2011native vulnerability scanning as an extra layer.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Store images in a private registry (Harbor, ECR, ACR, GCR).",
+          "expanded": false
+        },
+        {
+          "id": "n1b585777f3d460d",
+          "title": "Admission policies",
+          "markdown": "Reject images from untrusted registries.",
+          "notes": "Reject images from untrusted registries.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n58cb4f3f7ba90c1",
+              "title": "Reject images from untrusted registries.",
+              "markdown": "- Reject images from untrusted registries.",
+              "notes": "Reject images from untrusted registries.",
+              "blurb": "Reject images from untrusted registries.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na4f05fdece39c82",
+              "title": "Reject images with no digest or with mutable tags.",
+              "markdown": "- Reject images with no digest or with mutable tags.",
+              "notes": "Reject images with no digest or with mutable tags.",
+              "blurb": "Reject images with no digest or with mutable tags.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nbdd91827824ced0",
+              "title": "Reject images whose vulnerability scan results exceed the allowed threshold (via scanner",
+              "markdown": "- Reject images whose vulnerability scan results exceed the allowed threshold (via scanner",
+              "notes": "Reject images whose vulnerability scan results exceed the allowed threshold (via scanner",
+              "blurb": "Reject images whose vulnerability scan results exceed the allowed threshold...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Reject images from untrusted registries.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Before a pod runs, you must ensure the container image itself is trustworthy.",
+      "expanded": true
+    },
+    {
+      "id": "n7bbe764fe201762",
+      "title": "L2 \u2014 Network policies, Ingress & Egress Security",
+      "markdown": "Network security must be enforced at multiple layers: intra\u2011cluster, ingress, and egress.\n\n*Refer to the **Network & Services** block in the city diagram: the Service is the internal phone directory, the Ingress is the Main Gate. In the technical workflow, these sit after the pod is running, while Network Policies restrict pod\u2011to\u2011pod and pod\u2011to\u2011external traffic at the CNI level.*",
+      "notes": "Network security must be enforced at multiple layers: intra\u2011cluster, ingress, and egress.\n\nRefer to the Network & Services block in the city diagram: the Service is the internal phone directory, the Ingress is the Main Gate. In the technical workflow, these sit after the pod is running, while Network Policies restrict pod\u2011to\u2011pod and pod\u2011to\u2011external traffic at the CNI level.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nd9b3325dddee9dc",
+          "title": "NetworkPolicy (Kubernetes native)",
+          "markdown": "- **Default deny all ingress** and **egress**, then explicitly allow what's needed.\n- Example: allow only DNS, API server, and specific services.\n\n```yaml\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: default-deny-egress\nspec:\n  podSelector: {}\n  policyTypes: [Egress]\n# Then add policies for allowed egress endpoints\n```",
+          "notes": "- Default deny all ingress and egress, then explicitly allow what's needed.\n- Example: allow only DNS, API server, and specific services.\n\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: default-deny-egress\nspec:\n  podSelector: {}\n  policyTypes: [Egress]\nThen add policies for allowed egress endpoints",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Default deny all ingress and egress, then explicitly allow what's needed.",
+          "expanded": false
+        },
+        {
+          "id": "nf022f4a7d462a0f",
+          "title": "Ingress Controller Security",
+          "markdown": "Terminate TLS at the ingress point (use cert\u2011manager to automate certificates).",
+          "notes": "Terminate TLS at the ingress point (use cert\u2011manager to automate certificates).",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nef5adb23eb9018b",
+              "title": "Terminate TLS at the ingress point (use cert\u2011manager to automate certificates).",
+              "markdown": "- Terminate TLS at the ingress point (use cert\u2011manager to automate certificates).",
+              "notes": "Terminate TLS at the ingress point (use cert\u2011manager to automate certificates).",
+              "blurb": "Terminate TLS at the ingress point (use cert\u2011manager to automate...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n497cdbffeba0568",
+              "title": "Redirect HTTP to HTTPS.",
+              "markdown": "- Redirect HTTP to HTTPS.",
+              "notes": "Redirect HTTP to HTTPS.",
+              "blurb": "Redirect HTTP to HTTPS.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n23201751ee1bcb7",
+              "title": "Configure WAF rules (e.g., ModSecurity with NGINX Ingress) or integrate a cloud WAF.",
+              "markdown": "- Configure WAF rules (e.g., ModSecurity with NGINX Ingress) or integrate a cloud WAF.",
+              "notes": "Configure WAF rules (e.g., ModSecurity with NGINX Ingress) or integrate a cloud WAF.",
+              "blurb": "Configure WAF rules (e.g., ModSecurity with NGINX Ingress) or integrate a...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf7a13929938a3a0",
+              "title": "Restrict access by IP whitelisting, OAuth2 proxy, or API keys.",
+              "markdown": "- Restrict access by IP whitelisting, OAuth2 proxy, or API keys.",
+              "notes": "Restrict access by IP whitelisting, OAuth2 proxy, or API keys.",
+              "blurb": "Restrict access by IP whitelisting, OAuth2 proxy, or API keys.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Terminate TLS at the ingress point (use cert\u2011manager to automate...",
+          "expanded": false
+        },
+        {
+          "id": "nb2670b9ba8013f6",
+          "title": "Egress Gateways",
+          "markdown": "- Control outbound traffic to external services using a dedicated egress proxy or firewall (e.g., Istio Egress Gateway, Calico egress policies).\n- **Deny all egress by default** and allow only approved endpoints (API endpoints, monitoring systems, etc.).",
+          "notes": "- Control outbound traffic to external services using a dedicated egress proxy or firewall (e.g., Istio Egress Gateway, Calico egress policies).\n- Deny all egress by default and allow only approved endpoints (API endpoints, monitoring systems, etc.).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Control outbound traffic to external services using a dedicated egress proxy...",
+          "expanded": false
+        },
+        {
+          "id": "n38aa366ac0d9dc0",
+          "title": "Service Mesh (Istio, Linkerd)",
+          "markdown": "Enforce mTLS between all service\u2011to\u2011service communication automatically.",
+          "notes": "Enforce mTLS between all service\u2011to\u2011service communication automatically.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nd675028748ccf5c",
+              "title": "Enforce mTLS between all service\u2011to\u2011service communication automatically.",
+              "markdown": "- Enforce mTLS between all service\u2011to\u2011service communication automatically.",
+              "notes": "Enforce mTLS between all service\u2011to\u2011service communication automatically.",
+              "blurb": "Enforce mTLS between all service\u2011to\u2011service communication automatically.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ncb4f921e76713e7",
+              "title": "Implement fine\u2011grained L7 authorization policies (e.g., allow GET but not POST).",
+              "markdown": "- Implement fine\u2011grained L7 authorization policies (e.g., allow GET but not POST).",
+              "notes": "Implement fine\u2011grained L7 authorization policies (e.g., allow GET but not POST).",
+              "blurb": "Implement fine\u2011grained L7 authorization policies (e.g., allow GET but not...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n19d00e4e3e7e6d6",
+              "title": "Enable observability and tracing with sidecars.",
+              "markdown": "- Enable observability and tracing with sidecars.",
+              "notes": "Enable observability and tracing with sidecars.",
+              "blurb": "Enable observability and tracing with sidecars.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Enforce mTLS between all service\u2011to\u2011service communication automatically.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Network security must be enforced at multiple layers: intra\u2011cluster,...",
+      "expanded": false
+    },
+    {
+      "id": "n1aea94ff03104d7",
+      "title": "L2 \u2014 RBAC, Service Accounts & Identity Federation",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nc74754af184bdc2",
+          "title": "Least privilege RBAC",
+          "markdown": "Use Roles (namespaced) and ClusterRoles sparingly.",
+          "notes": "Use Roles (namespaced) and ClusterRoles sparingly.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "na5a01ce772ff7f5",
+              "title": "Use Roles (namespaced) and ClusterRoles sparingly.",
+              "markdown": "- Use Roles (namespaced) and ClusterRoles sparingly.",
+              "notes": "Use Roles (namespaced) and ClusterRoles sparingly.",
+              "blurb": "Use Roles (namespaced) and ClusterRoles sparingly.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n23b09c20c657a05",
+              "title": "Never use cluster-admin for application workloads.",
+              "markdown": "- Never use cluster-admin for application workloads.",
+              "notes": "Never use cluster-admin for application workloads.",
+              "blurb": "Never use cluster-admin for application workloads.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb039d7c2f77ee5b",
+              "title": "Implement break\u2011glass procedures with audit logging for emergency access.",
+              "markdown": "- Implement break\u2011glass procedures with audit logging for emergency access.",
+              "notes": "Implement break\u2011glass procedures with audit logging for emergency access.",
+              "blurb": "Implement break\u2011glass procedures with audit logging for emergency access.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Use Roles (namespaced) and ClusterRoles sparingly.",
+          "expanded": false
+        },
+        {
+          "id": "n8c274c82754b1c0",
+          "title": "Service account token hardening",
+          "markdown": "Disable auto\u2011mount of service account tokens unless the pod explicitly needs API access: automountServiceAccountToken: false - Use bound service account tokens (TokenRequest API) that are time\u2011limited and...",
+          "notes": "Disable auto\u2011mount of service account tokens unless the pod explicitly needs API access: automountServiceAccountToken: false - Use bound service account tokens (TokenRequest API) that are time\u2011limited and...",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n946288f06466db1",
+              "title": "Disable auto\u2011mount of service account tokens unless the pod explicitly needs API access",
+              "markdown": "- Disable auto\u2011mount of service account tokens unless the pod explicitly needs API access",
+              "notes": "Disable auto\u2011mount of service account tokens unless the pod explicitly needs API access",
+              "blurb": "Disable auto\u2011mount of service account tokens unless the pod explicitly needs...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9e6be5ee07b0530",
+              "title": "Use bound service account tokens (TokenRequest API) that are time\u2011limited and audience\u2011s",
+              "markdown": "- Use bound service account tokens (TokenRequest API) that are time\u2011limited and audience\u2011s",
+              "notes": "Use bound service account tokens (TokenRequest API) that are time\u2011limited and audience\u2011s",
+              "blurb": "Use bound service account tokens (TokenRequest API) that are time\u2011limited...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n182fb6e813ed6f8",
+              "title": "Employ projected volumes to combine multiple token sources with a single file.",
+              "markdown": "- Employ projected volumes to combine multiple token sources with a single file.",
+              "notes": "Employ projected volumes to combine multiple token sources with a single file.",
+              "blurb": "Employ projected volumes to combine multiple token sources with a single file.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Disable auto\u2011mount of service account tokens unless the pod explicitly needs...",
+          "expanded": false
+        },
+        {
+          "id": "nc8ea1969005ad39",
+          "title": "Enterprise identity integration",
+          "markdown": "Integrate OIDC (Okta, Azure AD, Keycloak) for user authentication to the API server.",
+          "notes": "Integrate OIDC (Okta, Azure AD, Keycloak) for user authentication to the API server.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nec0562672ac0c89",
+              "title": "Integrate OIDC (Okta, Azure AD, Keycloak) for user authentication to the API server.",
+              "markdown": "- Integrate OIDC (Okta, Azure AD, Keycloak) for user authentication to the API server.",
+              "notes": "Integrate OIDC (Okta, Azure AD, Keycloak) for user authentication to the API server.",
+              "blurb": "Integrate OIDC (Okta, Azure AD, Keycloak) for user authentication to the API...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n1cae6fcc6f371d6",
+              "title": "Use IRSA (AWS) or Workload Identity (GCP/Azure) to give pods a cloud IAM role without st",
+              "markdown": "- Use IRSA (AWS) or Workload Identity (GCP/Azure) to give pods a cloud IAM role without st",
+              "notes": "Use IRSA (AWS) or Workload Identity (GCP/Azure) to give pods a cloud IAM role without st",
+              "blurb": "Use IRSA (AWS) or Workload Identity (GCP/Azure) to give pods a cloud IAM...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3c53182130cdeae",
+              "title": "This eliminates the need to store cloud keys in Kubernetes Secrets.",
+              "markdown": "- This eliminates the need to store cloud keys in Kubernetes Secrets.",
+              "notes": "This eliminates the need to store cloud keys in Kubernetes Secrets.",
+              "blurb": "This eliminates the need to store cloud keys in Kubernetes Secrets.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Integrate OIDC (Okta, Azure AD, Keycloak) for user authentication to the API...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Least privilege RBAC",
+      "expanded": false
+    },
+    {
+      "id": "nfc514dcc120ebc2",
+      "title": "L2 \u2014 Secrets Management & etcd",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n626fb594c5aa8ef",
+          "title": "Encryption at rest",
+          "markdown": "- Configure `EncryptionConfiguration` to encrypt secrets in etcd using a KMS plugin (AWS KMS, Azure Key Vault, HashiCorp Vault).\n- Without this, secrets are stored as base64 (not encrypted) and can be read by anyone with etcd access.",
+          "notes": "- Configure EncryptionConfiguration to encrypt secrets in etcd using a KMS plugin (AWS KMS, Azure Key Vault, HashiCorp Vault).\n- Without this, secrets are stored as base64 (not encrypted) and can be read by anyone with etcd access.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Configure EncryptionConfiguration to encrypt secrets in etcd using a KMS...",
+          "expanded": false
+        },
+        {
+          "id": "n6e7331b3e15a9f0",
+          "title": "External secrets",
+          "markdown": "Never store secret YAML in Git.",
+          "notes": "Never store secret YAML in Git.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n07eea14513bc28d",
+              "title": "Never store secret YAML in Git.",
+              "markdown": "- Never store secret YAML in Git.",
+              "notes": "Never store secret YAML in Git.",
+              "blurb": "Never store secret YAML in Git.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5ee136d61e519dc",
+              "title": "Use External Secrets Operator or Sealed Secrets to sync secrets from a central vault int",
+              "markdown": "- Use External Secrets Operator or Sealed Secrets to sync secrets from a central vault int",
+              "notes": "Use External Secrets Operator or Sealed Secrets to sync secrets from a central vault int",
+              "blurb": "Use External Secrets Operator or Sealed Secrets to sync secrets from a...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc24fc094c2b1f74",
+              "title": "Alternatively, mount secrets directly into pods via CSI drivers (e.g., Vault CSI provide",
+              "markdown": "- Alternatively, mount secrets directly into pods via CSI drivers (e.g., Vault CSI provide",
+              "notes": "Alternatively, mount secrets directly into pods via CSI drivers (e.g., Vault CSI provide",
+              "blurb": "Alternatively, mount secrets directly into pods via CSI drivers (e.g., Vault...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Never store secret YAML in Git.",
+          "expanded": false
+        },
+        {
+          "id": "n1f0c385ac3edb01",
+          "title": "etcd hardening",
+          "markdown": "Restrict etcd network access (dedicated network, firewall rules).",
+          "notes": "Restrict etcd network access (dedicated network, firewall rules).",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nab1e700bf7decf3",
+              "title": "Restrict etcd network access (dedicated network, firewall rules).",
+              "markdown": "- Restrict etcd network access (dedicated network, firewall rules).",
+              "notes": "Restrict etcd network access (dedicated network, firewall rules).",
+              "blurb": "Restrict etcd network access (dedicated network, firewall rules).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6aa52b42a0eae35",
+              "title": "Use mTLS for all communication with etcd.",
+              "markdown": "- Use mTLS for all communication with etcd.",
+              "notes": "Use mTLS for all communication with etcd.",
+              "blurb": "Use mTLS for all communication with etcd.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ne4aa7c0f81bf869",
+              "title": "Perform regular encrypted backups.",
+              "markdown": "- Perform regular encrypted backups.",
+              "notes": "Perform regular encrypted backups.",
+              "blurb": "Perform regular encrypted backups.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf73bc76a099dec2",
+              "title": "Enable audit logging on the API server to track who accesses secrets.",
+              "markdown": "- Enable audit logging on the API server to track who accesses secrets.",
+              "notes": "Enable audit logging on the API server to track who accesses secrets.",
+              "blurb": "Enable audit logging on the API server to track who accesses secrets.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Restrict etcd network access (dedicated network, firewall rules).",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Encryption at rest",
+      "expanded": false
+    },
+    {
+      "id": "n9c8f99cd44ab008",
+      "title": "L2 \u2014 Node & kubelet Hardening",
+      "markdown": "- **Disable anonymous auth** on kubelet (`--anonymous-auth=false`).\n- Disable the read\u2011only port (`--read-only-port=0`).\n- Enable the **NodeRestriction** admission plugin to limit kubelet's ability to modify its own node object.\n- Use a **minimal OS** (Bottlerocket, COS, Flatcar) with automated patching.\n- Apply **CIS Kubernetes Benchmark** settings using `kube-bench`.",
+      "notes": "- Disable anonymous auth on kubelet (--anonymous-auth=false).\n- Disable the read\u2011only port (--read-only-port=0).\n- Enable the NodeRestriction admission plugin to limit kubelet's ability to modify its own node object.\n- Use a minimal OS (Bottlerocket, COS, Flatcar) with automated patching.\n- Apply CIS Kubernetes Benchmark settings using kube-bench.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nddf66987ac6b4b5",
+          "title": "Runtime detection on the node",
+          "markdown": "Deploy Falco (eBPF\u2011based) to detect: - Unexpected shells in containers - Privilege escalation attempts - Unauthorized file access - Outbound connections to suspicious IPs - Forward Falco alerts to SIEM or notification...",
+          "notes": "Deploy Falco (eBPF\u2011based) to detect: - Unexpected shells in containers - Privilege escalation attempts - Unauthorized file access - Outbound connections to suspicious IPs - Forward Falco alerts to SIEM or notification...",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nb06a642ee5569d3",
+              "title": "Deploy Falco (eBPF\u2011based) to detect",
+              "markdown": "- Deploy Falco (eBPF\u2011based) to detect",
+              "notes": "Deploy Falco (eBPF\u2011based) to detect",
+              "blurb": "Deploy Falco (eBPF\u2011based) to detect",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd03a73e18760021",
+              "title": "Unexpected shells in containers",
+              "markdown": "- Unexpected shells in containers",
+              "notes": "Unexpected shells in containers",
+              "blurb": "Unexpected shells in containers",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n06e124d4abfb004",
+              "title": "Privilege escalation attempts",
+              "markdown": "- Privilege escalation attempts",
+              "notes": "Privilege escalation attempts",
+              "blurb": "Privilege escalation attempts",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nde689955db3e77c",
+              "title": "Unauthorized file access",
+              "markdown": "- Unauthorized file access",
+              "notes": "Unauthorized file access",
+              "blurb": "Unauthorized file access",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na9803285d177237",
+              "title": "Outbound connections to suspicious IPs",
+              "markdown": "- Outbound connections to suspicious IPs",
+              "notes": "Outbound connections to suspicious IPs",
+              "blurb": "Outbound connections to suspicious IPs",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf432a75070654dc",
+              "title": "Forward Falco alerts to SIEM or notification channels.",
+              "markdown": "- Forward Falco alerts to SIEM or notification channels.",
+              "notes": "Forward Falco alerts to SIEM or notification channels.",
+              "blurb": "Forward Falco alerts to SIEM or notification channels.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Deploy Falco (eBPF\u2011based) to detect: - Unexpected shells in containers -...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Disable anonymous auth on kubelet (--anonymous-auth=false).",
+      "expanded": false
+    },
+    {
+      "id": "n6d7b386ea7305fd",
+      "title": "L2 \u2014 Multi\u2011tenant Isolation",
+      "markdown": "Namespace\u2011per\u2011tenant is the minimal baseline.",
+      "notes": "Namespace\u2011per\u2011tenant is the minimal baseline.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n2235d3be75ef84e",
+          "title": "Namespace\u2011per\u2011tenant is the minimal baseline.",
+          "markdown": "- Namespace\u2011per\u2011tenant is the minimal baseline.",
+          "notes": "Namespace\u2011per\u2011tenant is the minimal baseline.",
+          "blurb": "Namespace\u2011per\u2011tenant is the minimal baseline.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nb31c5d0286bff53",
+          "title": "Use virtual clusters (vCluster) for stronger isolation (separate control plane per tenan",
+          "markdown": "- Use virtual clusters (vCluster) for stronger isolation (separate control plane per tenan",
+          "notes": "Use virtual clusters (vCluster) for stronger isolation (separate control plane per tenan",
+          "blurb": "Use virtual clusters (vCluster) for stronger isolation (separate control...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n5f70490d983a1be",
+          "title": "Apply ResourceQuotas and LimitRanges to prevent noisy neighbours.",
+          "markdown": "- Apply ResourceQuotas and LimitRanges to prevent noisy neighbours.",
+          "notes": "Apply ResourceQuotas and LimitRanges to prevent noisy neighbours.",
+          "blurb": "Apply ResourceQuotas and LimitRanges to prevent noisy neighbours.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ne1bc096856d227e",
+          "title": "Enforce NetworkPolicy per tenant namespace to isolate tenant workloads from each other.",
+          "markdown": "- Enforce NetworkPolicy per tenant namespace to isolate tenant workloads from each other.",
+          "notes": "Enforce NetworkPolicy per tenant namespace to isolate tenant workloads from each other.",
+          "blurb": "Enforce NetworkPolicy per tenant namespace to isolate tenant workloads from...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n8f7a6891727d6f0",
+          "title": "Use Cilium with L7 policies if fine\u2011grained API\u2011level isolation is needed.",
+          "markdown": "- Use Cilium with L7 policies if fine\u2011grained API\u2011level isolation is needed.",
+          "notes": "Use Cilium with L7 policies if fine\u2011grained API\u2011level isolation is needed.",
+          "blurb": "Use Cilium with L7 policies if fine\u2011grained API\u2011level isolation is needed.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n7cd1057e025bafc",
+          "title": "Consider node pools or taint/tolerations to physically separate sensitive tenants.",
+          "markdown": "- Consider node pools or taint/tolerations to physically separate sensitive tenants.",
+          "notes": "Consider node pools or taint/tolerations to physically separate sensitive tenants.",
+          "blurb": "Consider node pools or taint/tolerations to physically separate sensitive...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Namespace\u2011per\u2011tenant is the minimal baseline.",
+      "expanded": false
+    },
+    {
+      "id": "n9672466975e3e3b",
+      "title": "L3 \u2014 Runtime Security & Continuous Monitoring",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n13f33c52162992b",
+          "title": "Continuous vulnerability scanning",
+          "markdown": "- Tools like **Trivy Operator** or **Aqua** continuously scan running images for newly disclosed CVEs.\n- Trigger automated remediation (rolling restart or GitOps\u2011based update) when new critical CVEs appear.",
+          "notes": "- Tools like Trivy Operator or Aqua continuously scan running images for newly disclosed CVEs.\n- Trigger automated remediation (rolling restart or GitOps\u2011based update) when new critical CVEs appear.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Tools like Trivy Operator or Aqua continuously scan running images for newly...",
+          "expanded": false
+        },
+        {
+          "id": "n6d783ac474acec6",
+          "title": "Log anomaly detection",
+          "markdown": "Aggregate all cluster logs (control plane, kubelet, application) with EFK or Loki.",
+          "notes": "Aggregate all cluster logs (control plane, kubelet, application) with EFK or Loki.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n730a1d134502e5e",
+              "title": "Aggregate all cluster logs (control plane, kubelet, application) with EFK or Loki.",
+              "markdown": "- Aggregate all cluster logs (control plane, kubelet, application) with EFK or Loki.",
+              "notes": "Aggregate all cluster logs (control plane, kubelet, application) with EFK or Loki.",
+              "blurb": "Aggregate all cluster logs (control plane, kubelet, application) with EFK or...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n71c9743497ff733",
+              "title": "Create alerts for security events",
+              "markdown": "- Create alerts for security events",
+              "notes": "Create alerts for security events",
+              "blurb": "Create alerts for security events",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0f335185214aeab",
+              "title": "RBAC violations",
+              "markdown": "- RBAC violations",
+              "notes": "RBAC violations",
+              "blurb": "",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb395f2006b30a5d",
+              "title": "Secrets access",
+              "markdown": "- Secrets access",
+              "notes": "Secrets access",
+              "blurb": "",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nfcd88995cc2bd14",
+              "title": "exec into containers",
+              "markdown": "- exec into containers",
+              "notes": "exec into containers",
+              "blurb": "exec into containers",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n2f478a205d18295",
+              "title": "Pods running as root (if slipped past admission)",
+              "markdown": "- Pods running as root (if slipped past admission)",
+              "notes": "Pods running as root (if slipped past admission)",
+              "blurb": "Pods running as root (if slipped past admission)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n2eda4a438af0846",
+              "title": "Integrate with SIEM (Splunk, ELK, etc.).",
+              "markdown": "- Integrate with SIEM (Splunk, ELK, etc.).",
+              "notes": "Integrate with SIEM (Splunk, ELK, etc.).",
+              "blurb": "Integrate with SIEM (Splunk, ELK, etc.).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Aggregate all cluster logs (control plane, kubelet, application) with EFK or...",
+          "expanded": false
+        },
+        {
+          "id": "n46805a66e45c41f",
+          "title": "Monitoring & metrics",
+          "markdown": "Use Prometheus / Grafana to monitor: - Pod restarts - Error rates (5xx) - Unusual network traffic spikes - Set alerts on deviations from baselines (e.g., an application pod suddenly making outbound SSH connections).",
+          "notes": "Use Prometheus / Grafana to monitor: - Pod restarts - Error rates (5xx) - Unusual network traffic spikes - Set alerts on deviations from baselines (e.g., an application pod suddenly making outbound SSH connections).",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n73d60f0383276f8",
+              "title": "Use Prometheus / Grafana to monitor",
+              "markdown": "- Use Prometheus / Grafana to monitor",
+              "notes": "Use Prometheus / Grafana to monitor",
+              "blurb": "Use Prometheus / Grafana to monitor",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n77d8646825e4d71",
+              "title": "Pod restarts",
+              "markdown": "- Pod restarts",
+              "notes": "Pod restarts",
+              "blurb": "",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "naea294ca9294c28",
+              "title": "Error rates (5xx)",
+              "markdown": "- Error rates (5xx)",
+              "notes": "Error rates (5xx)",
+              "blurb": "",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n13c2bf6610a85aa",
+              "title": "Unusual network traffic spikes",
+              "markdown": "- Unusual network traffic spikes",
+              "notes": "Unusual network traffic spikes",
+              "blurb": "Unusual network traffic spikes",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n7d431a397a975a3",
+              "title": "Set alerts on deviations from baselines (e.g., an application pod suddenly making outbou",
+              "markdown": "- Set alerts on deviations from baselines (e.g., an application pod suddenly making outbou",
+              "notes": "Set alerts on deviations from baselines (e.g., an application pod suddenly making outbou",
+              "blurb": "Set alerts on deviations from baselines (e.g., an application pod suddenly...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Use Prometheus / Grafana to monitor: - Pod restarts - Error rates (5xx) -...",
+          "expanded": false
+        },
+        {
+          "id": "n325db9a306ee0cd",
+          "title": "Automated rollback",
+          "markdown": "- In a GitOps workflow (Flux, ArgoCD), if a deployment violates a policy or health check after rollout, the GitOps operator can **auto\u2011rollback** to the previous revision.\n\n*All of this corresponds to the **Runtime Security & Monitoring** layer in the end\u2011to\u2011end security box - the final safety net.*",
+          "notes": "- In a GitOps workflow (Flux, ArgoCD), if a deployment violates a policy or health check after rollout, the GitOps operator can auto\u2011rollback to the previous revision.\n\nAll of this corresponds to the Runtime Security & Monitoring layer in the end\u2011to\u2011end security box - the final safety net.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "In a GitOps workflow (Flux, ArgoCD), if a deployment violates a policy or...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Continuous vulnerability scanning",
+      "expanded": false
+    },
+    {
+      "id": "n44abce7aebd5b30",
+      "title": "L3 \u2014 CI/CD & Supply Chain Security (Shift\u2011Left)",
+      "markdown": "- **Scan manifests** in the CI pipeline using **Kubescape**, **Polaris**, or **Datree** to catch misconfigurations before they are applied.\n- **Run admission policy dry\u2011runs** (Kyverno CLI, `kubectl --dry-run=server`) against all manifests.\n- **Enforce Git branch protection**, code review, and signed commits.\n- **Use OCI\u2011compliant registries** and **attestation** (SLSA provenance) to verify build integrity.\n- Integrate **SBOM collection** into the build and store it for vulnerability tracking.",
+      "notes": "- Scan manifests in the CI pipeline using Kubescape, Polaris, or Datree to catch misconfigurations before they are applied.\n- Run admission policy dry\u2011runs (Kyverno CLI, kubectl --dry-run=server) against all manifests.\n- Enforce Git branch protection, code review, and signed commits.\n- Use OCI\u2011compliant registries and attestation (SLSA provenance) to verify build integrity.\n- Integrate SBOM collection into the build and store it for vulnerability tracking.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "ncdbc0a5cc8192c9",
+          "title": "Example CI step (GitHub Actions)",
+          "markdown": "```yaml\n- name: Scan Kubernetes manifests\n  run: |\n    kube-score score deployment.yaml\n    kyverno apply --policy-report policies/\n```",
+          "notes": "- name: Scan Kubernetes manifests\n  run: |\n    kube-score score deployment.yaml\n    kyverno apply --policy-report policies/",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "name: Scan Kubernetes manifests run: | kube-score score deployment.yaml...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Scan manifests in the CI pipeline using Kubescape, Polaris, or Datree to...",
+      "expanded": false
+    },
+    {
+      "id": "n702be7f2250ab59",
+      "title": "L3 \u2014 Verification & Compliance",
+      "markdown": "kube\u2011bench: Checks against CIS Kubernetes Benchmark.",
+      "notes": "kube\u2011bench: Checks against CIS Kubernetes Benchmark.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "na84587758f3a8a0",
+          "title": "kube\u2011bench: Checks against CIS Kubernetes Benchmark.",
+          "markdown": "- kube\u2011bench: Checks against CIS Kubernetes Benchmark.",
+          "notes": "kube\u2011bench: Checks against CIS Kubernetes Benchmark.",
+          "blurb": "kube\u2011bench: Checks against CIS Kubernetes Benchmark.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nf1bedb8f6ecb36e",
+          "title": "kubectl auth can-i: Manually audit permissions.",
+          "markdown": "- kubectl auth can-i: Manually audit permissions.",
+          "notes": "kubectl auth can-i: Manually audit permissions.",
+          "blurb": "kubectl auth can-i: Manually audit permissions.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n4dc5cb9e83d0095",
+          "title": "Kubescape / Polaris / Datree: Automated scanning of cluster and manifests.",
+          "markdown": "- Kubescape / Polaris / Datree: Automated scanning of cluster and manifests.",
+          "notes": "Kubescape / Polaris / Datree: Automated scanning of cluster and manifests.",
+          "blurb": "Kubescape / Polaris / Datree: Automated scanning of cluster and manifests.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n1638f7388158985",
+          "title": "Falco audit: Ensure runtime rules are active.",
+          "markdown": "- Falco audit: Ensure runtime rules are active.",
+          "notes": "Falco audit: Ensure runtime rules are active.",
+          "blurb": "Falco audit: Ensure runtime rules are active.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nf6cab5ab6f42465",
+          "title": "Chaos tests: Simulate lateral movement - a pod without NetworkPolicy should not be able",
+          "markdown": "- Chaos tests: Simulate lateral movement - a pod without NetworkPolicy should not be able",
+          "notes": "Chaos tests: Simulate lateral movement - a pod without NetworkPolicy should not be able",
+          "blurb": "Chaos tests: Simulate lateral movement - a pod without NetworkPolicy should...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "na5a01e9ac00f895",
+          "title": "Penetration testing: Use kube-hunter to find internal attack vectors.",
+          "markdown": "- Penetration testing: Use kube-hunter to find internal attack vectors.",
+          "notes": "Penetration testing: Use kube-hunter to find internal attack vectors.",
+          "blurb": "Penetration testing: Use kube-hunter to find internal attack vectors.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "kube\u2011bench: Checks against CIS Kubernetes Benchmark.",
+      "expanded": false
+    },
+    {
+      "id": "n4014190f093fd93",
+      "title": "Cross\u2011links",
+      "markdown": "Container Security - Cloud Attack Paths - PKI Program Design - Secrets Management and Key Lifecycle - CI/CD Security & GitOps - Zero Trust Architecture",
+      "notes": "Container Security - Cloud Attack Paths - PKI Program Design - Secrets Management and Key Lifecycle - CI/CD Security & GitOps - Zero Trust Architecture",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nf3874dbccf91f46",
+          "title": "Container Security",
+          "markdown": "- Container Security",
+          "notes": "Container Security",
+          "blurb": "Container Security",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n4b2beeb88db20c5",
+          "title": "Cloud Attack Paths",
+          "markdown": "- Cloud Attack Paths",
+          "notes": "Cloud Attack Paths",
+          "blurb": "Cloud Attack Paths",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ncc369055da6eb2b",
+          "title": "PKI Program Design",
+          "markdown": "- PKI Program Design",
+          "notes": "PKI Program Design",
+          "blurb": "PKI Program Design",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "na1fd8c3cd7cc25e",
+          "title": "Secrets Management and Key Lifecycle",
+          "markdown": "- Secrets Management and Key Lifecycle",
+          "notes": "Secrets Management and Key Lifecycle",
+          "blurb": "Secrets Management and Key Lifecycle",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n18a4624b10fac5b",
+          "title": "CI/CD Security & GitOps",
+          "markdown": "- CI/CD Security & GitOps",
+          "notes": "CI/CD Security & GitOps",
+          "blurb": "CI/CD Security & GitOps",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n4f1ce5710050b7f",
+          "title": "Zero Trust Architecture",
+          "markdown": "- Zero Trust Architecture",
+          "notes": "Zero Trust Architecture",
+          "blurb": "Zero Trust Architecture",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Container Security - Cloud Attack Paths - PKI Program Design - Secrets...",
+      "expanded": false
+    },
+    {
+      "id": "n09c5a69e994dd0e",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nb65cd870f7d0550",
+          "title": "Must-haves",
+          "markdown": "**PSA restricted** \u00b7 **Admission policies** \u00b7 **NetworkPolicy default-deny** \u00b7 **RBAC least privilege** \u00b7 **etcd encryption**",
+          "notes": "PSA restricted \u00b7 Admission policies \u00b7 NetworkPolicy default-deny \u00b7 RBAC least privilege \u00b7 etcd encryption",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "PSA restricted \u00b7 Admission policies \u00b7 NetworkPolicy default-deny \u00b7 RBAC...",
+          "expanded": false
+        },
+        {
+          "id": "n7619cc4a1e8ace1",
+          "title": "PSA labels",
+          "markdown": "`pod-security.kubernetes.io/enforce: restricted`",
+          "notes": "pod-security.kubernetes.io/enforce: restricted",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "pod-security.kubernetes.io/enforce: restricted",
+          "expanded": false
+        },
+        {
+          "id": "n437673769ab1dc6",
+          "title": "Policy engines",
+          "markdown": "**Kyverno** (YAML) \u00b7 **OPA Gatekeeper** (Rego)",
+          "notes": "Kyverno (YAML) \u00b7 OPA Gatekeeper (Rego)",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Kyverno (YAML) \u00b7 OPA Gatekeeper (Rego)",
+          "expanded": false
+        },
+        {
+          "id": "ne1a57a5d5e0ada3",
+          "title": "SA hardening",
+          "markdown": "`automountServiceAccountToken: false` \u00b7 bound tokens \u00b7 minimal Role",
+          "notes": "automountServiceAccountToken: false \u00b7 bound tokens \u00b7 minimal Role",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "automountServiceAccountToken: false \u00b7 bound tokens \u00b7 minimal Role",
+          "expanded": false
+        },
+        {
+          "id": "nf5d1007d9570edc",
+          "title": "Verification",
+          "markdown": "**kube-bench** \u00b7 **Kubescape** \u00b7 **Polaris** \u00b7 `kubectl auth can-i`",
+          "notes": "kube-bench \u00b7 Kubescape \u00b7 Polaris \u00b7 kubectl auth can-i",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "kube-bench \u00b7 Kubescape \u00b7 Polaris \u00b7 kubectl auth can-i",
+          "expanded": false
+        },
+        {
+          "id": "n3d8716c12d7467c",
+          "title": "Runtime",
+          "markdown": "**Falco/eBPF** - shell, unexpected egress",
+          "notes": "Falco/eBPF - shell, unexpected egress",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Falco/eBPF - shell, unexpected egress",
+          "expanded": false
+        },
+        {
+          "id": "n1d2ec8897fde5b4",
+          "title": "Cross-reads",
+          "markdown": "`Container Security` \u00b7 `Cloud Attack Paths` \u00b7 `PKI Program Design`",
+          "notes": "Container Security \u00b7 Cloud Attack Paths \u00b7 PKI Program Design",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Container Security \u00b7 Cloud Attack Paths \u00b7 PKI Program Design",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Must-haves"
+    },
+    {
+      "id": "n8b48fde269b1127",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nd2771ea40c80b11",
+          "title": "\"Kubernetes is secure by default.\"",
+          "markdown": "**Wrong.** Default allows **wide RBAC mistakes**, **no NetworkPolicy**, and **privileged pods** unless PSA/policies applied.",
+          "notes": "Wrong. Default allows wide RBAC mistakes, no NetworkPolicy, and privileged pods unless PSA/policies applied.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "n573e1b0fd82f6dc",
+          "title": "\"NetworkPolicy optional if we have a firewall.\"",
+          "markdown": "**Wrong.** **East-west** traffic inside cluster needs **CNI policy**-perimeter firewall doesn't see pod-to-pod.",
+          "notes": "Wrong. East-west traffic inside cluster needs CNI policy-perimeter firewall doesn't see pod-to-pod.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "nf3a0c8e9f86f001",
+          "title": "\"Running as root in container is fine if cluster is private.\"",
+          "markdown": "**Wrong.** **Container escape** or **supply-chain RCE** -> root on node amplifies impact.",
+          "notes": "Wrong. Container escape or supply-chain RCE -> root on node amplifies impact.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "n7035afd0fc6550b",
+          "title": "\"Service account tokens are harmless.\"",
+          "markdown": "**Wrong.** Default tokens may **call Kubernetes API**-scope RBAC and **automount: false** when unused.",
+          "notes": "Wrong. Default tokens may call Kubernetes API-scope RBAC and automount: false when unused.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "n0fd11417a87133d",
+          "title": "\"Admission controllers slow clusters too much.\"",
+          "markdown": "**Wrong.** Policy at **admit time** prevents **thousands of bad pods**-optimize hot paths, cache policies.",
+          "notes": "Wrong. Policy at admit time prevents thousands of bad pods-optimize hot paths, cache policies.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "n44ecb170a764a7e",
+          "title": "\"Container Security guide covers all K8s.\"",
+          "markdown": "**Wrong.** Container guide covers **images/runtime**; this module covers **cluster primitives** (PSA, RBAC, NetworkPolicy, etcd).",
+          "notes": "Wrong. Container guide covers images/runtime; this module covers cluster primitives (PSA, RBAC, NetworkPolicy, etcd).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \"Kubernetes is secure by default.\""
+    },
+    {
+      "id": "n761363b9cb4cf34",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nfff18e248a63d0a",
+          "title": "60-second answer",
+          "markdown": "**Q: How do you harden a Kubernetes cluster for production?**\n\n**A:** Enforce **Pod Security Admission (restricted)**, **admission policies** (Kyverno/Gatekeeper) for image tags and securityContext, **default-deny NetworkPolicies**, **least-privilege RBAC**, disable unneeded **SA token mounts**, **encrypt etcd**, run **kube-bench**, and **runtime detection** (Falco). Assume **compromised pod**-limit blast radius with network and IAM boundaries.",
+          "notes": "Q: How do you harden a Kubernetes cluster for production?\n\nA: Enforce Pod Security Admission (restricted), admission policies (Kyverno/Gatekeeper) for image tags and securityContext, default-deny NetworkPolicies, least-privilege RBAC, disable unneeded SA token mounts, encrypt etcd, run kube-bench, and runtime detection (Falco). Assume compromised pod-limit blast radius with network and IAM boundaries.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n4997d562b44a599",
+              "title": "PSA vs PSP?",
+              "markdown": "**A:** **PodSecurityPolicy** deprecated; **Pod Security Admission** uses **namespace labels** (enforce/audit/warn) with **restricted/baseline/privileged** levels.",
+              "notes": "A: PodSecurityPolicy deprecated; Pod Security Admission uses namespace labels (enforce/audit/warn) with restricted/baseline/privileged levels.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: PodSecurityPolicy deprecated; Pod Security Admission uses namespace...",
+              "expanded": false
+            },
+            {
+              "id": "n4d691e2837ee4bb",
+              "title": "OPA Gatekeeper vs Kyverno?",
+              "markdown": "**A:** **Gatekeeper** uses **Rego**; **Kyverno** uses **Kubernetes YAML** policies-both validate/mutate at admission. Pick by team skill and policy complexity.",
+              "notes": "A: Gatekeeper uses Rego; Kyverno uses Kubernetes YAML policies-both validate/mutate at admission. Pick by team skill and policy complexity.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Gatekeeper uses Rego; Kyverno uses Kubernetes YAML policies-both...",
+              "expanded": false
+            },
+            {
+              "id": "nefc399be49c9811",
+              "title": "Pod compromised\u2014what limits damage?",
+              "markdown": "**A:** **NetworkPolicy** egress deny, **non-root** + **read-only rootfs**, **minimal SA RBAC**, **no hostPath**, **metadata service** not reachable from user-controlled fetchers, **secrets** not in env (prefer CSI with rotation).",
+              "notes": "A: NetworkPolicy egress deny, non-root + read-only rootfs, minimal SA RBAC, no hostPath, metadata service not reachable from user-controlled fetchers, secrets not in env (prefer CSI with rotation).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: NetworkPolicy egress deny, non-root + read-only rootfs, minimal SA RBAC,...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Q: How do you harden a Kubernetes cluster for production?",
+          "expanded": false
+        },
+        {
+          "id": "nf87dbe38f59a103",
+          "title": "Authoritative references",
+          "markdown": "Kubernetes Pod Security Standards - CIS Kubernetes Benchmark - NSA/CISA K8s Hardening Guide",
+          "notes": "Kubernetes Pod Security Standards - CIS Kubernetes Benchmark - NSA/CISA K8s Hardening Guide",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n87bd0f0e47a2844",
+              "title": "Kubernetes Pod Security Standards",
+              "markdown": "- Kubernetes Pod Security Standards",
+              "notes": "Kubernetes Pod Security Standards",
+              "blurb": "Kubernetes Pod Security Standards",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n31b7e63cd7d9189",
+              "title": "CIS Kubernetes Benchmark",
+              "markdown": "- CIS Kubernetes Benchmark",
+              "notes": "CIS Kubernetes Benchmark",
+              "blurb": "CIS Kubernetes Benchmark",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8e5482aaae247ef",
+              "title": "NSA/CISA K8s Hardening Guide",
+              "markdown": "- NSA/CISA K8s Hardening Guide",
+              "notes": "NSA/CISA K8s Hardening Guide",
+              "blurb": "NSA/CISA K8s Hardening Guide",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Kubernetes Pod Security Standards - CIS Kubernetes Benchmark - NSA/CISA K8s...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 60-second answer"
+    }
+  ],
+  "topicId": "kubernetes-security-hardening",
+  "name": "Kubernetes Security Hardening",
+  "structure": "logic-right",
+  "blurb": "Kubernetes security hardening is a multi\u2011layer discipline that spans the..."
+}

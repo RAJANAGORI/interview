@@ -1,0 +1,448 @@
+{
+  "version": 1,
+  "count": 16,
+  "scenarios": [
+    {
+      "id": "s00531f1240c9",
+      "title": "Vulnerable Third-Party Library in Mobile App",
+      "source": "Product Security Real-World Scenarios/Product Security Real-World Scenarios - Comprehensive Guide.md",
+      "collection": "product-real-world",
+      "kind": "appsec",
+      "difficulty": "beginner",
+      "minutes": 8,
+      "relatedTopicIds": [
+        "software-supply-chain-security",
+        "third-party-integration-security"
+      ],
+      "briefMarkdown": "You're part of a team developing a mobile app that uses a third-party SDK which has just been reported to have a critical TCP buffer overflow vulnerability (CVE-2024-XXXXX).\n\n**Prompt:** What steps do you take from discovery to resolution?",
+      "tasks": [
+        "Clarify scope, assets, and constraints",
+        "Name the top risks and why they matter",
+        "Propose containment or controls in priority order",
+        "Say how you verify and who you tell"
+      ],
+      "prompts": [
+        "What do you do in the first hour?",
+        "What is out of scope or deferred, and why?",
+        "How do you prove the fix worked?"
+      ],
+      "answerMarkdown": "**1. Immediate Assessment (First Hour)**\n\n**Identify Impact:**\n- Determine which version of the SDK your app uses\n- Check if the vulnerable version is in production\n- Identify which features/functionality use the vulnerable component\n- Assess what data or processes could be compromised:\n  - User input handling?\n  - Network communication?\n  - Local storage access?\n  - Privileged operations?\n\n**Checklist:**\n```\n□ Review dependency manifest (package.json, Podfile, build.gradle)\n□ Check all app versions (dev, staging, production)\n□ Identify affected user base\n□ Review CVE details and CVSS score\n□ Check if exploit is publicly available\n```\n\n**2. Containment (First 4 Hours)**\n\n**Immediate Actions:**\n- If possible, disable or avoid code paths invoking the vulnerable component\n- If feasible, roll back to a previous safe version (if available)\n- Consider temporarily removing the SDK if it's not critical\n- Implement network-level protections (WAF rules, if applicable)\n\n**Risk Assessment:**\n- **Critical**: SDK is in production, handles sensitive data, exploit is public\n- **High**: SDK is in production, limited sensitive data exposure\n- **Medium**: SDK is in staging/dev only\n- **Low**: SDK is deprecated or unused\n\n**3. Remediation (Day 1-3)**\n\n**Update Strategy:**\n- Check if vendor has released a patched version\n- Review changelog for breaking changes\n- Test the patched version in development environment\n- If no patch available:\n  - Apply temporary workarounds (input validation, bounds checking)\n  - Consider alternative libraries\n  - Contact vendor for timeline\n\n**Implementation Steps:**\n```\n1. Update SDK to patched version in dev\n2. Run full regression test suite\n3. Perform security testing (fuzzing, static analysis)\n4. Deploy to staging for validation\n5. Monitor for issues\n6. Deploy to production with rollback plan\n```\n\n**4. Testing & Validation**\n\n**Security Testing:**\n- Fuzz testing around buffer inputs\n- Static analysis (SAST) of updated code\n- Dynamic analysis (DAST) if applicable\n- Penetration testing of affected functionality\n\n**Functional Testing:**\n- Regression testing to ensure no breaking changes\n- Integration testing with other components\n- Performance testing (buffer overflow fixes may impact performance)\n- User acceptance testing\n\n**5. Release & Monitoring**\n\n**Deployment:**\n- Push hotfix or update to app stores\n- Coordinate with app store review processes\n- Consider forced updates for critical vulnerabilities\n- Communicate with users if necessary\n\n**Monitoring:**\n- Monitor crash reports and error logs\n- Track security logs for exploitation attempts\n- Monitor app store reviews for user issues\n- Set up alerts for unusual activity\n\n**6. Lessons Learned & Prevention**\n\n**Process Improvements:**\n- Maintain Software Bill of Materials (SBOM) for all dependencies\n- Implement automated vulnerability scanning:\n  - Dependabot (GitHub)\n  - Snyk\n  - OWASP Dependency-Check\n  - WhiteSource/Mend\n- Set up alerts for new CVEs in dependencies\n- Regular dependency audits (monthly/quarterly)\n- Establish vendor communication channels\n\n**Policy Updates:**\n- Define acceptable risk levels for dependencies\n- Establish SLAs for vulnerability response\n- Create playbook for dependency vulnerabilities\n- Document decision-making process\n\n---\n\n### Key takeaways\n\n1. **Speed matters**: Critical vulnerabilities need immediate response\n2. **Know your dependencies**: Maintain accurate inventory\n3. **Automate scanning**: Don't rely on manual checks\n4. **Test thoroughly**: Security fixes can break functionality\n5. **Communicate clearly**: Keep stakeholders informed\n6. **Learn and improve**: Document lessons for future incidents\n\n---"
+    },
+    {
+      "id": "s97486c9c501d",
+      "title": "Web Application Input Validation & XSS/SQL Injection",
+      "source": "Product Security Real-World Scenarios/Product Security Real-World Scenarios - Comprehensive Guide.md",
+      "collection": "product-real-world",
+      "kind": "appsec",
+      "difficulty": "beginner",
+      "minutes": 8,
+      "relatedTopicIds": [
+        "xss",
+        "sql-injection"
+      ],
+      "briefMarkdown": "During security testing of a customer-facing web application, you discover that a search input field does not properly sanitize user input. You suspect risks of both XSS (Cross-Site Scripting) and SQL Injection.\n\n**Prompt:** Walk through how you'd confirm, safely exploit, remediate, and prevent this vulnerability.",
+      "tasks": [
+        "Clarify scope, assets, and constraints",
+        "Name the top risks and why they matter",
+        "Propose containment or controls in priority order",
+        "Say how you verify and who you tell"
+      ],
+      "prompts": [
+        "What do you do in the first hour?",
+        "What is out of scope or deferred, and why?",
+        "How do you prove the fix worked?"
+      ],
+      "answerMarkdown": "**1. Confirmation & Safe Exploitation**\n\n**Initial Testing:**\n\n**SQL Injection Testing:**\n```sql\n-- Basic test vectors\n' OR 1=1 --\n' OR '1'='1\n' UNION SELECT NULL--\n'; DROP TABLE users--\n1' AND '1'='1\n```\n\n**XSS Testing:**\n```html\n<!-- Reflected XSS -->\n<script>alert('XSS')</script>\n<img src=x onerror=alert('XSS')>\n<svg onload=alert('XSS')>\n\n<!-- Stored XSS -->\n<script>document.cookie</script>\n<iframe src=\"javascript:alert('XSS')\"></iframe>\n\n<!-- DOM-based XSS -->\n#<img src=x onerror=alert('XSS')>\n```\n\n**Tools & Methodology:**\n- **Burp Suite / OWASP ZAP**: Intercept and modify requests\n- **SQLMap**: Automated SQL injection testing\n- **Manual testing**: Understand the application flow\n- **Code review**: Examine server-side code paths\n\n**Testing Process:**\n1. Identify all input points (forms, URL parameters, headers, cookies)\n2. Test each input with various payloads\n3. Monitor server responses and error messages\n4. Check for reflected input in HTML output\n5. Review server logs for SQL errors\n6. Test in different contexts (different user roles, browsers)\n\n**2. Vulnerability Confirmation**\n\n**SQL Injection Indicators:**\n- SQL error messages in responses\n- Unexpected query results\n- Time delays in responses\n- Out-of-band data exfiltration\n- Boolean-based blind SQL injection responses\n\n**XSS Indicators:**\n- Script execution in browser\n- Reflected input in HTML without encoding\n- DOM manipulation\n- Cookie theft (in real attacks)\n\n**3. Remediation**\n\n**SQL Injection Fixes:**\n\n**Use Parameterized Queries:**\n```python\n# BAD - Vulnerable\nquery = \"SELECT * FROM users WHERE id = \" + user_id\ncursor.execute(query)\n\n# GOOD - Parameterized\nquery = \"SELECT * FROM users WHERE id = %s\"\ncursor.execute(query, (user_id,))\n```\n\n**Use ORM (Object-Relational Mapping):**\n```python\n# Using SQLAlchemy (Python)\nuser = session.query(User).filter(User.id == user_id).first()\n\n# Using Hibernate (Java)\nUser user = session.get(User.class, userId);\n```\n\n**Input Validation:**\n- Whitelist allowed characters\n- Validate data types\n- Enforce length limits\n- Reject suspicious patterns\n\n**XSS Fixes:**\n\n**Output Encoding:**\n```python\n# Python - Use framework's auto-escaping\nfrom markupsafe import escape\noutput = escape(user_input)\n\n# JavaScript - Use DOMPurify\nimport DOMPurify from 'dompurify';\nconst clean = DOMPurify.sanitize(dirty);\n```\n\n**Content Security Policy (CSP):**\n```http\nContent-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'\n```\n\n**Framework Best Practices:**\n- Use templating engines with auto-escaping (Jinja2, Handlebars, etc.)\n- Never use `innerHTML` with user input\n- Use `textContent` instead of `innerHTML`\n- Validate and sanitize on both client and server side\n\n**4. Prevention Strategy**\n\n**Secure Development Practices:**\n- Security code reviews (mandatory for security-sensitive code)\n- Secure coding guidelines and training\n- Threat modeling for new features\n- Security champions program\n\n**Automated Security Testing:**\n- **SAST (Static Application Security Testing)**:\n  - SonarQube\n  - Checkmarx\n  - Veracode\n  - Bandit (Python)\n- **DAST (Dynamic Application Security Testing)**:\n  - OWASP ZAP\n  - Burp Suite\n  - Acunetix\n- **IAST (Interactive Application Security Testing)**:\n  - Contrast Security\n  - Synopsys Seeker\n\n**CI/CD Integration:**\n```yaml\n# Example GitHub Actions workflow\n- name: SAST Scan\n  uses: github/super-linter@v4\n\n- name: Dependency Check\n  uses: dependency-check/Dependency-Check_Action@main\n\n- name: DAST Scan\n  uses: zaproxy/action-full-scan@v0.10.0\n```\n\n**5. Stakeholder Communication**\n\n**Severity Assessment:**\n- **Critical**: Publicly exploitable, sensitive data exposure, authentication bypass\n- **High**: Data exposure, privilege escalation\n- **Medium**: Limited impact, requires specific conditions\n- **Low**: Minimal impact, difficult to exploit\n\n**Communication Plan:**\n1. Document findings with proof-of-concept\n2. Assess business impact\n3. Present to product/engineering leads\n4. Agree on remediation timeline\n5. Coordinate fix deployment\n6. Verify fix effectiveness\n\n---\n\n#### Data Flow Diagram (DFD)\n\n```\n┌─────────────┐\n│   User      │\n│  Browser    │\n└──────┬──────┘\n       │ User Input (Search Query)\n       │\n       ▼\n┌─────────────────────────────────┐\n│      Web Application            │\n│  ┌──────────────────────────┐   │\n│  │  Input Validation Layer  │   │ ← Missing/Weak\n│  └──────────┬───────────────┘   │\n│             │                    │\n│  ┌──────────▼──────────────┐   │\n│  │   Application Logic      │   │\n│  └──────────┬───────────────┘   │\n│             │                    │\n│  ┌──────────▼──────────────┐   │\n│  │   Database Query         │   │ ← SQL Injection Risk\n│  └──────────┬───────────────┘   │\n│             │                    │\n│  ┌──────────▼──────────────┐   │\n│  │   Response Generation    │   │ ← XSS Risk (Output)\n│  └──────────┬───────────────┘   │\n└─────────────┼────────────────────┘\n              │\n              ▼\n┌─────────────────────────────┐\n│      Database               │\n│  (Sensitive Data)           │\n└─────────────────────────────┘\n\nTrust Boundaries:\n- User Browser ↔ Web Application (untrusted input)\n- Application ↔ Database (trusted, but vulnerable to injection)\n```\n\n---\n\n### Key takeaways\n\n1. **Never trust user input**: Always validate and sanitize\n2. **Use parameterized queries**: Never concatenate SQL\n3. **Encode output**: Always encode user data in HTML\n4. **Defense in depth**: Multiple layers of protection\n5. **Automate testing**: Catch issues early in development\n6. **Security by design**: Build security in, don't bolt it on\n\n---"
+    },
+    {
+      "id": "s3cb8c1f9b891",
+      "title": "Cloud Security Assessment",
+      "source": "Practice & Exercises/Practice Scenarios and Exercises.md",
+      "collection": "practice-exercises",
+      "kind": "appsec",
+      "difficulty": "intermediate",
+      "minutes": 12,
+      "relatedTopicIds": [
+        "cloud-security-architecture",
+        "cloud-attack-paths",
+        "xss",
+        "sql-injection"
+      ],
+      "briefMarkdown": "You're asked to conduct a security assessment of a new AWS-based SaaS product. The product consists of:\n- Frontend (React) hosted on S3 + CloudFront\n- Backend API (Node.js) running on ECS\n- PostgreSQL database on RDS\n- Redis cache on ElastiCache\n- Lambda functions for background jobs",
+      "tasks": [
+        "Identify security concerns** for each component",
+        "Prioritize findings** by risk level",
+        "Provide recommendations** for each finding",
+        "Explain your assessment approach"
+      ],
+      "prompts": [
+        "How would you structure this assessment?",
+        "What tools would you use?",
+        "What would you look for in each component?",
+        "How would you document your findings?",
+        "How would you communicate findings to engineering teams?"
+      ],
+      "answerMarkdown": "1. Assessment Approach:\n   - Review architecture diagrams\n   - Examine IAM policies\n   - Check network configurations\n   - Review encryption settings\n   - Scan for misconfigurations\n\n2. Key Areas to Check:\n   - IAM: Least privilege, MFA, service accounts\n   - Network: Security groups, VPC configuration\n   - Data: Encryption at rest/transit, key management\n   - Application: Secrets management, API security\n   - Monitoring: CloudTrail, GuardDuty, logging\n\n3. Tools:\n   - AWS Security Hub\n   - Prowler or CloudSploit\n   - Manual review of configurations\n   - Code review for application security\n\n4. Prioritization:\n   - Critical: Public resources, missing encryption\n   - High: Overly permissive IAM, network exposure\n   - Medium: Missing monitoring, weak configurations"
+    },
+    {
+      "id": "sae0104d7db31",
+      "title": "Architecture Review",
+      "source": "Practice & Exercises/Practice Scenarios and Exercises.md",
+      "collection": "practice-exercises",
+      "kind": "architecture",
+      "difficulty": "intermediate",
+      "minutes": 14,
+      "relatedTopicIds": [
+        "cloud-security-architecture",
+        "cloud-attack-paths",
+        "software-supply-chain-security",
+        "third-party-integration-security"
+      ],
+      "briefMarkdown": "Engineering team wants to deploy a new feature that:\n- Processes payment data\n- Uses third-party API\n- Stores data in cloud database\n- Needs to be PCI-DSS compliant",
+      "tasks": [
+        "Review the architecture",
+        "Identify security concerns",
+        "Provide recommendations",
+        "Ensure compliance"
+      ],
+      "prompts": [
+        "What security concerns do you have?",
+        "How would you ensure PCI-DSS compliance?",
+        "What would you recommend?",
+        "How would you balance security and functionality?",
+        "How would you work with the team?"
+      ],
+      "answerMarkdown": "1. Security Concerns:\n   - Payment data handling\n   - Third-party API security\n   - Data encryption requirements\n   - Access controls\n   - Audit logging\n   - Network security\n\n2. PCI-DSS Requirements:\n   - Encryption of cardholder data\n   - Secure network architecture\n   - Access control measures\n   - Regular security testing\n   - Security policies\n   - Monitoring and logging\n\n3. Recommendations:\n   - Use tokenization for payment data\n   - Encrypt data at rest and in transit\n   - Implement network segmentation\n   - Use least privilege access\n   - Enable comprehensive logging\n   - Regular security assessments\n\n4. Collaboration:\n   - Early involvement in design\n   - Security requirements upfront\n   - Regular check-ins\n   - Provide clear guidance\n   - Support implementation"
+    },
+    {
+      "id": "sbb5f5c32971d",
+      "title": "Zero Trust Implementation",
+      "source": "Practice & Exercises/Practice Scenarios and Exercises.md",
+      "collection": "practice-exercises",
+      "kind": "architecture",
+      "difficulty": "intermediate",
+      "minutes": 14,
+      "relatedTopicIds": [
+        "cloud-security-architecture",
+        "cloud-attack-paths",
+        "zero-trust-architecture"
+      ],
+      "briefMarkdown": "Company wants to implement Zero Trust architecture for their cloud-native application. Current state:\n- Traditional network-based security\n- Some services trust each other implicitly\n- Limited identity-based access\n- Mixed on-prem and cloud",
+      "tasks": [
+        "Design Zero Trust architecture",
+        "Create migration plan",
+        "Identify challenges",
+        "Provide implementation steps"
+      ],
+      "prompts": [
+        "What does Zero Trust mean for this environment?",
+        "How would you implement it?",
+        "What are the challenges?",
+        "How would you measure success?",
+        "How would you get buy-in?"
+      ],
+      "answerMarkdown": "1. Zero Trust Principles:\n   - Verify explicitly: Every access authenticated\n   - Least privilege: Minimum necessary access\n   - Assume breach: Segment and monitor\n\n2. Implementation Areas:\n   - Identity: MFA, service accounts, workload identity\n   - Network: Micro-segmentation, private connectivity\n   - Data: Encryption, classification, access controls\n   - Application: Service mesh, API security\n   - Monitoring: Continuous verification\n\n3. Migration Plan:\n   - Phase 1: Identity foundation (MFA, service accounts)\n   - Phase 2: Network segmentation\n   - Phase 3: Service mesh (mTLS)\n   - Phase 4: Advanced policies\n\n4. Challenges:\n   - Legacy systems\n   - Team education\n   - Performance impact\n   - Complexity"
+    },
+    {
+      "id": "sd72d6963e40b",
+      "title": "Failed Login Attempts & Brute Force Detection",
+      "source": "Product Security Real-World Scenarios/Product Security Real-World Scenarios - Comprehensive Guide.md",
+      "collection": "product-real-world",
+      "kind": "assessment",
+      "difficulty": "beginner",
+      "minutes": 8,
+      "relatedTopicIds": [],
+      "briefMarkdown": "You notice in security logs that a privileged internal server has had 100+ failed SSH login attempts from a single IP address over 10 minutes, followed by a successful login.\n\n**Prompt:** How do you respond immediately, and how do you prevent this from happening again?",
+      "tasks": [
+        "Clarify scope, assets, and constraints",
+        "Name the top risks and why they matter",
+        "Propose containment or controls in priority order",
+        "Say how you verify and who you tell"
+      ],
+      "prompts": [
+        "What do you do in the first hour?",
+        "What is out of scope or deferred, and why?",
+        "How do you prove the fix worked?"
+      ],
+      "answerMarkdown": "**1. Immediate Response (First 15 Minutes)**\n\n**Investigation Steps:**\n1. **Review Logs:**\n   ```\n   - Source IP address and geolocation\n   - Timestamps of all attempts\n   - Username(s) targeted\n   - Successful login timestamp\n   - Commands executed after login\n   - Network connections established\n   ```\n\n2. **Assess Compromise:**\n   - Check if the successful login was legitimate or unauthorized\n   - Review what actions were taken after login\n   - Check for lateral movement (SSH agent forwarding, connections to other systems)\n   - Look for modified files, new processes, or backdoors\n\n3. **Containment Actions:**\n   ```\n   □ Immediately block the IP at firewall/network level\n   □ Reset password for the compromised account\n   □ Revoke/rotate SSH keys if public key authentication was used\n   □ Disable the compromised user account temporarily\n   □ Isolate the server from network if severe compromise suspected\n   ```\n\n**2. Forensic Investigation (First 4 Hours)**\n\n**Log Analysis:**\n```bash\n# Check SSH auth logs\ngrep \"Failed password\" /var/log/auth.log\ngrep \"Accepted\" /var/log/auth.log\n\n# Check for suspicious activity\nlast -f /var/log/wtmp\nlastlog\n\n# Check command history\nhistory | grep -i suspicious\n\n# Check network connections\nnetstat -anp | grep ESTABLISHED\nss -tulpn\n```\n\n**System Integrity Checks:**\n- Review modified files (tripwire, AIDE, or similar)\n- Check for new user accounts\n- Review cron jobs and scheduled tasks\n- Check for rootkits or backdoors\n- Review system logs for anomalies\n\n**3. Remediation**\n\n**Immediate Fixes:**\n1. **Change Credentials:**\n   - Reset password for compromised account\n   - Rotate all SSH keys\n   - Review and rotate other credentials on the system\n\n2. **Network Controls:**\n   - Block the attacker's IP address\n   - Consider blocking the entire IP range if it's a known bad actor\n   - Implement geo-blocking if the IP is from unexpected location\n\n3. **Access Controls:**\n   - Disable password authentication, use key-based only\n   - Implement IP whitelisting for SSH access\n   - Use VPN or bastion host for access\n\n**4. Prevention Measures**\n\n**Authentication Hardening:**\n\n**1. Multi-Factor Authentication (MFA):**\n```bash\n# Install Google Authenticator PAM module\napt-get install libpam-google-authenticator\n\n# Configure SSH to require MFA\n# In /etc/ssh/sshd_config:\nPasswordAuthentication no\nPubkeyAuthentication yes\nChallengeResponseAuthentication yes\nAuthenticationMethods publickey,keyboard-interactive\n```\n\n**2. Rate Limiting:**\n```bash\n# Using fail2ban\napt-get install fail2ban\n\n# Configure /etc/fail2ban/jail.local:\n[sshd]\nenabled = true\nport = ssh\nfilter = sshd\nlogpath = /var/log/auth.log\nmaxretry = 3\nbantime = 3600\nfindtime = 600\n```\n\n**3. SSH Hardening:**\n```bash\n# /etc/ssh/sshd_config recommendations:\nPermitRootLogin no\nPasswordAuthentication no\nPubkeyAuthentication yes\nPermitEmptyPasswords no\nMaxAuthTries 3\nClientAliveInterval 300\nClientAliveCountMax 2\nAllowUsers specific_user1 specific_user2\n```\n\n**4. Monitoring & Alerting:**\n\n**SIEM Integration:**\n- Set up alerts for multiple failed login attempts\n- Alert on successful logins from new IPs\n- Alert on logins outside business hours\n- Alert on privilege escalations\n\n**Example Alert Rules:**\n```\n- 5+ failed login attempts in 5 minutes → Warning\n- 10+ failed login attempts in 10 minutes → Critical Alert\n- Successful login from new IP → Info Alert\n- Successful login from new country → Warning\n```\n\n**5. Network Segmentation:**\n- Use bastion hosts/jump servers\n- Implement network segmentation\n- Use VPN for remote access\n- Implement zero-trust network access\n\n**6. Least Privilege:**\n- Users should only have necessary access\n- Use sudo for privilege escalation\n- Implement role-based access control (RBAC)\n- Regular access reviews\n\n**5. Long-Term Improvements**\n\n**Security Posture:**\n- Regular security assessments\n- Penetration testing\n- Security awareness training\n- Incident response drills\n\n**Compliance:**\n- Document security controls\n- Regular audits\n- Compliance with security frameworks (ISO 27001, NIST, etc.)\n\n---\n\n### Key takeaways\n\n1. **Time is critical**: Respond immediately to contain the threat\n2. **Logs are your friend**: Comprehensive logging enables investigation\n3. **Defense in depth**: Multiple layers of security controls\n4. **Monitor continuously**: Real-time monitoring and alerting\n5. **Least privilege**: Users should have minimum necessary access\n6. **Assume breach**: Design systems assuming they will be compromised\n\n---"
+    },
+    {
+      "id": "s7ab12b9627c3",
+      "title": "Container Security Implementation",
+      "source": "Practice & Exercises/Practice Scenarios and Exercises.md",
+      "collection": "practice-exercises",
+      "kind": "assessment",
+      "difficulty": "intermediate",
+      "minutes": 12,
+      "relatedTopicIds": [
+        "kubernetes-security-hardening",
+        "container-security"
+      ],
+      "briefMarkdown": "A team is deploying containers but:\n- Using base images with vulnerabilities\n- Running as root\n- No resource limits\n- No network policies\n- Secrets in environment variables",
+      "tasks": [
+        "Assess current state",
+        "Create improvement plan",
+        "Implement security controls",
+        "Provide ongoing guidance"
+      ],
+      "prompts": [
+        "What are the security risks?",
+        "How would you prioritize fixes?",
+        "What tools would you use?",
+        "How would you implement without breaking things?",
+        "How would you maintain security?"
+      ],
+      "answerMarkdown": "1. Risk Assessment:\n   - Vulnerable images: Supply chain risk\n   - Root containers: Privilege escalation\n   - No limits: DoS attacks\n   - No policies: Lateral movement\n   - Secrets exposure: Credential compromise\n\n2. Prioritization:\n   - Critical: Remove root, fix secrets\n   - High: Image scanning, network policies\n   - Medium: Resource limits, monitoring\n   - Low: Documentation, training\n\n3. Implementation:\n   - Phase 1: Non-breaking (scanning, monitoring)\n   - Phase 2: Gradual (remove root, add limits)\n   - Phase 3: Advanced (network policies, service mesh)\n\n4. Tools:\n   - Trivy/Clair for image scanning\n   - Falco for runtime security\n   - OPA for policies\n   - External Secrets Operator"
+    },
+    {
+      "id": "s4be97887ef8a",
+      "title": "Securing a Kubernetes Cluster",
+      "source": "Practice & Exercises/Practice Scenarios and Exercises.md",
+      "collection": "practice-exercises",
+      "kind": "assessment",
+      "difficulty": "intermediate",
+      "minutes": 12,
+      "relatedTopicIds": [
+        "kubernetes-security-hardening",
+        "container-security"
+      ],
+      "briefMarkdown": "You're tasked with securing a Kubernetes cluster running production workloads. Current state:\n- Cluster is running but has minimal security\n- Applications running as root\n- No network policies\n- RBAC not properly configured\n- Secrets stored in plaintext ConfigMaps\n- No monitoring or logging",
+      "tasks": [
+        "Create a security plan** with priorities",
+        "Implement security controls",
+        "Explain your approach",
+        "Provide implementation steps"
+      ],
+      "prompts": [
+        "What would you do first?",
+        "How would you prioritize security controls?",
+        "What tools would you use?",
+        "How would you ensure no downtime?",
+        "How would you validate security improvements?"
+      ],
+      "answerMarkdown": "1. Immediate Actions (Week 1):\n   - Enable RBAC\n   - Implement Pod Security Standards\n   - Remove root containers\n   - Secure etcd\n\n2. Short-term (Week 2-3):\n   - Implement network policies\n   - Set up secrets management\n   - Enable audit logging\n   - Configure resource limits\n\n3. Medium-term (Month 1-2):\n   - Implement service mesh (mTLS)\n   - Set up runtime security monitoring\n   - Implement admission controllers\n   - Enable compliance scanning\n\n4. Tools:\n   - Falco for runtime security\n   - OPA Gatekeeper for policies\n   - External Secrets Operator\n   - Network policy tools\n\n5. Validation:\n   - Security scanning\n   - Penetration testing\n   - Compliance checks\n   - Monitoring and alerting"
+    },
+    {
+      "id": "s970942d73abc",
+      "title": "IaC Security Integration",
+      "source": "Practice & Exercises/Practice Scenarios and Exercises.md",
+      "collection": "practice-exercises",
+      "kind": "design",
+      "difficulty": "intermediate",
+      "minutes": 12,
+      "relatedTopicIds": [
+        "infrastructure-as-code-security"
+      ],
+      "briefMarkdown": "A team uses Terraform for infrastructure but has no security scanning. You need to:\n- Integrate security scanning into CI/CD\n- Enforce security policies\n- Prevent deployment of insecure infrastructure\n- Educate the team",
+      "tasks": [
+        "Design a security integration plan",
+        "Choose appropriate tools",
+        "Create a rollout strategy",
+        "Plan team education"
+      ],
+      "prompts": [
+        "What tools would you recommend?",
+        "How would you integrate into CI/CD?",
+        "How would you handle false positives?",
+        "How would you get team buy-in?",
+        "How would you measure success?"
+      ],
+      "answerMarkdown": "1. Tool Selection:\n   - Checkov or Terrascan for scanning\n   - OPA for policy enforcement\n   - Pre-commit hooks for early detection\n   - CI/CD integration for blocking\n\n2. Integration Plan:\n   - Pre-commit: Fast feedback\n   - PR checks: Detailed scanning\n   - Pre-deploy: Final validation\n   - Post-deploy: Continuous monitoring\n\n3. Policy Strategy:\n   - Start with critical policies\n   - Gradually add more policies\n   - Custom policies for org needs\n   - Regular policy reviews\n\n4. Team Education:\n   - Security training sessions\n   - Documentation and examples\n   - Pair programming sessions\n   - Regular security reviews\n\n5. Success Metrics:\n   - Reduction in misconfigurations\n   - Faster remediation time\n   - Team adoption rate\n   - Security posture improvement"
+    },
+    {
+      "id": "s9c3677b17e0f",
+      "title": "Secure Account Recovery Flow Design",
+      "source": "Product Security Real-World Scenarios/Product Security Real-World Scenarios - Comprehensive Guide.md",
+      "collection": "product-real-world",
+      "kind": "design",
+      "difficulty": "intermediate",
+      "minutes": 12,
+      "relatedTopicIds": [
+        "session-fixation-and-session-hijacking"
+      ],
+      "briefMarkdown": "You're designing a secure \"Forgot Password\" / \"Account Recovery\" flow for a consumer web application handling financial transactions. The application must prevent abuse, impersonation, social engineering, and fraud while maintaining usability.\n\n**Prompt:** Design a comprehensive account recovery flow that balances security and user experience.",
+      "tasks": [
+        "Clarify scope, assets, and constraints",
+        "Name the top risks and why they matter",
+        "Propose containment or controls in priority order",
+        "Say how you verify and who you tell"
+      ],
+      "prompts": [
+        "What do you do in the first hour?",
+        "What is out of scope or deferred, and why?",
+        "How do you prove the fix worked?"
+      ],
+      "answerMarkdown": "**1. Threat Analysis**\n\n**Threats to Consider:**\n1. **Account Takeover**: Attacker resets password and gains access\n2. **Social Engineering**: Attacker convinces support to reset account\n3. **Email/SMS Hijacking**: Attacker intercepts recovery codes\n4. **Credential Stuffing**: Automated attacks using breached credentials\n5. **Account Enumeration**: Attacker discovers valid email addresses\n6. **Replay Attacks**: Reusing old recovery tokens\n7. **Brute Force**: Guessing recovery codes\n\n**2. Secure Recovery Flow Design**\n\n**Phase 1: Recovery Request**\n\n**User Initiates Recovery:**\n```\n1. User enters email/username (don't reveal if account exists)\n2. System checks if account exists (silently)\n3. If account exists:\n   - Generate secure recovery token (cryptographically random, 128+ bits)\n   - Store token hash in database (not plaintext)\n   - Set expiration (15-30 minutes)\n   - Rate limit: Max 3 requests per email per hour\n   - Send recovery email with token\n4. If account doesn't exist:\n   - Show same message (prevent enumeration)\n   - Don't send email\n```\n\n**Security Controls:**\n- **Token Generation**: Use cryptographically secure random number generator\n- **Token Storage**: Store hash (SHA-256) not plaintext\n- **Rate Limiting**: Prevent abuse, slow down attackers\n- **Account Enumeration Prevention**: Same response for valid/invalid accounts\n\n**Phase 2: Multi-Channel Verification**\n\n**Multi-Factor Recovery:**\n```\n1. Primary Channel (Email):\n   - Send recovery link with token\n   - Include device/browser information\n   - Show last login location\n\n2. Secondary Channel (SMS/App):\n   - Send 6-digit code to registered phone\n   - Or push notification to mobile app\n   - Code expires in 10 minutes\n\n3. Security Questions (Optional):\n   - Only for high-value accounts\n   - Use questions user set up during registration\n   - Limit to 3 attempts\n```\n\n**Phase 3: Risk Assessment**\n\n**Adaptive Authentication:**\n```python\ndef assess_recovery_risk(request):\n    risk_score = 0\n\n    # IP-based checks\n    if is_new_ip(request.ip):\n        risk_score += 20\n    if is_suspicious_location(request.ip, user.last_location):\n        risk_score += 30\n    if is_tor_or_vpn(request.ip):\n        risk_score += 15\n\n    # Device-based checks\n    if is_new_device(request.user_agent, user.devices):\n        risk_score += 25\n    if device_fingerprint_mismatch(request):\n        risk_score += 20\n\n    # Behavioral checks\n    if account_recently_accessed(user):\n        risk_score -= 10\n    if multiple_recovery_attempts(user):\n        risk_score += 30\n\n    # Account value\n    if is_high_value_account(user):\n        risk_score += 20\n\n    return risk_score\n\n# Risk-based actions\nif risk_score < 30:\n    # Low risk: Standard recovery\n    allow_recovery()\nelif risk_score < 60:\n    # Medium risk: Additional verification\n    require_additional_verification()\nelse:\n    # High risk: Manual review or account lock\n    require_manual_review()\n    notify_security_team()\n```\n\n**Phase 4: Password Reset**\n\n**Secure Password Reset:**\n```\n1. User clicks recovery link (validates token)\n2. User enters recovery code (from SMS/app)\n3. System validates:\n   - Token is valid and not expired\n   - Token hasn't been used\n   - Code matches\n   - Rate limits not exceeded\n4. User sets new password:\n   - Enforce strong password policy\n   - Check against password history (prevent reuse)\n   - Check against breached password databases\n5. Invalidate all existing sessions\n6. Send confirmation to all registered channels\n7. Log security event\n```\n\n**3. Implementation Details**\n\n**Token Management:**\n```python\nimport secrets\nimport hashlib\nfrom datetime import datetime, timedelta\n\nclass RecoveryTokenManager:\n    def generate_token(self):\n        # Generate cryptographically secure token\n        token = secrets.token_urlsafe(32)  # 256 bits\n        return token\n\n    def store_token(self, user_id, token):\n        # Store hash, not plaintext\n        token_hash = hashlib.sha256(token.encode()).hexdigest()\n        expires_at = datetime.utcnow() + timedelta(minutes=30)\n\n        db.store_recovery_token(\n            user_id=user_id,\n            token_hash=token_hash,\n            expires_at=expires_at,\n            used=False\n        )\n\n    def validate_token(self, user_id, token):\n        token_hash = hashlib.sha256(token.encode()).hexdigest()\n        stored_token = db.get_recovery_token(user_id, token_hash)\n\n        if not stored_token:\n            return False\n        if stored_token.used:\n            return False  # Token already used\n        if stored_token.expires_at < datetime.utcnow():\n            return False  # Token expired\n\n        # Mark as used\n        db.mark_token_used(token_hash)\n        return True\n```\n\n**Rate Limiting:**\n```python\nfrom redis import Redis\nimport time\n\nredis_client = Redis()\n\ndef check_rate_limit(email, action='recovery_request'):\n    key = f\"rate_limit:{action}:{email}\"\n    current = redis_client.incr(key)\n\n    if current == 1:\n        # First request, set expiration\n        redis_client.expire(key, 3600)  # 1 hour\n\n    if current > 3:\n        return False  # Rate limit exceeded\n\n    return True\n```\n\n**4. User Communication**\n\n**Recovery Email Template:**\n```\nSubject: Password Reset Request for Your Account\n\nHello [User],\n\nWe received a request to reset your password for your account.\n\nIf you made this request:\n- Click here to reset: [Recovery Link] (expires in 30 minutes)\n- Or enter this code: [6-digit code]\n\nDevice: [Browser/Device Info]\nLocation: [City, Country]\nTime: [Timestamp]\n\nIf you didn't request this:\n- Ignore this email (the link will expire)\n- Secure your account: [Security Settings Link]\n- Contact support if you're concerned\n\nFor security, this link can only be used once.\n```\n\n**Security Notifications:**\n- Send notification to all registered channels when password is reset\n- Include device, location, and timestamp\n- Provide \"This wasn't me\" option to lock account\n\n**5. Additional Security Measures**\n\n**Account Lockout:**\n- Lock account after 5 failed recovery attempts\n- Require manual unlock or extended verification\n- Notify user of account lock\n\n**Session Management:**\n- Invalidate all existing sessions on password reset\n- Force re-authentication on all devices\n- Clear \"remember me\" tokens\n\n**Audit Logging:**\n```python\ndef log_recovery_event(user_id, event_type, details):\n    log_entry = {\n        'user_id': user_id,\n        'event_type': event_type,  # 'recovery_requested', 'recovery_completed', etc.\n        'ip_address': request.remote_addr,\n        'user_agent': request.user_agent,\n        'timestamp': datetime.utcnow(),\n        'details': details\n    }\n    security_logger.info(log_entry)\n```\n\n**6. Usability Considerations**\n\n**Balance Security and UX:**\n- **Low-risk users**: Streamlined process (email + SMS)\n- **Medium-risk users**: Additional verification (security questions)\n- **High-risk users**: Manual review or account lock\n\n**User Experience:**\n- Clear instructions at each step\n- Progress indicators\n- Helpful error messages (without revealing security details)\n- Support contact information\n\n---\n\n#### Data Flow Diagram (DFD)\n\n```\n┌─────────────┐\n│    User     │\n└──────┬──────┘\n       │\n       │ 1. Request Recovery\n       │    (Email/Username)\n       │\n       ▼\n┌─────────────────────────────────────┐\n│   Recovery Service                  │\n│  ┌──────────────────────────────┐  │\n│  │  Account Lookup              │  │\n│  │  (Prevent Enumeration)      │  │\n│  └───────────┬──────────────────┘  │\n│              │                       │\n│  ┌───────────▼──────────────────┐  │\n│  │  Risk Assessment             │  │\n│  │  - IP Analysis               │  │\n│  │  - Device Fingerprinting     │  │\n│  │  - Behavioral Analysis      │  │\n│  └───────────┬──────────────────┘  │\n│              │                       │\n│  ┌───────────▼──────────────────┐  │\n│  │  Token Generation            │  │\n│  │  - Cryptographically Random  │  │\n│  │  - Hash Storage             │  │\n│  └───────────┬──────────────────┘  │\n└──────────────┼──────────────────────┘\n               │\n               │ 2. Multi-Channel Delivery\n               │\n       ┌───────┴───────┐\n       │               │\n       ▼               ▼\n┌──────────┐    ┌──────────┐\n│  Email   │    │   SMS    │\n│  Service │    │  Service │\n└────┬──────┘    └────┬─────┘\n     │                │\n     │ 3. User Receives Codes\n     │\n     ▼\n┌─────────────────────────────────────┐\n│   User Validates                    │\n│  - Token Validation                 │\n│  - Code Verification              │\n│  - Rate Limit Check                 │\n└───────────┬─────────────────────────┘\n            │\n            │ 4. Password Reset\n            │\n            ▼\n┌─────────────────────────────────────┐\n│   Password Service                  │\n│  - Password Policy Enforcement      │\n│  - Password History Check          │\n│  - Breach Database Check            │\n│  - Session Invalidation             │\n└───────────┬─────────────────────────┘\n            │\n            │ 5. Confirmation\n            │\n            ▼\n┌─────────────────────────────────────┐\n│   Notification Service              │\n│  - Email Confirmation               │\n│  - SMS Confirmation                 │\n│  - Security Alert                   │\n└─────────────────────────────────────┘\n\nTrust Boundaries:\n- User ↔ Recovery Service (untrusted input)\n- Recovery Service ↔ Email/SMS (secure channels)\n- Recovery Service ↔ Database (authenticated, encrypted)\n```\n\n---\n\n### Key takeaways\n\n1. **Multi-channel verification**: Use email + SMS/app for recovery\n2. **Risk-based authentication**: Adapt security based on risk level\n3. **Prevent enumeration**: Don't reveal if account exists\n4. **Rate limiting**: Prevent abuse and brute force\n5. **Token security**: Use cryptographically secure tokens, store hashes\n6. **User communication**: Clear, helpful, and secure messaging\n7. **Session management**: Invalidate all sessions on password reset\n8. **Audit logging**: Comprehensive logging for security events\n\n---"
+    },
+    {
+      "id": "s1a8bde22d06b",
+      "title": "Public S3 Bucket Exposure",
+      "source": "Product Security Real-World Scenarios/Product Security Real-World Scenarios - Comprehensive Guide.md",
+      "collection": "product-real-world",
+      "kind": "incident",
+      "difficulty": "beginner",
+      "minutes": 10,
+      "relatedTopicIds": [
+        "cloud-security-architecture",
+        "cloud-attack-paths"
+      ],
+      "briefMarkdown": "An internal security audit reveals that one of your AWS S3 buckets is publicly accessible. The bucket stores customer PII (Personally Identifiable Information). There's no evidence of compromise yet.\n\n**Prompt:** How do you analyze the risk, contain it, detect possible exposure, and put processes in place to avoid recurrence?",
+      "tasks": [
+        "Clarify scope, assets, and constraints",
+        "Name the top risks and why they matter",
+        "Propose containment or controls in priority order",
+        "Say how you verify and who you tell"
+      ],
+      "prompts": [
+        "What do you do in the first hour?",
+        "What is out of scope or deferred, and why?",
+        "How do you prove the fix worked?"
+      ],
+      "answerMarkdown": "**1. Risk Analysis (First Hour)**\n\n**Immediate Assessment:**\n```\n□ Identify the bucket name and region\n□ Determine what data is stored (PII types, volume)\n□ Check bucket policy and ACLs\n□ Review when the bucket became public\n□ Check if access logs are enabled\n□ Assess compliance implications (GDPR, CCPA, HIPAA)\n```\n\n**Risk Quantification:**\n- **Data Sensitivity**: PII, PHI, financial data, etc.\n- **Volume**: Number of records exposed\n- **Exposure Duration**: How long has it been public?\n- **Accessibility**: How easy is it to discover and access?\n- **Compliance Impact**: Regulatory requirements and penalties\n\n**2. Immediate Containment (First 15 Minutes)**\n\n**Remove Public Access:**\n```bash\n# Using AWS CLI\naws s3api put-public-access-block \\\n    --bucket my-bucket \\\n    --public-access-block-configuration \\\n    \"BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true\"\n\n# Remove public read policy\naws s3api delete-bucket-policy --bucket my-bucket\n\n# Update bucket ACL\naws s2api put-bucket-acl --bucket my-bucket --acl private\n```\n\n**Enable Block Public Access:**\n- Enable all four Block Public Access settings\n- This prevents accidental public exposure in the future\n\n**3. Detection of Exposure**\n\n**Access Log Analysis:**\n```bash\n# Enable server access logging if not already enabled\naws s3api put-bucket-logging \\\n    --bucket my-bucket \\\n    --bucket-logging-status file://logging.json\n\n# Analyze CloudTrail logs\naws cloudtrail lookup-events \\\n    --lookup-attributes AttributeKey=ResourceName,AttributeValue=my-bucket\n\n# Use AWS Macie to detect sensitive data access\naws macie2 create-classification-job \\\n    --job-type ONE_TIME \\\n    --s3-job-definition file://job-definition.json\n```\n\n**Forensic Investigation:**\n1. **CloudTrail Analysis:**\n   - Review all API calls to the bucket\n   - Identify unusual access patterns\n   - Check for data exfiltration\n\n2. **S3 Access Logs:**\n   - Review server access logs (if enabled)\n   - Identify IP addresses that accessed the bucket\n   - Check for bulk downloads\n\n3. **VPC Flow Logs:**\n   - If bucket is accessed via VPC endpoint\n   - Review network traffic patterns\n\n4. **Third-Party Tools:**\n   - Use AWS GuardDuty for threat detection\n   - Use AWS Macie for sensitive data discovery\n   - Use third-party security tools (CloudSploit, Prowler)\n\n**4. Communication & Compliance**\n\n**Internal Communication:**\n- Notify security team immediately\n- Inform legal and compliance teams\n- Brief executive leadership\n- Document the incident\n\n**External Communication:**\n- **If data breach confirmed:**\n  - Notify affected customers (within 72 hours for GDPR)\n  - Report to regulatory authorities if required\n  - Prepare public statement if necessary\n\n**Compliance Considerations:**\n- **GDPR**: 72-hour notification requirement\n- **CCPA**: Notification to California residents\n- **HIPAA**: Breach notification to HHS and affected individuals\n- **PCI-DSS**: If payment card data involved\n\n**5. Long-Term Prevention**\n\n**Infrastructure as Code (IaC) Security:**\n```hcl\n# Terraform example - Secure S3 bucket\nresource \"aws_s3_bucket\" \"secure_bucket\" {\n  bucket = \"my-secure-bucket\"\n}\n\nresource \"aws_s3_bucket_public_access_block\" \"secure_bucket\" {\n  bucket = aws_s3_bucket.secure_bucket.id\n\n  block_public_acls       = true\n  block_public_policy      = true\n  ignore_public_acls       = true\n  restrict_public_buckets = true\n}\n\nresource \"aws_s3_bucket_policy\" \"secure_bucket\" {\n  bucket = aws_s3_bucket.secure_bucket.id\n\n  policy = jsonencode({\n    Version = \"2012-10-17\"\n    Statement = [\n      {\n        Effect = \"Deny\"\n        Principal = \"*\"\n        Action = \"s3:*\"\n        Resource = [\n          aws_s3_bucket.secure_bucket.arn,\n          \"${aws_s3_bucket.secure_bucket.arn}/*\"\n        ]\n        Condition = {\n          Bool = {\n            \"aws:SecureTransport\" = \"false\"\n          }\n        }\n      }\n    ]\n  })\n}\n```\n\n**Automated Scanning:**\n```python\n# Example: Automated S3 bucket security scan\nimport boto3\nfrom botocore.exceptions import ClientError\n\ndef check_bucket_security(bucket_name):\n    s3 = boto3.client('s3')\n\n    # Check public access block\n    try:\n        response = s3.get_public_access_block(Bucket=bucket_name)\n        # Verify all settings are enabled\n    except ClientError:\n        # Public access block not configured - security issue\n        pass\n\n    # Check bucket policy\n    try:\n        policy = s3.get_bucket_policy(Bucket=bucket_name)\n        # Analyze policy for public access\n    except ClientError:\n        pass\n\n    # Check bucket ACL\n    acl = s3.get_bucket_acl(Bucket=bucket_name)\n    # Check for public grants\n```\n\n**Security Policies:**\n- **Default Deny**: All buckets should be private by default\n- **Policy Enforcement**: Use AWS Config rules to enforce policies\n- **Regular Audits**: Monthly security audits of all S3 buckets\n- **Access Reviews**: Quarterly review of bucket permissions\n\n**Tools & Automation:**\n- **AWS Config**: Continuous compliance monitoring\n- **CloudSploit**: Security scanning\n- **Prowler**: AWS security assessment tool\n- **Terraform/CloudFormation**: Infrastructure as code with security guardrails\n\n**Team Training:**\n- Security awareness training\n- Secure cloud practices\n- Regular security reviews\n- Incident response drills\n\n---\n\n#### Data Flow Diagram (DFD)\n\n```\n┌─────────────────┐\n│  Public Internet│\n│  (Untrusted)    │\n└────────┬────────┘\n         │\n         │ HTTP/HTTPS Request\n         │ (GET /bucket-name/object-key)\n         │\n         ▼\n┌─────────────────────────────────────┐\n│      AWS S3 Bucket                  │\n│  ┌──────────────────────────────┐  │\n│  │  Bucket Policy               │  │ ← Misconfigured (Public Read)\n│  │  - Public Access: ALLOWED     │  │\n│  └───────────┬──────────────────┘  │\n│              │                       │\n│  ┌───────────▼──────────────────┐  │\n│  │  Access Control List (ACL)   │  │ ← Public Read Permission\n│  └───────────┬──────────────────┘  │\n│              │                       │\n│  ┌───────────▼──────────────────┐  │\n│  │  Customer PII Data            │  │\n│  │  - Names, Emails, SSNs, etc. │  │\n│  └──────────────────────────────┘  │\n└─────────────────────────────────────┘\n         │\n         │ Data Exfiltration\n         │\n         ▼\n┌─────────────────┐\n│   Attacker      │\n│  (Unauthorized)  │\n└─────────────────┘\n\nTrust Boundaries:\n- Public Internet ↔ S3 Bucket (should be blocked)\n- S3 Bucket ↔ Authorized Services (should be allowed)\n```\n\n**Secure Architecture:**\n```\n┌─────────────────┐\n│  Authorized     │\n│  Application    │\n└────────┬────────┘\n         │\n         │ IAM Role/User\n         │ (Authenticated)\n         │\n         ▼\n┌─────────────────────────────────────┐\n│      AWS S3 Bucket                  │\n│  ┌──────────────────────────────┐  │\n│  │  Block Public Access: ENABLED  │  │\n│  └───────────┬──────────────────┘  │\n│              │                       │\n│  ┌───────────▼──────────────────┐  │\n│  │  Bucket Policy                │  │\n│  │  - Deny Public Access         │  │\n│  │  - Allow Only IAM Roles        │  │\n│  └───────────┬──────────────────┘  │\n│              │                       │\n│  ┌───────────▼──────────────────┐  │\n│  │  Encrypted Customer PII        │  │\n│  │  (KMS Encrypted)               │  │\n│  └──────────────────────────────┘  │\n└─────────────────────────────────────┘\n```\n\n---\n\n### Key takeaways\n\n1. **Default to private**: All S3 buckets should be private by default\n2. **Enable Block Public Access**: Use AWS Block Public Access settings\n3. **Monitor access**: Enable logging and monitoring\n4. **Automate security**: Use IaC and automated scanning\n5. **Regular audits**: Continuously review bucket configurations\n6. **Compliance awareness**: Understand regulatory requirements\n\n---"
+    },
+    {
+      "id": "s46b2878041b9",
+      "title": "Incident Response",
+      "source": "Practice & Exercises/Practice Scenarios and Exercises.md",
+      "collection": "practice-exercises",
+      "kind": "incident",
+      "difficulty": "intermediate",
+      "minutes": 14,
+      "relatedTopicIds": [
+        "cloud-security-architecture",
+        "cloud-attack-paths",
+        "production-security-incident-response",
+        "ssrf"
+      ],
+      "briefMarkdown": "You discover that an S3 bucket containing customer data is publicly accessible. The bucket has been public for 2 weeks. You need to:\n- Assess the situation\n- Contain the issue\n- Investigate impact\n- Communicate with stakeholders\n- Remediate",
+      "tasks": [
+        "Create an incident response plan",
+        "Prioritize actions",
+        "Plan communication",
+        "Design remediation"
+      ],
+      "prompts": [
+        "What's your first action?",
+        "How would you assess impact?",
+        "Who would you notify?",
+        "How would you communicate?",
+        "What's your remediation plan?"
+      ],
+      "answerMarkdown": "1. Immediate Actions (First Hour):\n   - Remove public access immediately\n   - Enable Block Public Access\n   - Review bucket policy\n   - Check access logs (if enabled)\n   - Notify security team\n\n2. Assessment (First 4 Hours):\n   - Determine what data was exposed\n   - Identify who had access\n   - Check for unauthorized access\n   - Review all buckets for similar issues\n   - Assess compliance impact\n\n3. Communication:\n   - Internal: Security team, engineering, legal\n   - External: Customers (if required), regulators\n   - Timeline: Within 24-72 hours if required\n   - Transparency: Clear, factual communication\n\n4. Remediation:\n   - Fix all affected buckets\n   - Implement automated scanning\n   - Add security checks to CI/CD\n   - Review and update policies\n   - Train team on best practices\n\n5. Prevention:\n   - Automated bucket scanning\n   - Policy enforcement\n   - Regular audits\n   - Security training"
+    },
+    {
+      "id": "sb615c31d5964",
+      "title": "Vendor Risk Assessment After Data Breach",
+      "source": "Product Security Real-World Scenarios/Product Security Real-World Scenarios - Comprehensive Guide.md",
+      "collection": "product-real-world",
+      "kind": "incident",
+      "difficulty": "intermediate",
+      "minutes": 14,
+      "relatedTopicIds": [
+        "cloud-security-architecture",
+        "cloud-attack-paths",
+        "production-security-incident-response",
+        "ssrf"
+      ],
+      "briefMarkdown": "Your company plans to use a third-party cloud-based CRM vendor that handles sensitive customer data. You discover:\n- The vendor suffered a data breach 6 months ago\n- Several security practices don't align with your company's standards\n- The business team insists on moving forward due to operational benefits\n- The vendor is the market leader with no viable alternatives\n\n**Prompt:** How do you approach this vendor risk assessment and decision-making process?",
+      "tasks": [
+        "Clarify scope, assets, and constraints",
+        "Name the top risks and why they matter",
+        "Propose containment or controls in priority order",
+        "Say how you verify and who you tell"
+      ],
+      "prompts": [
+        "What do you do in the first hour?",
+        "What is out of scope or deferred, and why?",
+        "How do you prove the fix worked?"
+      ],
+      "answerMarkdown": "**1. Vendor Security Evaluation**\n\n**Post-Breach Analysis:**\n```\n□ Review vendor's public breach disclosure\n□ Analyze root cause of the breach\n□ Assess remediation actions taken\n□ Review third-party security audits\n□ Check for recurring security incidents\n□ Evaluate vendor's security maturity\n```\n\n**Security Assessment Framework:**\n\n**1.1. Review Breach Details:**\n- **What was breached?**: Data types, volume, sensitivity\n- **How did it happen?**: Attack vector, root cause\n- **Who was affected?**: Customers, employees, partners\n- **Response timeline**: Detection time, containment time, notification time\n- **Remediation actions**: Technical fixes, process improvements, training\n\n**1.2. Request Documentation:**\n- SOC 2 Type II reports\n- ISO 27001 certification\n- Penetration test reports\n- Security incident reports\n- Security policies and procedures\n- Business continuity plans\n- Data processing agreements\n\n**1.3. Technical Assessment:**\n- Security architecture review\n- Encryption standards (at rest, in transit)\n- Access controls and authentication\n- Network security\n- Application security\n- Data backup and recovery\n- Security monitoring and logging\n\n**2. Gap Analysis**\n\n**Compare Against Your Standards:**\n\n**Security Control Matrix:**\n```\nYour Requirement          Vendor Capability    Gap        Risk\n─────────────────────────────────────────────────────────────────\nEncryption at Rest        ✅ AES-256          None       Low\nEncryption in Transit     ✅ TLS 1.3          None       Low\nMFA for Admin Access      ⚠️  Optional        Medium     Medium\nAudit Logging             ✅ 90 days          None       Low\nData Residency            ❌ US only          High       High\nBreach Notification        ⚠️  72 hours        Medium     Medium\nPenetration Testing       ✅ Annual           None       Low\nVulnerability Management  ⚠️  Quarterly       Medium     Medium\n```\n\n**Risk Quantification:**\n\n**Data Sensitivity Assessment:**\n- **High Sensitivity**: PII, PHI, financial data, intellectual property\n- **Medium Sensitivity**: Business data, analytics\n- **Low Sensitivity**: Public information, marketing data\n\n**Impact Assessment:**\n- **Financial Impact**: Regulatory fines, legal costs, business disruption\n- **Reputational Impact**: Customer trust, brand damage\n- **Operational Impact**: Service disruption, data loss\n\n**Likelihood Assessment:**\n- **High Likelihood**: Known vulnerabilities, weak controls, history of breaches\n- **Medium Likelihood**: Some controls in place, occasional incidents\n- **Low Likelihood**: Strong controls, no recent incidents\n\n**3. Compensating Controls**\n\n**If Proceeding with Vendor:**\n\n**Technical Controls:**\n1. **Client-Side Encryption**: Encrypt data before sending to vendor\n   ```python\n   # Example: Encrypt PII before sending to CRM\n   from cryptography.fertilizer import Fernet\n\n   key = load_key_from_kms()\n   f = Fernet(key)\n   encrypted_pii = f.encrypt(pii_data.encode())\n   # Send encrypted_pii to vendor\n   ```\n\n2. **Data Minimization**: Only send necessary data\n3. **Data Masking**: Mask sensitive fields where possible\n4. **Access Controls**: Implement strict access controls on your side\n5. **Monitoring**: Monitor all data transfers to vendor\n\n**Contractual Controls:**\n1. **Data Processing Agreement (DPA)**:\n   - Data handling requirements\n   - Security standards\n   - Breach notification timelines (24-48 hours)\n   - Right to audit\n   - Data deletion requirements\n   - Liability and indemnification\n\n2. **Service Level Agreements (SLA)**:\n   - Uptime requirements\n   - Security incident response time\n   - Data availability guarantees\n   - Performance metrics\n\n3. **Insurance Requirements**:\n   - Cyber liability insurance\n   - Minimum coverage amounts\n   - Proof of insurance\n\n**Operational Controls:**\n1. **Regular Audits**: Quarterly security reviews\n2. **Incident Response Plan**: Joint incident response procedures\n3. **Security Training**: Vendor staff security awareness\n4. **Vendor Management Program**: Ongoing vendor oversight\n\n**4. Decision Framework**\n\n**Risk Acceptance Criteria:**\n\n**Proceed if:**\n- Residual risk is within acceptable tolerance\n- Compensating controls adequately mitigate risks\n- Business benefit outweighs residual risk\n- Vendor demonstrates commitment to security improvement\n- Contractual protections are in place\n\n**Do Not Proceed if:**\n- Residual risk exceeds tolerance\n- Critical security gaps cannot be mitigated\n- Vendor is uncooperative or non-transparent\n- Regulatory compliance cannot be achieved\n- Business impact of breach would be catastrophic\n\n**Alternative Options:**\n1. **Build In-House**: Develop custom CRM solution\n2. **Alternative Vendors**: Find vendors with better security posture\n3. **Hybrid Approach**: Use vendor for non-sensitive data, in-house for sensitive\n4. **Phased Rollout**: Start with low-risk data, expand gradually\n\n**5. Stakeholder Communication**\n\n**Executive Presentation:**\n\n**Structure:**\n1. **Executive Summary**: Decision recommendation and rationale\n2. **Risk Assessment**: Detailed risk analysis\n3. **Gap Analysis**: Security gaps and mitigations\n4. **Options Analysis**: Alternatives and trade-offs\n5. **Recommendation**: Clear recommendation with justification\n6. **Next Steps**: Implementation plan if proceeding\n\n**Key Messages:**\n- **Transparency**: Full disclosure of risks and gaps\n- **Risk Management**: Comprehensive mitigation strategy\n- **Business Alignment**: Balance security and business needs\n- **Ongoing Oversight**: Continuous vendor management\n\n**6. Implementation Plan (If Proceeding)**\n\n**Phase 1: Contract Negotiation (Weeks 1-4)**\n- Negotiate DPA and SLA\n- Define security requirements\n- Establish audit rights\n- Set up insurance requirements\n\n**Phase 2: Technical Implementation (Weeks 5-12)**\n- Implement client-side encryption\n- Set up data minimization processes\n- Configure access controls\n- Implement monitoring\n\n**Phase 3: Operational Setup (Weeks 13-16)**\n- Establish vendor management processes\n- Set up regular audit schedule\n- Create incident response procedures\n- Train staff on vendor usage\n\n**Phase 4: Ongoing Management (Ongoing)**\n- Quarterly security reviews\n- Annual penetration testing\n- Continuous monitoring\n- Regular risk assessments\n\n---\n\n### Key takeaways\n\n1. **Thorough assessment**: Don't skip vendor security evaluation\n2. **Post-breach analysis**: Understand what happened and what changed\n3. **Gap analysis**: Compare vendor capabilities to your requirements\n4. **Compensating controls**: Mitigate risks you can't eliminate\n5. **Contractual protection**: Strong contracts are essential\n6. **Ongoing oversight**: Vendor management is continuous\n7. **Risk-based decisions**: Balance security and business needs\n\n---"
+    },
+    {
+      "id": "s6010f38bd325",
+      "title": "SSRF Attack & Incident Response",
+      "source": "Product Security Real-World Scenarios/Product Security Real-World Scenarios - Comprehensive Guide.md",
+      "collection": "product-real-world",
+      "kind": "incident",
+      "difficulty": "advanced",
+      "minutes": 17,
+      "relatedTopicIds": [
+        "cloud-security-architecture",
+        "cloud-attack-paths",
+        "production-security-incident-response",
+        "ssrf"
+      ],
+      "briefMarkdown": "Your production web application is under attack. An attacker exploited a Server-Side Request Forgery (SSRF) vulnerability in a public-facing API to access internal cloud metadata endpoints (AWS IMDS, Azure IMDS, GCP metadata server). They used the obtained temporary cloud credentials to read sensitive customer data from other services.\n\n**Prompt:** Walk through detection, response, forensic investigation, and how you redesign to prevent recurrence.",
+      "tasks": [
+        "Clarify scope, assets, and constraints",
+        "Name the top risks and why they matter",
+        "Propose containment or controls in priority order",
+        "Say how you verify and who you tell"
+      ],
+      "prompts": [
+        "What do you do in the first hour?",
+        "What is out of scope or deferred, and why?",
+        "How do you prove the fix worked?"
+      ],
+      "answerMarkdown": "**1. Detection**\n\n**Initial Indicators:**\n```\n□ Unusual outbound requests from API servers to metadata endpoints\n□ Cloud API calls from unexpected sources/IPs\n□ Unusual credential usage patterns\n□ Anomalous data access patterns\n□ SIEM alerts for metadata endpoint access\n□ WAF/API Gateway alerts for suspicious requests\n```\n\n**Detection Mechanisms:**\n\n**1.1. Log Analysis:**\n```bash\n# Check application logs for SSRF patterns\ngrep -i \"metadata\" /var/log/app.log\ngrep -i \"169.254.169.254\" /var/log/app.log  # AWS IMDS\ngrep -i \"metadata.google.internal\" /var/log/app.log  # GCP\n\n# Check CloudTrail for unusual API calls\naws cloudtrail lookup-events \\\n    --lookup-attributes AttributeKey=EventName,AttributeValue=GetSessionToken \\\n    --start-time 2024-01-01T00:00:00Z\n```\n\n**1.2. SIEM Alerts:**\n- Alert on API server → metadata endpoint connections\n- Alert on credential usage from new IPs\n- Alert on unusual data access patterns\n- Alert on privilege escalation attempts\n\n**1.3. Network Monitoring:**\n- Monitor outbound connections from API servers\n- Detect connections to internal metadata endpoints\n- Track unusual network patterns\n\n**2. Immediate Response (First 15 Minutes)**\n\n**Containment Actions:**\n```bash\n# 1. Patch SSRF vulnerability immediately\n# Disable vulnerable endpoint or apply fix\n\n# 2. Revoke compromised credentials\naws iam list-roles --query 'Roles[?RoleName==`api-server-role`]'\naws iam update-assume-role-policy --role-name api-server-role --policy-document file://new-policy.json\n\n# 3. Rotate all temporary credentials\n# Revoke all active sessions\naws sts get-caller-identity  # Check current credentials\n# Revoke via IAM console or CLI\n\n# 4. Restrict metadata endpoint access\n# AWS: Enable IMDSv2, restrict access\naws ec2 modify-instance-metadata-options \\\n    --instance-id i-1234567890abcdef0 \\\n    --http-tokens required \\\n    --http-put-response-hop-limit 1\n\n# 5. Block attacker IPs\n# Update security groups, WAF rules\naws wafv2 update-ip-set \\\n    --scope REGIONAL \\\n    --id <ip-set-id> \\\n    --addresses <attacker-ip>/32\n```\n\n**3. Forensic Investigation (First 4 Hours)**\n\n**Timeline Reconstruction:**\n```\n1. Identify SSRF vulnerability location\n2. Trace attacker's actions:\n   - Initial SSRF request\n   - Metadata endpoint access\n   - Credential extraction\n   - Subsequent API calls\n   - Data access patterns\n3. Determine scope of compromise\n4. Identify what data was accessed\n```\n\n**Investigation Steps:**\n\n**3.1. SSRF Vulnerability Analysis:**\n```python\n# Vulnerable code example\n@app.route('/api/fetch-url', methods=['POST'])\ndef fetch_url():\n    url = request.json.get('url')\n    # VULNERABLE: No validation\n    response = requests.get(url)  # SSRF here\n    return response.text\n\n# Attacker payload\n{\n    \"url\": \"http://169.254.169.254/latest/meta-data/iam/security-credentials/role-name\"\n}\n```\n\n**3.2. Metadata Access Analysis:**\n```bash\n# Check CloudTrail for metadata API calls\naws cloudtrail lookup-events \\\n    --lookup-attributes AttributeKey=ResourceName,AttributeValue=metadata\n\n# Check for credential access\naws cloudtrail lookup-events \\\n    --lookup-attributes AttributeKey=EventName,AttributeValue=GetSessionToken\n```\n\n**3.3. Data Access Analysis:**\n```bash\n# Check S3 access logs\naws s3api list-objects-v2 --bucket sensitive-data-bucket\n\n# Check database access logs\n# Review application logs for data queries\n# Check API Gateway logs for data access\n```\n\n**3.4. Attacker Attribution:**\n- Source IP addresses\n- User agents\n- Request patterns\n- Time of attack\n- Geographic location\n\n**4. Communication & Legal**\n\n**Internal Communication:**\n- Notify security team immediately\n- Brief executive leadership\n- Inform legal and compliance teams\n- Document incident timeline\n\n**External Communication:**\n- **If data breach confirmed:**\n  - Notify affected customers (within 72 hours for GDPR)\n  - Report to regulatory authorities if required\n  - Prepare public statement if necessary\n  - Coordinate with legal for breach notifications\n\n**Compliance Considerations:**\n- GDPR: 72-hour notification requirement\n- CCPA: Notification to California residents\n- HIPAA: Breach notification to HHS\n- PCI-DSS: If payment card data involved\n\n**5. Remediation & Redesign**\n\n**5.1. SSRF Prevention:**\n\n**Input Validation:**\n```python\nimport ipaddress\nfrom urllib.parse import urlparse\n\ndef validate_url(url):\n    parsed = urlparse(url)\n\n    # Block private IP ranges\n    private_ranges = [\n        ipaddress.IPv4Network('10.0.0.0/8'),\n        ipaddress.IPv4Network('172.16.0.0/12'),\n        ipaddress.IPv4Network('192.168.0.0/16'),\n        ipaddress.IPv4Network('127.0.0.0/8'),\n    ]\n\n    # Block metadata endpoints\n    blocked_hosts = [\n        '169.254.169.254',  # AWS IMDS\n        'metadata.google.internal',  # GCP\n        '169.254.169.254',  # Azure IMDS\n        'localhost',\n        '127.0.0.1',\n    ]\n\n    host = parsed.hostname\n    if host in blocked_hosts:\n        raise ValueError(\"Blocked host\")\n\n    # Resolve and check IP\n    ip = ipaddress.ip_address(host)\n    for private_range in private_ranges:\n        if ip in private_range:\n            raise ValueError(\"Private IP not allowed\")\n\n    # Whitelist approach (better)\n    allowed_domains = ['api.example.com', 'cdn.example.com']\n    if host not in allowed_domains:\n        raise ValueError(\"Domain not in whitelist\")\n\n    return url\n```\n\n**Network-Level Protections:**\n- Use outbound proxy with URL filtering\n- Block metadata endpoints at network level\n- Implement network segmentation\n- Use service mesh for service-to-service communication\n\n**5.2. Metadata Endpoint Hardening:**\n\n**AWS IMDS:**\n```bash\n# Enable IMDSv2 (session-based)\naws ec2 modify-instance-metadata-options \\\n    --instance-id i-1234567890abcdef0 \\\n    --http-tokens required \\\n    --http-put-response-hop-limit 1\n\n# Restrict metadata access via IAM\n{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Effect\": \"Deny\",\n            \"Action\": \"*\",\n            \"Resource\": \"*\",\n            \"Condition\": {\n                \"StringEquals\": {\n                    \"ec2:MetadataHttpEndpoint\": \"enabled\"\n                }\n            }\n        }\n    ]\n}\n```\n\n**5.3. Credential Management:**\n\n**Least Privilege:**\n- IAM roles with minimum necessary permissions\n- Regular permission audits\n- Use service-specific roles\n- Implement permission boundaries\n\n**Credential Rotation:**\n- Automatic credential rotation\n- Short-lived credentials (1 hour max)\n- Monitor credential usage\n- Alert on unusual credential access\n\n**5.4. Monitoring & Detection:**\n\n**Enhanced Monitoring:**\n```python\n# Monitor for SSRF patterns\ndef detect_ssrf_attempt(request):\n    url = request.json.get('url', '')\n\n    # Check for metadata endpoints\n    metadata_indicators = [\n        '169.254.169.254',\n        'metadata.google.internal',\n        'metadata.azure.com',\n    ]\n\n    for indicator in metadata_indicators:\n        if indicator in url:\n            alert_security_team({\n                'type': 'SSRF_ATTEMPT',\n                'url': url,\n                'ip': request.remote_addr,\n                'timestamp': datetime.utcnow()\n            })\n            return False\n\n    return True\n```\n\n**6. Post-Incident Improvements**\n\n**Process Improvements:**\n- Security code reviews mandatory\n- Automated SSRF testing in CI/CD\n- Threat modeling for new features\n- Security training for developers\n\n**Technical Improvements:**\n- Implement WAF rules for SSRF\n- Network-level protections\n- Enhanced logging and monitoring\n- Regular security assessments\n\n**Documentation:**\n- Incident response playbook\n- SSRF prevention guidelines\n- Security architecture documentation\n- Lessons learned document\n\n---\n\n#### Data Flow Diagram (DFD) - Attack Flow\n\n```\n┌─────────────┐\n│  Attacker   │\n│  (Internet) │\n└──────┬──────┘\n       │\n       │ 1. SSRF Request\n       │ POST /api/fetch-url\n       │ {\"url\": \"http://169.254.169.254/...\"}\n       │\n       ▼\n┌─────────────────────────────────────┐\n│   Public API Server                 │\n│  ┌──────────────────────────────┐  │\n│  │  Vulnerable Endpoint          │  │\n│  │  - No URL Validation          │  │\n│  │  - Direct requests.get()     │  │\n│  └───────────┬──────────────────┘  │\n└──────────────┼──────────────────────┘\n               │\n               │ 2. Server Makes Request\n               │ (From API Server)\n               │\n               ▼\n┌─────────────────────────────────────┐\n│   Cloud Metadata Service            │\n│  (169.254.169.254)                  │\n│  ┌──────────────────────────────┐  │\n│  │  IAM Credentials              │  │\n│  │  Temporary Access Tokens      │  │\n│  └───────────┬──────────────────┘  │\n└──────────────┼──────────────────────┘\n               │\n               │ 3. Credentials Returned\n               │\n               ▼\n┌─────────────────────────────────────┐\n│   Attacker Receives Credentials     │\n│  (Via SSRF Response)                │\n└───────────┬─────────────────────────┘\n            │\n            │ 4. Use Credentials\n            │\n            ▼\n┌─────────────────────────────────────┐\n│   Cloud Services                    │\n│  - S3 Buckets (Customer Data)       │\n│  - Databases (PII)                  │\n│  - Other Services                   │\n└─────────────────────────────────────┘\n\nTrust Boundaries (Broken):\n- Attacker ↔ API Server (should be blocked)\n- API Server ↔ Metadata Service (should be restricted)\n- Metadata Service ↔ Cloud Services (should use least privilege)\n```\n\n**Secure Architecture:**\n```\n┌─────────────┐\n│  Attacker   │\n└──────┬──────┘\n       │\n       │ SSRF Attempt\n       │\n       ▼\n┌─────────────────────────────────────┐\n│   Public API Server                 │\n│  ┌──────────────────────────────┐  │\n│  │  URL Validation               │  │\n│  │  - Whitelist Domains          │  │\n│  │  - Block Private IPs         │  │\n│  │  - Block Metadata Endpoints   │  │\n│  └───────────┬──────────────────┘  │\n│              │                       │\n│  ┌───────────▼──────────────────┐  │\n│  │  Outbound Proxy               │  │\n│  │  - URL Filtering              │  │\n│  │  - Network Segmentation       │  │\n│  └──────────────────────────────┘  │\n└─────────────────────────────────────┘\n              │\n              │ Blocked Request\n              │\n              ▼\n┌─────────────────────────────────────┐\n│   Metadata Service                  │\n│  ┌──────────────────────────────┐  │\n│  │  IMDSv2 (Session-Based)      │  │\n│  │  - Restricted Access         │  │\n│  │  - IAM Policies              │  │\n│  └──────────────────────────────┘  │\n└─────────────────────────────────────┘\n\nAdditional Protections:\n- Network segmentation\n- Service-specific IAM roles\n- Least privilege permissions\n- Comprehensive monitoring\n```\n\n---\n\n### Key takeaways\n\n1. **SSRF is dangerous**: Can lead to cloud credential theft\n2. **Input validation is critical**: Always validate and sanitize URLs\n3. **Network segmentation**: Isolate services, block metadata access\n4. **Least privilege**: IAM roles with minimum permissions\n5. **Monitor metadata access**: Alert on any metadata endpoint access\n6. **Incident response**: Have playbook ready for SSRF incidents\n7. **Defense in depth**: Multiple layers of protection\n\n---\n\n*[Additional Advanced Scenarios continue in Part 2...]*\n\n---"
+    },
+    {
+      "id": "sb394e99832f9",
+      "title": "Threat Modeling a Cloud-Native Product",
+      "source": "Practice & Exercises/Practice Scenarios and Exercises.md",
+      "collection": "practice-exercises",
+      "kind": "threat-model",
+      "difficulty": "intermediate",
+      "minutes": 14,
+      "relatedTopicIds": [
+        "cloud-security-architecture",
+        "cloud-attack-paths",
+        "kubernetes-security-hardening",
+        "container-security"
+      ],
+      "briefMarkdown": "A team is building a new microservices-based SaaS product with:\n- User authentication service (OAuth 2.0)\n- Payment processing service\n- Data analytics service\n- All services communicate via REST APIs\n- Deployed on Kubernetes\n- Uses service mesh (Istio)",
+      "tasks": [
+        "Conduct threat modeling** using STRIDE",
+        "Identify top 5 threats",
+        "Propose mitigations",
+        "Explain your process"
+      ],
+      "prompts": [
+        "How would you approach this threat modeling session?",
+        "What threats are specific to microservices?",
+        "How would you prioritize threats?",
+        "What mitigations would you recommend?",
+        "How would you document this?"
+      ],
+      "answerMarkdown": "1. Process:\n   - Gather architecture diagrams\n   - Identify data flows\n   - Identify trust boundaries\n   - Apply STRIDE per component\n   - Assess risk (DREAD or similar)\n\n2. Key Threats:\n   - Spoofing: Service identity, API keys\n   - Tampering: Data in transit, API requests\n   - Repudiation: Missing audit logs\n   - Information Disclosure: Unencrypted data, exposed APIs\n   - Denial of Service: Resource exhaustion, rate limiting\n   - Elevation of Privilege: RBAC misconfigurations\n\n3. Top 5 Threats:\n   1. Unauthorized service-to-service access (Spoofing)\n   2. Man-in-the-middle attacks (Tampering)\n   3. Sensitive data exposure (Information Disclosure)\n   4. API abuse/DoS (Denial of Service)\n   5. Privilege escalation (Elevation of Privilege)\n\n4. Mitigations:\n   - mTLS for service-to-service communication\n   - API authentication and authorization\n   - Encryption at rest and in transit\n   - Rate limiting and circuit breakers\n   - Comprehensive logging and monitoring"
+    },
+    {
+      "id": "saae9f4610b50",
+      "title": "Threat Modeling for Cloud-Native Microservices",
+      "source": "Product Security Real-World Scenarios/Product Security Real-World Scenarios - Comprehensive Guide.md",
+      "collection": "product-real-world",
+      "kind": "threat-model",
+      "difficulty": "intermediate",
+      "minutes": 14,
+      "relatedTopicIds": [
+        "cloud-security-architecture",
+        "cloud-attack-paths",
+        "threat-modeling",
+        "oauth"
+      ],
+      "briefMarkdown": "You're designing a threat model for a cloud-native microservices-based service handling sensitive user health data (HIPAA-regulated). The system consists of:\n- API Gateway (Kong/AWS API Gateway)\n- Authentication Service (OAuth 2.0)\n- User Service (manages user profiles)\n- Health Data Service (processes health records)\n- Analytics Service (aggregates data)\n- Database (PostgreSQL with encryption)\n- Message Queue (RabbitMQ/Kafka)\n- Logging & Monitoring (ELK Stack)\n\n**Prompt:** How would you represent this using a DFD, what threats do you identify using STRIDE, and what mitigations do you propose?",
+      "tasks": [
+        "Clarify scope, assets, and constraints",
+        "Name the top risks and why they matter",
+        "Propose containment or controls in priority order",
+        "Say how you verify and who you tell"
+      ],
+      "prompts": [
+        "What do you do in the first hour?",
+        "What is out of scope or deferred, and why?",
+        "How do you prove the fix worked?"
+      ],
+      "answerMarkdown": "**1. Data Flow Diagram (DFD)**\n\n```\n┌─────────────────┐\n│   User Device   │\n│  (Mobile/Web)   │\n└────────┬────────┘\n         │ HTTPS Request\n         │ (User Credentials)\n         │\n         ▼\n┌─────────────────────────────────────┐\n│      API Gateway                    │\n│  (Kong / AWS API Gateway)           │\n│  ┌──────────────────────────────┐  │\n│  │  Rate Limiting               │  │\n│  │  SSL Termination             │  │\n│  │  Request Routing             │  │\n│  └───────────┬──────────────────┘  │\n└─────────────┼──────────────────────┘\n              │\n              │ Authenticated Request\n              │ (JWT Token)\n              │\n              ▼\n┌─────────────────────────────────────┐\n│   Authentication Service             │\n│  ┌──────────────────────────────┐   │\n│  │  OAuth 2.0 Provider          │   │\n│  │  Token Generation            │   │\n│  │  User Validation             │   │\n│  └───────────┬──────────────────┘   │\n└─────────────┼───────────────────────┘\n              │\n              │ Valid Token\n              │\n              ▼\n┌─────────────────────────────────────┐\n│      User Service                    │\n│  ┌──────────────────────────────┐   │\n│  │  User Profile Management     │   │\n│  │  Authorization Checks        │   │\n│  └───────────┬──────────────────┘   │\n└─────────────┼───────────────────────┘\n              │\n              │ Authorized Request\n              │\n              ▼\n┌─────────────────────────────────────┐\n│   Health Data Service               │\n│  ┌──────────────────────────────┐   │\n│  │  Health Record Processing    │   │\n│  │  Data Validation            │   │\n│  │  Business Logic              │   │\n│  └───────────┬──────────────────┘   │\n└─────────────┼───────────────────────┘\n              │\n              │ Encrypted Data\n              │\n              ▼\n┌─────────────────────────────────────┐\n│   PostgreSQL Database                │\n│  ┌──────────────────────────────┐   │\n│  │  Encrypted at Rest (TDE)      │   │\n│  │  Health Records (PHI)         │   │\n│  │  User Profiles               │   │\n│  └──────────────────────────────┘   │\n└─────────────────────────────────────┘\n\nParallel Flows:\n┌─────────────────────────────────────┐\n│   Message Queue (RabbitMQ/Kafka)    │\n│  ┌──────────────────────────────┐   │\n│  │  Event Publishing            │   │\n│  │  Service Communication       │   │\n│  └───────────┬──────────────────┘   │\n└─────────────┼───────────────────────┘\n              │\n              ▼\n┌─────────────────────────────────────┐\n│   Analytics Service                 │\n│  ┌──────────────────────────────┐   │\n│  │  Data Aggregation             │   │\n│  │  Statistical Analysis         │   │\n│  └──────────────────────────────┘   │\n└─────────────────────────────────────┘\n\n┌─────────────────────────────────────┐\n│   Logging & Monitoring (ELK)         │\n│  ┌──────────────────────────────┐   │\n│  │  Application Logs            │   │\n│  │  Security Events             │   │\n│  │  Performance Metrics         │   │\n│  └──────────────────────────────┘   │\n└─────────────────────────────────────┘\n\nTrust Boundaries:\n- Internet ↔ API Gateway (untrusted)\n- API Gateway ↔ Services (authenticated)\n- Services ↔ Database (encrypted, authenticated)\n- Services ↔ Message Queue (authenticated)\n- Services ↔ Logging (potentially sensitive)\n```\n\n**2. STRIDE Threat Analysis**\n\n**S - Spoofing (Identity Spoofing)**\n\n**Threats:**\n1. **Fake User Tokens**: Attacker creates or steals JWT tokens\n2. **Service Impersonation**: One service impersonates another\n3. **API Key Theft**: Stolen API keys used for unauthorized access\n\n**Mitigations:**\n- **Strong Authentication**: OAuth 2.0 with PKCE, MFA\n- **Token Security**: Short-lived tokens, refresh token rotation\n- **Service Identity**: mTLS between services, service mesh (Istio/Linkerd)\n- **API Key Management**: Secure storage, rotation, least privilege\n- **Token Validation**: Verify signatures, check expiration, validate audience\n\n**T - Tampering (Data Tampering)**\n\n**Threats:**\n1. **Data in Transit**: Man-in-the-middle attacks\n2. **Data at Rest**: Unauthorized database modifications\n3. **Message Queue**: Tampered messages between services\n4. **Log Tampering**: Altered audit logs\n\n**Mitigations:**\n- **Encryption in Transit**: TLS 1.3 for all communications\n- **Encryption at Rest**: Database encryption (TDE), encrypted volumes\n- **Message Integrity**: Digital signatures for messages, message authentication\n- **Immutable Logs**: Write-only logging, blockchain-based audit logs\n- **Data Validation**: Input validation, output encoding\n- **Database Security**: Row-level security, audit triggers\n\n**R - Repudiation (Non-Repudiation)**\n\n**Threats:**\n1. **Action Denial**: Users deny performing actions\n2. **Service Denial**: Services deny processing requests\n3. **Audit Gaps**: Missing or incomplete audit trails\n\n**Mitigations:**\n- **Comprehensive Logging**: All actions logged with timestamps\n- **User Attribution**: Every action tied to authenticated user\n- **Service Attribution**: Service identity in all logs\n- **Immutable Audit Trail**: Tamper-proof logging\n- **Digital Signatures**: Cryptographic proof of actions\n- **Log Retention**: Long-term storage, compliance requirements\n\n**I - Information Disclosure**\n\n**Threats:**\n1. **Sensitive Data in Logs**: PHI/PII in application logs\n2. **Database Exposure**: Unauthorized database access\n3. **API Response Leakage**: Sensitive data in API responses\n4. **Error Messages**: Information disclosure in error messages\n5. **Message Queue**: Sensitive data in messages\n\n**Mitigations:**\n- **Data Masking**: Mask PII/PHI in logs and responses\n- **Access Controls**: Database access controls, row-level security\n- **Encryption**: Encrypt sensitive data fields\n- **Error Handling**: Generic error messages, no stack traces in production\n- **API Security**: Field-level access control, data filtering\n- **Log Sanitization**: Automated log sanitization\n- **Data Classification**: Tag sensitive data, enforce policies\n\n**D - Denial of Service (DoS)**\n\n**Threats:**\n1. **API Gateway Overload**: DDoS attacks on API gateway\n2. **Service Exhaustion**: Resource exhaustion attacks\n3. **Database Overload**: Query-based DoS\n4. **Message Queue Flood**: Message queue saturation\n\n**Mitigations:**\n- **Rate Limiting**: Per-user, per-IP, per-API key rate limits\n- **Circuit Breakers**: Prevent cascade failures\n- **Resource Limits**: CPU, memory, connection limits\n- **Auto-scaling**: Scale resources based on demand\n- **DDoS Protection**: Cloud DDoS protection (AWS Shield, Cloudflare)\n- **Query Optimization**: Database query limits, connection pooling\n- **Throttling**: Progressive throttling, backoff strategies\n\n**E - Elevation of Privilege**\n\n**Threats:**\n1. **Token Escalation**: Regular user tokens with admin privileges\n2. **Service Privilege Escalation**: Service accessing unauthorized resources\n3. **Database Privilege Escalation**: Database user with excessive permissions\n4. **Container Escape**: Container accessing host resources\n\n**Mitigations:**\n- **Least Privilege**: Minimum necessary permissions\n- **Role-Based Access Control (RBAC)**: Fine-grained permissions\n- **Token Scopes**: Limited token scopes, principle of least privilege\n- **Service Accounts**: Separate service accounts with minimal permissions\n- **Database Security**: Database user with minimal permissions\n- **Container Security**: Non-root containers, read-only filesystems\n- **Regular Audits**: Periodic permission reviews\n\n**3. Additional HIPAA-Specific Threats**\n\n**HIPAA Requirements:**\n- **Administrative Safeguards**: Security management, workforce training\n- **Physical Safeguards**: Facility access controls, workstation security\n- **Technical Safeguards**: Access control, audit controls, integrity, transmission security\n\n**Additional Mitigations:**\n- **Business Associate Agreements (BAA)**: With cloud providers\n- **Encryption**: End-to-end encryption for PHI\n- **Access Controls**: Role-based access, user authentication\n- **Audit Logs**: Comprehensive audit trails for PHI access\n- **Backup & Recovery**: Secure backup procedures\n- **Incident Response**: Breach notification procedures\n\n**4. Risk Prioritization (DREAD Model)**\n\n**High Priority Threats:**\n1. **Information Disclosure** (PHI exposure) - Damage: 10, Reproducibility: 9, Exploitability: 7, Affected Users: 10, Discoverability: 8\n2. **Spoofing** (Token theft) - Damage: 9, Reproducibility: 8, Exploitability: 6, Affected Users: 9, Discoverability: 7\n3. **Tampering** (Data modification) - Damage: 9, Reproducibility: 7, Exploitability: 6, Affected Users: 8, Discoverability: 6\n\n**Medium Priority Threats:**\n4. **Denial of Service** - Damage: 6, Reproducibility: 9, Exploitability: 8, Affected Users: 7, Discoverability: 9\n5. **Elevation of Privilege** - Damage: 8, Reproducibility: 6, Exploitability: 5, Affected Users: 6, Discoverability: 5\n\n**Low Priority Threats:**\n6. **Repudiation** - Damage: 5, Reproducibility: 7, Exploitability: 4, Affected Users: 5, Discoverability: 6\n\n**5. Implementation Roadmap**\n\n**Phase 1: Foundation (Weeks 1-4)**\n- Implement mTLS between services\n- Set up comprehensive logging\n- Enable encryption at rest\n- Implement basic rate limiting\n\n**Phase 2: Access Control (Weeks 5-8)**\n- Implement RBAC\n- Token scope restrictions\n- Service account management\n- Database access controls\n\n**Phase 3: Monitoring & Detection (Weeks 9-12)**\n- SIEM integration\n- Anomaly detection\n- Security monitoring\n- Incident response procedures\n\n**Phase 4: Advanced Security (Weeks 13-16)**\n- Service mesh implementation\n- Advanced threat detection\n- Automated security testing\n- Compliance validation\n\n---\n\n### Key takeaways\n\n1. **Threat modeling is iterative**: Update as system evolves\n2. **STRIDE is comprehensive**: Covers all major threat categories\n3. **DFD helps visualization**: Understand data flows and trust boundaries\n4. **Prioritize by risk**: Focus on high-impact, high-likelihood threats\n5. **Compliance matters**: HIPAA, GDPR, etc. add specific requirements\n6. **Defense in depth**: Multiple layers of security controls\n\n---"
+    }
+  ]
+}

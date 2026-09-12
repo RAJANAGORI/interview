@@ -1,0 +1,1135 @@
+{
+  "id": "n3a1ae7045dbc423",
+  "title": "System Design for Security",
+  "markdown": "**Security system design** interviews ask you to **architect a real product capability**-login, file upload, SSO, secret rotation-under **scale, latency, abuse, and compliance** constraints. Strong candidates **lead with abuse cases**, draw **trust boundaries**, layer **controls**, and define **verification metrics**-not jump to \"we'll use AES-256.\"\n\nThis guide follows the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)** and includes **worked design sketches** for high-value prompts.",
+  "notes": "Security system design interviews ask you to architect a real product capability-login, file upload, SSO, secret rotation-under scale, latency, abuse, and compliance constraints. Strong candidates lead with abuse cases, draw trust boundaries, layer controls, and define verification metrics-not jump to \"we'll use AES-256.\"\n\nThis guide follows the Content Mastery Framework and includes worked design sketches for high-value prompts.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "n5dca107af4a65f5",
+      "title": "At a glance",
+      "markdown": "**Security system design** interviews ask you to **architect a real product capability**-login, file upload, SSO, secret rotation-under **scale, latency, abuse, and compliance** constraints. Strong candidates **lead with abuse cases**, draw **trust boundaries**, layer **controls**, and define **verification metrics**-not jump to \"we'll use AES-256.\"\n\nThis guide follows the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)** and includes **worked design sketches** for high-value prompts.",
+      "notes": "Security system design interviews ask you to architect a real product capability-login, file upload, SSO, secret rotation-under scale, latency, abuse, and compliance constraints. Strong candidates lead with abuse cases, draw trust boundaries, layer controls, and define verification metrics-not jump to \"we'll use AES-256.\"\n\nThis guide follows the Content Mastery Framework and includes worked design sketches for high-value prompts.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Security system design interviews ask you to architect a real product...",
+      "expanded": false
+    },
+    {
+      "id": "n70cf89d39b229ec",
+      "title": "The design answer framework (use every time)",
+      "markdown": "Clarify scope - users, scale (QPS, data size), SLA, compliance (PCI, HIPAA), online/offl",
+      "notes": "Clarify scope - users, scale (QPS, data size), SLA, compliance (PCI, HIPAA), online/offl",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n6381b89dbb59942",
+          "title": "Clarify scope - users, scale (QPS, data size), SLA, compliance (PCI, HIPAA), online/offl",
+          "markdown": "- Clarify scope - users, scale (QPS, data size), SLA, compliance (PCI, HIPAA), online/offl",
+          "notes": "Clarify scope - users, scale (QPS, data size), SLA, compliance (PCI, HIPAA), online/offl",
+          "blurb": "Clarify scope - users, scale (QPS, data size), SLA, compliance (PCI, HIPAA),...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n6c2c581df1f579e",
+          "title": "Assets & trust boundaries - what must stay confidential/integrity/authentic?",
+          "markdown": "- Assets & trust boundaries - what must stay confidential/integrity/authentic?",
+          "notes": "Assets & trust boundaries - what must stay confidential/integrity/authentic?",
+          "blurb": "Assets & trust boundaries - what must stay confidential/integrity/authentic?",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n5e8529bf07c74be",
+          "title": "Top 3 abuse cases - attacker goals, not features first.",
+          "markdown": "- Top 3 abuse cases - attacker goals, not features first.",
+          "notes": "Top 3 abuse cases - attacker goals, not features first.",
+          "blurb": "Top 3 abuse cases - attacker goals, not features first.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "na206759d34ed81a",
+          "title": "Architecture - components, data flows, crypto at boundaries.",
+          "markdown": "- Architecture - components, data flows, crypto at boundaries.",
+          "notes": "Architecture - components, data flows, crypto at boundaries.",
+          "blurb": "Architecture - components, data flows, crypto at boundaries.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n162e7fc7cd1648a",
+          "title": "Controls by layer - identity, transport, app, data, ops, detection.",
+          "markdown": "- Controls by layer - identity, transport, app, data, ops, detection.",
+          "notes": "Controls by layer - identity, transport, app, data, ops, detection.",
+          "blurb": "Controls by layer - identity, transport, app, data, ops, detection.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nbbb68897628b8c6",
+          "title": "Failure modes - safe degradation, break-glass, IdP down.",
+          "markdown": "- Failure modes - safe degradation, break-glass, IdP down.",
+          "notes": "Failure modes - safe degradation, break-glass, IdP down.",
+          "blurb": "Failure modes - safe degradation, break-glass, IdP down.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n9782cbd07e37d35",
+          "title": "Verification - metrics, tests, chaos/red-team hooks.",
+          "markdown": "- Verification - metrics, tests, chaos/red-team hooks.",
+          "notes": "Verification - metrics, tests, chaos/red-team hooks.",
+          "blurb": "Verification - metrics, tests, chaos/red-team hooks.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n884203e593f6c4a",
+          "title": "Rollout - phased enablement, feature flags, backwards compatibility.",
+          "markdown": "- Rollout - phased enablement, feature flags, backwards compatibility.",
+          "notes": "Rollout - phased enablement, feature flags, backwards compatibility.",
+          "blurb": "Rollout - phased enablement, feature flags, backwards compatibility.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Clarify scope - users, scale (QPS, data size), SLA, compliance (PCI, HIPAA),...",
+      "expanded": true
+    },
+    {
+      "id": "n724b74a38bbb55d",
+      "title": "Prompt 1: Rate-limited login and account lockout",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n6c7525e77e51e6f",
+          "title": "Abuse cases",
+          "markdown": "Credential stuffing, password spraying, user enumeration, lockout DoS on victims.",
+          "notes": "Credential stuffing, password spraying, user enumeration, lockout DoS on victims.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Credential stuffing, password spraying, user enumeration, lockout DoS on...",
+          "expanded": false
+        },
+        {
+          "id": "n33dbed500fef83e",
+          "title": "Design sketch",
+          "markdown": "```\nClient -> CDN/WAF -> API Gateway -> Auth Service -> User DB\n                         \u2502\n                    Rate limiter (Redis/token bucket per IP + per username)\n                         \u2502\n                    Risk engine (velocity, ASN, known breach passwords)\n```\n\n**Controls:**",
+          "notes": "Client -> CDN/WAF -> API Gateway -> Auth Service -> User DB\n                         \u2502\n                    Rate limiter (Redis/token bucket per IP + per username)\n                         \u2502\n                    Risk engine (velocity, ASN, known breach passwords)\n\nControls:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n2f8bc81873e4f6d",
+              "title": "Constant-time auth responses; generic error messages (anti-enumeration).",
+              "markdown": "- Constant-time auth responses; generic error messages (anti-enumeration).",
+              "notes": "Constant-time auth responses; generic error messages (anti-enumeration).",
+              "blurb": "Constant-time auth responses; generic error messages (anti-enumeration).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ne510b8977d1b669",
+              "title": "Rate limits: per-IP, per-username, exponential backoff; stricter on auth endpoints.",
+              "markdown": "- Rate limits: per-IP, per-username, exponential backoff; stricter on auth endpoints.",
+              "notes": "Rate limits: per-IP, per-username, exponential backoff; stricter on auth endpoints.",
+              "blurb": "Rate limits: per-IP, per-username, exponential backoff; stricter on auth...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n022210dc4004d4c",
+              "title": "Lockout: prefer soft lock + CAPTCHA/MFA step-up over permanent lock (avoid attacker-trig",
+              "markdown": "- Lockout: prefer soft lock + CAPTCHA/MFA step-up over permanent lock (avoid attacker-trig",
+              "notes": "Lockout: prefer soft lock + CAPTCHA/MFA step-up over permanent lock (avoid attacker-trig",
+              "blurb": "Lockout: prefer soft lock + CAPTCHA/MFA step-up over permanent lock (avoid...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ncee0420164ec50a",
+              "title": "Breach password list (HIBP k-anonymity API or local bloom filter).",
+              "markdown": "- Breach password list (HIBP k-anonymity API or local bloom filter).",
+              "notes": "Breach password list (HIBP k-anonymity API or local bloom filter).",
+              "blurb": "Breach password list (HIBP k-anonymity API or local bloom filter).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ndd572aebfbf52c4",
+              "title": "MFA for anomalous logins; device cookies with rotation.",
+              "markdown": "- MFA for anomalous logins; device cookies with rotation.",
+              "notes": "MFA for anomalous logins; device cookies with rotation.",
+              "blurb": "MFA for anomalous logins; device cookies with rotation.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Client -> CDN/WAF -> API Gateway -> Auth Service -> User DB \u2502 Rate limiter...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Abuse cases",
+      "expanded": true
+    },
+    {
+      "id": "n37936b031531265",
+      "title": "Prompt 2: SSO + token validation for multi-tenant SaaS",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n8fc2cc5ae88a114",
+          "title": "Abuse cases",
+          "markdown": "Token replay, cross-tenant ID confusion, IdP misconfiguration, stale session after offboarding.",
+          "notes": "Token replay, cross-tenant ID confusion, IdP misconfiguration, stale session after offboarding.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Token replay, cross-tenant ID confusion, IdP misconfiguration, stale session...",
+          "expanded": false
+        },
+        {
+          "id": "nd5f7d01bac41274",
+          "title": "Design sketch",
+          "markdown": "```\nBrowser -> IdP (OIDC) -> Callback -> Auth Service issues session/JWT\n                                         \u2502\n                    Tenant resolver (issuer + org_id claim, allowlist)\n                                         \u2502\n                    API validates JWT (signature, aud, exp, tenant_id) every request\n```\n\n**Controls:**",
+          "notes": "Browser -> IdP (OIDC) -> Callback -> Auth Service issues session/JWT\n                                         \u2502\n                    Tenant resolver (issuer + orgid claim, allowlist)\n                                         \u2502\n                    API validates JWT (signature, aud, exp, tenantid) every request\n\nControls:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n8e5e18c293cb0f8",
+              "title": "OIDC with PKCE for public clients; strict aud/iss validation.",
+              "markdown": "- OIDC with PKCE for public clients; strict aud/iss validation.",
+              "notes": "OIDC with PKCE for public clients; strict aud/iss validation.",
+              "blurb": "OIDC with PKCE for public clients; strict aud/iss validation.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6fa696103d1d306",
+              "title": "Tenant ID in token claims mapped to partition key; never trust client-supplied tenant he",
+              "markdown": "- Tenant ID in token claims mapped to partition key; never trust client-supplied tenant he",
+              "notes": "Tenant ID in token claims mapped to partition key; never trust client-supplied tenant he",
+              "blurb": "Tenant ID in token claims mapped to partition key; never trust...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n626ab01b7038069",
+              "title": "JWKS cache with key rotation support; short access token TTL + refresh rotation.",
+              "markdown": "- JWKS cache with key rotation support; short access token TTL + refresh rotation.",
+              "notes": "JWKS cache with key rotation support; short access token TTL + refresh rotation.",
+              "blurb": "JWKS cache with key rotation support; short access token TTL + refresh...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc9cc172a3815fe9",
+              "title": "SCIM/offboarding hook to revoke sessions within minutes.",
+              "markdown": "- SCIM/offboarding hook to revoke sessions within minutes.",
+              "notes": "SCIM/offboarding hook to revoke sessions within minutes.",
+              "blurb": "SCIM/offboarding hook to revoke sessions within minutes.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Browser -> IdP (OIDC) -> Callback -> Auth Service issues session/JWT \u2502...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Abuse cases",
+      "expanded": true
+    },
+    {
+      "id": "n03c5665389d783a",
+      "title": "Prompt 3: Secure file upload pipeline at scale",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n51278941dc70bca",
+          "title": "Abuse cases",
+          "markdown": "Malware hosting, web shell upload, SSRF via image processors, storage cost abuse, zip slip.",
+          "notes": "Malware hosting, web shell upload, SSRF via image processors, storage cost abuse, zip slip.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Malware hosting, web shell upload, SSRF via image processors, storage cost...",
+          "expanded": false
+        },
+        {
+          "id": "n2244dbb8edec7cf",
+          "title": "Design sketch",
+          "markdown": "```\nClient -> Pre-signed POST (size/type limits) -> Quarantine bucket\n       -> Async scan (ClamAV/Lambda) -> Metadata strip -> Safe bucket -> CDN (optional)\n```\n\n**Controls:**",
+          "notes": "Client -> Pre-signed POST (size/type limits) -> Quarantine bucket\n       -> Async scan (ClamAV/Lambda) -> Metadata strip -> Safe bucket -> CDN (optional)\n\nControls:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n6d274c7b50cb68f",
+              "title": "Pre-signed URLs with content-length, content-type conditions; virus scan before promote.",
+              "markdown": "- Pre-signed URLs with content-length, content-type conditions; virus scan before promote.",
+              "notes": "Pre-signed URLs with content-length, content-type conditions; virus scan before promote.",
+              "blurb": "Pre-signed URLs with content-length, content-type conditions; virus scan...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n314e45d18869880",
+              "title": "Separate bucket/account for quarantine; no execute on storage; random object keys.",
+              "markdown": "- Separate bucket/account for quarantine; no execute on storage; random object keys.",
+              "notes": "Separate bucket/account for quarantine; no execute on storage; random object keys.",
+              "blurb": "Separate bucket/account for quarantine; no execute on storage; random object...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n44bb0af133087c1",
+              "title": "Magic-byte validation, not extension; ImageMagick sandbox or safe libraries.",
+              "markdown": "- Magic-byte validation, not extension; ImageMagick sandbox or safe libraries.",
+              "notes": "Magic-byte validation, not extension; ImageMagick sandbox or safe libraries.",
+              "blurb": "Magic-byte validation, not extension; ImageMagick sandbox or safe libraries.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6aac8082734609f",
+              "title": "Rate limits and per-user quotas; WAF on download if public.",
+              "markdown": "- Rate limits and per-user quotas; WAF on download if public.",
+              "notes": "Rate limits and per-user quotas; WAF on download if public.",
+              "blurb": "Rate limits and per-user quotas; WAF on download if public.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Client -> Pre-signed POST (size/type limits) -> Quarantine bucket -> Async...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Abuse cases",
+      "expanded": false
+    },
+    {
+      "id": "n4e56b5407fb74de",
+      "title": "Prompt 4: Secret rotation for microservices",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nba549f03eb79084",
+          "title": "Abuse cases",
+          "markdown": "Long-lived DB passwords in env vars, leaked secrets in logs, rotation causing outage.",
+          "notes": "Long-lived DB passwords in env vars, leaked secrets in logs, rotation causing outage.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Long-lived DB passwords in env vars, leaked secrets in logs, rotation...",
+          "expanded": false
+        },
+        {
+          "id": "n517f221922efbb9",
+          "title": "Design sketch",
+          "markdown": "```\nVault / Secrets Manager -> Dynamic creds OR versioned static secrets\n       -> Sidecar/agent injects at runtime (not in git)\n       -> Dual-credential window during rotation\n```\n\n**Controls:**",
+          "notes": "Vault / Secrets Manager -> Dynamic creds OR versioned static secrets\n       -> Sidecar/agent injects at runtime (not in git)\n       -> Dual-credential window during rotation\n\nControls:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nd77146564194ea6",
+              "title": "Central secret store with audit; no secrets in CI logs.",
+              "markdown": "- Central secret store with audit; no secrets in CI logs.",
+              "notes": "Central secret store with audit; no secrets in CI logs.",
+              "blurb": "Central secret store with audit; no secrets in CI logs.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n1884c3c7056117c",
+              "title": "Dynamic secrets (DB user per session) where supported.",
+              "markdown": "- Dynamic secrets (DB user per session) where supported.",
+              "notes": "Dynamic secrets (DB user per session) where supported.",
+              "blurb": "Dynamic secrets (DB user per session) where supported.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5c13f3bcb2a9ccd",
+              "title": "Rotation playbook: grant new cred -> rolling restart -> revoke old.",
+              "markdown": "- Rotation playbook: grant new cred -> rolling restart -> revoke old.",
+              "notes": "Rotation playbook: grant new cred -> rolling restart -> revoke old.",
+              "blurb": "Rotation playbook: grant new cred -> rolling restart -> revoke old.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5ad530707e7163c",
+              "title": "Break-glass credentials in HSM with alerting.",
+              "markdown": "- Break-glass credentials in HSM with alerting.",
+              "notes": "Break-glass credentials in HSM with alerting.",
+              "blurb": "Break-glass credentials in HSM with alerting.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Vault / Secrets Manager -> Dynamic creds OR versioned static secrets ->...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Abuse cases",
+      "expanded": false
+    },
+    {
+      "id": "ne0c4378994e8ae3",
+      "title": "Prompt 5: Signed URLs for object storage",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n729a0160fb1e372",
+          "title": "Abuse cases",
+          "markdown": "URL sharing beyond intent, parameter tampering, indefinite access, hotlinking cost.\n\n**Controls:**",
+          "notes": "URL sharing beyond intent, parameter tampering, indefinite access, hotlinking cost.\n\nControls:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n96573eeafd7633d",
+              "title": "HMAC-SHA256 over method, path, expiry, optional IP; short TTL (minutes-hours).",
+              "markdown": "- HMAC-SHA256 over method, path, expiry, optional IP; short TTL (minutes-hours).",
+              "notes": "HMAC-SHA256 over method, path, expiry, optional IP; short TTL (minutes-hours).",
+              "blurb": "HMAC-SHA256 over method, path, expiry, optional IP; short TTL (minutes-hours).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n79f0d09091a863d",
+              "title": "Single-use tokens for sensitive downloads where needed.",
+              "markdown": "- Single-use tokens for sensitive downloads where needed.",
+              "notes": "Single-use tokens for sensitive downloads where needed.",
+              "blurb": "Single-use tokens for sensitive downloads where needed.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na048d2a404258d9",
+              "title": "Separate signing key per tenant; key rotation with dual verification window.",
+              "markdown": "- Separate signing key per tenant; key rotation with dual verification window.",
+              "notes": "Separate signing key per tenant; key rotation with dual verification window.",
+              "blurb": "Separate signing key per tenant; key rotation with dual verification window.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nbc7637dd1f27d83",
+              "title": "CDN integration (CloudFront signed cookies/URLs).",
+              "markdown": "- CDN integration (CloudFront signed cookies/URLs).",
+              "notes": "CDN integration (CloudFront signed cookies/URLs).",
+              "blurb": "CDN integration (CloudFront signed cookies/URLs).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "URL sharing beyond intent, parameter tampering, indefinite access,...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Abuse cases",
+      "expanded": false
+    },
+    {
+      "id": "n17995b0da8f5620",
+      "title": "Prompt 6: Design a secure password manager (E2E encrypted)",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nbd85d160deae254",
+          "title": "Abuse cases",
+          "markdown": "Server reads vault, weak KDF, clipboard leak, account recovery abuse, device theft.",
+          "notes": "Server reads vault, weak KDF, clipboard leak, account recovery abuse, device theft.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Server reads vault, weak KDF, clipboard leak, account recovery abuse, device...",
+          "expanded": false
+        },
+        {
+          "id": "n610529b231673e1",
+          "title": "Design sketch",
+          "markdown": "```\nClient derives keys from master password + salt (Argon2id)\n       -> Encrypt vault blob client-side -> Store ciphertext only on server\n       -> Zero-knowledge: server never sees master password or keys\n```\n\n**Controls:**",
+          "notes": "Client derives keys from master password + salt (Argon2id)\n       -> Encrypt vault blob client-side -> Store ciphertext only on server\n       -> Zero-knowledge: server never sees master password or keys\n\nControls:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n6687634851e09e2",
+              "title": "Argon2id with tuned memory/time; unique salt per user.",
+              "markdown": "- Argon2id with tuned memory/time; unique salt per user.",
+              "notes": "Argon2id with tuned memory/time; unique salt per user.",
+              "blurb": "Argon2id with tuned memory/time; unique salt per user.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd9141e4b824f079",
+              "title": "Authenticated encryption (AES-GCM or XChaCha20-Poly1305) for vault records.",
+              "markdown": "- Authenticated encryption (AES-GCM or XChaCha20-Poly1305) for vault records.",
+              "notes": "Authenticated encryption (AES-GCM or XChaCha20-Poly1305) for vault records.",
+              "blurb": "Authenticated encryption (AES-GCM or XChaCha20-Poly1305) for vault records.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8c6a87454beab38",
+              "title": "Recovery: secret key or Shamir shares-no email-only reset that breaks zero-knowledge.",
+              "markdown": "- Recovery: secret key or Shamir shares-no email-only reset that breaks zero-knowledge.",
+              "notes": "Recovery: secret key or Shamir shares-no email-only reset that breaks zero-knowledge.",
+              "blurb": "Recovery: secret key or Shamir shares-no email-only reset that breaks...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8ad075f78e71b01",
+              "title": "Device compromise: auto-lock, biometry for local unlock, no password in logs.",
+              "markdown": "- Device compromise: auto-lock, biometry for local unlock, no password in logs.",
+              "notes": "Device compromise: auto-lock, biometry for local unlock, no password in logs.",
+              "blurb": "Device compromise: auto-lock, biometry for local unlock, no password in logs.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Client derives keys from master password + salt (Argon2id) -> Encrypt vault...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Abuse cases",
+      "expanded": false
+    },
+    {
+      "id": "n5b1218ddc5520f6",
+      "title": "Prompt 7: Payment processing API",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "ncc33b85115b9625",
+          "title": "Abuse cases",
+          "markdown": "Double spend, idempotency bypass, PCI scope expansion, webhook replay, admin fraud.\n\n**Controls:**",
+          "notes": "Double spend, idempotency bypass, PCI scope expansion, webhook replay, admin fraud.\n\nControls:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n88fdc91f5c707a2",
+              "title": "Tokenization-never store PAN; use payment provider vault.",
+              "markdown": "- Tokenization-never store PAN; use payment provider vault.",
+              "notes": "Tokenization-never store PAN; use payment provider vault.",
+              "blurb": "Tokenization-never store PAN; use payment provider vault.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6c2c6c8a99699aa",
+              "title": "Idempotency-Key header with 24h dedup store.",
+              "markdown": "- Idempotency-Key header with 24h dedup store.",
+              "notes": "Idempotency-Key header with 24h dedup store.",
+              "blurb": "Idempotency-Key header with 24h dedup store.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n70aa4f383da6cb0",
+              "title": "mTLS or signed webhooks from processor; amount verification server-side.",
+              "markdown": "- mTLS or signed webhooks from processor; amount verification server-side.",
+              "notes": "mTLS or signed webhooks from processor; amount verification server-side.",
+              "blurb": "mTLS or signed webhooks from processor; amount verification server-side.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf424b47c0011f49",
+              "title": "Rate limits, velocity checks, audit log immutable for transactions.",
+              "markdown": "- Rate limits, velocity checks, audit log immutable for transactions.",
+              "notes": "Rate limits, velocity checks, audit log immutable for transactions.",
+              "blurb": "Rate limits, velocity checks, audit log immutable for transactions.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb25ce45675d5c02",
+              "title": "Least-privilege admin APIs with dual control for refunds.",
+              "markdown": "- Least-privilege admin APIs with dual control for refunds.",
+              "notes": "Least-privilege admin APIs with dual control for refunds.",
+              "blurb": "Least-privilege admin APIs with dual control for refunds.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Double spend, idempotency bypass, PCI scope expansion, webhook replay, admin...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Abuse cases",
+      "expanded": false
+    },
+    {
+      "id": "n6f067b020a13c7c",
+      "title": "Prompt 8: High-signal audit logging architecture",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n177cbc947b09ebe",
+          "title": "Abuse cases",
+          "markdown": "Log injection, PII in logs, tampering, drowning in noise, missing attacker actions.\n\n**Controls:**",
+          "notes": "Log injection, PII in logs, tampering, drowning in noise, missing attacker actions.\n\nControls:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n52a75666ba12f87",
+              "title": "Structured JSON; schema versioning; hash-chained or WORM storage for compliance.",
+              "markdown": "- Structured JSON; schema versioning; hash-chained or WORM storage for compliance.",
+              "notes": "Structured JSON; schema versioning; hash-chained or WORM storage for compliance.",
+              "blurb": "Structured JSON; schema versioning; hash-chained or WORM storage for...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc2c6815c790f150",
+              "title": "Who did what to which object (actor, action, resource, tenant, outcome).",
+              "markdown": "- Who did what to which object (actor, action, resource, tenant, outcome).",
+              "notes": "Who did what to which object (actor, action, resource, tenant, outcome).",
+              "blurb": "Who did what to which object (actor, action, resource, tenant, outcome).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n1b8de3a681fc59b",
+              "title": "Separate security log pipeline with retention and SIEM alerts.",
+              "markdown": "- Separate security log pipeline with retention and SIEM alerts.",
+              "notes": "Separate security log pipeline with retention and SIEM alerts.",
+              "blurb": "Separate security log pipeline with retention and SIEM alerts.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n599d0229065dc63",
+              "title": "Redact secrets/PII; sample high-volume read paths.",
+              "markdown": "- Redact secrets/PII; sample high-volume read paths.",
+              "notes": "Redact secrets/PII; sample high-volume read paths.",
+              "blurb": "Redact secrets/PII; sample high-volume read paths.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Log injection, PII in logs, tampering, drowning in noise, missing attacker...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Abuse cases",
+      "expanded": false
+    },
+    {
+      "id": "n84d306a115bc8fc",
+      "title": "Prompt 9: Third-party webhook ingestion",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nd9f4ec14d106f0a",
+          "title": "Abuse cases",
+          "markdown": "Forged events, replay, SSRF callbacks, payload bombs.\n\n**Controls:**",
+          "notes": "Forged events, replay, SSRF callbacks, payload bombs.\n\nControls:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n95751b3ffd3e656",
+              "title": "HMAC signature (Stripe/GitHub pattern) + timestamp skew window.",
+              "markdown": "- HMAC signature (Stripe/GitHub pattern) + timestamp skew window.",
+              "notes": "HMAC signature (Stripe/GitHub pattern) + timestamp skew window.",
+              "blurb": "HMAC signature (Stripe/GitHub pattern) + timestamp skew window.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8460420439751b5",
+              "title": "Idempotent processing keyed by event ID.",
+              "markdown": "- Idempotent processing keyed by event ID.",
+              "notes": "Idempotent processing keyed by event ID.",
+              "blurb": "Idempotent processing keyed by event ID.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nae7e0c96bfe2d2e",
+              "title": "Size limits, schema validation, async queue.",
+              "markdown": "- Size limits, schema validation, async queue.",
+              "notes": "Size limits, schema validation, async queue.",
+              "blurb": "Size limits, schema validation, async queue.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc74d231447cff4b",
+              "title": "Outbound callback URLs not user-controlled without allowlist (SSRF).",
+              "markdown": "- Outbound callback URLs not user-controlled without allowlist (SSRF).",
+              "notes": "Outbound callback URLs not user-controlled without allowlist (SSRF).",
+              "blurb": "Outbound callback URLs not user-controlled without allowlist (SSRF).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Forged events, replay, SSRF callbacks, payload bombs.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Abuse cases",
+      "expanded": false
+    },
+    {
+      "id": "n0ea3f0825ea88b8",
+      "title": "Prompt 10: IdP outage resilience",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nbab5bdb1f367e41",
+          "title": "Abuse cases",
+          "markdown": "Total login failure, stale cached sessions granting access to offboarded users.\n\n**Controls:**",
+          "notes": "Total login failure, stale cached sessions granting access to offboarded users.\n\nControls:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n1b4c5b7a4a3d1ce",
+              "title": "Cached JWKS with last-known-good; session TTL upper bound.",
+              "markdown": "- Cached JWKS with last-known-good; session TTL upper bound.",
+              "notes": "Cached JWKS with last-known-good; session TTL upper bound.",
+              "blurb": "Cached JWKS with last-known-good; session TTL upper bound.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5cc571a74e62d88",
+              "title": "Read-only degraded mode policy documented (continue vs deny).",
+              "markdown": "- Read-only degraded mode policy documented (continue vs deny).",
+              "notes": "Read-only degraded mode policy documented (continue vs deny).",
+              "blurb": "Read-only degraded mode policy documented (continue vs deny).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf661ad7cb1cb6fb",
+              "title": "Break-glass local accounts for ops (HSM-protected, audited).",
+              "markdown": "- Break-glass local accounts for ops (HSM-protected, audited).",
+              "notes": "Break-glass local accounts for ops (HSM-protected, audited).",
+              "blurb": "Break-glass local accounts for ops (HSM-protected, audited).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd4e30dd8937ff31",
+              "title": "Regular DR drills for IdP failure.",
+              "markdown": "- Regular DR drills for IdP failure.",
+              "notes": "Regular DR drills for IdP failure.",
+              "blurb": "Regular DR drills for IdP failure.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Total login failure, stale cached sessions granting access to offboarded...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Abuse cases",
+      "expanded": false
+    },
+    {
+      "id": "ned6377518d76a5d",
+      "title": "What interviewers score",
+      "markdown": "| Signal | Strong | Weak |\n|--------|--------|------|\n| **Trust boundaries** | Explicit diagram | Vague \"encrypt everything\" |\n| **Abuse-first** | Names attacker goals | Feature list only |\n| **Trade-offs** | UX, latency, cost | Dogma |\n| **Verification** | Metrics + tests | \"We'll monitor\" |\n| **Rollout** | Phased, flags | Big bang |",
+      "notes": "| Signal | Strong | Weak |\n|--------|--------|------|\n| Trust boundaries | Explicit diagram | Vague \"encrypt everything\" |\n| Abuse-first | Names attacker goals | Feature list only |\n| Trade-offs | UX, latency, cost | Dogma |\n| Verification | Metrics + tests | \"We'll monitor\" |\n| Rollout | Phased, flags | Big bang |",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Signal | Strong | Weak | |--------|--------|------| | Trust boundaries |...",
+      "expanded": false
+    },
+    {
+      "id": "nb081831d7feba69",
+      "title": "Practice drills",
+      "markdown": "Time yourself **15 minutes** each on prompts 1, 3, and 6. Record and review against the framework above.",
+      "notes": "Time yourself 15 minutes each on prompts 1, 3, and 6. Record and review against the framework above.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Time yourself 15 minutes each on prompts 1, 3, and 6.",
+      "expanded": false
+    },
+    {
+      "id": "n49eba47971375b7",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nc78cb958e5826d5",
+          "title": "5-step answer",
+          "markdown": "Scope -> abuse cases -> layered controls -> failure modes -> metrics/verification",
+          "notes": "Scope -> abuse cases -> layered controls -> failure modes -> metrics/verification",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Scope -> abuse cases -> layered controls -> failure modes ->...",
+          "expanded": false
+        },
+        {
+          "id": "n073fe25034f5f19",
+          "title": "Must-cover dimensions",
+          "markdown": "Identity \u00b7 authorization \u00b7 data boundaries \u00b7 secrets \u00b7 telemetry \u00b7 response",
+          "notes": "Identity \u00b7 authorization \u00b7 data boundaries \u00b7 secrets \u00b7 telemetry \u00b7 response",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Identity \u00b7 authorization \u00b7 data boundaries \u00b7 secrets \u00b7 telemetry \u00b7 response",
+          "expanded": false
+        },
+        {
+          "id": "n62152e167ddb426",
+          "title": "Strong design prompts",
+          "markdown": "Secure login \u00b7 SSO \u00b7 file upload \u00b7 secret rotation \u00b7 signed URLs \u00b7 audit logs",
+          "notes": "Secure login \u00b7 SSO \u00b7 file upload \u00b7 secret rotation \u00b7 signed URLs \u00b7 audit logs",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Secure login \u00b7 SSO \u00b7 file upload \u00b7 secret rotation \u00b7 signed URLs \u00b7 audit logs",
+          "expanded": false
+        },
+        {
+          "id": "n3d0f3bedaaf2cf3",
+          "title": "Cross-read",
+          "markdown": "`Threat Modeling` \u00b7 `IAM and Least Privilege at Scale` \u00b7 `Secure CI CD Pipeline Security`",
+          "notes": "Threat Modeling \u00b7 IAM and Least Privilege at Scale \u00b7 Secure CI CD Pipeline Security",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Threat Modeling \u00b7 IAM and Least Privilege at Scale \u00b7 Secure CI CD Pipeline...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 5-step answer"
+    },
+    {
+      "id": "ncdf3dd7507f2614",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n3768a893605bad5",
+          "title": "\"Security design is just adding WAF and MFA.\"",
+          "markdown": "**Reality:** Design quality depends on threat boundaries, authorization model, and data flow controls.",
+          "notes": "Reality: Design quality depends on threat boundaries, authorization model, and data flow controls.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Design quality depends on threat boundaries, authorization model,...",
+          "expanded": false
+        },
+        {
+          "id": "nc302ed2988af50b",
+          "title": "\"A perfect architecture can skip incident planning.\"",
+          "markdown": "**Reality:** Detection, response, and rollback paths are core design components.",
+          "notes": "Reality: Detection, response, and rollback paths are core design components.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Detection, response, and rollback paths are core design components.",
+          "expanded": false
+        },
+        {
+          "id": "n2fdea86f656b51c",
+          "title": "\"Compliance architecture equals secure architecture.\"",
+          "markdown": "**Reality:** Compliance can be necessary but not sufficient for real abuse resistance.",
+          "notes": "Reality: Compliance can be necessary but not sufficient for real abuse resistance.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Compliance can be necessary but not sufficient for real abuse...",
+          "expanded": false
+        },
+        {
+          "id": "n72a8bff533cfaed",
+          "title": "\"Zero trust means zero usability.\"",
+          "markdown": "**Reality:** Risk-adaptive controls can preserve UX while reducing exposure.",
+          "notes": "Reality: Risk-adaptive controls can preserve UX while reducing exposure.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Risk-adaptive controls can preserve UX while reducing exposure.",
+          "expanded": false
+        },
+        {
+          "id": "nf44397010ed9171",
+          "title": "\"One design works for all tenants.\"",
+          "markdown": "**Reality:** Multi-tenant isolation and policy granularity vary by risk and product model.",
+          "notes": "Reality: Multi-tenant isolation and policy granularity vary by risk and product model.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Multi-tenant isolation and policy granularity vary by risk and...",
+          "expanded": false
+        },
+        {
+          "id": "n2bfe21801ba18b8",
+          "title": "\"Logging everything solves observability.\"",
+          "markdown": "**Reality:** Structured, high-signal telemetry and response playbooks matter more than volume.",
+          "notes": "Reality: Structured, high-signal telemetry and response playbooks matter more than volume.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Structured, high-signal telemetry and response playbooks matter...",
+          "expanded": false
+        },
+        {
+          "id": "nbc28d1528425cf0",
+          "title": "\"System design questions are theoretical.\"",
+          "markdown": "**Reality:** Interviewers evaluate production realism, migration strategy, and measurable outcomes.",
+          "notes": "Reality: Interviewers evaluate production realism, migration strategy, and measurable outcomes.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Interviewers evaluate production realism, migration strategy, and...",
+          "expanded": false
+        },
+        {
+          "id": "nb1aa87e00b11ac1",
+          "title": "\"Security team alone owns architecture decisions.\"",
+          "markdown": "**Reality:** Platform, product, legal, and operations co-own key constraints.",
+          "notes": "Reality: Platform, product, legal, and operations co-own key constraints.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Platform, product, legal, and operations co-own key constraints.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \"Security design is just adding WAF and MFA.\""
+    },
+    {
+      "id": "nd373d4a9afc1e43",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n28705544b4357c3",
+          "title": "60-second answer",
+          "markdown": "**Q: How do you approach a security system design interview?**\n\n**A:** I clarify scope and assets, define top abuse cases, propose layered controls with clear trust boundaries, then discuss operational tradeoffs, telemetry, and rollout verification.",
+          "notes": "Q: How do you approach a security system design interview?\n\nA: I clarify scope and assets, define top abuse cases, propose layered controls with clear trust boundaries, then discuss operational tradeoffs, telemetry, and rollout verification.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n09b579ed8debab3",
+              "title": "Q: What if security controls hurt UX?",
+              "markdown": "**A:** Introduce risk-based controls (step-up auth, adaptive friction) and measure conversion + abuse outcomes.",
+              "notes": "A: Introduce risk-based controls (step-up auth, adaptive friction) and measure conversion + abuse outcomes.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Introduce risk-based controls (step-up auth, adaptive friction) and...",
+              "expanded": false
+            },
+            {
+              "id": "nee210d8bc7a5ac4",
+              "title": "Q: How do you prove the design works?",
+              "markdown": "**A:** Define measurable success criteria: abuse rate, false positives, MTTD/MTTR, and red-team/purple validation cadence.",
+              "notes": "A: Define measurable success criteria: abuse rate, false positives, MTTD/MTTR, and red-team/purple validation cadence.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Define measurable success criteria: abuse rate, false positives,...",
+              "expanded": false
+            },
+            {
+              "id": "nf4ac3de2ddead5c",
+              "title": "Q: What do you do during IdP outage?",
+              "markdown": "**A:** Fail in controlled mode: bounded session extension, explicit emergency policy, full auditability.",
+              "notes": "A: Fail in controlled mode: bounded session extension, explicit emergency policy, full auditability.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Fail in controlled mode: bounded session extension, explicit emergency...",
+              "expanded": false
+            },
+            {
+              "id": "n5b82304593b1ba1",
+              "title": "Q: How do you prioritize roadmap items?",
+              "markdown": "**A:** By impact x exploitability x exposure, adjusted by implementation complexity and dependency risk.",
+              "notes": "A: By impact x exploitability x exposure, adjusted by implementation complexity and dependency risk.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: By impact x exploitability x exposure, adjusted by implementation...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Q: How do you approach a security system design interview?",
+          "expanded": false
+        },
+        {
+          "id": "n6e90f73eae5e060",
+          "title": "Mock ladder",
+          "markdown": "| Level | Prompt |\n|-------|--------|\n| Junior | Design secure login |\n| Mid | Multi-tenant authZ model |\n| Senior | Secret rotation at scale |\n| Staff | Program-level security architecture |",
+          "notes": "| Level | Prompt |\n|-------|--------|\n| Junior | Design secure login |\n| Mid | Multi-tenant authZ model |\n| Senior | Secret rotation at scale |\n| Staff | Program-level security architecture |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Level | Prompt | |-------|--------| | Junior | Design secure login | | Mid...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 60-second answer"
+    }
+  ],
+  "topicId": "system-design-for-security",
+  "name": "System Design for Security",
+  "structure": "logic-right",
+  "blurb": "Security system design interviews ask you to architect a real product..."
+}

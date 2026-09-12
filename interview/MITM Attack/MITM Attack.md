@@ -7,3 +7,5 @@
 [**Critical Clarification: MITM Attack Security Misconceptions**](Critical Clarification MITM Attack Misconceptions.md)
 
 [**MITM Attack - Quick Reference Guide**](MITM Attack - Quick Reference.md)
+
+[**MITM Attack - Mind Map**](MITM%20Attack%20-%20Mind%20Map.md)

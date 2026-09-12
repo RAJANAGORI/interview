@@ -1,0 +1,1234 @@
+{
+  "id": "n256e91ce49173f1",
+  "title": "GenAI LLM Product Security",
+  "markdown": "Large language model (LLM) features add a **new trust boundary**: **untrusted natural language and documents** flow through a **non-deterministic model** that may invoke **tools**, query **retrieval stores**, and produce **outputs** consumed by people and systems. Product security means **explicit authorization outside the model**, **tenant-safe data paths**, **safe handling of model output**, and **continuous evaluation** when prompts, weights, corpora, and vendors change every release.\n\n**Primary taxonomy:** [OWASP Top 10 for LLM Applications (2025)](https://genai.owasp.org/llm-top-10/) from the OWASP GenAI Security Project. Cite the **2025** edition in interviews; older material remains useful for historical comparison on the [OWASP LLM Top 10 project page](https://owasp.org/www-project-top-10-for-large-language-model-applications/).",
+  "notes": "Large language model (LLM) features add a new trust boundary: untrusted natural language and documents flow through a non-deterministic model that may invoke tools, query retrieval stores, and produce outputs consumed by people and systems. Product security means explicit authorization outside the model, tenant-safe data paths, safe handling of model output, and continuous evaluation when prompts, weights, corpora, and vendors change every release.\n\nPrimary taxonomy: OWASP Top 10 for LLM Applications (2025) from the OWASP GenAI Security Project. Cite the 2025 edition in interviews; older material remains useful for historical comparison on the OWASP LLM Top 10 project page.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "nec95ff8d99f7737",
+      "title": "At a glance",
+      "markdown": "Large language model (LLM) features add a **new trust boundary**: **untrusted natural language and documents** flow through a **non-deterministic model** that may invoke **tools**, query **retrieval stores**, and produce **outputs** consumed by people and systems. Product security means **explicit authorization outside the model**, **tenant-safe data paths**, **safe handling of model output**, and **continuous evaluation** when prompts, weights, corpora, and vendors change every release.\n\n**Primary taxonomy:** [OWASP Top 10 for LLM Applications (2025)](https://genai.owasp.org/llm-top-10/) from the OWASP GenAI Security Project. Cite the **2025** edition in interviews; older material remains useful for historical comparison on the [OWASP LLM Top 10 project page](https://owasp.org/www-project-top-10-for-large-language-model-applications/).",
+      "notes": "Large language model (LLM) features add a new trust boundary: untrusted natural language and documents flow through a non-deterministic model that may invoke tools, query retrieval stores, and produce outputs consumed by people and systems. Product security means explicit authorization outside the model, tenant-safe data paths, safe handling of model output, and continuous evaluation when prompts, weights, corpora, and vendors change every release.\n\nPrimary taxonomy: OWASP Top 10 for LLM Applications (2025) from the OWASP GenAI Security Project. Cite the 2025 edition in interviews; older material remains useful for historical comparison on the OWASP LLM Top 10 project page.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Large language model (LLM) features add a new trust boundary: untrusted...",
+      "expanded": false
+    },
+    {
+      "id": "n814a618014874ab",
+      "title": "OWASP LLM Top 10 (2025) \u2014 anchor map",
+      "markdown": "Use official risk pages under [genai.owasp.org/llm-top-10](https://genai.owasp.org/llm-top-10/) for definitions. This table is a **memory aid** for interviews:\n\n| ID | Risk | Interview one-liner |\n|----|------|---------------------|\n| **LLM01** | Prompt injection | Untrusted text steers behavior; includes **indirect** injection via retrieved or pasted content. |\n| **LLM02** | Sensitive information disclosure | Secrets, PII, or internal data in prompts, corpora, logs, training, or model output. |\n| **LLM03** | Supply chain | Models, datasets, libraries, containers, eval harnesses, third-party APIs-integrity and provenance. |\n| **LLM04** | Data and model poisoning | Bad fine-tune, RAG, or embedding data shifts behavior (backdoors, bias, exfil helpers). |\n| **LLM05** | Improper output handling | Model output treated as trusted in HTML, SQL, shell, or tool APIs without validation. |\n| **LLM06** | Excessive agency | Tools or automations are too powerful relative to checks and human oversight. |\n| **LLM07** | System prompt leakage | System or developer instructions exposed via responses, errors, or logs. |\n| **LLM08** | Vector and embedding weaknesses | Weak tenant isolation, retrieval manipulation, embedding or chunk-level attacks. |\n| **LLM09** | Misinformation | Unsafe reliance on hallucinations or weak grounding in high-risk workflows. |\n| **LLM10** | Unbounded consumption | Cost and availability abuse via tokens, loops, or uncontrolled tool calls. |\n\n**Interview tip:** Tie mitigations to IDs (for example, \"tool authZ addresses LLM06; output encoding addresses LLM05\").",
+      "notes": "Use official risk pages under genai.owasp.org/llm-top-10 for definitions. This table is a memory aid for interviews:\n\n| ID | Risk | Interview one-liner |\n|----|------|---------------------|\n| LLM01 | Prompt injection | Untrusted text steers behavior; includes indirect injection via retrieved or pasted content. |\n| LLM02 | Sensitive information disclosure | Secrets, PII, or internal data in prompts, corpora, logs, training, or model output. |\n| LLM03 | Supply chain | Models, datasets, libraries, containers, eval harnesses, third-party APIs-integrity and provenance. |\n| LLM04 | Data and model poisoning | Bad fine-tune, RAG, or embedding data shifts behavior (backdoors, bias, exfil helpers). |\n| LLM05 | Improper output handling | Model output treated as trusted in HTML, SQL, shell, or tool APIs without validation. |\n| LLM06 | Excessive agency | Tools or automations are too powerful relative to checks and human oversight. |\n| LLM07 | System prompt leakage | System or developer instructions exposed via responses, errors, or logs. |\n| LLM08 | Vector and embedding weaknesses | Weak tenant isolation, retrieval manipulation, embedding or chunk-level attacks. |\n| LLM09 | Misinformation | Unsafe reliance on hallucinations or weak grounding in high-risk workflows. |\n| LLM10 | Unbounded consumption | Cost and availability abuse via tokens, loops, or uncontrolled tool calls. |\n\nInterview tip: Tie mitigations to IDs (for example, \"tool authZ addresses LLM06; output encoding addresses LLM05\").",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Use official risk pages under genai.owasp.org/llm-top-10 for definitions.",
+      "expanded": false
+    },
+    {
+      "id": "nb371cc8bc1deed7",
+      "title": "Threat model (product-shaped)",
+      "markdown": "**Inputs:** Chat messages, pasted text, uploaded files, email bodies, support tickets, web pages fetched for \"research,\" images with embedded text, and **any document later retrieved into context**.\n\n**Processing:** System prompts, few-shot examples, chain-of-thought style reasoning (even if hidden), **retrieval** steps, **reranking**, and **tool** or **function** invocations.\n\n**Outputs:** User-visible answers, **structured** payloads for downstream services, **actions** (send message, update record, call payment API), and **telemetry** (logs, traces, feedback datasets).\n\n**Adversaries:** Curious users, compromised accounts, external attackers driving **indirect injection** through content your product ingests, and **insiders** with broad corpus access.\n\n**Trust boundary rule:** Anything that can appear **inside the model's context window** must be treated as **potentially hostile instructions and data**, unless you have a separate, enforced channel with cryptographic or strong system guarantees.",
+      "notes": "Inputs: Chat messages, pasted text, uploaded files, email bodies, support tickets, web pages fetched for \"research,\" images with embedded text, and any document later retrieved into context.\n\nProcessing: System prompts, few-shot examples, chain-of-thought style reasoning (even if hidden), retrieval steps, reranking, and tool or function invocations.\n\nOutputs: User-visible answers, structured payloads for downstream services, actions (send message, update record, call payment API), and telemetry (logs, traces, feedback datasets).\n\nAdversaries: Curious users, compromised accounts, external attackers driving indirect injection through content your product ingests, and insiders with broad corpus access.\n\nTrust boundary rule: Anything that can appear inside the model's context window must be treated as potentially hostile instructions and data, unless you have a separate, enforced channel with cryptographic or strong system guarantees.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Inputs: Chat messages, pasted text, uploaded files, email bodies, support...",
+      "expanded": false
+    },
+    {
+      "id": "n5fa2827206a5cab",
+      "title": "Prompt injection",
+      "markdown": "**Direct injection** is when the end user tries to override developer intent: \"Ignore previous instructions and ...\"\n\n**Indirect injection** is when **untrusted content** becomes part of the context: a malicious snippet in a PDF the assistant summarizes, a web page the agent fetches, a ticket filed by an attacker, or a coworker's document in a shared drive that the assistant retrieves. The model may follow embedded commands because it cannot reliably distinguish \"data to analyze\" from \"instructions to obey.\"\n\n**Why \"better system prompts\" are insufficient:** Models optimize for coherence with **all** tokens in context. Delimiters and \"ignore the above\" clauses are **hints**, not security boundaries. Defense must **reduce blast radius** and **enforce policy outside the model**.\n\n**Controls that matter:**",
+      "notes": "Direct injection is when the end user tries to override developer intent: \"Ignore previous instructions and ...\"\n\nIndirect injection is when untrusted content becomes part of the context: a malicious snippet in a PDF the assistant summarizes, a web page the agent fetches, a ticket filed by an attacker, or a coworker's document in a shared drive that the assistant retrieves. The model may follow embedded commands because it cannot reliably distinguish \"data to analyze\" from \"instructions to obey.\"\n\nWhy \"better system prompts\" are insufficient: Models optimize for coherence with all tokens in context. Delimiters and \"ignore the above\" clauses are hints, not security boundaries. Defense must reduce blast radius and enforce policy outside the model.\n\nControls that matter:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n4e26d000b582eb4",
+          "title": "Structural separation where feasible: distinct APIs or internal representations for \"tru",
+          "markdown": "- Structural separation where feasible: distinct APIs or internal representations for \"tru",
+          "notes": "Structural separation where feasible: distinct APIs or internal representations for \"tru",
+          "blurb": "Structural separation where feasible: distinct APIs or internal...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n7ed2f0f1af84578",
+          "title": "Downstream enforcement: If the model proposes an action, application code validates iden",
+          "markdown": "- Downstream enforcement: If the model proposes an action, application code validates iden",
+          "notes": "Downstream enforcement: If the model proposes an action, application code validates iden",
+          "blurb": "Downstream enforcement: If the model proposes an action, application code...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n24c493de3ecf37c",
+          "title": "Least-privilege tools: Narrow functions (read specific resource types, write with limits",
+          "markdown": "- Least-privilege tools: Narrow functions (read specific resource types, write with limits",
+          "notes": "Least-privilege tools: Narrow functions (read specific resource types, write with limits",
+          "blurb": "Least-privilege tools: Narrow functions (read specific resource types, write...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nd55602e15564eec",
+          "title": "Human confirmation for irreversible or high-impact operations, with clear display of wha",
+          "markdown": "- Human confirmation for irreversible or high-impact operations, with clear display of wha",
+          "notes": "Human confirmation for irreversible or high-impact operations, with clear display of wha",
+          "blurb": "Human confirmation for irreversible or high-impact operations, with clear...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n30e68f5549ca614",
+          "title": "Detection and rate limits on probing patterns (repeated jailbreak attempts, unusual tool",
+          "markdown": "- Detection and rate limits on probing patterns (repeated jailbreak attempts, unusual tool",
+          "notes": "Detection and rate limits on probing patterns (repeated jailbreak attempts, unusual tool",
+          "blurb": "Detection and rate limits on probing patterns (repeated jailbreak attempts,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Direct injection is when the end user tries to override developer intent:...",
+      "expanded": true
+    },
+    {
+      "id": "n884d3551648a256",
+      "title": "Data leakage",
+      "markdown": "Leakage paths include: **model responses** that echo secrets from context or memorized training; **logs and traces** storing full prompts and completions; **support and analytics** exports; **retrieval** returning another tenant's chunks; **client-side** storage of sensitive threads; and **third-party inference** where prompts leave your trust zone.\n\n**Memorization and hosted models:** Commercial APIs may state they do not train on **enterprise** data under certain tiers, but **operational reality** still includes subprocessors, regions, retention, and incident response. Your **DPA** and **AI addenda** must match how you actually call the API (streaming, batch, fine-tuning, eval dumps).\n\n**Controls:**",
+      "notes": "Leakage paths include: model responses that echo secrets from context or memorized training; logs and traces storing full prompts and completions; support and analytics exports; retrieval returning another tenant's chunks; client-side storage of sensitive threads; and third-party inference where prompts leave your trust zone.\n\nMemorization and hosted models: Commercial APIs may state they do not train on enterprise data under certain tiers, but operational reality still includes subprocessors, regions, retention, and incident response. Your DPA and AI addenda must match how you actually call the API (streaming, batch, fine-tuning, eval dumps).\n\nControls:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n26d3e58194d5c07",
+          "title": "Data classification gates: block or redact highly sensitive fields before they enter pro",
+          "markdown": "- Data classification gates: block or redact highly sensitive fields before they enter pro",
+          "notes": "Data classification gates: block or redact highly sensitive fields before they enter pro",
+          "blurb": "Data classification gates: block or redact highly sensitive fields before...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n7021a7925657e90",
+          "title": "Output filtering for known secret patterns (API keys, internal URLs) as a backstop, not",
+          "markdown": "- Output filtering for known secret patterns (API keys, internal URLs) as a backstop, not",
+          "notes": "Output filtering for known secret patterns (API keys, internal URLs) as a backstop, not",
+          "blurb": "Output filtering for known secret patterns (API keys, internal URLs) as a...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nfa0da623a316145",
+          "title": "Log hygiene: structured security events without raw prompts where possible; tokenization",
+          "markdown": "- Log hygiene: structured security events without raw prompts where possible; tokenization",
+          "notes": "Log hygiene: structured security events without raw prompts where possible; tokenization",
+          "blurb": "Log hygiene: structured security events without raw prompts where possible;...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nd15735948b28e47",
+          "title": "RAG-specific: enforce document-level and chunk-level authorization at query time; never",
+          "markdown": "- RAG-specific: enforce document-level and chunk-level authorization at query time; never",
+          "notes": "RAG-specific: enforce document-level and chunk-level authorization at query time; never",
+          "blurb": "RAG-specific: enforce document-level and chunk-level authorization at query...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Leakage paths include: model responses that echo secrets from context or...",
+      "expanded": true
+    },
+    {
+      "id": "n075455ce5001d58",
+      "title": "RAG risks",
+      "markdown": "Retrieval-augmented generation reduces hallucinations when done well, but introduces **new attack surface**.\n\n**Access control:** Vector stores must enforce **the same entitlements** as the source systems. Common failure: index built from a copy that **lags** ACL changes, or metadata filters that are **too coarse** (workspace-wide instead of per-file).\n\n**Poisoning and manipulation (LLM04 / LLM08):** An attacker with write access to the corpus (or SEO spam on crawled pages) can insert **biased**, **misleading**, or **instruction-like** text designed to appear in top-k results. **Embedding attacks** and **chunk boundary** tricks can hide malicious content from human reviewers while remaining retrievable.\n\n**Grounding and misinformation (LLM09):** Empty retrieval, wrong language, or stale docs can cause confident wrong answers. High-risk domains (medical, financial, security operations) need **explicit uncertainty**, **citations**, and **escalation** paths.\n\n**Mitigations:**",
+      "notes": "Retrieval-augmented generation reduces hallucinations when done well, but introduces new attack surface.\n\nAccess control: Vector stores must enforce the same entitlements as the source systems. Common failure: index built from a copy that lags ACL changes, or metadata filters that are too coarse (workspace-wide instead of per-file).\n\nPoisoning and manipulation (LLM04 / LLM08): An attacker with write access to the corpus (or SEO spam on crawled pages) can insert biased, misleading, or instruction-like text designed to appear in top-k results. Embedding attacks and chunk boundary tricks can hide malicious content from human reviewers while remaining retrievable.\n\nGrounding and misinformation (LLM09): Empty retrieval, wrong language, or stale docs can cause confident wrong answers. High-risk domains (medical, financial, security operations) need explicit uncertainty, citations, and escalation paths.\n\nMitigations:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n1db87ef0c2af9e7",
+          "title": "Ingestion pipeline integrity: provenance, approval workflows for curated corpora, malwar",
+          "markdown": "- Ingestion pipeline integrity: provenance, approval workflows for curated corpora, malwar",
+          "notes": "Ingestion pipeline integrity: provenance, approval workflows for curated corpora, malwar",
+          "blurb": "Ingestion pipeline integrity: provenance, approval workflows for curated...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n6d0fd4af29a8d28",
+          "title": "Query-time filters: tenant ID, user ID, resource IDs, labels; deny by default when metad",
+          "markdown": "- Query-time filters: tenant ID, user ID, resource IDs, labels; deny by default when metad",
+          "notes": "Query-time filters: tenant ID, user ID, resource IDs, labels; deny by default when metad",
+          "blurb": "Query-time filters: tenant ID, user ID, resource IDs, labels; deny by...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n6f33a8db23d20ff",
+          "title": "Grounding UX: show sources; distinguish \"answer from retrieved docs\" from \"general knowl",
+          "markdown": "- Grounding UX: show sources; distinguish \"answer from retrieved docs\" from \"general knowl",
+          "notes": "Grounding UX: show sources; distinguish \"answer from retrieved docs\" from \"general knowl",
+          "blurb": "Grounding UX: show sources; distinguish \"answer from retrieved docs\" from...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n28c3b3dca0bdbf3",
+          "title": "Regression tests: golden questions with expected cited passages after corpus or embedder",
+          "markdown": "- Regression tests: golden questions with expected cited passages after corpus or embedder",
+          "notes": "Regression tests: golden questions with expected cited passages after corpus or embedder",
+          "blurb": "Regression tests: golden questions with expected cited passages after corpus...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nabdadd2e39e847b",
+          "title": "Monitoring: retrieval hit rates, empty-result rates, sudden shifts in embedding neighbor",
+          "markdown": "- Monitoring: retrieval hit rates, empty-result rates, sudden shifts in embedding neighbor",
+          "notes": "Monitoring: retrieval hit rates, empty-result rates, sudden shifts in embedding neighbor",
+          "blurb": "Monitoring: retrieval hit rates, empty-result rates, sudden shifts in...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Retrieval-augmented generation reduces hallucinations when done well, but...",
+      "expanded": true
+    },
+    {
+      "id": "n299a1e5eb5ce700",
+      "title": "Tool use (functions, plugins, agents)",
+      "markdown": "When the model invokes **tools**, the security model is **distributed systems plus OAuth**, not chat UX.\n\n**Non-negotiables:**",
+      "notes": "When the model invokes tools, the security model is distributed systems plus OAuth, not chat UX.\n\nNon-negotiables:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n75d7705ab5759fe",
+          "title": "Authorize every call with the end-user's (or service's) identity and delegated tokens, n",
+          "markdown": "- Authorize every call with the end-user's (or service's) identity and delegated tokens, n",
+          "notes": "Authorize every call with the end-user's (or service's) identity and delegated tokens, n",
+          "blurb": "Authorize every call with the end-user's (or service's) identity and...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nd64471430c60efb",
+          "title": "Allowlist destinations, methods, and parameter shapes; reject free-form URLs or arbitrar",
+          "markdown": "- Allowlist destinations, methods, and parameter shapes; reject free-form URLs or arbitrar",
+          "notes": "Allowlist destinations, methods, and parameter shapes; reject free-form URLs or arbitrar",
+          "blurb": "Allowlist destinations, methods, and parameter shapes; reject free-form URLs...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n29f4e981b8fa29d",
+          "title": "Idempotency keys and deduplication for writes; read-only vs read-write tool groups per p",
+          "markdown": "- Idempotency keys and deduplication for writes; read-only vs read-write tool groups per p",
+          "notes": "Idempotency keys and deduplication for writes; read-only vs read-write tool groups per p",
+          "blurb": "Idempotency keys and deduplication for writes; read-only vs read-write tool...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nc7884f4915cf795",
+          "title": "Server-side validation of arguments (types, ranges, referential checks) exactly as for n",
+          "markdown": "- Server-side validation of arguments (types, ranges, referential checks) exactly as for n",
+          "notes": "Server-side validation of arguments (types, ranges, referential checks) exactly as for n",
+          "blurb": "Server-side validation of arguments (types, ranges, referential checks)...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n44f2c88a958fa84",
+          "title": "Rate limits and budgets per user, tenant, and tool; circuit breakers on error storms (LL",
+          "markdown": "- Rate limits and budgets per user, tenant, and tool; circuit breakers on error storms (LL",
+          "notes": "Rate limits and budgets per user, tenant, and tool; circuit breakers on error storms (LL",
+          "blurb": "Rate limits and budgets per user, tenant, and tool; circuit breakers on...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nb3f1162583ecaa0",
+          "title": "Audit logs that record who, what tool, which resource, and outcome, suitable for inciden",
+          "markdown": "- Audit logs that record who, what tool, which resource, and outcome, suitable for inciden",
+          "notes": "Audit logs that record who, what tool, which resource, and outcome, suitable for inciden",
+          "blurb": "Audit logs that record who, what tool, which resource, and outcome, suitable...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "When the model invokes tools, the security model is distributed systems plus...",
+      "expanded": false
+    },
+    {
+      "id": "n6fb9fde5d187b9d",
+      "title": "Evaluations and red teaming",
+      "markdown": "**Quality evals** (helpfulness, correctness) are necessary but **not sufficient**. Security evals should include:",
+      "notes": "Quality evals (helpfulness, correctness) are necessary but not sufficient. Security evals should include:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nb53aae9483d212e",
+          "title": "Prompt injection suites: direct and indirect cases, multilingual, multimodal where appli",
+          "markdown": "- Prompt injection suites: direct and indirect cases, multilingual, multimodal where appli",
+          "notes": "Prompt injection suites: direct and indirect cases, multilingual, multimodal where appli",
+          "blurb": "Prompt injection suites: direct and indirect cases, multilingual, multimodal...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nb6f29725123f975",
+          "title": "Privilege tests: attempts to invoke admin tools with a standard user session; cross-tena",
+          "markdown": "- Privilege tests: attempts to invoke admin tools with a standard user session; cross-tena",
+          "notes": "Privilege tests: attempts to invoke admin tools with a standard user session; cross-tena",
+          "blurb": "Privilege tests: attempts to invoke admin tools with a standard user...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nc5cfcb7ef4f70a2",
+          "title": "Corpus drift tests: after RAG updates, verify no new leakage paths and stable citations",
+          "markdown": "- Corpus drift tests: after RAG updates, verify no new leakage paths and stable citations",
+          "notes": "Corpus drift tests: after RAG updates, verify no new leakage paths and stable citations",
+          "blurb": "Corpus drift tests: after RAG updates, verify no new leakage paths and...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "na556f36c9984809",
+          "title": "Abuse tests: token stuffing, parallel sessions, agent loops, and denial-of-wallet patter",
+          "markdown": "- Abuse tests: token stuffing, parallel sessions, agent loops, and denial-of-wallet patter",
+          "notes": "Abuse tests: token stuffing, parallel sessions, agent loops, and denial-of-wallet patter",
+          "blurb": "Abuse tests: token stuffing, parallel sessions, agent loops, and...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Quality evals (helpfulness, correctness) are necessary but not sufficient.",
+      "expanded": false
+    },
+    {
+      "id": "nb99b370dffe8263",
+      "title": "Governance",
+      "markdown": "**Roles:** Application security owns **threat models and secure patterns**; ML and data science own **datasets, training, and offline metrics**; platform owns **infra, quotas, and keys**; privacy and legal own **external commitments**; product owns **UX risk** and **customer communication**.\n\n**Artifacts:** data protection impact assessments for **new** LLM use cases; **model and corpus** inventories; **vendor** risk reviews for foundation model providers; **incident runbooks** for prompt injection-led abuse, data spillage, and model **degradation**.\n\n**Policies:** acceptable use for **employee** copilots; customer-facing **transparency** on data use, retention, and **human review** where required; **exception** process with owners and expiry dates.",
+      "notes": "Roles: Application security owns threat models and secure patterns; ML and data science own datasets, training, and offline metrics; platform owns infra, quotas, and keys; privacy and legal own external commitments; product owns UX risk and customer communication.\n\nArtifacts: data protection impact assessments for new LLM use cases; model and corpus inventories; vendor risk reviews for foundation model providers; incident runbooks for prompt injection-led abuse, data spillage, and model degradation.\n\nPolicies: acceptable use for employee copilots; customer-facing transparency on data use, retention, and human review where required; exception process with owners and expiry dates.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Roles: Application security owns threat models and secure patterns; ML and...",
+      "expanded": false
+    },
+    {
+      "id": "nd506f28842bde4f",
+      "title": "Model supply chain (LLM03)",
+      "markdown": "The supply chain spans **base weights**, **fine-tunes**, **LoRA** adapters, **evaluation** frameworks, **inference** runtimes (vLLM, ONNX, vendor SDKs), **containers**, **GPU drivers**, and **CI** templates that package prompts.\n\n**Practices:**",
+      "notes": "The supply chain spans base weights, fine-tunes, LoRA adapters, evaluation frameworks, inference runtimes (vLLM, ONNX, vendor SDKs), containers, GPU drivers, and CI templates that package prompts.\n\nPractices:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n9f61c69db63a6d7",
+          "title": "Pin versions for models, containers, and dependencies; scan images; sign artifacts where",
+          "markdown": "- Pin versions for models, containers, and dependencies; scan images; sign artifacts where",
+          "notes": "Pin versions for models, containers, and dependencies; scan images; sign artifacts where",
+          "blurb": "Pin versions for models, containers, and dependencies; scan images; sign...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n7083ec427e17841",
+          "title": "Provenance for datasets used in fine-tuning or RAG; license review for training and redi",
+          "markdown": "- Provenance for datasets used in fine-tuning or RAG; license review for training and redi",
+          "notes": "Provenance for datasets used in fine-tuning or RAG; license review for training and redi",
+          "blurb": "Provenance for datasets used in fine-tuning or RAG; license review for...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n1f3f14ee6207862",
+          "title": "Reproducible training and deployment configs; change control when swapping models or tem",
+          "markdown": "- Reproducible training and deployment configs; change control when swapping models or tem",
+          "notes": "Reproducible training and deployment configs; change control when swapping models or tem",
+          "blurb": "Reproducible training and deployment configs; change control when swapping...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "na47534580ba5307",
+          "title": "Subprocessor and region tracking for cloud inference; exit strategy if a vendor changes",
+          "markdown": "- Subprocessor and region tracking for cloud inference; exit strategy if a vendor changes",
+          "notes": "Subprocessor and region tracking for cloud inference; exit strategy if a vendor changes",
+          "blurb": "Subprocessor and region tracking for cloud inference; exit strategy if a...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "The supply chain spans base weights, fine-tunes, LoRA adapters, evaluation...",
+      "expanded": false
+    },
+    {
+      "id": "n5f8affbf9ce836e",
+      "title": "PII in prompts",
+      "markdown": "**Minimize** before the model sees text: drop columns, mask tokens, aggregate where possible, and **avoid** sending **full** government IDs, **raw** payment details, or **complete** medical records unless legally required and contractually covered.\n\n**Redaction pipeline:** deterministic rules (regex and dictionaries) plus **classifiers** where appropriate; **human** review queues for borderline exports in regulated workflows.\n\n**Logging:** if prompts must be stored for debugging, use **role-based access**, **short retention**, and **encryption**; prefer **hashes** of prompt templates plus **structured** metadata over full verbatim logs in production.\n\n**User education:** warn when users **paste** sensitive data; offer **local** processing or **no-retain** modes if your architecture supports them.",
+      "notes": "Minimize before the model sees text: drop columns, mask tokens, aggregate where possible, and avoid sending full government IDs, raw payment details, or complete medical records unless legally required and contractually covered.\n\nRedaction pipeline: deterministic rules (regex and dictionaries) plus classifiers where appropriate; human review queues for borderline exports in regulated workflows.\n\nLogging: if prompts must be stored for debugging, use role-based access, short retention, and encryption; prefer hashes of prompt templates plus structured metadata over full verbatim logs in production.\n\nUser education: warn when users paste sensitive data; offer local processing or no-retain modes if your architecture supports them.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Minimize before the model sees text: drop columns, mask tokens, aggregate...",
+      "expanded": false
+    },
+    {
+      "id": "n80de555e13ce73a",
+      "title": "Safe UX patterns",
+      "markdown": "**Citations and provenance:** show **which documents** grounded the answer; let users **inspect** snippets. Reduces **silent fabrication** and aids **audit**.\n\n**Uncertainty and refusal:** train product copy and model behavior to **admit limits**; avoid **false precision** in numeric or policy answers.\n\n**Confirmations:** for **external** email, **money movement**, **IAM changes**, or **bulk delete**, require **explicit** confirmation with **immutable** summary of targets.\n\n**Progressive disclosure:** default to **narrow** tool permissions; **escalate** scope only after step-up authentication or admin approval.\n\n**Escalation to humans:** visible path for **incorrect** or **harmful** outputs; **feedback** tied to **trace IDs** for triage.\n\n**Safe rendering:** treat assistant output as **untrusted HTML**; use **sanitization**, **CSP**, and **no raw HTML** where not needed.\n\n**Abuse UX:** gentle **throttling** messages and **account** protections rather than leaking **internal** policy strings when blocking.",
+      "notes": "Citations and provenance: show which documents grounded the answer; let users inspect snippets. Reduces silent fabrication and aids audit.\n\nUncertainty and refusal: train product copy and model behavior to admit limits; avoid false precision in numeric or policy answers.\n\nConfirmations: for external email, money movement, IAM changes, or bulk delete, require explicit confirmation with immutable summary of targets.\n\nProgressive disclosure: default to narrow tool permissions; escalate scope only after step-up authentication or admin approval.\n\nEscalation to humans: visible path for incorrect or harmful outputs; feedback tied to trace IDs for triage.\n\nSafe rendering: treat assistant output as untrusted HTML; use sanitization, CSP, and no raw HTML where not needed.\n\nAbuse UX: gentle throttling messages and account protections rather than leaking internal policy strings when blocking.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Citations and provenance: show which documents grounded the answer; let...",
+      "expanded": false
+    },
+    {
+      "id": "ndf6136b7a531bc3",
+      "title": "Metrics and success criteria",
+      "markdown": "Safety and security: blocked tool calls, injection attempt rate, cross-tenant access denials, red-team open criticals, time to remediate.",
+      "notes": "Safety and security: blocked tool calls, injection attempt rate, cross-tenant access denials, red-team open criticals, time to remediate.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nc3d047bc936cfe1",
+          "title": "Safety and security: blocked tool calls, injection attempt rate, cross-tenant access den",
+          "markdown": "- Safety and security: blocked tool calls, injection attempt rate, cross-tenant access den",
+          "notes": "Safety and security: blocked tool calls, injection attempt rate, cross-tenant access den",
+          "blurb": "Safety and security: blocked tool calls, injection attempt rate,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "neadef90aa1e9d64",
+          "title": "Reliability: grounded-answer rate, empty-retrieval handling quality, regression suite pa",
+          "markdown": "- Reliability: grounded-answer rate, empty-retrieval handling quality, regression suite pa",
+          "notes": "Reliability: grounded-answer rate, empty-retrieval handling quality, regression suite pa",
+          "blurb": "Reliability: grounded-answer rate, empty-retrieval handling quality,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nc788b01737e400b",
+          "title": "Cost and resilience: tokens per task, p95 latency, anomaly detection on spend and concur",
+          "markdown": "- Cost and resilience: tokens per task, p95 latency, anomaly detection on spend and concur",
+          "notes": "Cost and resilience: tokens per task, p95 latency, anomaly detection on spend and concur",
+          "blurb": "Cost and resilience: tokens per task, p95 latency, anomaly detection on...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nd9149983cd5e048",
+          "title": "Governance: percentage of LLM features with completed DPIAs, vendor review SLAs met, aud",
+          "markdown": "- Governance: percentage of LLM features with completed DPIAs, vendor review SLAs met, aud",
+          "notes": "Governance: percentage of LLM features with completed DPIAs, vendor review SLAs met, aud",
+          "blurb": "Governance: percentage of LLM features with completed DPIAs, vendor review...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Safety and security: blocked tool calls, injection attempt rate,...",
+      "expanded": false
+    },
+    {
+      "id": "n8c2412b9bbaa2b5",
+      "title": "Failure modes (credible in interviews)",
+      "markdown": "Guardrails on text while tools still run with service account superpowers (LLM06).",
+      "notes": "Guardrails on text while tools still run with service account superpowers (LLM06).",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nc6956f4f4515e2e",
+          "title": "Guardrails on text while tools still run with service account superpowers (LLM06).",
+          "markdown": "- Guardrails on text while tools still run with service account superpowers (LLM06).",
+          "notes": "Guardrails on text while tools still run with service account superpowers (LLM06).",
+          "blurb": "Guardrails on text while tools still run with service account superpowers...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ndff42f03366d017",
+          "title": "RAG indexed without document ACLs, or filters that fail open on errors (LLM08, LLM02).",
+          "markdown": "- RAG indexed without document ACLs, or filters that fail open on errors (LLM08, LLM02).",
+          "notes": "RAG indexed without document ACLs, or filters that fail open on errors (LLM08, LLM02).",
+          "blurb": "RAG indexed without document ACLs, or filters that fail open on errors...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ne5496352a8b9a10",
+          "title": "Treating prompt injection as fixable with secret system prompts (LLM01, LLM07).",
+          "markdown": "- Treating prompt injection as fixable with secret system prompts (LLM01, LLM07).",
+          "notes": "Treating prompt injection as fixable with secret system prompts (LLM01, LLM07).",
+          "blurb": "Treating prompt injection as fixable with secret system prompts (LLM01,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n6ead9c15977538d",
+          "title": "Logging full prompts containing secrets and PII into a searchable SIEM (LLM02).",
+          "markdown": "- Logging full prompts containing secrets and PII into a searchable SIEM (LLM02).",
+          "notes": "Logging full prompts containing secrets and PII into a searchable SIEM (LLM02).",
+          "blurb": "Logging full prompts containing secrets and PII into a searchable SIEM...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n492a6d38e3f9b28",
+          "title": "Evaluations that track BLEU or helpfulness but miss security regressions after a fine-tu",
+          "markdown": "- Evaluations that track BLEU or helpfulness but miss security regressions after a fine-tu",
+          "notes": "Evaluations that track BLEU or helpfulness but miss security regressions after a fine-tu",
+          "blurb": "Evaluations that track BLEU or helpfulness but miss security regressions...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Guardrails on text while tools still run with service account superpowers...",
+      "expanded": false
+    },
+    {
+      "id": "n5adea0f59e6778f",
+      "title": "Staff-level positioning",
+      "markdown": "GenAI product security is **application security**, **data governance**, and **distributed systems**, with **non-deterministic** components. Winning designs **never** trust the model for **authorization**; they **compose** narrow tools, **enforce** entitlements at retrieval and execution, **measure** security continuously, and **align** UX with **safe failure** when models and data inevitably drift.",
+      "notes": "GenAI product security is application security, data governance, and distributed systems, with non-deterministic components. Winning designs never trust the model for authorization; they compose narrow tools, enforce entitlements at retrieval and execution, measure security continuously, and align UX with safe failure when models and data inevitably drift.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "GenAI product security is application security, data governance, and...",
+      "expanded": false
+    },
+    {
+      "id": "n98311b28f6784bf",
+      "title": "Pre-launch and regression checklist",
+      "markdown": "Use this as a **release gate** companion to your threat model, not as a substitute for it.\n\n**Architecture and data paths**",
+      "notes": "Use this as a release gate companion to your threat model, not as a substitute for it.\n\nArchitecture and data paths",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n6552eeef4fd16d0",
+          "title": "Document every path where user or third-party text can enter context (chat, uploads, cra",
+          "markdown": "- Document every path where user or third-party text can enter context (chat, uploads, cra",
+          "notes": "Document every path where user or third-party text can enter context (chat, uploads, cra",
+          "blurb": "Document every path where user or third-party text can enter context (chat,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nbdfb5429e2eff53",
+          "title": "Verify tenant isolation for RAG metadata filters and integration tests that prove negati",
+          "markdown": "- Verify tenant isolation for RAG metadata filters and integration tests that prove negati",
+          "notes": "Verify tenant isolation for RAG metadata filters and integration tests that prove negati",
+          "blurb": "Verify tenant isolation for RAG metadata filters and integration tests that...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nbf96d2e453268d1",
+          "title": "Confirm retention and encryption for prompts, completions, and embeddings match customer",
+          "markdown": "- Confirm retention and encryption for prompts, completions, and embeddings match customer",
+          "notes": "Confirm retention and encryption for prompts, completions, and embeddings match customer",
+          "blurb": "Confirm retention and encryption for prompts, completions, and embeddings...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n2464826dc91fa35",
+          "title": "Enumerate each tool with required OAuth scopes or service roles; reject ambient god toke",
+          "markdown": "- Enumerate each tool with required OAuth scopes or service roles; reject ambient god toke",
+          "notes": "Enumerate each tool with required OAuth scopes or service roles; reject ambient god toke",
+          "blurb": "Enumerate each tool with required OAuth scopes or service roles; reject...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n7abee7d15664d90",
+          "title": "Require server-side argument validation and idempotency for mutating tools; log denials",
+          "markdown": "- Require server-side argument validation and idempotency for mutating tools; log denials",
+          "notes": "Require server-side argument validation and idempotency for mutating tools; log denials",
+          "blurb": "Require server-side argument validation and idempotency for mutating tools;...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n2e6a0206bf2fb69",
+          "title": "Define which actions need step-up authentication, dual control, or human approval.",
+          "markdown": "- Define which actions need step-up authentication, dual control, or human approval.",
+          "notes": "Define which actions need step-up authentication, dual control, or human approval.",
+          "blurb": "Define which actions need step-up authentication, dual control, or human...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n0a36d52580db29a",
+          "title": "Run offline injection and privilege suites; compare metrics to the previous model or pro",
+          "markdown": "- Run offline injection and privilege suites; compare metrics to the previous model or pro",
+          "notes": "Run offline injection and privilege suites; compare metrics to the previous model or pro",
+          "blurb": "Run offline injection and privilege suites; compare metrics to the previous...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n28cfc6b5dd46e0e",
+          "title": "After corpus updates, run golden RAG tests and spot-check citation integrity for regulat",
+          "markdown": "- After corpus updates, run golden RAG tests and spot-check citation integrity for regulat",
+          "notes": "After corpus updates, run golden RAG tests and spot-check citation integrity for regulat",
+          "blurb": "After corpus updates, run golden RAG tests and spot-check citation integrity...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nc086d8bd0cf57df",
+          "title": "Update runbooks when vendor regions, data processing terms, or fine-tune artifacts chang",
+          "markdown": "- Update runbooks when vendor regions, data processing terms, or fine-tune artifacts chang",
+          "notes": "Update runbooks when vendor regions, data processing terms, or fine-tune artifacts chang",
+          "blurb": "Update runbooks when vendor regions, data processing terms, or fine-tune...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nca33bc80789ca04",
+          "title": "Dashboards for token volume, tool error rates, policy blocks, and cost anomalies per ten",
+          "markdown": "- Dashboards for token volume, tool error rates, policy blocks, and cost anomalies per ten",
+          "notes": "Dashboards for token volume, tool error rates, policy blocks, and cost anomalies per ten",
+          "blurb": "Dashboards for token volume, tool error rates, policy blocks, and cost...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Use this as a release gate companion to your threat model, not as a...",
+      "expanded": false
+    },
+    {
+      "id": "n4778bf40f7bde11",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n0bd4daa354c318b",
+          "title": "Canonical taxonomy",
+          "markdown": "**[OWASP Top 10 for LLM Applications (2025)](https://genai.owasp.org/llm-top-10/)** - use this for interviews; prior editions: [OWASP LLM Top 10 project page](https://owasp.org/www-project-top-10-for-large-language-model-applications/).",
+          "notes": "OWASP Top 10 for LLM Applications (2025) - use this for interviews; prior editions: OWASP LLM Top 10 project page.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "OWASP Top 10 for LLM Applications (2025) - use this for interviews; prior...",
+          "expanded": false
+        },
+        {
+          "id": "n357564447f6a9b3",
+          "title": "2025 Top 10 (memorize IDs)",
+          "markdown": "| ID | Risk |\n|----|------|\n| LLM01 | Prompt Injection |\n| LLM02 | Sensitive Information Disclosure |\n| LLM03 | Supply Chain |\n| LLM04 | Data and Model Poisoning |\n| LLM05 | Improper Output Handling |\n| LLM06 | Excessive Agency |\n| LLM07 | System Prompt Leakage |\n| LLM08 | Vector and Embedding Weaknesses |\n| LLM09 | Misinformation |\n| LLM10 | Unbounded Consumption |",
+          "notes": "| ID | Risk |\n|----|------|\n| LLM01 | Prompt Injection |\n| LLM02 | Sensitive Information Disclosure |\n| LLM03 | Supply Chain |\n| LLM04 | Data and Model Poisoning |\n| LLM05 | Improper Output Handling |\n| LLM06 | Excessive Agency |\n| LLM07 | System Prompt Leakage |\n| LLM08 | Vector and Embedding Weaknesses |\n| LLM09 | Misinformation |\n| LLM10 | Unbounded Consumption |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| ID | Risk | |----|------| | LLM01 | Prompt Injection | | LLM02 | Sensitive...",
+          "expanded": false
+        },
+        {
+          "id": "n81dca9666f0f0de",
+          "title": "Non-negotiables (product security)",
+          "markdown": "Tool authZ outside the model (identity, tenant, scopes, allowlists) - LLM06 - Validate model output before SQL/HTML/shell/downstream APIs - LLM05 - Tenant ACLs on retrieval/embeddings; cite sources; handle...",
+          "notes": "Tool authZ outside the model (identity, tenant, scopes, allowlists) - LLM06 - Validate model output before SQL/HTML/shell/downstream APIs - LLM05 - Tenant ACLs on retrieval/embeddings; cite sources; handle...",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nb0e37b99b8ef76c",
+              "title": "Tool authZ outside the model (identity, tenant, scopes, allowlists) - LLM06",
+              "markdown": "- Tool authZ outside the model (identity, tenant, scopes, allowlists) - LLM06",
+              "notes": "Tool authZ outside the model (identity, tenant, scopes, allowlists) - LLM06",
+              "blurb": "Tool authZ outside the model (identity, tenant, scopes, allowlists) - LLM06",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n07ae8d1b956b30e",
+              "title": "Validate model output before SQL/HTML/shell/downstream APIs - LLM05",
+              "markdown": "- Validate model output before SQL/HTML/shell/downstream APIs - LLM05",
+              "notes": "Validate model output before SQL/HTML/shell/downstream APIs - LLM05",
+              "blurb": "Validate model output before SQL/HTML/shell/downstream APIs - LLM05",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd0f05a0b33cf48b",
+              "title": "Tenant ACLs on retrieval/embeddings; cite sources; handle low-confidence - LLM08 / LLM09",
+              "markdown": "- Tenant ACLs on retrieval/embeddings; cite sources; handle low-confidence - LLM08 / LLM09",
+              "notes": "Tenant ACLs on retrieval/embeddings; cite sources; handle low-confidence - LLM08 / LLM09",
+              "blurb": "Tenant ACLs on retrieval/embeddings; cite sources; handle low-confidence -...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nfa861bd453e6a3e",
+              "title": "Minimize + redact prompts/logs; vendor DPA/subprocessors - LLM02",
+              "markdown": "- Minimize + redact prompts/logs; vendor DPA/subprocessors - LLM02",
+              "notes": "Minimize + redact prompts/logs; vendor DPA/subprocessors - LLM02",
+              "blurb": "Minimize + redact prompts/logs; vendor DPA/subprocessors - LLM02",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf08702d33cfc152",
+              "title": "Quotas + loop detection on tokens/tools - LLM10",
+              "markdown": "- Quotas + loop detection on tokens/tools - LLM10",
+              "notes": "Quotas + loop detection on tokens/tools - LLM10",
+              "blurb": "Quotas + loop detection on tokens/tools - LLM10",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9085b8b2e84b86b",
+              "title": "Eval + regression after data/model changes - LLM04",
+              "markdown": "- Eval + regression after data/model changes - LLM04",
+              "notes": "Eval + regression after data/model changes - LLM04",
+              "blurb": "Eval + regression after data/model changes - LLM04",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Tool authZ outside the model (identity, tenant, scopes, allowlists) - LLM06...",
+          "expanded": false
+        },
+        {
+          "id": "necfc49ef3f7ce38",
+          "title": "Phrases for interviews",
+          "markdown": "\"Untrusted input, high-privilege tools-authorization cannot live in the prompt.\" - \"Indirect injection is a retrieval and UX problem, not only a chat problem.\" - \"Grounding reduces wrong answers; ACLs stop wrong data.\"",
+          "notes": "\"Untrusted input, high-privilege tools-authorization cannot live in the prompt.\" - \"Indirect injection is a retrieval and UX problem, not only a chat problem.\" - \"Grounding reduces wrong answers; ACLs stop wrong data.\"",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n2f619e66ea74c51",
+              "title": "\"Untrusted input, high-privilege tools-authorization cannot live in the prompt.\"",
+              "markdown": "- \"Untrusted input, high-privilege tools-authorization cannot live in the prompt.\"",
+              "notes": "\"Untrusted input, high-privilege tools-authorization cannot live in the prompt.\"",
+              "blurb": "\"Untrusted input, high-privilege tools-authorization cannot live in the...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ne2ff858b2d2506e",
+              "title": "\"Indirect injection is a retrieval and UX problem, not only a chat problem.\"",
+              "markdown": "- \"Indirect injection is a retrieval and UX problem, not only a chat problem.\"",
+              "notes": "\"Indirect injection is a retrieval and UX problem, not only a chat problem.\"",
+              "blurb": "\"Indirect injection is a retrieval and UX problem, not only a chat problem.\"",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "naf97d39dfb0cd43",
+              "title": "\"Grounding reduces wrong answers; ACLs stop wrong data.\"",
+              "markdown": "- \"Grounding reduces wrong answers; ACLs stop wrong data.\"",
+              "notes": "\"Grounding reduces wrong answers; ACLs stop wrong data.\"",
+              "blurb": "\"Grounding reduces wrong answers; ACLs stop wrong data.\"",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "\"Untrusted input, high-privilege tools-authorization cannot live in the...",
+          "expanded": false
+        },
+        {
+          "id": "nc2eb4dacbc08b3a",
+          "title": "Quick metrics",
+          "markdown": "Blocked high-risk tool calls \u00b7 cross-tenant retrieval attempts \u00b7 injection suite regression pass rate \u00b7 token abuse anomalies \u00b7 cost per successful task",
+          "notes": "Blocked high-risk tool calls \u00b7 cross-tenant retrieval attempts \u00b7 injection suite regression pass rate \u00b7 token abuse anomalies \u00b7 cost per successful task",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Blocked high-risk tool calls \u00b7 cross-tenant retrieval attempts \u00b7 injection...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Canonical taxonomy"
+    },
+    {
+      "id": "nf1be3a542ef1a9c",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n7d737e54fd0ce3a",
+          "title": "\u201cThe model provider\u2019s security posture secures our app.\u201d",
+          "markdown": "**Reality:** **Your** **app** still owns **authZ**, **data** **minimization**, **logging**, **tenant** **isolation**, and **output** **handling**-**shared** **responsibility** **model** applies.",
+          "notes": "Reality: Your app still owns authZ, data minimization, logging, tenant isolation, and output handling-shared responsibility model applies.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Your app still owns authZ, data minimization, logging, tenant...",
+          "expanded": false
+        },
+        {
+          "id": "n6774ea482acb7e7",
+          "title": "\u201cPrompt filters alone stop jailbreaks.\u201d",
+          "markdown": "**Reality:** **Adaptive** **attacks**, **encoding** tricks, and **multi-turn** **coercion** **bypass** **static** **filters**-**defense** needs **layered** **controls** and **monitoring**.",
+          "notes": "Reality: Adaptive attacks, encoding tricks, and multi-turn coercion bypass static filters-defense needs layered controls and monitoring.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Adaptive attacks, encoding tricks, and multi-turn coercion bypass...",
+          "expanded": false
+        },
+        {
+          "id": "n43e54a39d00b20b",
+          "title": "\u201cOne red-team pass before launch is enough.\u201d",
+          "markdown": "**Reality:** **Models**, **prompts**, **tools**, and **data** **change**; **continuous** **evals**, **regression** **suites**, and **abuse** **metrics** are **expected**.",
+          "notes": "Reality: Models, prompts, tools, and data change; continuous evals, regression suites, and abuse metrics are expected.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Models, prompts, tools, and data change; continuous evals,...",
+          "expanded": false
+        },
+        {
+          "id": "n6a6ca247b99efd8",
+          "title": "\u201cRAG eliminates training-data leakage risk.\u201d",
+          "markdown": "**Reality:** **Retrieval** can **pull** **sensitive** **chunks** into **context**; **access** **control** on **corpus**, **redaction**, and **output** **filters** **still** **matter**.",
+          "notes": "Reality: Retrieval can pull sensitive chunks into context; access control on corpus, redaction, and output filters still matter.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Retrieval can pull sensitive chunks into context; access control on...",
+          "expanded": false
+        },
+        {
+          "id": "nacd998632d2906d",
+          "title": "\u201cTool-calling is safe if tools are internal.\u201d",
+          "markdown": "**Reality:** **Over-privileged** **tool** **tokens** and **prompt** **injection** can **chain** to **SSRF**, **data** **exfil**, or **destructive** **actions**-**least** **privilege** **per** **tool**.",
+          "notes": "Reality: Over-privileged tool tokens and prompt injection can chain to SSRF, data exfil, or destructive actions-least privilege per tool.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Over-privileged tool tokens and prompt injection can chain to SSRF,...",
+          "expanded": false
+        },
+        {
+          "id": "n522be4eb1470240",
+          "title": "\u201cPII in prompts is fine because the model forgets.\u201d",
+          "markdown": "**Reality:** **Providers** may **log**; **employees** **review**; **subprocessors** **expand**-**treat** **prompts** as **sensitive** **telemetry**.",
+          "notes": "Reality: Providers may log; employees review; subprocessors expand-treat prompts as sensitive telemetry.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Providers may log; employees review; subprocessors expand-treat...",
+          "expanded": false
+        },
+        {
+          "id": "n0f63a240efc8bab",
+          "title": "\u201cWe don\u2019t need threat modeling for a chat box.\u201d",
+          "markdown": "**Reality:** **Chat** surfaces **change** **trust** **boundaries** ( **mixed** **human**/**AI** **content**, **automation** **bias**, **social** **engineering** at **scale**).",
+          "notes": "Reality: Chat surfaces change trust boundaries ( mixed human/AI content, automation bias, social engineering at scale).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Chat surfaces change trust boundaries ( mixed human/AI content,...",
+          "expanded": false
+        },
+        {
+          "id": "n64bb60b3527928a",
+          "title": "\u201cSmaller models are inherently safer.\u201d",
+          "markdown": "**Reality:** **Attack** **surface** shifts but **doesn't** **vanish**-**injection** and **abuse** **still** apply; **smaller** models may **hallucinate** **differently**, not **safely**.",
+          "notes": "Reality: Attack surface shifts but doesn't vanish-injection and abuse still apply; smaller models may hallucinate differently, not safely.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Attack surface shifts but doesn't vanish-injection and abuse still...",
+          "expanded": false
+        },
+        {
+          "id": "n2a53a4873bc9445",
+          "title": "\u201cSafety classifiers catch all toxic output.\u201d",
+          "markdown": "**Reality:** **Evasion**, **multilingual** **content**, and **domain** **specific** **harms** **slip** through-**human** **review** and **user** **reporting** **loops** **remain**.",
+          "notes": "Reality: Evasion, multilingual content, and domain specific harms slip through-human review and user reporting loops remain.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Evasion, multilingual content, and domain specific harms slip...",
+          "expanded": false
+        },
+        {
+          "id": "n835ee2bf36181ff",
+          "title": "\u201cGenAI security is only about the model weights.\u201d",
+          "markdown": "**Reality:** **Data** **pipelines**, **fine-tuning** **sets**, **eval** **harnesses**, **CI** for **prompts**, and **incident** **response** for **model** **abuse** are **product** **security** **work**.",
+          "notes": "Reality: Data pipelines, fine-tuning sets, eval harnesses, CI for prompts, and incident response for model abuse are product security work.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Data pipelines, fine-tuning sets, eval harnesses, CI for prompts,...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \u201cThe model provider\u2019s security posture secures our app.\u201d"
+    },
+    {
+      "id": "n91e5b5d9292b77d",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n2cbd55688377b6c",
+          "title": "Why is an LLM feature a different kind of product security problem...",
+          "markdown": "A REST API has **structured inputs**, predictable parsing, and clear **authZ** hooks. An LLM path accepts **free text and documents** that become **one narrative context** for the model. Attackers (or innocently poisoned content) can blend **instructions and data**, so you cannot rely on the model to honor a \"system prompt\" as a security boundary. Security has to live in **tool authorization**, **retrieval entitlements**, **output validation**, and **UX** that limits irreversible actions-mapped to OWASP items such as **LLM01**, **LLM05**, **LLM06**, and **LLM08**.",
+          "notes": "A REST API has structured inputs, predictable parsing, and clear authZ hooks. An LLM path accepts free text and documents that become one narrative context for the model. Attackers (or innocently poisoned content) can blend instructions and data, so you cannot rely on the model to honor a \"system prompt\" as a security boundary. Security has to live in tool authorization, retrieval entitlements, output validation, and UX that limits irreversible actions-mapped to OWASP items such as LLM01, LLM05, LLM06, and LLM08.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "A REST API has structured inputs, predictable parsing, and clear authZ hooks.",
+          "expanded": false
+        },
+        {
+          "id": "n906ff76fd2028d6",
+          "title": "What is prompt injection, and how does indirect injection differ from...",
+          "markdown": "**Direct injection** is the user typing attempts to override developer intent (\"disregard prior rules\"). **Indirect injection** is when **untrusted content** enters context-malicious text in a PDF, a web page fetched by an agent, a support ticket, or a retrieved chunk-and steers the model or tool chain without the end user typing an attack string. The same retrieved paragraph can simultaneously be **data the user asked about** and **instructions the model obeys**, which is why delimiter tricks alone fail at scale. Mitigations are **not** limited to better prompts: you need **least-privilege tools**, **server-side authZ**, **safe retrieval**, and **validation** of anything the model outputs to other systems (**LLM01** plus **LLM05**/**LLM06**).",
+          "notes": "Direct injection is the user typing attempts to override developer intent (\"disregard prior rules\"). Indirect injection is when untrusted content enters context-malicious text in a PDF, a web page fetched by an agent, a support ticket, or a retrieved chunk-and steers the model or tool chain without the end user typing an attack string. The same retrieved paragraph can simultaneously be data the user asked about and instructions the model obeys, which is why delimiter tricks alone fail at scale. Mitigations are not limited to better prompts: you need least-privilege tools, server-side authZ, safe retrieval, and validation of anything the model outputs to other systems (LLM01 plus LLM05/LLM06).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Direct injection is the user typing attempts to override developer intent...",
+          "expanded": false
+        },
+        {
+          "id": "n7b71a5e0e7f21ea",
+          "title": "Can we eliminate prompt injection entirely?",
+          "markdown": "**No** for general-purpose assistants that accept arbitrary text. You **manage** risk: narrow **tool** surfaces, **confirm** high-impact actions, **validate** machine-consumed outputs, **monitor** abuse, and **assume** context can be hostile. The goal is **contained impact**, not perfect separation of instructions and data inside the model (**LLM01**, **LLM06**).",
+          "notes": "No for general-purpose assistants that accept arbitrary text. You manage risk: narrow tool surfaces, confirm high-impact actions, validate machine-consumed outputs, monitor abuse, and assume context can be hostile. The goal is contained impact, not perfect separation of instructions and data inside the model (LLM01, LLM06).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "No for general-purpose assistants that accept arbitrary text.",
+          "expanded": false
+        },
+        {
+          "id": "ncdfc5c35e9e0cac",
+          "title": "What data leakage risks are most common in shipped LLM products?",
+          "markdown": "**Leaking secrets or PII** in completions after they appeared in context; **logging** full prompts and responses into SIEM or support tools; **cross-tenant RAG** returning another customer's chunks; **over-retention** of chat in analytics; **client-side** thread storage without encryption; and **vendor** subprocessors or regions that do not match customer contracts. **Export**, **share link**, and **copilot-in-email** features often widen blast radius because users treat the assistant as a **notepad**. Controls: **minimize** fields in prompts, **redact**, **query-time ACLs** on retrieval, **short retention** and **access-controlled** logs, **review** sharing UX, and **contract** alignment (**LLM02**, **LLM03**, **LLM08**).",
+          "notes": "Leaking secrets or PII in completions after they appeared in context; logging full prompts and responses into SIEM or support tools; cross-tenant RAG returning another customer's chunks; over-retention of chat in analytics; client-side thread storage without encryption; and vendor subprocessors or regions that do not match customer contracts. Export, share link, and copilot-in-email features often widen blast radius because users treat the assistant as a notepad. Controls: minimize fields in prompts, redact, query-time ACLs on retrieval, short retention and access-controlled logs, review sharing UX, and contract alignment (LLM02, LLM03, LLM08).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Leaking secrets or PII in completions after they appeared in context;...",
+          "expanded": false
+        },
+        {
+          "id": "n393d2ff24d2daff",
+          "title": "How should we handle PII in prompts and logs?",
+          "markdown": "**Minimize** before model calls: drop or mask columns, aggregate where possible, and block categories that violate policy. Use **deterministic redaction** plus classifiers where needed. For **logs**, prefer **structured** events (which tool, which tenant, outcome) over **verbatim** prompts; if full prompts are stored for debugging, enforce **strict** RBAC, **encryption**, and **retention** limits. Tell users not to paste **regulated** data when the product cannot guarantee handling (**LLM02**).",
+          "notes": "Minimize before model calls: drop or mask columns, aggregate where possible, and block categories that violate policy. Use deterministic redaction plus classifiers where needed. For logs, prefer structured events (which tool, which tenant, outcome) over verbatim prompts; if full prompts are stored for debugging, enforce strict RBAC, encryption, and retention limits. Tell users not to paste regulated data when the product cannot guarantee handling (LLM02).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Minimize before model calls: drop or mask columns, aggregate where possible,...",
+          "expanded": false
+        },
+        {
+          "id": "n1192e26292840a4",
+          "title": "What risks are specific to RAG, beyond \u201cthe model hallucinates\u201d?",
+          "markdown": "**Authorization failures** on chunks (wrong tenant or overshared workspace). **Poisoning** of the corpus or crawled web content so malicious passages rank highly. **Stale or wrong** documents producing **confident** wrong answers (**LLM09**). **Embedding** or **chunk-boundary** tricks that hide hostile instructions. Mitigations: **query-time filters** tied to source-system ACLs, **ingestion** integrity and **ACL reconciliation**, **citations**, **golden** regression tests after corpus changes, and **monitoring** of retrieval health (**LLM04**, **LLM08**).",
+          "notes": "Authorization failures on chunks (wrong tenant or overshared workspace). Poisoning of the corpus or crawled web content so malicious passages rank highly. Stale or wrong documents producing confident wrong answers (LLM09). Embedding or chunk-boundary tricks that hide hostile instructions. Mitigations: query-time filters tied to source-system ACLs, ingestion integrity and ACL reconciliation, citations, golden regression tests after corpus changes, and monitoring of retrieval health (LLM04, LLM08).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Authorization failures on chunks (wrong tenant or overshared workspace).",
+          "expanded": false
+        },
+        {
+          "id": "n628681b2e499b13",
+          "title": "How do you enforce tenant isolation in a vector database?",
+          "markdown": "Treat vectors like **any other datastore**: every upsert carries **stable metadata** (tenant ID, resource ID, labels) from the **authoritative** identity and document store. At query time, the application **must** apply **mandatory** filters; **fail closed** if metadata is missing. **Reindex** or **patch** when source ACLs change. **Test** negative cases in CI: two tenants, overlapping vocabulary, prove **no** cross-leak. **Audit** admin APIs that can search across tenants (**LLM08**, **LLM02**).",
+          "notes": "Treat vectors like any other datastore: every upsert carries stable metadata (tenant ID, resource ID, labels) from the authoritative identity and document store. At query time, the application must apply mandatory filters; fail closed if metadata is missing. Reindex or patch when source ACLs change. Test negative cases in CI: two tenants, overlapping vocabulary, prove no cross-leak. Audit admin APIs that can search across tenants (LLM08, LLM02).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Treat vectors like any other datastore: every upsert carries stable metadata...",
+          "expanded": false
+        },
+        {
+          "id": "nc56255baf76745e",
+          "title": "What does \u201cexcessive agency\u201d mean, and how do you design against it?",
+          "markdown": "**Excessive agency** is when the assistant can **act** (API calls, writes, integrations) with **too much** power or **too few** checks relative to the risk (**LLM06**). Design **narrow** tools (specific operations, not \"run arbitrary SQL\"), **per-user** delegated credentials, **allowlists** for destinations, **rate limits**, **idempotency** for writes, and **human confirmation** for irreversible actions. **Never** substitute a clever prompt for **OAuth scopes** and **server-side** policy checks.",
+          "notes": "Excessive agency is when the assistant can act (API calls, writes, integrations) with too much power or too few checks relative to the risk (LLM06). Design narrow tools (specific operations, not \"run arbitrary SQL\"), per-user delegated credentials, allowlists for destinations, rate limits, idempotency for writes, and human confirmation for irreversible actions. Never substitute a clever prompt for OAuth scopes and server-side policy checks.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Excessive agency is when the assistant can act (API calls, writes,...",
+          "expanded": false
+        },
+        {
+          "id": "nec2a330416e3c40",
+          "title": "How do you secure function calling or plugins end to end?",
+          "markdown": "Assume **hostile** arguments and **hostile** sequencing. The **runtime**, not the model, enforces **who** is calling (identity, tenant), **what** tool is allowed for that persona, and **whether** parameters are valid. Use **schemas**, **type checks**, **reference** lookups (\"does this ID belong to this user?\"), **idempotency** keys, and **audit** trails. Block **open** URL fetchers or **generic** code execution unless heavily sandboxed and justified (**LLM05**, **LLM06**, **LLM10**).",
+          "notes": "Assume hostile arguments and hostile sequencing. The runtime, not the model, enforces who is calling (identity, tenant), what tool is allowed for that persona, and whether parameters are valid. Use schemas, type checks, reference lookups (\"does this ID belong to this user?\"), idempotency keys, and audit trails. Block open URL fetchers or generic code execution unless heavily sandboxed and justified (LLM05, LLM06, LLM10).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Assume hostile arguments and hostile sequencing.",
+          "expanded": false
+        },
+        {
+          "id": "n330bedc3adbde5e",
+          "title": "What is improper output handling in LLM systems?",
+          "markdown": "Treating model output as **safe** for **HTML**, **SQL**, **shell**, or **downstream** JSON without the same defenses you use for untrusted user input-leading to **XSS**, **injection**, or **unsafe** tool payloads (**LLM05**). **Mitigate** with encoding, **CSP**, **parameterized** queries, **schema validation** for structured outputs, and **no** \"paste assistant output into admin console\" shortcuts.",
+          "notes": "Treating model output as safe for HTML, SQL, shell, or downstream JSON without the same defenses you use for untrusted user input-leading to XSS, injection, or unsafe tool payloads (LLM05). Mitigate with encoding, CSP, parameterized queries, schema validation for structured outputs, and no \"paste assistant output into admin console\" shortcuts.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Treating model output as safe for HTML, SQL, shell, or downstream JSON...",
+          "expanded": false
+        },
+        {
+          "id": "ndd001cb1ef0964b",
+          "title": "How do you test LLM features for security before and after launch?",
+          "markdown": "Combine **offline** suites (injection strings, indirect injection fixtures, privilege escalation attempts), **RAG** regression tests after **corpus** or **embedder** changes, **red-team** exercises with documented scope, and **production** signals (tool **denials**, policy blocks, anomaly detection on **tokens** and **cost**). **Canary** new models or prompts and compare **security** metrics, not only **quality** scores (**LLM04**, **LLM10**).",
+          "notes": "Combine offline suites (injection strings, indirect injection fixtures, privilege escalation attempts), RAG regression tests after corpus or embedder changes, red-team exercises with documented scope, and production signals (tool denials, policy blocks, anomaly detection on tokens and cost). Canary new models or prompts and compare security metrics, not only quality scores (LLM04, LLM10).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Combine offline suites (injection strings, indirect injection fixtures,...",
+          "expanded": false
+        },
+        {
+          "id": "nad6ec4ff53852f8",
+          "title": "What belongs in a red-team engagement against an agent?",
+          "markdown": "Realistic **goals** (exfiltrate another tenant's doc, send email externally, escalate IAM, burn budget). **Indirect** vectors (poisoned attachment, malicious page). **Tool-chaining** abuse and **retry** loops. **Safe** execution rules (no production customer data without approval). Deliver **severity-rated** findings tied to **controls** (authZ gap vs model weakness) and **retest** criteria.",
+          "notes": "Realistic goals (exfiltrate another tenant's doc, send email externally, escalate IAM, burn budget). Indirect vectors (poisoned attachment, malicious page). Tool-chaining abuse and retry loops. Safe execution rules (no production customer data without approval). Deliver severity-rated findings tied to controls (authZ gap vs model weakness) and retest criteria.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Realistic goals (exfiltrate another tenant's doc, send email externally,...",
+          "expanded": false
+        },
+        {
+          "id": "n6f9a87e020a67bc",
+          "title": "What is the \u201cLLM supply chain,\u201d and what do you actually review?",
+          "markdown": "Models, **fine-tunes**, **datasets**, **evaluation** harnesses, inference **libraries**, **containers**, **GPU** stacks, and third-party **APIs**-plus the **CI** that builds and deploys them (**LLM03**). Review **version pinning**, **artifact integrity**, **licenses**, **subprocessors** and **regions**, **secret** scanning in repos, and **change control** when swapping weights or default **temperature** and **policy** prompts.",
+          "notes": "Models, fine-tunes, datasets, evaluation harnesses, inference libraries, containers, GPU stacks, and third-party APIs-plus the CI that builds and deploys them (LLM03). Review version pinning, artifact integrity, licenses, subprocessors and regions, secret scanning in repos, and change control when swapping weights or default temperature and policy prompts.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Models, fine-tunes, datasets, evaluation harnesses, inference libraries,...",
+          "expanded": false
+        },
+        {
+          "id": "nec929bb903f8ec9",
+          "title": "How does governance differ for GenAI versus traditional features?",
+          "markdown": "Same **ownership** lines in principle-AppSec for **threat models** and **patterns**, ML for **data and evals**, platform for **infra and quotas**, legal/privacy for **commitments**-but GenAI adds **non-determinism**, **vendor** dependence, and **data paths** that are easy to **misconfigure** (RAG ACLs, logging). You need **DPIAs**, **model/corpus** inventory, **incident** runbooks for **data spill** and **model degradation**, and **launch** reviews that include **offline** security evals.",
+          "notes": "Same ownership lines in principle-AppSec for threat models and patterns, ML for data and evals, platform for infra and quotas, legal/privacy for commitments-but GenAI adds non-determinism, vendor dependence, and data paths that are easy to misconfigure (RAG ACLs, logging). You need DPIAs, model/corpus inventory, incident runbooks for data spill and model degradation, and launch reviews that include offline security evals.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Same ownership lines in principle-AppSec for threat models and patterns, ML...",
+          "expanded": false
+        },
+        {
+          "id": "n7f11c6e82d88868",
+          "title": "What are safe UX patterns for high-risk answers and actions?",
+          "markdown": "Show **citations** and **sources** for grounded answers; surface **uncertainty** instead of false precision. Use **explicit confirmations** with an **immutable** summary for email, payments, deletes, and IAM changes. **Progressive** permission: default **narrow** tools, **step-up** for broader scope. Render assistant output as **untrusted** HTML with **sanitization** and **CSP**. Provide a clear **human escalation** path and **feedback** tied to **trace IDs** (**LLM05**, **LLM06**, **LLM09**).",
+          "notes": "Show citations and sources for grounded answers; surface uncertainty instead of false precision. Use explicit confirmations with an immutable summary for email, payments, deletes, and IAM changes. Progressive permission: default narrow tools, step-up for broader scope. Render assistant output as untrusted HTML with sanitization and CSP. Provide a clear human escalation path and feedback tied to trace IDs (LLM05, LLM06, LLM09).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Show citations and sources for grounded answers; surface uncertainty instead...",
+          "expanded": false
+        },
+        {
+          "id": "n505aa9e6a01d956",
+          "title": "What is system prompt leakage, and how do you reduce it?",
+          "markdown": "**System prompt leakage** is when **developer** or **system** instructions are exposed through model replies, verbose errors, **debug** endpoints, or **logs** (**LLM07**). Reduce by **minimizing** secret sauce in prompts (policy belongs in **code** where possible), **rate limiting** probing, **safe error** messages, and **log** redaction. Treat leaked instructions as a **defense-in-depth** issue: impact should stay low if **tools** are properly **authorized**.",
+          "notes": "System prompt leakage is when developer or system instructions are exposed through model replies, verbose errors, debug endpoints, or logs (LLM07). Reduce by minimizing secret sauce in prompts (policy belongs in code where possible), rate limiting probing, safe error messages, and log redaction. Treat leaked instructions as a defense-in-depth issue: impact should stay low if tools are properly authorized.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "System prompt leakage is when developer or system instructions are exposed...",
+          "expanded": false
+        },
+        {
+          "id": "n15dca0a4da09d1d",
+          "title": "What is unbounded consumption, and what mitigations matter at scale?",
+          "markdown": "**Unbounded consumption** is runaway **tokens**, **tool loops**, parallel **sessions**, or abuse that drives **cost** and **availability** harm (**LLM10**). Mitigate with **per-user** and **per-tenant** budgets, **concurrency** caps, **timeouts**, **circuit breakers**, **detection** of anomalous **spend**, and **backpressure** on queues. Product and **finance** should align on **alerts** and **throttling** behavior.",
+          "notes": "Unbounded consumption is runaway tokens, tool loops, parallel sessions, or abuse that drives cost and availability harm (LLM10). Mitigate with per-user and per-tenant budgets, concurrency caps, timeouts, circuit breakers, detection of anomalous spend, and backpressure on queues. Product and finance should align on alerts and throttling behavior.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Unbounded consumption is runaway tokens, tool loops, parallel sessions, or...",
+          "expanded": false
+        },
+        {
+          "id": "n2af31feb9d066df",
+          "title": "Are content safety filters enough for \u201cLLM security\u201d?",
+          "markdown": "**No.** Filters address **abuse** and some **safety** categories but do not replace **authorization**, **tenant isolation**, **output validation**, or **safe tool** design. A polite model can still **call** a tool if the **backend** allows it; a filtered answer can still be **wrong** or **grounded** on **poisoned** docs. Interview answer: **layer** policy-filters plus **authZ** plus **architecture** (**LLM05**, **LLM06**).",
+          "notes": "No. Filters address abuse and some safety categories but do not replace authorization, tenant isolation, output validation, or safe tool design. A polite model can still call a tool if the backend allows it; a filtered answer can still be wrong or grounded on poisoned docs. Interview answer: layer policy-filters plus authZ plus architecture (LLM05, LLM06).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "n5f5b590d45f883a",
+          "title": "A customer asks whether their prompts are used to train your...",
+          "markdown": "Confirm the **exact SKU** or contract line: **enterprise** vs **consumer**, **zero-retention** claims, **fine-tuning** that uses customer data, and **evaluation** or **human review** programs that might copy transcripts. Read **DPA**, **AI addendum**, **subprocessor** list, and **region** commitments. If marketing says \"we don't train,\" ensure that covers **your** integration path (batch vs streaming, attachments, **logging** to third-party observability). Answer customers with **precise** scope: what is **excluded**, what is **logged**, retention, and **who** can access logs (**LLM02**, **LLM03**).",
+          "notes": "Confirm the exact SKU or contract line: enterprise vs consumer, zero-retention claims, fine-tuning that uses customer data, and evaluation or human review programs that might copy transcripts. Read DPA, AI addendum, subprocessor list, and region commitments. If marketing says \"we don't train,\" ensure that covers your integration path (batch vs streaming, attachments, logging to third-party observability). Answer customers with precise scope: what is excluded, what is logged, retention, and who can access logs (LLM02, LLM03).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Confirm the exact SKU or contract line: enterprise vs consumer,...",
+          "expanded": false
+        },
+        {
+          "id": "n8f134c63b478a9e",
+          "title": "After a red-team, how do you decide whether to fix the model, the...",
+          "markdown": "**Default bias toward application and tool fixes** when the issue is **privilege**, **data access**, or **unsafe execution**-those should not depend on model niceness. **Prompt and model** changes help with **behavioral** refusals and **quality** but are **brittle** under attack. Prioritize **deterministic** controls: **authZ** bugs first, then **retrieval** ACLs, then **output** validation, then **prompt** hardening, then **model** swaps or **fine-tunes**. Track **regression tests** so \"fixes\" do not reopen prior **injection** or **leakage** paths (**LLM01**, **LLM06**).",
+          "notes": "Default bias toward application and tool fixes when the issue is privilege, data access, or unsafe execution-those should not depend on model niceness. Prompt and model changes help with behavioral refusals and quality but are brittle under attack. Prioritize deterministic controls: authZ bugs first, then retrieval ACLs, then output validation, then prompt hardening, then model swaps or fine-tunes. Track regression tests so \"fixes\" do not reopen prior injection or leakage paths (LLM01, LLM06).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Default bias toward application and tool fixes when the issue is privilege,...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Why is an LLM feature a different kind of product security problem..."
+    }
+  ],
+  "topicId": "genai-llm-product-security",
+  "name": "GenAI LLM Product Security",
+  "structure": "logic-right",
+  "blurb": "Large language model (LLM) features add a new trust boundary: untrusted..."
+}

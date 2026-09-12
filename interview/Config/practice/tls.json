@@ -1,0 +1,133 @@
+{
+  "topicId": "tls",
+  "name": "TLS",
+  "source": "TLS/TLS - Interview Questions & Answers.md",
+  "prompts": [
+    {
+      "id": "pa9eab56c670f6c",
+      "cluster": "Handshake and key agreement",
+      "title": "What problem does TLS solve, and what does it explicitly not solve?",
+      "seconds": 90,
+      "answerMarkdown": "TLS gives you a **protected channel**: **confidentiality** (encryption), **integrity** (tamper detection, typically via AEAD), and usually **server authentication** (and optionally client authentication) using X.509 certificates and public-key cryptography. It secures bytes **on the wire between endpoints** where TLS is terminated.\n\nIt does **not** fix application security by itself: stored data, authorization bugs, injection, SSRF, compromised endpoints, or \"HTTPS at the edge but plaintext inside the data center\" are all out of scope unless you add additional controls.\n\n---"
+    },
+    {
+      "id": "pd9f456858f56b8",
+      "cluster": "Handshake and key agreement",
+      "title": "Walk through the TLS 1.2 full handshake at a level you could whiteboard.",
+      "seconds": 120,
+      "answerMarkdown": "Goal: agree on protocol version and cipher suite, authenticate the server, derive shared keys, then encrypt application data.\n\nTypical **RSA key transport** style (legacy mental model): **ClientHello** (versions, random, cipher suites, extensions) \u2192 **ServerHello** (chosen version/suite, server random) \u2192 server **Certificate** chain \u2192 **ServerHelloDone** \u2192 client **ClientKeyExchange** (premaster secret encrypted to server cert public key) \u2192 **ChangeCipherSpec** + **Finished** (MAC over handshake) \u2192 server **ChangeCipherSpec** + **Finished**. Session keys are derived from the two randoms plus premaster secret.\n\nModern **TLS 1.2 with ECDHE**: replace static RSA transport with **ephemeral Diffie-Hellman** (**ECDHE**) in **ServerKeyExchange** / **ClientKeyExchange** (or messages folded into extensions in some stacks). The **Finished** messages authenticate the handshake transcript so a MITM cannot splice sessions.\n\n**Interview tip:** Mention **forward secrecy**: with ECDHE, compromise of the long-term cert key does not decrypt past sessions if ephemeral secrets are gone.\n\n---"
+    },
+    {
+      "id": "p63910685840cae",
+      "cluster": "Handshake and key agreement",
+      "title": "How does the TLS 1.3 handshake differ from 1.2 in ways interviewers care about?",
+      "seconds": 120,
+      "answerMarkdown": "TLS 1.3 is designed to be **faster and simpler**: often **1-RTT** for a full handshake (0-RTT resumption exists but has replay caveats). It **encrypts more of the handshake earlier** (certificate-related messages are encrypted after key agreement in the main flow). It **removes obsolete and dangerous constructs** (RSA key transport, static DH cipher suites, MD5/SHA1 for handshake integrity, etc.). **0-RTT early data** can improve latency but must be used only for **idempotent** operations and with explicit replay awareness on the server.\n\nNegotiation is stricter: fewer cipher suites, mandatory use of modern AEAD ciphers, and a cleaner **key schedule** derived from the HKDF-based transcript.\n\n---"
+    },
+    {
+      "id": "p820458c63a6b42",
+      "cluster": "Handshake and key agreement",
+      "title": "At a high level, what is the TLS record layer and why does it matter?",
+      "seconds": 120,
+      "answerMarkdown": "Above TCP (or DTLS over UDP), TLS splits traffic into **records**. Each record has a **type** (handshake, application data, alert, etc.), **version** field (legacy in 1.3), **length**, and **payload**. For TLS 1.3, application data records use **AEAD**: each record has an explicit **nonce/IV** (often derived from a sequence), **ciphertext**, and **authentication tag**. The tag binds the ciphertext to the **sequence number** and associated data, giving integrity and preventing silent truncation or reordering within the cryptographic model.\n\nOperationally, this matters for **limits**: very large frames, **TLS compression** (disabled in modern TLS-was a CRIME class enabler), and how implementations handle **reassembly** and **alerts** (e.g., `bad_record_mac`, `decode_error`). It also explains why TLS is not \"a byte stream you can slice anywhere\"-boundaries and ordering are part of the security story.\n\n---"
+    },
+    {
+      "id": "p2d11047174ebff",
+      "cluster": "Certificates, validation, and PKI",
+      "title": "How does a TLS client validate a server certificate end-to-end?",
+      "seconds": 120,
+      "answerMarkdown": "Starting from the server's **leaf** certificate:\n\n1. **Build a chain** to a **trust anchor** in the client's trust store (intermediates may be provided by the server or fetched-behavior varies).\n2. **Verify signatures** along the chain (each cert signed by the issuer up to the root).\n3. Check **validity interval** (`notBefore` / `notAfter`).\n4. Check **names**: compare requested hostname or IP against **Subject Alternative Name (SAN)** entries; **Common Name (CN)** alone is legacy and insufficient on modern clients.\n5. Enforce **constraints**: **Basic Constraints** (CA:TRUE/FALSE), **Key Usage**, **Extended Key Usage** (e.g., `serverAuth` for HTTPS).\n6. Apply **policy**: pinning if configured, CT expectations in some ecosystems, and optionally **revocation** checks (below).\n\nIf any mandatory step fails, the handshake should abort with a certificate error.\n\n---"
+    },
+    {
+      "id": "p343338d568d253",
+      "cluster": "Certificates, validation, and PKI",
+      "title": "What are OCSP, OCSP stapling, and CRLs, and what trade-offs do they create?",
+      "seconds": 120,
+      "answerMarkdown": "**CRLs** are signed lists of revoked serial numbers published by the CA-simple model but can be **large** and **stale** depending on fetch cadence.\n\n**OCSP** is a **live** request: \"Is serial S still valid?\" Fast when it works, but adds **latency**, **privacy** (leaks which sites you visit to the responder unless stapled), and **availability** risk if the responder is down.\n\n**OCSP stapling** lets the **server** attach a **fresh, signed OCSP response** in the TLS handshake so the client does not call the CA directly-better performance and privacy, but the server must **configure and refresh** the staple correctly.\n\nMany clients use **soft-fail** behaviors in practice if revocation infrastructure is unreachable, which is why **short-lived certs** (automation via ACME) and **key compromise response** (rotate fast) often matter as much as revocation checks.\n\n---"
+    },
+    {
+      "id": "p040ead084e3de4",
+      "cluster": "Certificates, validation, and PKI",
+      "title": "What is certificate pinning, where is it appropriate, and what goes wrong?",
+      "seconds": 120,
+      "answerMarkdown": "**Pinning** means the client stores an expected **public key** (often **SPKI hash**) or certificate and **rejects** chains that do not match, even if a public CA would trust them. It helps against **rogue or mis-issued CA** certificates and some corporate MITM proxies-common in **mobile apps** and some high-assurance clients.\n\n**Risks:** **operational fragility**. If you pin the wrong key, forget **backup pins**, or rotate certs without updating the app, users brick connectivity until a new app release. **HTTP Public Key Pinning (HPKP)** in browsers caused real **lockout** incidents and is largely abandoned for the web platform.\n\nSafer patterns: **pin in controlled clients** you ship, use **multiple pins**, plan rotation with overlap, or rely on **modern CA ecosystem + CT monitoring** for browsers where pinning is not viable.\n\n---"
+    },
+    {
+      "id": "p0ff627f15d59a2",
+      "cluster": "Downgrades, HTTP policy, and ecosystem attacks",
+      "title": "What is a TLS downgrade attack, and how do modern versions defend against it?",
+      "seconds": 120,
+      "answerMarkdown": "A **downgrade** tries to make client and server agree on an **older, weaker** protocol or cipher (or cleartext) than they support-examples include forcing SSL3 for **POODLE**-class issues historically, or stripping TLS at an HTTP layer.\n\nDefenses include: **servers disabling old protocols** (SSL2/3, TLS 1.0/1.1 off on the public internet for most orgs), **AEAD-only** suites, **TLS_FALLBACK_SCSV** (historical signal for intentional downgrade in 1.2-era clients), and **TLS 1.3's stricter negotiation** and removal of bad primitives. At the **application layer**, **HSTS** (below) reduces **sslstrip** where users start on HTTP.\n\n**Interview angle:** Downgrade is both **crypto/protocol** and **UX**: users typing `http://` or captive portals can bypass assumptions-combine strict TLS with **HSTS** and **HTTPS redirects** done carefully.\n\n---"
+    },
+    {
+      "id": "p43eea20dee4c11",
+      "cluster": "Downgrades, HTTP policy, and ecosystem attacks",
+      "title": "What is HSTS, and what are its limits?",
+      "seconds": 120,
+      "answerMarkdown": "**HTTP Strict Transport Security** is an **HTTP response header** (`Strict-Transport-Security`) that tells supporting browsers to **only use HTTPS** to that host for a `max-age`, with optional **`includeSubDomains`** and **`preload`** list enrollment.\n\nIt reduces **accidental plaintext** and **sslstrip** for **returning** visitors who already received the header. It does **not** protect the **first visit** to a site before HSTS is seen (hence **preload**). It does **not** replace fixing **mixed content**, **cert errors**, or **TLS misconfiguration**. Wrong **`includeSubDomains`** can **outage** large subdomain trees-treat it as a **production config** with blast-radius review.\n\n---"
+    },
+    {
+      "id": "p9bdeb677bdc974",
+      "cluster": "Downgrades, HTTP policy, and ecosystem attacks",
+      "title": "Why is mixed content still a TLS topic in interviews?",
+      "seconds": 90,
+      "answerMarkdown": "A page loaded over HTTPS that pulls **active** scripts, iframes, or XHR from **http://** creates **integrity and confidentiality gaps**: attackers can modify or observe that subresource. Browsers **block** or **upgrade** mixed content depending on type; broken sites sometimes \"fix\" by disabling CSP or downgrading to HTTP-both are bad.\n\nThe fix is **same-origin HTTPS** for subresources, **CSP** (`upgrade-insecure-requests` where appropriate), and **CDN/asset** configuration audits. It shows you connect **transport security** to **how the app is actually assembled**.\n\n---"
+    },
+    {
+      "id": "p9fda3a11887d46",
+      "cluster": "Ciphers, versions, and operations",
+      "title": "What cipher-suite posture would you expect on a public HTTPS API in 2026?",
+      "seconds": 90,
+      "answerMarkdown": "**TLS 1.2 minimum**, **TLS 1.3 preferred** on all modern clients. **AEAD only** for bulk encryption: **AES-GCM** or **ChaCha20-Poly1305**. Key exchange via **ECDHE** (forward secrecy). Disable **NULL**, **EXPORT**, **RC4**, **3DES**, **CBC** modes for new configs, and avoid **RSA key transport** where possible.\n\nUse a **maintained baseline** (for example Mozilla's \"intermediate\" or \"modern\" SSL config profiles) and **test** with `openssl s_client`, **sslscan**, or managed scanners-**document** any exception with owner and expiry.\n\n---"
+    },
+    {
+      "id": "p0d7f2c4dc2c9af",
+      "cluster": "Ciphers, versions, and operations",
+      "title": "What is mTLS, and when is it worth the complexity?",
+      "seconds": 90,
+      "answerMarkdown": "**Mutual TLS** means **both** parties present certificates and private keys; the server verifies the client cert against a **CA** or allow-list. Common for **service-to-service** meshes, private APIs, and **zero-trust** style identities replacing broad network trust.\n\nCosts: **provisioning** client certs to workloads or people, **rotation**, **revocation** or **short TTL** policies, **clock skew**, and **observability** when handshakes fail. Pair with **SPIFFE/SVID**-style identity in Kubernetes or a mesh when scale matters.\n\n---"
+    },
+    {
+      "id": "p78a169215c56f2",
+      "cluster": "Ciphers, versions, and operations",
+      "title": "Explain TLS termination and the trust boundary mistakes teams make.",
+      "seconds": 120,
+      "answerMarkdown": "**Termination** is where TLS is decrypted-often at a **load balancer**, **reverse proxy**, or **ingress**. After that point, traffic may be **plaintext** on the network unless you add **TLS to backends** (re-encrypt) or isolate with **strict network policy**.\n\nCommon mistakes: trusting **`X-Forwarded-Proto`** or **`X-Forwarded-For`** from **any** client without **edge stripping** and **trusted hop** configuration; assuming \"we are inside the VPC\" means **confidentiality**; logging **full URLs or cookies** at the proxy; and **different cert lifecycles** between edge and internal names causing **SNI** or **hostname** mismatches on re-encrypt paths.\n\n---"
+    },
+    {
+      "id": "pa46b27af9986c8",
+      "cluster": "Detection, compliance, and senior scenarios",
+      "title": "You get a \u201cweak cipher\u201d or \u201cTLS 1.0 enabled\u201d finding\u2014how do you triage it?",
+      "seconds": 120,
+      "answerMarkdown": "Confirm **where** it was observed (public VIP vs legacy admin jump host vs mainframe listener). Capture **what actually negotiates** from representative clients using `openssl s_client -connect host:443 -tls1_2` and a **1.3** probe. Check **load balancer defaults**, **CDN** settings, and **managed service** consoles-vendors often reintroduce broad compatibility.\n\nRemediation: **disable** obsolete protocols at the edge first, **narrow** cipher lists, **retest**, and **monitor** handshake error rates. For unavoidable legacy endpoints, **segment**, **rate-limit**, and **time-box** with a documented exception and owner-not an infinite waiver.\n\n---"
+    },
+    {
+      "id": "p595cf598e1f107",
+      "cluster": "Detection, compliance, and senior scenarios",
+      "title": "Describe a realistic scenario where \u201cTLS was correct\u201d but the system remained exploitable.",
+      "seconds": 120,
+      "answerMarkdown": "A retail API serves only **TLS 1.3** with a strong Mozilla-modern config and **OCSP stapling**, but the **JWT** is stored in **localStorage** and the SPA pulls a third-party **analytics script** over HTTP until a marketer \"fixed\" tracking-creating **mixed active content** and **XSS**-adjacent risk. An attacker who achieves script execution **exfiltrates tokens** despite perfect TLS to the API.\n\nAnother pattern: **mTLS** from service A to B, but B **authorizes** every caller as admin because **CN parsing** is wrong and defaults to **allow-all** on verify failure. Channel crypto worked; **identity binding** did not.\n\n---"
+    },
+    {
+      "id": "p08201e64df1c57",
+      "cluster": "Detection, compliance, and senior scenarios",
+      "title": "How does TLS show up in compliance conversations (PCI, HIPAA-style) without drowning in checklists?",
+      "seconds": 90,
+      "answerMarkdown": "Auditors and risk teams usually want evidence of **strong cryptography in transit**, **no forbidden legacy SSL/TLS**, **key and certificate management** (generation, storage, rotation, access), and **monitoring** (expiry, coverage). Map controls to **concrete artifacts**: ingress Terraform/Helm values, **WAF/LB** screenshots, **scanner** reports, **runbooks** for rotation, and **KMS/HSM** use for private keys where required.\n\nAvoid hand-waving \"we use HTTPS\"; show **version floor**, **cipher governance**, and **who** can export private keys.\n\n---"
+    },
+    {
+      "id": "p57fbc1f5566d6d",
+      "cluster": "Detection, compliance, and senior scenarios",
+      "title": "What is SNI, and why do privacy and multi-tenant routing discussions mention it?",
+      "seconds": 90,
+      "answerMarkdown": "**Server Name Indication** lets the client send the **hostname** it wants during the handshake so a single IP can host many TLS sites with **different certificates**. Before encrypted extensions, SNI was often **visible on the wire** in plaintext (still true in many 1.2 deployments), which is a **metadata leak** compared to **ECH** (Encrypted Client Hello) efforts.\n\nOperationally, **wrong SNI** or missing SNI breaks **virtual hosting** behind CDNs; **internal services** sometimes need **SAN** coverage for many names or **wildcard** certs with careful scope.\n\n---"
+    },
+    {
+      "id": "p2645491b2a93c2",
+      "cluster": "Detection, compliance, and senior scenarios",
+      "title": "How would you **verify** TLS posture before and after a change?",
+      "seconds": 120,
+      "answerMarkdown": "**Before:** inventory all **listeners** (edge, admin, APIs, mail, DB tunnels), not just marketing sites. **Test** externally and from internal vantage points. Tools: `openssl s_client`, **sslscan** / **testssl.sh**, cloud **security hub** policies, CA **transparency** logs for unexpected certs, and **browser devtools** for **mixed content**.\n\n**After changes:** watch **handshake failure** metrics, **support tickets** from old clients, and **certificate expiry** alarms at least **30 days** ahead. For **pinning** clients, run **staged** cert rotations and **canary** releases.\n\n---\n\n**Authoritative references:** [RFC 8446](https://www.rfc-editor.org/rfc/rfc8446) (TLS 1.3); [RFC 5246](https://www.rfc-editor.org/rfc/rfc5246) (TLS 1.2, historical); [Mozilla SSL Configuration Generator](https://ssl-config.mozilla.org/); [OWASP Transport Layer Protection Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Protection_Cheat_Sheet.html).\n\n**Cross-read:** HTTP security headers (HSTS detail), certificate lifecycle automation (ACME), service mesh identity, and cloud load balancer hardening.\n\n<!-- verified-depth-merged:v1 ids=tls -->"
+    }
+  ]
+}

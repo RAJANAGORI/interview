@@ -7,3 +7,5 @@
 [**Critical Clarification: GraphQL and API Security Misconceptions**](Critical%20Clarification%20GraphQL%20and%20API%20Security%20Misconceptions.md)
 
 [**GraphQL and API Security - Quick Reference**](GraphQL%20and%20API%20Security%20-%20Quick%20Reference.md)
+
+[**GraphQL and API Security - Mind Map**](GraphQL%20and%20API%20Security%20-%20Mind%20Map.md)

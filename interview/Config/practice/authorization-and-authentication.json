@@ -1,0 +1,133 @@
+{
+  "topicId": "authorization-and-authentication",
+  "name": "Authorization and Authentication",
+  "source": "Authorization and Authentication/Authorization and Authentication - Interview Quest.md",
+  "prompts": [
+    {
+      "id": "pc2e9707b4e20ed",
+      "cluster": "Fundamental concepts",
+      "title": "What is the difference between authentication and authorization?",
+      "seconds": 120,
+      "answerMarkdown": "**Authentication (AuthN)** proves *who* the caller is-password plus MFA, WebAuthn, client certificate, or a signed token from a trusted issuer. **Authorization (AuthZ)** decides *whether that principal may perform this action on this resource*-RBAC roles, ABAC policies, ownership checks, tenant isolation. AuthN usually happens once per session or token lifetime; **AuthZ should be evaluated on every protected request** because permissions and object state change. A system can return **401** when identity is missing or invalid, and **403** when identity is known but policy denies the action.\n\n---"
+    },
+    {
+      "id": "p12a9486d2cdb2e",
+      "cluster": "Fundamental concepts",
+      "title": "Why is \u201cthe user is logged in\u201d not enough for security?",
+      "seconds": 90,
+      "answerMarkdown": "Login establishes **identity**, not **entitlement to a specific object**. Classic failure modes are **IDOR** (changing an ID in a URL or API call) and **missing function-level checks** (calling an admin endpoint with a normal session). Secure designs load the resource in the right **tenant context**, then evaluate **object-level** policy: owner, sharing rules, workflow state, and regulatory constraints. **CWE-285** (improper authorization) captures this class of bugs.\n\n---"
+    },
+    {
+      "id": "pb5edf91c4c06c6",
+      "cluster": "Fundamental concepts",
+      "title": "Explain authentication factors and when to combine them.",
+      "seconds": 90,
+      "answerMarkdown": "Factors fall into **knowledge** (password, PIN), **possession** (OTP app, security key, phone), and **inherence** (biometric). **MFA** combines categories so stolen passwords are insufficient. Interviewers often expect you to note **phishing**: push/TOTP can be relayed; **WebAuthn/FIDO2** security keys are **phishing-resistant** because credentials are **origin-bound**. Risk-based policies use MFA for **step-up** on sensitive actions (changing MFA methods, large transfers, production deletes).\n\n---"
+    },
+    {
+      "id": "pfdb8fcd3a7fccd",
+      "cluster": "Sessions, tokens, and browser apps",
+      "title": "Compare server-side sessions with signed tokens such as JWTs.",
+      "seconds": 90,
+      "answerMarkdown": "**Server-side sessions** store state in a server or Redis; the client holds an **opaque** session ID, often in an **HttpOnly, Secure, SameSite** cookie. Revocation is immediate by deleting session state. **JWT access tokens** carry **signed claims** so resource servers can validate offline using **issuer keys (JWKS)**-good for microservices-but **revocation is harder**; mitigate with **short TTL**, **refresh token rotation**, and occasional **denylists** after compromise. Neither replaces **application-level AuthZ**; they are **continuity mechanisms** after AuthN.\n\n---"
+    },
+    {
+      "id": "p83db82f6bf6e09",
+      "cluster": "Sessions, tokens, and browser apps",
+      "title": "How do you implement secure session management for a web application?",
+      "seconds": 120,
+      "answerMarkdown": "Issue **high-entropy** session IDs from a CSPRNG; **regenerate** the session ID after successful login to prevent **session fixation**. Set cookies **Secure**, **HttpOnly**, and a sensible **SameSite** policy; serve everything sensitive over **HTTPS**. Apply **idle** and **absolute** timeouts; require **re-auth** for high-risk actions. Invalidate sessions server-side on **logout**, **password change**, and **reported compromise**. Monitor for **credential stuffing** and **impossible travel**. For SPAs, prefer patterns that avoid storing bearer tokens in **localStorage** (e.g., **BFF** with HttpOnly cookies) because XSS becomes instant account takeover.\n\n---"
+    },
+    {
+      "id": "pd214564188a5e4",
+      "cluster": "Sessions, tokens, and browser apps",
+      "title": "What mistakes do teams make with JWTs?",
+      "seconds": 90,
+      "answerMarkdown": "Common issues: trusting tokens without strict **`aud` (audience)** and **`iss` (issuer)** validation; weak algorithms or **alg confusion** attacks; **long-lived** access tokens without rotation; storing JWTs in **JS-accessible storage**; treating **JWT claims** as authoritative for **fine-grained** permissions that actually belong in the database; and skipping **key rotation** discipline. JWTs are **bearer** credentials-whoever steals them wins until expiry unless you add **binding** (mTLS, DPoP) or very short lifetimes.\n\n---"
+    },
+    {
+      "id": "pe024d602a5404a",
+      "cluster": "OAuth 2.0 and OpenID Connect",
+      "title": "Name the OAuth 2.0 roles and what each is responsible for.",
+      "seconds": 90,
+      "answerMarkdown": "**Resource owner** (typically the user) grants access. **Client** is the application requesting access-distinguish **confidential** servers from **public** clients that must use **PKCE**. **Authorization server** authenticates the user, obtains **consent**, and **issues tokens**. **Resource server** hosts APIs, **validates** tokens, and enforces **access policy** (often starting with **scopes**). The interview point: OAuth is primarily **delegation**; it standardizes how apps obtain **limited** authority to act on behalf of a user, not your full domain authorization model.\n\n---"
+    },
+    {
+      "id": "pa0083dae1fbc98",
+      "cluster": "OAuth 2.0 and OpenID Connect",
+      "title": "What is OpenID Connect, and how does it relate to OAuth 2.0?",
+      "seconds": 90,
+      "answerMarkdown": "**OIDC** adds an **identity layer** on OAuth: an **`id_token`** (JWT) and **UserInfo** convey **who** the user is to the **relying party** (your app). **OAuth** alone issues **access tokens** for **APIs**. A frequent bug is sending an **`id_token`** to your backend API as if it were an **access token**-IDs are for the client to consume identity; APIs should require **access tokens** with correct **audience** and **scopes** intended for those resources.\n\n---"
+    },
+    {
+      "id": "p07c398419d86f8",
+      "cluster": "OAuth 2.0 and OpenID Connect",
+      "title": "What is PKCE, and why does it matter?",
+      "seconds": 90,
+      "answerMarkdown": "**Proof Key for Code Exchange** binds the **authorization code** request to a **verifier** secret so an intercepted code cannot be exchanged by another party-critical for **public clients** (mobile, SPA) that cannot hold a client secret safely. Modern guidance treats PKCE as **best practice even for confidential clients** as defense in depth. Pair PKCE with **exact redirect URI matching** and a **state** parameter for **CSRF** protection on the OAuth front channel.\n\n---"
+    },
+    {
+      "id": "pa7ababddaeb5a2",
+      "cluster": "Authorization models and design",
+      "title": "Explain RBAC and its operational downsides.",
+      "seconds": 90,
+      "answerMarkdown": "**RBAC** assigns **permissions** via **roles** (e.g., `viewer`, `editor`, `admin`). It is easy to administer and explain. Downsides include **role explosion** when real duties are combinatorial, **stale assignments** after org changes, and **over-broad** roles created for expediency. Mitigations: **role hierarchies** with clear docs, **periodic access reviews**, **separation of duties** for sensitive pairs of permissions, and **temporary elevation** with approval for break-glass paths.\n\n---"
+    },
+    {
+      "id": "p98e114df950b8d",
+      "cluster": "Authorization models and design",
+      "title": "When would you choose ABAC over RBAC?",
+      "seconds": 90,
+      "answerMarkdown": "Choose **ABAC** when decisions depend on **context**: data classification, resource owner, geography, time window, device posture, or transaction attributes. ABAC expresses policies like \"managers may approve invoices up to $10k during business hours from a managed device.\" The cost is **complexity**-policies need **testing**, **observability**, and **governance**. Many systems expose **RBAC to admins** but implement **ABAC-like** rules in code for **multi-tenant** row access.\n\n---"
+    },
+    {
+      "id": "pf29241570023d8",
+      "cluster": "Authorization models and design",
+      "title": "What is least privilege, and how do you apply it in practice?",
+      "seconds": 90,
+      "answerMarkdown": "**Least privilege** grants the **minimum** rights needed for a task, for the **shortest** time, on the **smallest** set of objects. In practice: default **deny**, **scope** API keys and tokens narrowly, use **just-in-time** admin roles, **automate** offboarding hooks to revoke access, and measure **unused permissions** in audits. Least privilege limits **blast radius** when credentials leak or insiders go rogue.\n\n---"
+    },
+    {
+      "id": "pfd99ee3b4dcbe4",
+      "cluster": "APIs, HTTP semantics, and enforcement",
+      "title": "How do you use 401 and 403 in APIs?",
+      "seconds": 90,
+      "answerMarkdown": "Use **401 Unauthorized** when the caller is **not authenticated** or credentials are **invalid/expired**-optionally with `WWW-Authenticate`. Use **403 Forbidden** when the caller **is authenticated** but **policy forbids** the action. Be careful with information leakage on **403** vs **404** for object existence; pick a **consistent** product-wide rule and document it. Interview credit goes to **consistent semantics** more than arguing universal absolutes.\n\n---"
+    },
+    {
+      "id": "p493522eb230c4f",
+      "cluster": "APIs, HTTP semantics, and enforcement",
+      "title": "How would you secure authentication for public APIs?",
+      "seconds": 90,
+      "answerMarkdown": "Layer controls: **TLS** everywhere; **OAuth client credentials** or **scoped API keys** for integrations; **short-lived access tokens** with **refresh rotation** for user delegation; **mTLS** or **workload identities** for internal services. Add **rate limiting**, **anomaly detection**, and **auditing**. At the gateway, validate **issuer, audience, signature, expiry**. Inside services, enforce **tenant** and **object-level** rules-**scopes** are coarse gates, not the whole AuthZ story.\n\n---"
+    },
+    {
+      "id": "p7c602d7f973837",
+      "cluster": "APIs, HTTP semantics, and enforcement",
+      "title": "Where should authorization be enforced in a microservice architecture?",
+      "seconds": 90,
+      "answerMarkdown": "**Coarse** checks (JWT validation, required scopes, tenant routing) fit well at an **API gateway** or **service mesh** edge. **Fine-grained** rules belong **in the domain service** that understands **ownership**, **state machines**, and **business invariants**-because only that service knows whether \"approve refund\" is legal for *this* order. **Policy-as-code** and **shared middleware** help avoid **drift**, but the domain must still perform **object-level** checks. Log both **allow** and **deny** (with sampling/throttling) for sensitive routes.\n\n---"
+    },
+    {
+      "id": "p65a79bb3f800f0",
+      "cluster": "Threats, testing, and behaviorals",
+      "title": "Name common authentication attacks and mitigations.",
+      "seconds": 90,
+      "answerMarkdown": "**Credential stuffing** and **password spraying**: rate limits, **MFA**, **breach password detection**, **CAPTCHA** where appropriate. **Phishing**: phishing-resistant MFA, security education. **Session hijacking/fixation**: **HttpOnly** cookies, **Secure** flag, **regenerate** session on login, short TTLs. **Password reset** abuse: single-use tokens, short expiry, **no account enumeration** via response differences where feasible. **Brute force**: throttling, **progressive backoff**, alerting.\n\n---"
+    },
+    {
+      "id": "p1f9cfb5953e89e",
+      "cluster": "Threats, testing, and behaviorals",
+      "title": "How do you test authorization beyond \u201chappy path\u201d?",
+      "seconds": 90,
+      "answerMarkdown": "Build **negative tests** per role: attempt **cross-tenant** IDs, **horizontal** access to peers' resources, and **vertical** escalation to admin operations. Automate checks for **every new endpoint** that accepts identifiers. Use **pairwise** tests when combining roles and **object states**. In reviews, trace the **data path** from identifier to **policy decision**-if you cannot point to the line of code that enforces ownership, you likely have **CWE-285** risk.\n\n---"
+    },
+    {
+      "id": "p4fecb8356e8328",
+      "cluster": "Threats, testing, and behaviorals",
+      "title": "Describe balancing stronger authentication with usability.",
+      "seconds": 90,
+      "answerMarkdown": "Use **risk-based** MFA: step-up only for **high-value** actions or **anomalous** context (new device, new geography). Offer **multiple factors** (security keys, TOTP, passkeys) so users can recover. **Remember trusted devices** with clear revocation UX. Communicate **why** prompts appear to reduce abandonment. Measure **support tickets** and **conversion** after changes; security wins that nobody can use rarely stick. Tie decisions to **threat modeling**-protect assets proportional to impact.\n\n---"
+    }
+  ]
+}

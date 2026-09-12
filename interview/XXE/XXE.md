@@ -7,3 +7,5 @@
 [**Critical Clarification: XXE Security Misconceptions**](Critical Clarification XXE Misconceptions.md)
 
 [**XXE - Quick Reference Guide**](XXE - Quick Reference.md)
+
+[**XXE - Mind Map**](XXE%20-%20Mind%20Map.md)

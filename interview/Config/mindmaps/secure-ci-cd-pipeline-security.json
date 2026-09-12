@@ -1,0 +1,1088 @@
+{
+  "id": "nb04ce1ed9dadd38",
+  "title": "Secure CI CD Pipeline Security",
+  "markdown": "Continuous integration and continuous delivery systems are a **control plane**: they read source code, execute arbitrary build steps, hold credentials, and often gate production releases. A compromised pipeline can **exfiltrate secrets**, **tamper with artifacts**, **bypass code review**, or **deploy attacker-controlled software** without touching a production server directly. Strong practice **threat-models the pipeline** as infrastructure: who can change workflows, what identity jobs use to reach cloud APIs, how artifacts are proven, and how untrusted contributions are isolated.\n\nThis guide focuses on **pipeline secrets**, **OIDC federation to cloud providers**, **branch and merge protections**, **artifact signing**, **SBOM generation as a pipeline hook**, **poisoned pull requests and poisoned pipeline execution (PPE)**, and **runner isolation**. It aligns vocabulary with the [OWASP Top 10 CI/CD Security Risks](https://owasp.org/www-project-top-10-ci-cd-security-risks/) (v1.0, October 2022).",
+  "notes": "Continuous integration and continuous delivery systems are a control plane: they read source code, execute arbitrary build steps, hold credentials, and often gate production releases. A compromised pipeline can exfiltrate secrets, tamper with artifacts, bypass code review, or deploy attacker-controlled software without touching a production server directly. Strong practice threat-models the pipeline as infrastructure: who can change workflows, what identity jobs use to reach cloud APIs, how artifacts are proven, and how untrusted contributions are isolated.\n\nThis guide focuses on pipeline secrets, OIDC federation to cloud providers, branch and merge protections, artifact signing, SBOM generation as a pipeline hook, poisoned pull requests and poisoned pipeline execution (PPE), and runner isolation. It aligns vocabulary with the OWASP Top 10 CI/CD Security Risks (v1.0, October 2022).",
+  "expanded": true,
+  "children": [
+    {
+      "id": "n2489e5a86f2475b",
+      "title": "At a glance",
+      "markdown": "Continuous integration and continuous delivery systems are a **control plane**: they read source code, execute arbitrary build steps, hold credentials, and often gate production releases. A compromised pipeline can **exfiltrate secrets**, **tamper with artifacts**, **bypass code review**, or **deploy attacker-controlled software** without touching a production server directly. Strong practice **threat-models the pipeline** as infrastructure: who can change workflows, what identity jobs use to reach cloud APIs, how artifacts are proven, and how untrusted contributions are isolated.\n\nThis guide focuses on **pipeline secrets**, **OIDC federation to cloud providers**, **branch and merge protections**, **artifact signing**, **SBOM generation as a pipeline hook**, **poisoned pull requests and poisoned pipeline execution (PPE)**, and **runner isolation**. It aligns vocabulary with the [OWASP Top 10 CI/CD Security Risks](https://owasp.org/www-project-top-10-ci-cd-security-risks/) (v1.0, October 2022).",
+      "notes": "Continuous integration and continuous delivery systems are a control plane: they read source code, execute arbitrary build steps, hold credentials, and often gate production releases. A compromised pipeline can exfiltrate secrets, tamper with artifacts, bypass code review, or deploy attacker-controlled software without touching a production server directly. Strong practice threat-models the pipeline as infrastructure: who can change workflows, what identity jobs use to reach cloud APIs, how artifacts are proven, and how untrusted contributions are isolated.\n\nThis guide focuses on pipeline secrets, OIDC federation to cloud providers, branch and merge protections, artifact signing, SBOM generation as a pipeline hook, poisoned pull requests and poisoned pipeline execution (PPE), and runner isolation. It aligns vocabulary with the OWASP Top 10 CI/CD Security Risks (v1.0, October 2022).",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Continuous integration and continuous delivery systems are a control plane:...",
+      "expanded": false
+    },
+    {
+      "id": "n8161adf4d13d54b",
+      "title": "Poisoned pull requests and poisoned pipeline execution (PPE)",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nc2647d6f9911321",
+          "title": "Definitions",
+          "markdown": "**Poisoned pipeline execution** means an attacker manipulates **CI configuration** or **build scripts** so that **trusted** automation runs **attacker-controlled** steps-often to steal secrets, pivot to production, or modify artifacts.\n\n**Poisoned PR** often refers to **untrusted code** from forks or new contributors running in CI. The danger is **combined** with **secrets** and **write tokens** available to workflows triggered by `pull_request` events.",
+          "notes": "Poisoned pipeline execution means an attacker manipulates CI configuration or build scripts so that trusted automation runs attacker-controlled steps-often to steal secrets, pivot to production, or modify artifacts.\n\nPoisoned PR often refers to untrusted code from forks or new contributors running in CI. The danger is combined with secrets and write tokens available to workflows triggered by pullrequest events.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Poisoned pipeline execution means an attacker manipulates CI configuration...",
+          "expanded": false
+        },
+        {
+          "id": "n036b0e8e17c886e",
+          "title": "Common attack patterns",
+          "markdown": "Malicious **workflow** added in a PR that exfiltrates `secrets` to an external host. **Script** changes in `package.json` `postinstall` that only run in CI. **Conditional** steps that behave benignly in review but activate on specific branch names or environment variables.",
+          "notes": "Malicious workflow added in a PR that exfiltrates secrets to an external host. Script changes in package.json postinstall that only run in CI. Conditional steps that behave benignly in review but activate on specific branch names or environment variables.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Malicious workflow added in a PR that exfiltrates secrets to an external host.",
+          "expanded": false
+        },
+        {
+          "id": "n6a4fbd6f26bc85f",
+          "title": "Platform-specific considerations",
+          "markdown": "**GitHub Actions:** `pull_request` from forks runs with a **read-only** `GITHUB_TOKEN` and **no access to secrets** by default; `pull_request_target` and misuse of **checkout of the PR head** with privileged workflows are historical sources of incidents. **Workflows** triggered by `issue_comment` or `workflow_dispatch` from contributors can widen exposure if misconfigured.\n\n**GitLab:** Merge request pipelines and **fork** behavior depend on project settings; **protected branches** and **protected variables** limit what untrusted pipelines see.\n\n**General:** Any trigger that runs **privileged** jobs on **untrusted** ref content must be treated as **remote code execution** with whatever identity the job holds.",
+          "notes": "GitHub Actions: pullrequest from forks runs with a read-only GITHUBTOKEN and no access to secrets by default; pullrequesttarget and misuse of checkout of the PR head with privileged workflows are historical sources of incidents. Workflows triggered by issuecomment or workflowdispatch from contributors can widen exposure if misconfigured.\n\nGitLab: Merge request pipelines and fork behavior depend on project settings; protected branches and protected variables limit what untrusted pipelines see.\n\nGeneral: Any trigger that runs privileged jobs on untrusted ref content must be treated as remote code execution with whatever identity the job holds.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "GitHub Actions: pullrequest from forks runs with a read-only GITHUBTOKEN and...",
+          "expanded": false
+        },
+        {
+          "id": "n5e8b6c625ef1365",
+          "title": "Mitigations",
+          "markdown": "Default-deny: no secrets on fork-driven pipelines; use label-gated or manual approval to run full integration for external contributors when needed.",
+          "notes": "Default-deny: no secrets on fork-driven pipelines; use label-gated or manual approval to run full integration for external contributors when needed.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n006ffa23b57e0d2",
+              "title": "Default-deny: no secrets on fork-driven pipelines; use label-gated or manual approval to",
+              "markdown": "- Default-deny: no secrets on fork-driven pipelines; use label-gated or manual approval to",
+              "notes": "Default-deny: no secrets on fork-driven pipelines; use label-gated or manual approval to",
+              "blurb": "Default-deny: no secrets on fork-driven pipelines; use label-gated or manual...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nccc67d49fb522ae",
+              "title": "Require CODEOWNERS review for workflow and CI script directories.",
+              "markdown": "- Require CODEOWNERS review for workflow and CI script directories.",
+              "notes": "Require CODEOWNERS review for workflow and CI script directories.",
+              "blurb": "Require CODEOWNERS review for workflow and CI script directories.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n998ffd4ab07510f",
+              "title": "Use separate low-privilege workflows for fork PRs and promote only after maintainer merg",
+              "markdown": "- Use separate low-privilege workflows for fork PRs and promote only after maintainer merg",
+              "notes": "Use separate low-privilege workflows for fork PRs and promote only after maintainer merg",
+              "blurb": "Use separate low-privilege workflows for fork PRs and promote only after...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na423663b10d0a87",
+              "title": "Pin third-party actions to full commit SHAs; review updates like application dependencie",
+              "markdown": "- Pin third-party actions to full commit SHAs; review updates like application dependencie",
+              "notes": "Pin third-party actions to full commit SHAs; review updates like application dependencie",
+              "blurb": "Pin third-party actions to full commit SHAs; review updates like application...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n7773200634bb3e5",
+              "title": "Monitor for new workflow files, sudden curl | bash steps, and unexpected outbound destin",
+              "markdown": "- Monitor for new workflow files, sudden curl | bash steps, and unexpected outbound destin",
+              "notes": "Monitor for new workflow files, sudden curl | bash steps, and unexpected outbound destin",
+              "blurb": "Monitor for new workflow files, sudden curl | bash steps, and unexpected...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Default-deny: no secrets on fork-driven pipelines; use label-gated or manual...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Definitions",
+      "expanded": true
+    },
+    {
+      "id": "n40581a6570a5770",
+      "title": "Defenses",
+      "markdown": "",
+      "notes": "",
+      "expanded": true,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nde15355ef9913d6",
+          "title": "Threat model: what you are actually protecting",
+          "markdown": "**Assets:** source repositories, pipeline definitions, build caches, artifact registries, deployment targets, cloud roles, signing keys, and observability data about builds.\n\n**Adversaries:** external contributors opening pull requests, compromised developer accounts, malicious or hijacked third-party actions or packages, insiders with merge rights, and attackers who already have footholds in adjacent systems (registry, package manager, SaaS integrations).\n\n**Critical insight:** The pipeline executes **attacker-influenced code** whenever it checks out a branch or runs install scripts. If that execution shares **secrets**, **long-lived credentials**, or **trusted signing identity** with production paths, the blast radius equals full cloud or release compromise. Controls therefore split into **identity** (what the job may authenticate as), **flow control** (who may merge or change CI config), **integrity** (signatures, digests, provenance), and **isolation** (fork PRs, runner boundaries).",
+          "notes": "Assets: source repositories, pipeline definitions, build caches, artifact registries, deployment targets, cloud roles, signing keys, and observability data about builds.\n\nAdversaries: external contributors opening pull requests, compromised developer accounts, malicious or hijacked third-party actions or packages, insiders with merge rights, and attackers who already have footholds in adjacent systems (registry, package manager, SaaS integrations).\n\nCritical insight: The pipeline executes attacker-influenced code whenever it checks out a branch or runs install scripts. If that execution shares secrets, long-lived credentials, or trusted signing identity with production paths, the blast radius equals full cloud or release compromise. Controls therefore split into identity (what the job may authenticate as), flow control (who may merge or change CI config), integrity (signatures, digests, provenance), and isolation (fork PRs, runner boundaries).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Assets: source repositories, pipeline definitions, build caches, artifact...",
+          "expanded": false
+        },
+        {
+          "id": "n2777ab6976a07db",
+          "title": "Branch protections and flow control",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n841ee0ab2e4d0f1",
+              "title": "Goals",
+              "markdown": "Ensure **no single actor** can land arbitrary code on a **release** or **default** branch without review, and that **sensitive paths**-including **pipeline definitions**-require explicit approval from owners who understand the blast radius.",
+              "notes": "Ensure no single actor can land arbitrary code on a release or default branch without review, and that sensitive paths-including pipeline definitions-require explicit approval from owners who understand the blast radius.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Ensure no single actor can land arbitrary code on a release or default...",
+              "expanded": false
+            },
+            {
+              "id": "n90e177fe0c60557",
+              "title": "Typical controls",
+              "markdown": "**Protected branches** on `main`, `release/*`, or production deployment branches: disallow force-push and deletion, require **pull request** merges, require **up-to-date** base before merge (or merge queue), and require **status checks** to pass.\n\n**Required reviewers** and **CODEOWNERS** for directories such as `.github/workflows/`, `.gitlab-ci.yml`, Terraform roots, and authentication code. A poisoned workflow merged without security review is **CICD-SEC-4** (poisoned pipeline execution) waiting to happen.\n\n**Signed commits** or **signed merges** where policy demands non-repudiation; pair with **branch rules** that verify signatures if your toolchain supports it.\n\n**Merge queues** (or equivalent) so rapid merges cannot bypass checks through race conditions.\n\n**Separation of duties:** the person who authored a high-risk change should not be the **sole** approver; for regulated systems, enforce **four-eyes** on production pipeline edits.",
+              "notes": "Protected branches on main, release/, or production deployment branches: disallow force-push and deletion, require pull request merges, require up-to-date base before merge (or merge queue), and require status checks to pass.\n\nRequired reviewers and CODEOWNERS for directories such as .github/workflows/, .gitlab-ci.yml, Terraform roots, and authentication code. A poisoned workflow merged without security review is CICD-SEC-4 (poisoned pipeline execution) waiting to happen.\n\nSigned commits or signed merges where policy demands non-repudiation; pair with branch rules that verify signatures if your toolchain supports it.\n\nMerge queues (or equivalent) so rapid merges cannot bypass checks through race conditions.\n\nSeparation of duties: the person who authored a high-risk change should not be the sole approver; for regulated systems, enforce four-eyes on production pipeline edits.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Protected branches on main, release/, or production deployment branches:...",
+              "expanded": false
+            },
+            {
+              "id": "n6b3943fc27d8a9f",
+              "title": "Pipeline definition files as code",
+              "markdown": "Treat `.github/workflows/*.yml`, GitLab includes, Jenkinsfile, and Argo CD Application manifests as **security-sensitive**. Changes there should trigger **the same or stricter** review bar as application authentication code, because they control **what runs** and **with which secrets**.",
+              "notes": "Treat .github/workflows/.yml, GitLab includes, Jenkinsfile, and Argo CD Application manifests as security-sensitive. Changes there should trigger the same or stricter review bar as application authentication code, because they control what runs and with which secrets.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Treat .github/workflows/.yml, GitLab includes, Jenkinsfile, and Argo CD...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Goals",
+          "expanded": false
+        },
+        {
+          "id": "n725fa90193480e1",
+          "title": "Balancing velocity and control",
+          "markdown": "Use **risk tiers**: maximum controls on payment, identity, and data-plane services; lighter templates on internal tools with **documented** criteria. Roll out **advisory** checks before **blocking** gates; time-bound **exceptions** with owners. Invest in **paved-road** templates so secure defaults are **easier** than bespoke insecure YAML.",
+          "notes": "Use risk tiers: maximum controls on payment, identity, and data-plane services; lighter templates on internal tools with documented criteria. Roll out advisory checks before blocking gates; time-bound exceptions with owners. Invest in paved-road templates so secure defaults are easier than bespoke insecure YAML.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Use risk tiers: maximum controls on payment, identity, and data-plane...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Threat model: what you are actually protecting"
+    },
+    {
+      "id": "n5b10c5d0c85c540",
+      "title": "Logging, detection, and metrics",
+      "markdown": "**CICD-SEC-10** emphasizes visibility. Collect audit events for: **workflow file changes**, **branch protection** edits, **new OAuth apps** and **deploy keys**, **runner registration**, **failed OIDC** assumptions, **secret scanning** hits, and **deployment** actions. Metrics that matter: percentage of production deploys **signed and verified**, percentage of cloud access via **OIDC**, **mean time** to rotate after a leaked secret drill, and **count** of workflows with `pull_request_target` or equivalent high-risk patterns.",
+      "notes": "CICD-SEC-10 emphasizes visibility. Collect audit events for: workflow file changes, branch protection edits, new OAuth apps and deploy keys, runner registration, failed OIDC assumptions, secret scanning hits, and deployment actions. Metrics that matter: percentage of production deploys signed and verified, percentage of cloud access via OIDC, mean time to rotate after a leaked secret drill, and count of workflows with pullrequesttarget or equivalent high-risk patterns.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "CICD-SEC-10 emphasizes visibility.",
+      "expanded": false
+    },
+    {
+      "id": "n73329ebc31fde2f",
+      "title": "Primary references",
+      "markdown": "OWASP Top 10 CI/CD Security Risks (v1.0) - SLSA - supply-chain integrity levels and provenance - Cloud OIDC integration guides from AWS, Google Cloud, and Microsoft Azure for your chosen CI platform",
+      "notes": "OWASP Top 10 CI/CD Security Risks (v1.0) - SLSA - supply-chain integrity levels and provenance - Cloud OIDC integration guides from AWS, Google Cloud, and Microsoft Azure for your chosen CI platform",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n96b4a6deed82c12",
+          "title": "OWASP Top 10 CI/CD Security Risks (v1.0)",
+          "markdown": "- OWASP Top 10 CI/CD Security Risks (v1.0)",
+          "notes": "OWASP Top 10 CI/CD Security Risks (v1.0)",
+          "blurb": "OWASP Top 10 CI/CD Security Risks (v1.0)",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ne35af9669b347a9",
+          "title": "SLSA - supply-chain integrity levels and provenance",
+          "markdown": "- SLSA - supply-chain integrity levels and provenance",
+          "notes": "SLSA - supply-chain integrity levels and provenance",
+          "blurb": "SLSA - supply-chain integrity levels and provenance",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n5bf585e2042e3e9",
+          "title": "Cloud OIDC integration guides from AWS, Google Cloud, and Microsoft Azure for your chose",
+          "markdown": "- Cloud OIDC integration guides from AWS, Google Cloud, and Microsoft Azure for your chose",
+          "notes": "Cloud OIDC integration guides from AWS, Google Cloud, and Microsoft Azure for your chose",
+          "blurb": "Cloud OIDC integration guides from AWS, Google Cloud, and Microsoft Azure...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "OWASP Top 10 CI/CD Security Risks (v1.0) - SLSA - supply-chain integrity...",
+      "expanded": true
+    },
+    {
+      "id": "n81bbf61753e648d",
+      "title": "Pipeline secrets",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "ndbe8916fd042bee",
+          "title": "Why CI secrets are uniquely dangerous",
+          "markdown": "Secrets in CI are often **high privilege** (cloud admin-adjacent, registry push, deployment tokens) and **broadly reachable** by any workflow that the platform allows to run with secret access. They also appear in **failure logs**, **debug output**, **test fixtures**, and **build caches** if teams are not disciplined.",
+          "notes": "Secrets in CI are often high privilege (cloud admin-adjacent, registry push, deployment tokens) and broadly reachable by any workflow that the platform allows to run with secret access. They also appear in failure logs, debug output, test fixtures, and build caches if teams are not disciplined.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Secrets in CI are often high privilege (cloud admin-adjacent, registry push,...",
+          "expanded": false
+        },
+        {
+          "id": "n6a827e3812e6e53",
+          "title": "Hygiene principles",
+          "markdown": "**Minimize inventory.** Every secret in CI should have a named owner, rotation procedure, and documented scope. Remove unused credentials quarterly.\n\n**Scope by repository and environment.** Production deploy credentials must not be available on feature-branch jobs. Use platform **environments** (GitHub Environments, GitLab protected environments, Azure DevOps environment gates) so secrets and approvals bind to **deployment context**, not merely branch name string checks inside scripts.\n\n**Prefer federation over static keys.** Where the cloud supports **OIDC**, eliminate repository-stored cloud access keys for standard flows. Reserve static keys for break-glass automation with heavy monitoring.\n\n**Never echo secrets.** Masking in logs is helpful but not sufficient; prevent secrets from entering **artifact metadata**, **test reports**, and **cache keys** that untrusted jobs might read.\n\n**Audit access.** Log which workflow run read which secret (where the platform supports it), alert on new consumers, and review **workflow_dispatch** and **repository_dispatch** triggers that widen who can invoke privileged jobs.",
+          "notes": "Minimize inventory. Every secret in CI should have a named owner, rotation procedure, and documented scope. Remove unused credentials quarterly.\n\nScope by repository and environment. Production deploy credentials must not be available on feature-branch jobs. Use platform environments (GitHub Environments, GitLab protected environments, Azure DevOps environment gates) so secrets and approvals bind to deployment context, not merely branch name string checks inside scripts.\n\nPrefer federation over static keys. Where the cloud supports OIDC, eliminate repository-stored cloud access keys for standard flows. Reserve static keys for break-glass automation with heavy monitoring.\n\nNever echo secrets. Masking in logs is helpful but not sufficient; prevent secrets from entering artifact metadata, test reports, and cache keys that untrusted jobs might read.\n\nAudit access. Log which workflow run read which secret (where the platform supports it), alert on new consumers, and review workflowdispatch and repositorydispatch triggers that widen who can invoke privileged jobs.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Minimize inventory.",
+          "expanded": false
+        },
+        {
+          "id": "n04d1614ad8caea8",
+          "title": "Operational failures to avoid",
+          "markdown": "Storing one **shared** service account for \"all CI\" across hundreds of repositories. Using **personal access tokens** for automation instead of fine-grained app or OIDC identities. Caching **`~/.docker`**, **`~/.npm`**, or **`~/.config`** on shared runners without isolating cache namespaces per trust boundary. Running **integration tests** that print environment dumps on failure.",
+          "notes": "Storing one shared service account for \"all CI\" across hundreds of repositories. Using personal access tokens for automation instead of fine-grained app or OIDC identities. Caching ~/.docker, ~/.npm, or ~/.config on shared runners without isolating cache namespaces per trust boundary. Running integration tests that print environment dumps on failure.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Storing one shared service account for \"all CI\" across hundreds of...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Why CI secrets are uniquely dangerous",
+      "expanded": false
+    },
+    {
+      "id": "n34c7723ae202baa",
+      "title": "OIDC to cloud providers",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "na11872dd68ca6e4",
+          "title": "What problem OIDC solves",
+          "markdown": "Long-lived **access keys** in CI variables are stolen from logs, exfiltrated via malicious workflow steps, or leaked from backup copies of repository settings. **OpenID Connect** lets the CI platform mint **short-lived identity tokens** that the cloud provider exchanges for **session credentials** constrained by **trust policy**.",
+          "notes": "Long-lived access keys in CI variables are stolen from logs, exfiltrated via malicious workflow steps, or leaked from backup copies of repository settings. OpenID Connect lets the CI platform mint short-lived identity tokens that the cloud provider exchanges for session credentials constrained by trust policy.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Long-lived access keys in CI variables are stolen from logs, exfiltrated via...",
+          "expanded": false
+        },
+        {
+          "id": "n00a682131219c78",
+          "title": "How the flow works (conceptually)",
+          "markdown": "A job requests an OIDC token from the CI identity provider (for example GitHub's OIDC is",
+          "notes": "A job requests an OIDC token from the CI identity provider (for example GitHub's OIDC is",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nc05ba1efb3dbb1a",
+              "title": "A job requests an OIDC token from the CI identity provider (for example GitHub's OIDC is",
+              "markdown": "- A job requests an OIDC token from the CI identity provider (for example GitHub's OIDC is",
+              "notes": "A job requests an OIDC token from the CI identity provider (for example GitHub's OIDC is",
+              "blurb": "A job requests an OIDC token from the CI identity provider (for example...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nba2478bc7e0baae",
+              "title": "The job presents that token to the cloud STS-style endpoint.",
+              "markdown": "- The job presents that token to the cloud STS-style endpoint.",
+              "notes": "The job presents that token to the cloud STS-style endpoint.",
+              "blurb": "The job presents that token to the cloud STS-style endpoint.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nca07723f79bd9cc",
+              "title": "The cloud validates issuer, audience, and subject claims, then issues temporary cloud cr",
+              "markdown": "- The cloud validates issuer, audience, and subject claims, then issues temporary cloud cr",
+              "notes": "The cloud validates issuer, audience, and subject claims, then issues temporary cloud cr",
+              "blurb": "The cloud validates issuer, audience, and subject claims, then issues...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "A job requests an OIDC token from the CI identity provider (for example...",
+          "expanded": false
+        },
+        {
+          "id": "nc7dca355fa97e54",
+          "title": "What you must configure correctly",
+          "markdown": "**Trust policy** ties the role to an **issuer** and **subject pattern**. A policy that trusts `repo:org/*` is wider than one that trusts `repo:org/app:ref:refs/heads/main`. Prefer **fine-grained** subjects: specific repository, branch or tag, or **environment** claim where available.\n\n**Audience (`aud`)** must match what the cloud expects; mismatches are a common integration failure and sometimes a **confused-deputy** class mistake if multiple audiences are accepted without care.\n\n**Least privilege on the role.** The federated role should only allow **ECR push** for one registry, **S3 put** to one artifact bucket, or **deploy** to one workload account-not **AdministratorAccess**.\n\n**Multi-account and multi-cloud.** Large orgs use **per-environment AWS accounts** or **GCP projects** so a compromised federated role in **staging** cannot mutate **production**. The OIDC trust in each account should reference only the repos and refs that belong there.",
+          "notes": "Trust policy ties the role to an issuer and subject pattern. A policy that trusts repo:org/ is wider than one that trusts repo:org/app:ref:refs/heads/main. Prefer fine-grained subjects: specific repository, branch or tag, or environment claim where available.\n\nAudience (aud) must match what the cloud expects; mismatches are a common integration failure and sometimes a confused-deputy class mistake if multiple audiences are accepted without care.\n\nLeast privilege on the role. The federated role should only allow ECR push for one registry, S3 put to one artifact bucket, or deploy to one workload account-not AdministratorAccess.\n\nMulti-account and multi-cloud. Large orgs use per-environment AWS accounts or GCP projects so a compromised federated role in staging cannot mutate production. The OIDC trust in each account should reference only the repos and refs that belong there.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Trust policy ties the role to an issuer and subject pattern.",
+          "expanded": false
+        },
+        {
+          "id": "n364495f7c618f79",
+          "title": "Interview framing",
+          "markdown": "OIDC in CI is **credential hygiene** (OWASP **CICD-SEC-6**) and **identity** (**CICD-SEC-2**): credentials are **ephemeral**, **auditable**, and **cryptographically bound** to a specific workflow context, which shrinks theft value and simplifies rotation compared to static keys.",
+          "notes": "OIDC in CI is credential hygiene (OWASP CICD-SEC-6) and identity (CICD-SEC-2): credentials are ephemeral, auditable, and cryptographically bound to a specific workflow context, which shrinks theft value and simplifies rotation compared to static keys.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "OIDC in CI is credential hygiene (OWASP CICD-SEC-6) and identity...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes What problem OIDC solves",
+      "expanded": false
+    },
+    {
+      "id": "n74e0834b8098828",
+      "title": "Signing artifacts",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n4d9e4bc0aef0279",
+          "title": "Why signing matters",
+          "markdown": "Registries and CDNs are not implicit integrity guarantees. **Mutable tags** (`latest`), compromised build systems, and **insider threats** can replace what operators think they deploy. **Signatures** let deployers and admission controllers **verify** that an image or binary was produced by an expected **builder identity** before traffic shifts.",
+          "notes": "Registries and CDNs are not implicit integrity guarantees. Mutable tags (latest), compromised build systems, and insider threats can replace what operators think they deploy. Signatures let deployers and admission controllers verify that an image or binary was produced by an expected builder identity before traffic shifts.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Registries and CDNs are not implicit integrity guarantees.",
+          "expanded": false
+        },
+        {
+          "id": "nc0b04d4211adce5",
+          "title": "Practical patterns",
+          "markdown": "**Container images:** Sign with **Sigstore Cosign** (keyless with Fulcio/Rekor or with long-lived keys in HSM/KMS depending on policy). Record **digest** (`sha256:...`) in deployment manifests; verify signature against that digest, not a floating tag.\n\n**Binaries and packages:** Sign release artifacts; publish **checksums** alongside signatures; verify in downstream pipelines or package managers that support it.\n\n**Key management:** Prefer **OIDC-bound signing** (keyless) for open pipelines where policy allows; use **KMS-backed** keys when regulations require custodial control and clear key ceremony.\n\n**Verification at deploy:** Kubernetes admission (policy engines), cloud deploy hooks, or internal release services should **fail closed** if signature or **SLSA-style provenance** does not match policy. Unsigned artifacts should not reach production for tier-one services.\n\nThis maps to OWASP **CICD-SEC-9** (artifact integrity validation) and connects to broader **SLSA** and **supply chain** conversations.",
+          "notes": "Container images: Sign with Sigstore Cosign (keyless with Fulcio/Rekor or with long-lived keys in HSM/KMS depending on policy). Record digest (sha256:...) in deployment manifests; verify signature against that digest, not a floating tag.\n\nBinaries and packages: Sign release artifacts; publish checksums alongside signatures; verify in downstream pipelines or package managers that support it.\n\nKey management: Prefer OIDC-bound signing (keyless) for open pipelines where policy allows; use KMS-backed keys when regulations require custodial control and clear key ceremony.\n\nVerification at deploy: Kubernetes admission (policy engines), cloud deploy hooks, or internal release services should fail closed if signature or SLSA-style provenance does not match policy. Unsigned artifacts should not reach production for tier-one services.\n\nThis maps to OWASP CICD-SEC-9 (artifact integrity validation) and connects to broader SLSA and supply chain conversations.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Container images: Sign with Sigstore Cosign (keyless with Fulcio/Rekor or...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Why signing matters",
+      "expanded": false
+    },
+    {
+      "id": "n9d5f8cc01a2ad95",
+      "title": "SBOM as a pipeline hook",
+      "markdown": "A **Software Bill of Materials** lists components (libraries, containers, OS packages) in a deliverable. In CI, SBOMs support **vulnerability management**, **license compliance**, and **incident response** when a dependency is disclosed as malicious.",
+      "notes": "A Software Bill of Materials lists components (libraries, containers, OS packages) in a deliverable. In CI, SBOMs support vulnerability management, license compliance, and incident response when a dependency is disclosed as malicious.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nbb9afafa52ab063",
+          "title": "Where to generate",
+          "markdown": "Run SBOM tooling **after** dependency resolution and **before** promotion to a trusted registry: for example on merge to `main` or on **release** tags. Store SBOMs as **build artifacts** versioned with the **same digest** as the container or package they describe.",
+          "notes": "Run SBOM tooling after dependency resolution and before promotion to a trusted registry: for example on merge to main or on release tags. Store SBOMs as build artifacts versioned with the same digest as the container or package they describe.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Run SBOM tooling after dependency resolution and before promotion to a...",
+          "expanded": false
+        },
+        {
+          "id": "n276ff71174ccc2b",
+          "title": "Formats and tooling",
+          "markdown": "Common formats include **SPDX** and **CycloneDX**. Choose tools that understand your stack (language package managers, base images, OS packages). For containers, generate from the **final image filesystem**, not only the application `package-lock.json`, or you will miss base image CVEs.",
+          "notes": "Common formats include SPDX and CycloneDX. Choose tools that understand your stack (language package managers, base images, OS packages). For containers, generate from the final image filesystem, not only the application package-lock.json, or you will miss base image CVEs.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Common formats include SPDX and CycloneDX.",
+          "expanded": false
+        },
+        {
+          "id": "n7e73c1d88ba42bb",
+          "title": "Governance",
+          "markdown": "Treat SBOM generation as a **required** build step for tier-one services, not a one-off audit export. **Diff** SBOMs between releases to catch unexpected new dependencies. Connect outputs to **VE** workflows: when **CVE-XXXX** drops, query which SBOMs contain the affected package and **block** rollout until patched.",
+          "notes": "Treat SBOM generation as a required build step for tier-one services, not a one-off audit export. Diff SBOMs between releases to catch unexpected new dependencies. Connect outputs to VE workflows: when CVE-XXXX drops, query which SBOMs contain the affected package and block rollout until patched.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Treat SBOM generation as a required build step for tier-one services, not a...",
+          "expanded": false
+        },
+        {
+          "id": "n4ddb984c207a40b",
+          "title": "Pitfalls",
+          "markdown": "Generating SBOMs only from **source** without **transitive** resolution. Allowing SBOM jobs on **untrusted** forks with access to internal tool credentials. Storing SBOMs only in email or tickets instead of **durable object storage** next to artifacts.",
+          "notes": "Generating SBOMs only from source without transitive resolution. Allowing SBOM jobs on untrusted forks with access to internal tool credentials. Storing SBOMs only in email or tickets instead of durable object storage next to artifacts.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Generating SBOMs only from source without transitive resolution.",
+          "expanded": false
+        }
+      ],
+      "blurb": "A Software Bill of Materials lists components (libraries, containers, OS...",
+      "expanded": false
+    },
+    {
+      "id": "n25663ed73ee2d8a",
+      "title": "Runner isolation",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nc2a75cafb1a86fe",
+          "title": "Shared and hosted runners",
+          "markdown": "**GitHub-hosted** and similar shared runners are **ephemeral** per job in many configurations, which limits **cross-job** residue but does not stop **exfiltration within a job** if secrets are exposed. **Self-hosted** runners are attractive for speed and special hardware but are **long-lived**: a malicious job can leave **backdoors**, steal **runner registration tokens**, or persist in **workspace** directories.",
+          "notes": "GitHub-hosted and similar shared runners are ephemeral per job in many configurations, which limits cross-job residue but does not stop exfiltration within a job if secrets are exposed. Self-hosted runners are attractive for speed and special hardware but are long-lived: a malicious job can leave backdoors, steal runner registration tokens, or persist in workspace directories.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "GitHub-hosted and similar shared runners are ephemeral per job in many...",
+          "expanded": false
+        },
+        {
+          "id": "n45c4b61b5eef9af",
+          "title": "Isolation tactics",
+          "markdown": "**Ephemeral runners:** provision a fresh VM or container per job where feasible; destroy after completion. **Auto-scaling groups** that recycle instances reduce persistence.\n\n**Separate runner pools** for **untrusted** versus **trusted** workloads; never run fork PR jobs on runners that mount production kubeconfigs or cloud metadata roles intended for release.\n\n**Network controls:** restrict egress with **firewalls** or **proxy allowlists** so build steps cannot phone home arbitrarily; allow package registries and required APIs only.\n\n**Least privilege for runner identity:** if the agent uses a **machine identity** to fetch secrets, scope it to **read** secrets for **one** project, not org-wide.\n\n**Hygiene:** disable unnecessary **Docker socket** mounts; avoid running CI inside the same host namespace as sensitive services; patch runner software and **JIT** images regularly.\n\n**Secrets on self-hosted runners:** prefer **vault** or **OIDC** with **very tight** roles rather than flat files on disk readable by any local user.\n\nIsolation supports **CICD-SEC-7** (insecure system configuration) and **CICD-SEC-5** (insufficient PBAC) when combined with scoped identities.",
+          "notes": "Ephemeral runners: provision a fresh VM or container per job where feasible; destroy after completion. Auto-scaling groups that recycle instances reduce persistence.\n\nSeparate runner pools for untrusted versus trusted workloads; never run fork PR jobs on runners that mount production kubeconfigs or cloud metadata roles intended for release.\n\nNetwork controls: restrict egress with firewalls or proxy allowlists so build steps cannot phone home arbitrarily; allow package registries and required APIs only.\n\nLeast privilege for runner identity: if the agent uses a machine identity to fetch secrets, scope it to read secrets for one project, not org-wide.\n\nHygiene: disable unnecessary Docker socket mounts; avoid running CI inside the same host namespace as sensitive services; patch runner software and JIT images regularly.\n\nSecrets on self-hosted runners: prefer vault or OIDC with very tight roles rather than flat files on disk readable by any local user.\n\nIsolation supports CICD-SEC-7 (insecure system configuration) and CICD-SEC-5 (insufficient PBAC) when combined with scoped identities.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Ephemeral runners: provision a fresh VM or container per job where feasible;...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Shared and hosted runners",
+      "expanded": false
+    },
+    {
+      "id": "n56e83fdb715f5fe",
+      "title": "Third-party CI code and dependencies",
+      "markdown": "Marketplace actions, Jenkins plugins, and **curl | bash** installers are **supply chain** nodes (**CICD-SEC-8**, **CICD-SEC-3**). **Pin** versions to immutable references, maintain an **allowlist** for actions, **vendor** critical steps into your org when policy requires, and run **SCA** on application dependencies with **lockfiles**. Hermetic or **reproducible** builds reduce \"works on my runner\" drift and make tampering easier to detect.",
+      "notes": "Marketplace actions, Jenkins plugins, and curl | bash installers are supply chain nodes (CICD-SEC-8, CICD-SEC-3). Pin versions to immutable references, maintain an allowlist for actions, vendor critical steps into your org when policy requires, and run SCA on application dependencies with lockfiles. Hermetic or reproducible builds reduce \"works on my runner\" drift and make tampering easier to detect.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Marketplace actions, Jenkins plugins, and curl | bash installers are supply...",
+      "expanded": false
+    },
+    {
+      "id": "na2d77d74bb9b694",
+      "title": "Interview positioning (senior / staff)",
+      "markdown": "Interviewers reward **concrete** threat models: \"Fork PR cannot see production secrets,\" \"OIDC role trusts only this repo and environment,\" \"Deploy verifies Cosign signature and digest,\" \"SBOM stored next to image digest for forensics.\" Avoid tool soup; connect each control to **identity**, **integrity**, **flow control**, or **isolation**.",
+      "notes": "Interviewers reward concrete threat models: \"Fork PR cannot see production secrets,\" \"OIDC role trusts only this repo and environment,\" \"Deploy verifies Cosign signature and digest,\" \"SBOM stored next to image digest for forensics.\" Avoid tool soup; connect each control to identity, integrity, flow control, or isolation.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Interviewers reward concrete threat models: \"Fork PR cannot see production...",
+      "expanded": false
+    },
+    {
+      "id": "n5f27041d732f968",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nc303a7c603ba97f",
+          "title": "Canonical list",
+          "markdown": "**[OWASP Top 10 CI/CD Security Risks](https://owasp.org/www-project-top-10-ci-cd-security-risks/)** - v1.0 stable **October 2022**; cites SolarWinds, Codecov, dependency confusion, and compromised packages in intro.",
+          "notes": "OWASP Top 10 CI/CD Security Risks - v1.0 stable October 2022; cites SolarWinds, Codecov, dependency confusion, and compromised packages in intro.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "OWASP Top 10 CI/CD Security Risks - v1.0 stable October 2022; cites...",
+          "expanded": false
+        },
+        {
+          "id": "n1c06fc6b6aecceb",
+          "title": "CICD-SEC-1 \u2026 10 (short labels)",
+          "markdown": "1. **Flow control** - 2. **IAM** - 3. **Dependency chain** - 4. **Poisoned pipeline execution** - 5. **PBAC** - 6. **Credential hygiene** - 7. **Misconfiguration** - 8. **Third-party services** - 9. **Artifact integrity** - 10. **Logging/visibility**",
+          "notes": "1. Flow control - 2. IAM - 3. Dependency chain - 4. Poisoned pipeline execution - 5. PBAC - 6. Credential hygiene - 7. Misconfiguration - 8. Third-party services - 9. Artifact integrity - 10. Logging/visibility",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "nb2b69c8ef3be063",
+          "title": "High-signal controls",
+          "markdown": "| Risk | Control |\n|------|---------|\n| SEC-1/4 | Branch protection, required reviews, protect workflow files |\n| SEC-2/5 | Least-privilege CI identities; scoped cloud roles |\n| SEC-6 | **OIDC** to cloud; short-lived tokens; no long-lived keys in CI |\n| SEC-8 | Pin actions/plugins (**commit SHA**); allowlist vendors |\n| SEC-9 | Sign artifacts; **verify** at deploy; **digest** pin images |\n| SEC-10 | Audit pipeline edits, secret access, deployments |",
+          "notes": "| Risk | Control |\n|------|---------|\n| SEC-1/4 | Branch protection, required reviews, protect workflow files |\n| SEC-2/5 | Least-privilege CI identities; scoped cloud roles |\n| SEC-6 | OIDC to cloud; short-lived tokens; no long-lived keys in CI |\n| SEC-8 | Pin actions/plugins (commit SHA); allowlist vendors |\n| SEC-9 | Sign artifacts; verify at deploy; digest pin images |\n| SEC-10 | Audit pipeline edits, secret access, deployments |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Risk | Control | |------|---------| | SEC-1/4 | Branch protection,...",
+          "expanded": false
+        },
+        {
+          "id": "nc34c92b9c10346f",
+          "title": "Related standards",
+          "markdown": "- **[SLSA](https://github.com/slsa-framework/slsa)** - artifact/source integrity\n- **[Sigstore](https://www.sigstore.dev/)** - signing for containers/attestations",
+          "notes": "- SLSA - artifact/source integrity\n- Sigstore - signing for containers/attestations",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "SLSA - artifact/source integrity - Sigstore - signing for...",
+          "expanded": false
+        },
+        {
+          "id": "n0b83d9e8f379295",
+          "title": "One-liner",
+          "markdown": "**Treat CI as production IAM that can ship code-protect flow control, credentials, and artifact integrity.**",
+          "notes": "Treat CI as production IAM that can ship code-protect flow control, credentials, and artifact integrity.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Treat CI as production IAM that can ship code-protect flow control,...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Canonical list"
+    },
+    {
+      "id": "nba76152758ca710",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n90555176a1a6340",
+          "title": "\u201cSAST/DAST green means the pipeline is secure.\u201d",
+          "markdown": "**Reality:** **Pipeline** **identity**, **runner** **trust**, **secret** **handling**, **artifact** **signing**, and **deployment** **gates** are **orthogonal** to **app** **scanning**.",
+          "notes": "Reality: Pipeline identity, runner trust, secret handling, artifact signing, and deployment gates are orthogonal to app scanning.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Pipeline identity, runner trust, secret handling, artifact signing,...",
+          "expanded": false
+        },
+        {
+          "id": "nfcc0e0677252651",
+          "title": "\u201cSelf-hosted runners are always safer than cloud runners.\u201d",
+          "markdown": "**Reality:** **Poorly** **patched** **pets** with **broad** **network** **egress** and **shared** **workspaces** **increase** **blast** **radius** vs **ephemeral** **cloud** **builders**.",
+          "notes": "Reality: Poorly patched pets with broad network egress and shared workspaces increase blast radius vs ephemeral cloud builders.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Poorly patched pets with broad network egress and shared workspaces...",
+          "expanded": false
+        },
+        {
+          "id": "nf5a0cb5191dbba1",
+          "title": "\u201cOne broken gate means we should bypass forever.\u201d",
+          "markdown": "**Reality:** **Bypass** needs **time-bound** **approval**, **ticket**, and **remediation** **SLA**-**permanent** **exceptions** **become** **norm**.",
+          "notes": "Reality: Bypass needs time-bound approval, ticket, and remediation SLA-permanent exceptions become norm.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Bypass needs time-bound approval, ticket, and remediation...",
+          "expanded": false
+        },
+        {
+          "id": "n7cba8a876416e2a",
+          "title": "\u201cFork PRs can\u2019t steal secrets.\u201d",
+          "markdown": "**Reality:** **Misconfigured** **workflow** **triggers** and **cache** **poisoning** **patterns** **have** **leaked** **credentials**-**restrict** **GHA** **permissions** and **use** **OIDC**.",
+          "notes": "Reality: Misconfigured workflow triggers and cache poisoning patterns have leaked credentials-restrict GHA permissions and use OIDC.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Misconfigured workflow triggers and cache poisoning patterns have...",
+          "expanded": false
+        },
+        {
+          "id": "ndb2f004cda24da3",
+          "title": "\u201cImmutable artifacts remove supply chain risk.\u201d",
+          "markdown": "**Reality:** **Immutability** **helps** **integrity**; **you** **still** **must** **verify** **provenance** and **scan** **before** **promotion**.",
+          "notes": "Reality: Immutability helps integrity; you still must verify provenance and scan before promotion.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Immutability helps integrity; you still must verify provenance and...",
+          "expanded": false
+        },
+        {
+          "id": "n29e15702c248a9f",
+          "title": "\u201cAdmin access to CI is low risk\u2014it's internal.\u201d",
+          "markdown": "**Reality:** **CI** is **production** for **software**; **compromise** **equals** **code** **signing** and **deploy** **keys**-**PAM** and **MFA** **required**.",
+          "notes": "Reality: CI is production for software; compromise equals code signing and deploy keys-PAM and MFA required.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: CI is production for software; compromise equals code signing and...",
+          "expanded": false
+        },
+        {
+          "id": "n435938a1542ee21",
+          "title": "\u201cWe don\u2019t need network segmentation for build agents.\u201d",
+          "markdown": "**Reality:** **Lateral** **movement** from **compromised** **dev** **workstations** **targets** **builders**-**isolate** **build** **VLANs**/**peering**.",
+          "notes": "Reality: Lateral movement from compromised dev workstations targets builders-isolate build VLANs/peering.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Lateral movement from compromised dev workstations targets...",
+          "expanded": false
+        },
+        {
+          "id": "n60c68a61b21bb12",
+          "title": "\u201cThird-party GitHub Actions at @main is fine.\u201d",
+          "markdown": "**Reality:** **Tag** **pinning** and **hash** **pinning** **reduce** **supply** **chain** **surprises** from **moving** **action** **repos**.",
+          "notes": "Reality: Tag pinning and hash pinning reduce supply chain surprises from moving action repos.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Tag pinning and hash pinning reduce supply chain surprises from...",
+          "expanded": false
+        },
+        {
+          "id": "n78319ea2512598c",
+          "title": "\u201cSecrets in CI variables are encrypted, so we\u2019re done.\u201d",
+          "markdown": "**Reality:** **Logs**, **debug** **artifacts**, and **dump** **env** **steps** **expose** **them**-**minimal** **scope** and **runtime** **secret** **injection** **patterns** **help**.",
+          "notes": "Reality: Logs, debug artifacts, and dump env steps expose them-minimal scope and runtime secret injection patterns help.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Logs, debug artifacts, and dump env steps expose them-minimal scope...",
+          "expanded": false
+        },
+        {
+          "id": "n01acb4eb08e6a89",
+          "title": "\u201cDev and prod pipelines can share the same service accounts.\u201d",
+          "markdown": "**Reality:** **Cross-environment** **identity** **ties** **test** **code** **paths** to **prod** **deploy** **authority**-**split** **identities** and **trust** **policies**.",
+          "notes": "Reality: Cross-environment identity ties test code paths to prod deploy authority-split identities and trust policies.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Cross-environment identity ties test code paths to prod deploy...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \u201cSAST/DAST green means the pipeline is secure.\u201d"
+    },
+    {
+      "id": "nbcf2d9b54de346e",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n8e4583ef4192465",
+          "title": "Fundamentals and threat model",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nf30c60ffedc89f9",
+              "title": "Why is CI/CD described as a \u201ccontrol plane,\u201d and what fails if you...",
+              "markdown": "CI/CD decides **what code runs**, **with which credentials**, and **what ships to production**. Static analysis does not stop an attacker who can **merge a malicious workflow**, **steal OIDC-exchanged cloud roles**, or **replace an unsigned artifact** in a registry. You need **flow control** (who can change pipelines and protected branches), **identity and secret hygiene**, **artifact integrity**, and **isolation** for untrusted contributions-not only scanners.",
+              "notes": "CI/CD decides what code runs, with which credentials, and what ships to production. Static analysis does not stop an attacker who can merge a malicious workflow, steal OIDC-exchanged cloud roles, or replace an unsigned artifact in a registry. You need flow control (who can change pipelines and protected branches), identity and secret hygiene, artifact integrity, and isolation for untrusted contributions-not only scanners.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "CI/CD decides what code runs, with which credentials, and what ships to...",
+              "expanded": false
+            },
+            {
+              "id": "nb4cfb4ec5909b88",
+              "title": "How does OWASP CI/CD Top 10 help in an interview answer without...",
+              "markdown": "Use it as **shared vocabulary** mapped to **your** controls: for example **CICD-SEC-4** (poisoned pipeline execution) tied to **CODEOWNERS on workflow files**, **CICD-SEC-6** (credential hygiene) tied to **OIDC instead of static AWS keys**, **CICD-SEC-9** (artifact integrity) tied to **Cosign verification at deploy**. Name **two or three** risks and **one concrete mitigation** each rather than reciting all ten.",
+              "notes": "Use it as shared vocabulary mapped to your controls: for example CICD-SEC-4 (poisoned pipeline execution) tied to CODEOWNERS on workflow files, CICD-SEC-6 (credential hygiene) tied to OIDC instead of static AWS keys, CICD-SEC-9 (artifact integrity) tied to Cosign verification at deploy. Name two or three risks and one concrete mitigation each rather than reciting all ten.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Use it as shared vocabulary mapped to your controls: for example CICD-SEC-4...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Why is CI/CD described as a \u201ccontrol plane,\u201d and what fails if you...",
+          "expanded": false
+        },
+        {
+          "id": "ne25725eb7240719",
+          "title": "Pipeline secrets",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n5c9ab902bb0ac06",
+              "title": "What are the main ways secrets leak from CI besides committing them to...",
+              "markdown": "Secrets appear in **build logs** (verbose scripts, test failures), **cached layers** or runner workspaces reused across jobs, **artifact attachments** (reports, dumps), **fork workflows** misconfigured to receive repository secrets, and **overly broad** tokens (org-level PATs) stolen once and reused everywhere. Mitigations include **environment-scoped** secrets, **log redaction**, **ephemeral** runners, **no secrets on untrusted PR jobs**, and **short-lived** federation instead of long-lived keys.",
+              "notes": "Secrets appear in build logs (verbose scripts, test failures), cached layers or runner workspaces reused across jobs, artifact attachments (reports, dumps), fork workflows misconfigured to receive repository secrets, and overly broad tokens (org-level PATs) stolen once and reused everywhere. Mitigations include environment-scoped secrets, log redaction, ephemeral runners, no secrets on untrusted PR jobs, and short-lived federation instead of long-lived keys.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Secrets appear in build logs (verbose scripts, test failures), cached layers...",
+              "expanded": false
+            },
+            {
+              "id": "n3a5db5872b75b8e",
+              "title": "How should production deploy credentials differ from credentials used...",
+              "markdown": "Production credentials should be bound to **protected branches or tags**, **deployment environments** with **required reviewers**, and **narrow IAM roles** (OIDC subjects including environment or ref). Feature-branch jobs should use **read-only** or sandbox roles, **no** production kubeconfig, and **separate** registries or namespaces. The goal is **blast-radius reduction**: compromising a dev branch workflow should not imply **production** write access.",
+              "notes": "Production credentials should be bound to protected branches or tags, deployment environments with required reviewers, and narrow IAM roles (OIDC subjects including environment or ref). Feature-branch jobs should use read-only or sandbox roles, no production kubeconfig, and separate registries or namespaces. The goal is blast-radius reduction: compromising a dev branch workflow should not imply production write access.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Production credentials should be bound to protected branches or tags,...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes What are the main ways secrets leak from CI besides committing them t",
+          "expanded": false
+        },
+        {
+          "id": "n7eb561e6ebb1f2d",
+          "title": "OIDC to cloud",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n881341243bd0d12",
+              "title": "Explain OIDC from CI to AWS (or another cloud) at a level you could...",
+              "markdown": "The CI platform issues a **signed JWT** (OIDC token) to the job. The job presents it to **AWS STS** `AssumeRoleWithWebIdentity` (or the cloud's equivalent). **IAM trust policy** on the role allows only that **issuer**, expected **audience**, and a **subject** matching the repository and usually branch, tag, or environment. STS returns **temporary** credentials. Those credentials are **short-lived** and **not stored** as a long-term secret in the repo, which addresses **CICD-SEC-6** and shrinks theft value.\n\nIn **GitHub Actions**, the job uses `id-token: write` permission so the runner can request the JWT; in **Google Cloud**, **Workload Identity Federation** binds the external identity to a **service account**; in **Azure**, **federated credentials** on an app registration play the same role. Interviewers often probe **confused deputy**: the cloud must validate **audience** so one OIDC client cannot trick another service into accepting a token meant for a different integration.",
+              "notes": "The CI platform issues a signed JWT (OIDC token) to the job. The job presents it to AWS STS AssumeRoleWithWebIdentity (or the cloud's equivalent). IAM trust policy on the role allows only that issuer, expected audience, and a subject matching the repository and usually branch, tag, or environment. STS returns temporary credentials. Those credentials are short-lived and not stored as a long-term secret in the repo, which addresses CICD-SEC-6 and shrinks theft value.\n\nIn GitHub Actions, the job uses id-token: write permission so the runner can request the JWT; in Google Cloud, Workload Identity Federation binds the external identity to a service account; in Azure, federated credentials on an app registration play the same role. Interviewers often probe confused deputy: the cloud must validate audience so one OIDC client cannot trick another service into accepting a token meant for a different integration.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "The CI platform issues a signed JWT (OIDC token) to the job.",
+              "expanded": false
+            },
+            {
+              "id": "n10d04b6e8ba7b29",
+              "title": "What goes wrong if the OIDC trust policy is too broad?",
+              "markdown": "A role that trusts `repo:myorg/*` or any ref on a repo lets **more workflows than intended** assume the same **production** role. An attacker who can run workflows in **any** included repository-or who confuses **audience** or **subject** validation-may obtain **cloud access** from a lower-trust context. Correct designs use **repository-specific** subjects, **environment** claims where available, and **separate roles per environment** and account.",
+              "notes": "A role that trusts repo:myorg/ or any ref on a repo lets more workflows than intended assume the same production role. An attacker who can run workflows in any included repository-or who confuses audience or subject validation-may obtain cloud access from a lower-trust context. Correct designs use repository-specific subjects, environment claims where available, and separate roles per environment and account.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A role that trusts repo:myorg/ or any ref on a repo lets more workflows than...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Explain OIDC from CI to AWS (or another cloud) at a level you could..",
+          "expanded": false
+        },
+        {
+          "id": "nf67f8ed330865c3",
+          "title": "Branch protections and governance",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "na8bf7dfb2adb61b",
+              "title": "Which files should be treated as security-sensitive alongside...",
+              "markdown": "**Pipeline definitions** (`.github/workflows/*.yml`, `.gitlab-ci.yml`, Jenkinsfile, Argo CD apps), **IaC** roots, **dependency lock** and **package** manifests when they trigger **install scripts**, and **CODEOWNERS** itself. A change to a workflow can **exfiltrate secrets** or **disable checks** without touching Java or Go code, so **CICD-SEC-1** (flow control) and **CICD-SEC-4** (PPE) demand **required reviews** from security or platform owners on those paths.",
+              "notes": "Pipeline definitions (.github/workflows/.yml, .gitlab-ci.yml, Jenkinsfile, Argo CD apps), IaC roots, dependency lock and package manifests when they trigger install scripts, and CODEOWNERS itself. A change to a workflow can exfiltrate secrets or disable checks without touching Java or Go code, so CICD-SEC-1 (flow control) and CICD-SEC-4 (PPE) demand required reviews from security or platform owners on those paths.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Pipeline definitions (.github/workflows/.yml, .gitlab-ci.yml, Jenkinsfile,...",
+              "expanded": false
+            },
+            {
+              "id": "n08aaf7acb42e56b",
+              "title": "What is the difference between \u201crequired status checks\u201d and a merge...",
+              "markdown": "**Required checks** ensure specific jobs passed before merge. A **merge queue** (or equivalent) rechecks against the **latest** base after other merges land, reducing **race conditions** where two PRs are green alone but broken together-useful when checks enforce **policy-as-code** or **signing** steps. For security, both matter: checks enforce **gates**, queues enforce **consistency** under parallel development.",
+              "notes": "Required checks ensure specific jobs passed before merge. A merge queue (or equivalent) rechecks against the latest base after other merges land, reducing race conditions where two PRs are green alone but broken together-useful when checks enforce policy-as-code or signing steps. For security, both matter: checks enforce gates, queues enforce consistency under parallel development.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Required checks ensure specific jobs passed before merge.",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Which files should be treated as security-sensitive alongside...",
+          "expanded": false
+        },
+        {
+          "id": "neca59fd2cd4223e",
+          "title": "Signing artifacts and integrity",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ne83b4b72ac08ce4",
+              "title": "Why pin container deployments by digest and still sign the image?",
+              "markdown": "**Tags** can move; **digest** identifies an immutable manifest. **Signing** proves **provenance** or publisher identity for that digest. Deploy-time policy should verify **signature matches digest** (and optionally **SLSA provenance**) so a registry compromise or mistaken tag promotion does not silently change what runs. This is the operational side of **CICD-SEC-9**.",
+              "notes": "Tags can move; digest identifies an immutable manifest. Signing proves provenance or publisher identity for that digest. Deploy-time policy should verify signature matches digest (and optionally SLSA provenance) so a registry compromise or mistaken tag promotion does not silently change what runs. This is the operational side of CICD-SEC-9.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Tags can move; digest identifies an immutable manifest.",
+              "expanded": false
+            },
+            {
+              "id": "n39a13aa55a70280",
+              "title": "Where should signature verification happen\u2014CI, CD, or runtime?",
+              "markdown": "**Signing** happens at the end of **trusted build** (CI or release pipeline). **Verification** belongs at **deploy** (admission controller, deploy service, or infrastructure apply) and can be **reinforced at runtime** (e.g., Kubernetes policy). Verifying only in CI is insufficient if **another path** can deploy or if **mutable tags** are used downstream.\n\n**Cosign** with **keyless** signing ties signatures to **OIDC identity** of the build; **KMS-backed** keys suit stricter custody models. Policy engines (for example **Kyverno** or **OPA Gatekeeper** rules) can require a matching **signature** and **digest** before a **Pod** schedules. The staff-level point is **defense in depth**: build proves origin, deploy enforces it, runtime catches **drift** or **bypass** paths.",
+              "notes": "Signing happens at the end of trusted build (CI or release pipeline). Verification belongs at deploy (admission controller, deploy service, or infrastructure apply) and can be reinforced at runtime (e.g., Kubernetes policy). Verifying only in CI is insufficient if another path can deploy or if mutable tags are used downstream.\n\nCosign with keyless signing ties signatures to OIDC identity of the build; KMS-backed keys suit stricter custody models. Policy engines (for example Kyverno or OPA Gatekeeper rules) can require a matching signature and digest before a Pod schedules. The staff-level point is defense in depth: build proves origin, deploy enforces it, runtime catches drift or bypass paths.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Signing happens at the end of trusted build (CI or release pipeline).",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Why pin container deployments by digest and still sign the image?",
+          "expanded": false
+        },
+        {
+          "id": "naec85087273aaf0",
+          "title": "SBOM",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n186d199bdbf2e81",
+              "title": "Where in the pipeline should you generate an SBOM, and what do you do...",
+              "markdown": "Generate after **dependencies are resolved** and the **deliverable** (image or package) is known-typically on merge to the release line or on **version tags**. Store the SBOM **next to the artifact** (same version or digest), in **SPDX or CycloneDX**, and feed it to **vulnerability** processes: diff between releases, query during **incidents**, and block promotion if **critical** policy violations appear. Avoid generating SBOMs only on forks with access to **internal** tool credentials.",
+              "notes": "Generate after dependencies are resolved and the deliverable (image or package) is known-typically on merge to the release line or on version tags. Store the SBOM next to the artifact (same version or digest), in SPDX or CycloneDX, and feed it to vulnerability processes: diff between releases, query during incidents, and block promotion if critical policy violations appear. Avoid generating SBOMs only on forks with access to internal tool credentials.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Generate after dependencies are resolved and the deliverable (image or...",
+              "expanded": false
+            },
+            {
+              "id": "nb4ad8bbcf040a6a",
+              "title": "What mistake makes SBOMs misleading for container images?",
+              "markdown": "Generating SBOMs **only** from application `package.json` or `go.mod` while ignoring **base image OS packages** and **transitive** layers misses most **CVE** exposure in many stacks. Prefer tooling that inspects the **final filesystem** or image SBOM standards so operational responses match **what is actually shipped**.",
+              "notes": "Generating SBOMs only from application package.json or go.mod while ignoring base image OS packages and transitive layers misses most CVE exposure in many stacks. Prefer tooling that inspects the final filesystem or image SBOM standards so operational responses match what is actually shipped.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Generating SBOMs only from application package.json or go.mod while ignoring...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Where in the pipeline should you generate an SBOM, and what do you do",
+          "expanded": false
+        },
+        {
+          "id": "nef6394564d35562",
+          "title": "Poisoned PRs and PPE",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n1c96c4dac594bbd",
+              "title": "What is poisoned pipeline execution (PPE), and give one example?",
+              "markdown": "PPE is when an attacker causes **trusted CI** to run **malicious** steps-often by changing **workflow YAML**, **build scripts**, or **hooked** install logic. Example: a PR adds a step that **base64-encodes** secrets and posts them to an external host, or a **`postinstall`** script runs only in CI to **harvest** environment variables. **CICD-SEC-4** covers this risk class.",
+              "notes": "PPE is when an attacker causes trusted CI to run malicious steps-often by changing workflow YAML, build scripts, or hooked install logic. Example: a PR adds a step that base64-encodes secrets and posts them to an external host, or a postinstall script runs only in CI to harvest environment variables. CICD-SEC-4 covers this risk class.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "PPE is when an attacker causes trusted CI to run malicious steps-often by...",
+              "expanded": false
+            },
+            {
+              "id": "n35ed2c48d88f480",
+              "title": "On GitHub Actions, why is pull_request_target discussed as high risk?",
+              "markdown": "`pull_request_target` runs in the **base** repository context and may access **secrets** and **write** `GITHUB_TOKEN` while **checking out** attacker-controlled code if misconfigured. That combination is **dangerous**: it was intended for labeling or commenting but has been involved in **real** secret exfiltration when workflows also build or execute untrusted code. Safer patterns use **limited** workflows for forks, **approval** gates, or **`pull_request`** with **no secrets** for untrusted code.\n\nIf you must touch secrets for fork automation, keep the workflow **minimal**: comment-only bots, no **build** of PR head on the same job that holds secrets, or use **maintainer-triggered** `workflow_run` after merge to a **trusted** branch. **CODEOWNERS** on `.github/workflows` reduces the chance a poisoned workflow ever lands without review.",
+              "notes": "pullrequesttarget runs in the base repository context and may access secrets and write GITHUBTOKEN while checking out attacker-controlled code if misconfigured. That combination is dangerous: it was intended for labeling or commenting but has been involved in real secret exfiltration when workflows also build or execute untrusted code. Safer patterns use limited workflows for forks, approval gates, or pullrequest with no secrets for untrusted code.\n\nIf you must touch secrets for fork automation, keep the workflow minimal: comment-only bots, no build of PR head on the same job that holds secrets, or use maintainer-triggered workflowrun after merge to a trusted branch. CODEOWNERS on .github/workflows reduces the chance a poisoned workflow ever lands without review.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "pullrequesttarget runs in the base repository context and may access secrets...",
+              "expanded": false
+            },
+            {
+              "id": "ne981f14bbce03a4",
+              "title": "How do you safely run integration tests for external contributors\u2019...",
+              "markdown": "Use **low-privilege** pipelines without production secrets; optionally require **maintainer approval** or a **label** before running full suites on trusted runners. Never mount **production** credentials on jobs triggered by **untrusted** ref content. Some teams use **manual** dispatch or **merge to a staging branch** first so **trusted** context runs sensitive jobs.",
+              "notes": "Use low-privilege pipelines without production secrets; optionally require maintainer approval or a label before running full suites on trusted runners. Never mount production credentials on jobs triggered by untrusted ref content. Some teams use manual dispatch or merge to a staging branch first so trusted context runs sensitive jobs.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Use low-privilege pipelines without production secrets; optionally require...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes What is poisoned pipeline execution (PPE), and give one example?",
+          "expanded": false
+        },
+        {
+          "id": "nfd1ab3f7e6eac32",
+          "title": "Runner isolation",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n1ba5d26ebf0386c",
+              "title": "What is the main security downside of self-hosted runners compared to...",
+              "markdown": "Self-hosted runners are **long-lived**: malicious jobs can **persist** backdoors, steal **registration tokens**, poison **global caches**, or access **local** secrets left on disk. Hosted runners are often **ephemeral per job**, reducing **cross-job** contamination though not **in-job** exfiltration. Mitigations: **ephemeral** VMs per job, **separate pools** for untrusted work, **network egress** controls, and **minimal** persistent state.",
+              "notes": "Self-hosted runners are long-lived: malicious jobs can persist backdoors, steal registration tokens, poison global caches, or access local secrets left on disk. Hosted runners are often ephemeral per job, reducing cross-job contamination though not in-job exfiltration. Mitigations: ephemeral VMs per job, separate pools for untrusted work, network egress controls, and minimal persistent state.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Self-hosted runners are long-lived: malicious jobs can persist backdoors,...",
+              "expanded": false
+            },
+            {
+              "id": "n9627a00d64ffb4b",
+              "title": "Why does mounting the Docker socket into a CI job matter for security?",
+              "markdown": "The Docker socket grants **effective root** on the host and the ability to **start privileged containers**, read **host filesystems**, and **escape** isolation assumptions. It should be **avoided** unless strictly necessary and then wrapped with **strict** policy; prefer **rootless** builders or remote **build services** with audited APIs.",
+              "notes": "The Docker socket grants effective root on the host and the ability to start privileged containers, read host filesystems, and escape isolation assumptions. It should be avoided unless strictly necessary and then wrapped with strict policy; prefer rootless builders or remote build services with audited APIs.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "The Docker socket grants effective root on the host and the ability to start...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes What is the main security downside of self-hosted runners compared to",
+          "expanded": false
+        },
+        {
+          "id": "ndbd89a6a85f27bf",
+          "title": "Operations and depth",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n074b430b77a6e62",
+              "title": "What metrics show CI/CD security is improving, not just \u201cmore tools\u201d?",
+              "markdown": "Examples: **percentage** of production deploys using **signed artifacts verified** at deploy; **percentage** of cloud access via **OIDC** versus static keys; **count** of repos with **branch protection** and **CODEOWNERS** on workflows; **mean time** to contain a **simulated** secret leak; **open exceptions** with owners and **expiry**; reduction in workflows with **high-risk** patterns (e.g., dangerous triggers). Tie metrics to **CICD-SEC** outcomes.",
+              "notes": "Examples: percentage of production deploys using signed artifacts verified at deploy; percentage of cloud access via OIDC versus static keys; count of repos with branch protection and CODEOWNERS on workflows; mean time to contain a simulated secret leak; open exceptions with owners and expiry; reduction in workflows with high-risk patterns (e.g., dangerous triggers). Tie metrics to CICD-SEC outcomes.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Examples: percentage of production deploys using signed artifacts verified...",
+              "expanded": false
+            },
+            {
+              "id": "nb98bc133a90c9b3",
+              "title": "How does SLSA relate to your CI/CD story in one minute?",
+              "markdown": "**SLSA** describes **levels** of **integrity** controls around builds and **provenance**. CI/CD implements **hermetic** or **audited** builds, **signed** artifacts, and **immutable** references; **consumers** (deploy systems) **verify** provenance before promotion. Connect it to **CICD-SEC-9** and to **organizational** policy: what **level** you target per **risk tier**.",
+              "notes": "SLSA describes levels of integrity controls around builds and provenance. CI/CD implements hermetic or audited builds, signed artifacts, and immutable references; consumers (deploy systems) verify provenance before promotion. Connect it to CICD-SEC-9 and to organizational policy: what level you target per risk tier.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "SLSA describes levels of integrity controls around builds and provenance.",
+              "expanded": false
+            },
+            {
+              "id": "n875a9e61b938050",
+              "title": "You discover a leaked repository secret that had broad cloud access....",
+              "markdown": "**Revoke and rotate** the credential immediately; **audit** workflow runs and **logs** for misuse; **narrow** replacement credentials using **OIDC** and **smaller roles**; **scan** for **fork** or **`workflow_dispatch`** abuse; add **temporary** blocks on deploy if integrity is uncertain. Follow with **post-incident** hardening: environment-scoped secrets, **required** reviews on workflow paths, and **detection** for anomalous **STS** or cloud API usage from CI egress IPs.\n\nCommunicate clearly with **engineering leadership**: pipeline incidents are **identity** incidents-check **CloudTrail**, **GCP audit logs**, or **Azure Activity Log** for **CreateUser**, **AssumeRole**, **key creation**, or **S3 exfiltration** patterns tied to the exposure window. Document **lessons** as **control gaps** (over-broad IAM, missing branch protection, shared runner pools) rather than only as \"someone leaked a key.\"",
+              "notes": "Revoke and rotate the credential immediately; audit workflow runs and logs for misuse; narrow replacement credentials using OIDC and smaller roles; scan for fork or workflowdispatch abuse; add temporary blocks on deploy if integrity is uncertain. Follow with post-incident hardening: environment-scoped secrets, required reviews on workflow paths, and detection for anomalous STS or cloud API usage from CI egress IPs.\n\nCommunicate clearly with engineering leadership: pipeline incidents are identity incidents-check CloudTrail, GCP audit logs, or Azure Activity Log for CreateUser, AssumeRole, key creation, or S3 exfiltration patterns tied to the exposure window. Document lessons as control gaps (over-broad IAM, missing branch protection, shared runner pools) rather than only as \"someone leaked a key.\"",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Revoke and rotate the credential immediately; audit workflow runs and logs...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes What metrics show CI/CD security is improving, not just \u201cmore tools\u201d?",
+          "expanded": false
+        },
+        {
+          "id": "n8b11986813b0e2d",
+          "title": "Cross-read",
+          "markdown": "**Comprehensive Guide** (this topic), **Secrets Management**, **IAM and Least Privilege**, **Software Supply Chain / SLSA**, **Security Observability**.",
+          "notes": "Comprehensive Guide (this topic), Secrets Management, IAM and Least Privilege, Software Supply Chain / SLSA, Security Observability.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Comprehensive Guide (this topic), Secrets Management, IAM and Least...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Fundamentals and threat model"
+    }
+  ],
+  "topicId": "secure-ci-cd-pipeline-security",
+  "name": "Secure CI CD Pipeline Security",
+  "structure": "logic-right",
+  "blurb": "Continuous integration and continuous delivery systems are a control plane:..."
+}

@@ -7,3 +7,5 @@
 [**Security Headers - Quick Reference Guide**](Security%20Headers%20-%20Quick%20Reference.md)
 
 [**Security Headers - VAPT Methodology**](Security%20Headers%20-%20VAPT%20Methodology.md)
+
+[**Security Headers - Mind Map**](Security%20Headers%20-%20Mind%20Map.md)

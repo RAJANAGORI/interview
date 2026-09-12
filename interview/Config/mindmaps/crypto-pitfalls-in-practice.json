@@ -1,0 +1,569 @@
+{
+  "id": "nfd6440e422e19ba",
+  "title": "Crypto Pitfalls in Practice",
+  "markdown": "**Crypto pitfalls in practice** are the **implementation mistakes** that turn strong algorithms into broken systems: **AES-CBC without authentication**, **GCM nonce reuse**, **MD5/SHA-1 for passwords**, **RSA PKCS#1 v1.5 padding oracle**, **JWT alg=none**, **hardcoded keys**, and **rolling your own protocol**. Interviewers test whether you can **select modes**, **tune KDF parameters**, and **operate keys**-not recite AES block sizes.\n\nThis guide follows the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+  "notes": "Crypto pitfalls in practice are the implementation mistakes that turn strong algorithms into broken systems: AES-CBC without authentication, GCM nonce reuse, MD5/SHA-1 for passwords, RSA PKCS#1 v1.5 padding oracle, JWT alg=none, hardcoded keys, and rolling your own protocol. Interviewers test whether you can select modes, tune KDF parameters, and operate keys-not recite AES block sizes.\n\nThis guide follows the Content Mastery Framework.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "n11ffb2d430e524b",
+      "title": "At a glance",
+      "markdown": "**Crypto pitfalls in practice** are the **implementation mistakes** that turn strong algorithms into broken systems: **AES-CBC without authentication**, **GCM nonce reuse**, **MD5/SHA-1 for passwords**, **RSA PKCS#1 v1.5 padding oracle**, **JWT alg=none**, **hardcoded keys**, and **rolling your own protocol**. Interviewers test whether you can **select modes**, **tune KDF parameters**, and **operate keys**-not recite AES block sizes.\n\nThis guide follows the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+      "notes": "Crypto pitfalls in practice are the implementation mistakes that turn strong algorithms into broken systems: AES-CBC without authentication, GCM nonce reuse, MD5/SHA-1 for passwords, RSA PKCS#1 v1.5 padding oracle, JWT alg=none, hardcoded keys, and rolling your own protocol. Interviewers test whether you can select modes, tune KDF parameters, and operate keys-not recite AES block sizes.\n\nThis guide follows the Content Mastery Framework.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Crypto pitfalls in practice are the implementation mistakes that turn strong...",
+      "expanded": false
+    },
+    {
+      "id": "nf59711968e28d50",
+      "title": "L1 \u2014 The pitfall taxonomy",
+      "markdown": "| Category | Example failure |\n|----------|-----------------|\n| **Wrong primitive** | SHA-256 for password storage |\n| **Wrong mode** | AES-ECB, AES-CBC without MAC |\n| **Nonce/IV reuse** | Same GCM nonce with same key |\n| **Key management** | Hardcoded AES key in repo |\n| **Protocol design** | Custom encrypt-then-maybe-MAC |\n| **Verification bugs** | JWT accept `alg: none` |",
+      "notes": "| Category | Example failure |\n|----------|-----------------|\n| Wrong primitive | SHA-256 for password storage |\n| Wrong mode | AES-ECB, AES-CBC without MAC |\n| Nonce/IV reuse | Same GCM nonce with same key |\n| Key management | Hardcoded AES key in repo |\n| Protocol design | Custom encrypt-then-maybe-MAC |\n| Verification bugs | JWT accept alg: none |",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Category | Example failure | |----------|-----------------| | Wrong...",
+      "expanded": false
+    },
+    {
+      "id": "n9fcc3c73cd1f983",
+      "title": "L2 \u2014 AES modes (interview essential)",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nf38acc493644f8d",
+          "title": "ECB \u2014 never for structured data",
+          "markdown": "**Problem:** Identical plaintext blocks -> identical ciphertext blocks (penguin logo demo). **No integrity.**",
+          "notes": "Problem: Identical plaintext blocks -> identical ciphertext blocks (penguin logo demo). No integrity.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Problem: Identical plaintext blocks -> identical ciphertext blocks (penguin...",
+          "expanded": false
+        },
+        {
+          "id": "n27cc0368cd2dfa9",
+          "title": "CBC \u2014 confidentiality only, malleable",
+          "markdown": "**Problem:** **Bit-flipping** attacks on ciphertext alter plaintext blocks predictably. **Padding oracle** (Bleichenbacher-style on CBC padding) if attacker can observe **padding error vs MAC error** differences.\n\n**Mitigation:** Use **AEAD** (GCM, ChaCha20-Poly1305). If legacy CBC required: **Encrypt-then-MAC** with **HMAC-SHA256** over IV+ciphertext, **constant-time** MAC compare.",
+          "notes": "Problem: Bit-flipping attacks on ciphertext alter plaintext blocks predictably. Padding oracle (Bleichenbacher-style on CBC padding) if attacker can observe padding error vs MAC error differences.\n\nMitigation: Use AEAD (GCM, ChaCha20-Poly1305). If legacy CBC required: Encrypt-then-MAC with HMAC-SHA256 over IV+ciphertext, constant-time MAC compare.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Problem: Bit-flipping attacks on ciphertext alter plaintext blocks...",
+          "expanded": false
+        },
+        {
+          "id": "nd0efb937fef54f4",
+          "title": "CTR / GCM \u2014 watch the nonce",
+          "markdown": "**CTR:** Counter must **never repeat** for a given key.\n\n**GCM:** **96-bit nonce** standard; **nonce reuse with same key** leaks authentication key and enables **forgery** (Catastrophic).\n\n**Rule:** **Random 96-bit nonce per message** (collision probability negligible) OR **counter-based nonce** with persistent counter stored in **HSM/KMS**-never manual copy-paste.\n\n```python\n# Safer: OS-provided random nonce per encryption (AES-GCM)\nimport os\nfrom cryptography.hazmat.primitives.ciphers.aead import AESGCM\nkey = AESGCM.generate_key(bit_length=256)\naesgcm = AESGCM(key)\nnonce = os.urandom(12)\nct = aesgcm.encrypt(nonce, plaintext, associated_data)\n```",
+          "notes": "CTR: Counter must never repeat for a given key.\n\nGCM: 96-bit nonce standard; nonce reuse with same key leaks authentication key and enables forgery (Catastrophic).\n\nRule: Random 96-bit nonce per message (collision probability negligible) OR counter-based nonce with persistent counter stored in HSM/KMS-never manual copy-paste.\n\nSafer: OS-provided random nonce per encryption (AES-GCM)\nimport os\nfrom cryptography.hazmat.primitives.ciphers.aead import AESGCM\nkey = AESGCM.generatekey(bitlength=256)\naesgcm = AESGCM(key)\nnonce = os.urandom(12)\nct = aesgcm.encrypt(nonce, plaintext, associateddata)",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "CTR: Counter must never repeat for a given key.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes ECB \u2014 never for structured data",
+      "expanded": true
+    },
+    {
+      "id": "n529d061547e4fa5",
+      "title": "L2 \u2014 Real-world CVE classes",
+      "markdown": "| Incident | Primitive | Lesson |\n|----------|-----------|--------|\n| **Heartbleed (OpenSSL)** | TLS heartbeat read overflow | Memory leak of keys/sessions-not mode misuse but crypto **implementation** bug |\n| **BEAST** | TLS 1.0 CBC in HTTPS | Protocol + cipher suite evolution |\n| **Padding oracle attacks** | CBC + error oracles | Use AEAD; uniform errors |\n| **Nonce reuse in WPA2 (KRACK class)** | GCM/CCMP replay/nonce issues | Protocol-level; reinforces nonce discipline |\n| **JWT alg confusion** | RS256 vs HS256 | Attacker signs with public key as HMAC secret |",
+      "notes": "| Incident | Primitive | Lesson |\n|----------|-----------|--------|\n| Heartbleed (OpenSSL) | TLS heartbeat read overflow | Memory leak of keys/sessions-not mode misuse but crypto implementation bug |\n| BEAST | TLS 1.0 CBC in HTTPS | Protocol + cipher suite evolution |\n| Padding oracle attacks | CBC + error oracles | Use AEAD; uniform errors |\n| Nonce reuse in WPA2 (KRACK class) | GCM/CCMP replay/nonce issues | Protocol-level; reinforces nonce discipline |\n| JWT alg confusion | RS256 vs HS256 | Attacker signs with public key as HMAC secret |",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Incident | Primitive | Lesson | |----------|-----------|--------| |...",
+      "expanded": false
+    },
+    {
+      "id": "nb7cdf319700f95d",
+      "title": "L2 \u2014 Password hashing (KDF selection)",
+      "markdown": "**Never:** MD5, SHA-1, SHA-256 alone for passwords.\n\n| KDF | When | Parameters (starting points-tune to hardware) |\n|-----|------|--------------------------------------------------|\n| **Argon2id** | Greenfield, memory-hard desired | memory 64MB+, iterations 3+, parallelism 4+ |\n| **bcrypt** | Wide library support | cost factor 12+ (adjust over years) |\n| **scrypt** | Similar to Argon2 goals | N, r, p per RFC 7914 |\n| **PBKDF2** | FIPS/compliance legacy | SHA-256, \u2265600k iterations (increase over time) |\n\n**Always:** unique **salt per user**; optional **pepper** in HSM/KMS; **constant-time** comparison on verify.\n\n```python\n# Python - Argon2id via argon2-cffi (illustrative)\nfrom argon2 import PasswordHasher\nph = PasswordHasher(time_cost=3, memory_cost=65536, parallelism=4, hash_len=32, salt_len=16)\nhash = ph.hash(\"user_password\")\nph.verify(hash, \"user_password\")\n```",
+      "notes": "Never: MD5, SHA-1, SHA-256 alone for passwords.\n\n| KDF | When | Parameters (starting points-tune to hardware) |\n|-----|------|--------------------------------------------------|\n| Argon2id | Greenfield, memory-hard desired | memory 64MB+, iterations 3+, parallelism 4+ |\n| bcrypt | Wide library support | cost factor 12+ (adjust over years) |\n| scrypt | Similar to Argon2 goals | N, r, p per RFC 7914 |\n| PBKDF2 | FIPS/compliance legacy | SHA-256, \u2265600k iterations (increase over time) |\n\nAlways: unique salt per user; optional pepper in HSM/KMS; constant-time comparison on verify.\n\nPython - Argon2id via argon2-cffi (illustrative)\nfrom argon2 import PasswordHasher\nph = PasswordHasher(timecost=3, memorycost=65536, parallelism=4, hashlen=32, saltlen=16)\nhash = ph.hash(\"userpassword\")\nph.verify(hash, \"userpassword\")",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Never: MD5, SHA-1, SHA-256 alone for passwords.",
+      "expanded": false
+    },
+    {
+      "id": "n8dd18f543d2d33f",
+      "title": "L2 \u2014 RSA pitfalls",
+      "markdown": "PKCS#1 v1.5 encryption: padding oracle history-prefer RSA-OAEP for encryption.",
+      "notes": "PKCS#1 v1.5 encryption: padding oracle history-prefer RSA-OAEP for encryption.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n23769d4c193591b",
+          "title": "PKCS#1 v1.5 encryption: padding oracle history-prefer RSA-OAEP for encryption.",
+          "markdown": "- PKCS#1 v1.5 encryption: padding oracle history-prefer RSA-OAEP for encryption.",
+          "notes": "PKCS#1 v1.5 encryption: padding oracle history-prefer RSA-OAEP for encryption.",
+          "blurb": "PKCS#1 v1.5 encryption: padding oracle history-prefer RSA-OAEP for encryption.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n07e225da55d7250",
+          "title": "Small exponent / weak keys: RSA <2048 deprecated.",
+          "markdown": "- Small exponent / weak keys: RSA <2048 deprecated.",
+          "notes": "Small exponent / weak keys: RSA <2048 deprecated.",
+          "blurb": "Small exponent / weak keys: RSA <2048 deprecated.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n491683c591e1a81",
+          "title": "Signing vs encryption key confusion in custom protocols.",
+          "markdown": "- Signing vs encryption key confusion in custom protocols.",
+          "notes": "Signing vs encryption key confusion in custom protocols.",
+          "blurb": "Signing vs encryption key confusion in custom protocols.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "PKCS#1 v1.5 encryption: padding oracle history-prefer RSA-OAEP for encryption.",
+      "expanded": true
+    },
+    {
+      "id": "n401f3bcee911ad8",
+      "title": "L2 \u2014 JWT / JWS misuse",
+      "markdown": "| Bug | Attack |\n|-----|--------|\n| **`alg: none`** | Strip signature verification |\n| **HS256 with public key as secret** | Key confusion |\n| **Missing `aud`, `iss`, `exp`** | Token replay across services |\n| **Weak HMAC secret** (`secret123`) | Offline brute force |\n\n**Fix:** Use mature library defaults; **allowlist algorithms**; **JWKS** with key rotation; validate **all** standard claims.",
+      "notes": "| Bug | Attack |\n|-----|--------|\n| alg: none | Strip signature verification |\n| HS256 with public key as secret | Key confusion |\n| Missing aud, iss, exp | Token replay across services |\n| Weak HMAC secret (secret123) | Offline brute force |\n\nFix: Use mature library defaults; allowlist algorithms; JWKS with key rotation; validate all standard claims.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Bug | Attack | |-----|--------| | alg: none | Strip signature verification...",
+      "expanded": false
+    },
+    {
+      "id": "nb5fc63d8dffce15",
+      "title": "L2 \u2014 Constant-time comparison",
+      "markdown": "```python\n# Wrong\nif computed_mac == received_mac: ...\n\n# Better\nimport hmac\nhmac.compare_digest(computed_mac, received_mac)\n```\n\nPrevents **timing side channels** on MAC/password verify (within practical bounds).",
+      "notes": "Wrong\nif computedmac == receivedmac: ...\n\nBetter\nimport hmac\nhmac.comparedigest(computedmac, receivedmac)\n\nPrevents timing side channels on MAC/password verify (within practical bounds).",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Wrong if computedmac == receivedmac: ...",
+      "expanded": false
+    },
+    {
+      "id": "ne860dd48f5812b9",
+      "title": "L2 \u2014 Key management pitfalls",
+      "markdown": "Hardcoded keys in source/mobile apps.",
+      "notes": "Hardcoded keys in source/mobile apps.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n80085014701f4ac",
+          "title": "Hardcoded keys in source/mobile apps.",
+          "markdown": "- Hardcoded keys in source/mobile apps.",
+          "notes": "Hardcoded keys in source/mobile apps.",
+          "blurb": "Hardcoded keys in source/mobile apps.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n817e23f9097f7b4",
+          "title": "Same key for encryption and signing.",
+          "markdown": "- Same key for encryption and signing.",
+          "notes": "Same key for encryption and signing.",
+          "blurb": "Same key for encryption and signing.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n4b2b1f2ca165925",
+          "title": "No rotation plan-versioned keys in KMS with envelope encryption.",
+          "markdown": "- No rotation plan-versioned keys in KMS with envelope encryption.",
+          "notes": "No rotation plan-versioned keys in KMS with envelope encryption.",
+          "blurb": "No rotation plan-versioned keys in KMS with envelope encryption.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n95d393cba4f5b16",
+          "title": "Logging ciphertext keys or IVs with secrets.",
+          "markdown": "- Logging ciphertext keys or IVs with secrets.",
+          "notes": "Logging ciphertext keys or IVs with secrets.",
+          "blurb": "Logging ciphertext keys or IVs with secrets.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Hardcoded keys in source/mobile apps.",
+      "expanded": true
+    },
+    {
+      "id": "n464175a1e5b2620",
+      "title": "L3 \u2014 Side channels (high level)",
+      "markdown": "**Timing attacks** on RSA decrypt, **cache attacks** (Spectre class), **power analysis** on embedded-awareness for interviews. Mitigations: **constant-time** libs, **HSM**, **masking** in high-threat hardware.",
+      "notes": "Timing attacks on RSA decrypt, cache attacks (Spectre class), power analysis on embedded-awareness for interviews. Mitigations: constant-time libs, HSM, masking in high-threat hardware.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Timing attacks on RSA decrypt, cache attacks (Spectre class), power analysis...",
+      "expanded": false
+    },
+    {
+      "id": "ne1062206ef3ac94",
+      "title": "L3 \u2014 Migration stories (senior)",
+      "markdown": "**Legacy PBKDF2 -> Argon2id:** re-hash on successful login; dual-verify window; force reset for dormant accounts.\n\n**CBC -> GCM:** parallel read old/new during rollout; strict **key separation**-don't reuse CBC key as GCM key without analysis.",
+      "notes": "Legacy PBKDF2 -> Argon2id: re-hash on successful login; dual-verify window; force reset for dormant accounts.\n\nCBC -> GCM: parallel read old/new during rollout; strict key separation-don't reuse CBC key as GCM key without analysis.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Legacy PBKDF2 -> Argon2id: re-hash on successful login; dual-verify window;...",
+      "expanded": false
+    },
+    {
+      "id": "n8f55530bb0f66f5",
+      "title": "Detection in code review",
+      "markdown": "Grep: AES/ECB, MODEECB, MD5, SHA1 + password, pickle (different vuln but often co-located).",
+      "notes": "Grep: AES/ECB, MODEECB, MD5, SHA1 + password, pickle (different vuln but often co-located).",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nce0cae1b09f1273",
+          "title": "Grep: AES/ECB, MODE_ECB, MD5, SHA1 + password, pickle (different vuln but often co-locat",
+          "markdown": "- Grep: AES/ECB, MODE_ECB, MD5, SHA1 + password, pickle (different vuln but often co-locat",
+          "notes": "Grep: AES/ECB, MODE_ECB, MD5, SHA1 + password, pickle (different vuln but often co-locat",
+          "blurb": "Grep: AES/ECB, MODEECB, MD5, SHA1 + password, pickle (different vuln but...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n29d19e890368b88",
+          "title": "Semgrep crypto rules; GitHub secret scanning.",
+          "markdown": "- Semgrep crypto rules; GitHub secret scanning.",
+          "notes": "Semgrep crypto rules; GitHub secret scanning.",
+          "blurb": "Semgrep crypto rules; GitHub secret scanning.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n238ac109a68acfc",
+          "title": "JWT libraries with verify_signature=False.",
+          "markdown": "- JWT libraries with verify_signature=False.",
+          "notes": "JWT libraries with verify_signature=False.",
+          "blurb": "JWT libraries with verifysignature=False.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Grep: AES/ECB, MODEECB, MD5, SHA1 + password, pickle (different vuln but...",
+      "expanded": false
+    },
+    {
+      "id": "nbf0cac31f7fdb66",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nba738523c45fdbb",
+          "title": "Safe defaults",
+          "markdown": "Prefer AEAD: AES-GCM or ChaCha20-Poly1305 - Passwords: Argon2id (or tuned bcrypt/scrypt) - Signatures: strict algorithm allow-lists",
+          "notes": "Prefer AEAD: AES-GCM or ChaCha20-Poly1305 - Passwords: Argon2id (or tuned bcrypt/scrypt) - Signatures: strict algorithm allow-lists",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n97883374a9789ac",
+              "title": "Prefer AEAD: AES-GCM or ChaCha20-Poly1305",
+              "markdown": "- Prefer AEAD: AES-GCM or ChaCha20-Poly1305",
+              "notes": "Prefer AEAD: AES-GCM or ChaCha20-Poly1305",
+              "blurb": "Prefer AEAD: AES-GCM or ChaCha20-Poly1305",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n7db621587ab8285",
+              "title": "Passwords: Argon2id (or tuned bcrypt/scrypt)",
+              "markdown": "- Passwords: Argon2id (or tuned bcrypt/scrypt)",
+              "notes": "Passwords: Argon2id (or tuned bcrypt/scrypt)",
+              "blurb": "Passwords: Argon2id (or tuned bcrypt/scrypt)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n41b318e0bc18306",
+              "title": "Signatures: strict algorithm allow-lists",
+              "markdown": "- Signatures: strict algorithm allow-lists",
+              "notes": "Signatures: strict algorithm allow-lists",
+              "blurb": "Signatures: strict algorithm allow-lists",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Prefer AEAD: AES-GCM or ChaCha20-Poly1305 - Passwords: Argon2id (or tuned...",
+          "expanded": false
+        },
+        {
+          "id": "n8c94e083169192c",
+          "title": "Red flags",
+          "markdown": "`ECB` mode \u00b7 GCM nonce reuse \u00b7 static IVs \u00b7 hardcoded keys \u00b7 SHA256(password)",
+          "notes": "ECB mode \u00b7 GCM nonce reuse \u00b7 static IVs \u00b7 hardcoded keys \u00b7 SHA256(password)",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "ECB mode \u00b7 GCM nonce reuse \u00b7 static IVs \u00b7 hardcoded keys \u00b7 SHA256(password)",
+          "expanded": false
+        },
+        {
+          "id": "n45b7c2b7be31d87",
+          "title": "Operational controls",
+          "markdown": "KMS key versioning \u00b7 rotation runbook \u00b7 dual-decrypt migration \u00b7 crypto lint checks",
+          "notes": "KMS key versioning \u00b7 rotation runbook \u00b7 dual-decrypt migration \u00b7 crypto lint checks",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "KMS key versioning \u00b7 rotation runbook \u00b7 dual-decrypt migration \u00b7 crypto lint...",
+          "expanded": false
+        },
+        {
+          "id": "n5475e5ade4ea612",
+          "title": "Cross-read",
+          "markdown": "`Encryption vs Hashing` \u00b7 `TLS` \u00b7 `Secrets Management and Key Lifecycle`",
+          "notes": "Encryption vs Hashing \u00b7 TLS \u00b7 Secrets Management and Key Lifecycle",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Encryption vs Hashing \u00b7 TLS \u00b7 Secrets Management and Key Lifecycle",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Safe defaults"
+    },
+    {
+      "id": "ne1916aeeaa8154b",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n35bcbf5b10f8964",
+          "title": "\"Using AES means we are secure.\"",
+          "markdown": "**Reality:** Mode, nonce/IV handling, and key lifecycle determine real security.",
+          "notes": "Reality: Mode, nonce/IV handling, and key lifecycle determine real security.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Mode, nonce/IV handling, and key lifecycle determine real security.",
+          "expanded": false
+        },
+        {
+          "id": "nb0597e5e790fe33",
+          "title": "\"SHA-256 is fine for passwords.\"",
+          "markdown": "**Reality:** Passwords need adaptive/memory-hard KDFs, not fast digests.",
+          "notes": "Reality: Passwords need adaptive/memory-hard KDFs, not fast digests.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Passwords need adaptive/memory-hard KDFs, not fast digests.",
+          "expanded": false
+        },
+        {
+          "id": "ne554d647a70b4b4",
+          "title": "\"Nonce reuse is a minor issue.\"",
+          "markdown": "**Reality:** In AEAD modes like GCM, nonce reuse can be catastrophic.",
+          "notes": "Reality: In AEAD modes like GCM, nonce reuse can be catastrophic.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: In AEAD modes like GCM, nonce reuse can be catastrophic.",
+          "expanded": false
+        },
+        {
+          "id": "n6db9a64258e49fb",
+          "title": "\"Custom crypto is okay if code-reviewed.\"",
+          "markdown": "**Reality:** Bespoke crypto protocols fail in subtle ways; use vetted standards.",
+          "notes": "Reality: Bespoke crypto protocols fail in subtle ways; use vetted standards.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Bespoke crypto protocols fail in subtle ways; use vetted standards.",
+          "expanded": false
+        },
+        {
+          "id": "nb675ec5651259b7",
+          "title": "\"Rotation once a year is enough.\"",
+          "markdown": "**Reality:** Rotation cadence should match risk and support emergency revocation.",
+          "notes": "Reality: Rotation cadence should match risk and support emergency revocation.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Rotation cadence should match risk and support emergency revocation.",
+          "expanded": false
+        },
+        {
+          "id": "nad4975bb65c4857",
+          "title": "\"TLS means app crypto decisions do not matter.\"",
+          "markdown": "**Reality:** TLS protects transport; stored data and token logic still need correct crypto.",
+          "notes": "Reality: TLS protects transport; stored data and token logic still need correct crypto.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: TLS protects transport; stored data and token logic still need...",
+          "expanded": false
+        },
+        {
+          "id": "nfc0badbc0aab698",
+          "title": "\"JWT signatures are always validated by libraries.\"",
+          "markdown": "**Reality:** Misconfiguration and unsafe options can bypass verification.",
+          "notes": "Reality: Misconfiguration and unsafe options can bypass verification.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Misconfiguration and unsafe options can bypass verification.",
+          "expanded": false
+        },
+        {
+          "id": "nb341b1c7bce8d84",
+          "title": "\"Pepper replaces salt.\"",
+          "markdown": "**Reality:** Salt and pepper serve different purposes; both may be needed.",
+          "notes": "Reality: Salt and pepper serve different purposes; both may be needed.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Salt and pepper serve different purposes; both may be needed.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \"Using AES means we are secure.\""
+    },
+    {
+      "id": "n0a5f98d98f5ccaf",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nb533b2c67f042ee",
+          "title": "60-second answer",
+          "markdown": "**Q: What crypto mistakes do you watch for first?**\n\n**A:** I check for AEAD misuse (especially nonce reuse), weak password hashing choices, key material in code/logs, and unsafe signature verification logic. Most incidents are implementation failures, not broken primitives.",
+          "notes": "Q: What crypto mistakes do you watch for first?\n\nA: I check for AEAD misuse (especially nonce reuse), weak password hashing choices, key material in code/logs, and unsafe signature verification logic. Most incidents are implementation failures, not broken primitives.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Q: What crypto mistakes do you watch for first?",
+          "expanded": false
+        },
+        {
+          "id": "n18e6fde120e9e48",
+          "title": "Core questions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n49b703131daab9e",
+              "title": "Q: Why is GCM nonce reuse dangerous?",
+              "markdown": "**A:** Reusing a nonce with the same key can leak relationships between plaintexts and can break integrity guarantees.",
+              "notes": "A: Reusing a nonce with the same key can leak relationships between plaintexts and can break integrity guarantees.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Reusing a nonce with the same key can leak relationships between...",
+              "expanded": false
+            },
+            {
+              "id": "ndecddc64e187fcb",
+              "title": "Q: Is SHA-256 okay for password storage?",
+              "markdown": "**A:** No. Use memory-hard or adaptive password KDFs (Argon2id/bcrypt/scrypt/PBKDF2 with tuned parameters).",
+              "notes": "A: No. Use memory-hard or adaptive password KDFs (Argon2id/bcrypt/scrypt/PBKDF2 with tuned parameters).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            },
+            {
+              "id": "nf275c170f046439",
+              "title": "Q: CBC + HMAC still acceptable?",
+              "markdown": "**A:** It can be safe if correctly implemented (encrypt-then-MAC), but AEAD reduces implementation risk.",
+              "notes": "A: It can be safe if correctly implemented (encrypt-then-MAC), but AEAD reduces implementation risk.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: It can be safe if correctly implemented (encrypt-then-MAC), but AEAD...",
+              "expanded": false
+            },
+            {
+              "id": "ncdbda5c58fd15b8",
+              "title": "Q: How do you roll keys safely?",
+              "markdown": "**A:** Version keys, support dual-decrypt windows, re-encrypt gradually, and monitor failures.",
+              "notes": "A: Version keys, support dual-decrypt windows, re-encrypt gradually, and monitor failures.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Version keys, support dual-decrypt windows, re-encrypt gradually, and...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: Why is GCM nonce reuse dangerous?",
+          "expanded": false
+        },
+        {
+          "id": "n59a4082eb356d7b",
+          "title": "Mock ladder",
+          "markdown": "| Level | Prompt |\n|-------|--------|\n| Junior | Encryption vs hashing |\n| Mid | Password KDF choice |\n| Senior | Nonce/key management controls |\n| Staff | Crypto policy governance |",
+          "notes": "| Level | Prompt |\n|-------|--------|\n| Junior | Encryption vs hashing |\n| Mid | Password KDF choice |\n| Senior | Nonce/key management controls |\n| Staff | Crypto policy governance |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Level | Prompt | |-------|--------| | Junior | Encryption vs hashing | |...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 60-second answer"
+    }
+  ],
+  "topicId": "crypto-pitfalls-in-practice",
+  "name": "Crypto Pitfalls in Practice",
+  "structure": "logic-right",
+  "blurb": "Crypto pitfalls in practice are the implementation mistakes that turn strong..."
+}

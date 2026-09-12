@@ -19,6 +19,7 @@ def main() -> None:
     static: list[tuple[str, str, str]] = [
         (f"{BASE}/", "weekly", "1.0"),
         (f"{BASE}/interview/", "weekly", "0.95"),
+        (f"{BASE}/how-to-use.html", "monthly", "0.9"),
         (f"{BASE}/threatmodel/", "monthly", "0.6"),
         (f"{BASE}/zerotohero/", "monthly", "0.6"),
         (f"{BASE}/source-code-review/", "monthly", "0.6"),

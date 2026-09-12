@@ -1,0 +1,615 @@
+{
+  "id": "n7b68f34a4acf056",
+  "title": "WebSockets and SSE Security",
+  "markdown": "**WebSockets** and **Server-Sent Events (SSE)** create **long-lived HTTP-derived channels** where authentication, **origin policy**, and **per-message authorization** are easy to get wrong. Classic failures include **Cross-Site WebSocket Hijacking (CSWSH)**, **cookie-only auth** without origin checks, **tenant channel confusion**, and **missing rate limits** on persistent connections. SSE shares many issues but is **unidirectional** and often **EventSource**-based with simpler CSRF surface.\n\nThis guide follows the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+  "notes": "WebSockets and Server-Sent Events (SSE) create long-lived HTTP-derived channels where authentication, origin policy, and per-message authorization are easy to get wrong. Classic failures include Cross-Site WebSocket Hijacking (CSWSH), cookie-only auth without origin checks, tenant channel confusion, and missing rate limits on persistent connections. SSE shares many issues but is unidirectional and often EventSource-based with simpler CSRF surface.\n\nThis guide follows the Content Mastery Framework.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "ncbb3b729a185b72",
+      "title": "At a glance",
+      "markdown": "**WebSockets** and **Server-Sent Events (SSE)** create **long-lived HTTP-derived channels** where authentication, **origin policy**, and **per-message authorization** are easy to get wrong. Classic failures include **Cross-Site WebSocket Hijacking (CSWSH)**, **cookie-only auth** without origin checks, **tenant channel confusion**, and **missing rate limits** on persistent connections. SSE shares many issues but is **unidirectional** and often **EventSource**-based with simpler CSRF surface.\n\nThis guide follows the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+      "notes": "WebSockets and Server-Sent Events (SSE) create long-lived HTTP-derived channels where authentication, origin policy, and per-message authorization are easy to get wrong. Classic failures include Cross-Site WebSocket Hijacking (CSWSH), cookie-only auth without origin checks, tenant channel confusion, and missing rate limits on persistent connections. SSE shares many issues but is unidirectional and often EventSource-based with simpler CSRF surface.\n\nThis guide follows the Content Mastery Framework.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "WebSockets and Server-Sent Events (SSE) create long-lived HTTP-derived...",
+      "expanded": false
+    },
+    {
+      "id": "nd362b4cf39a2844",
+      "title": "L1 \u2014 Handshake and trust model",
+      "markdown": "**WebSocket upgrade:**\n\n```\nGET /chat HTTP/1.1\nUpgrade: websocket\nConnection: Upgrade\nSec-WebSocket-Key: ...\nOrigin: https://app.example.com\nCookie: session=...\n```\n\nServer responds `101 Switching Protocols` - after this, **framed messages** flow bidirectionally.\n\n**SSE:**\n\n```\nGET /events HTTP/1.1\nAccept: text/event-stream\nCookie: session=...\n```\n\nServer streams `text/event-stream` - **server -> client only**.\n\n**Trust boundary:** Handshake is the last convenient HTTP middleware checkpoint-**authenticate and authorize here**, then **re-validate** on subscription changes.",
+      "notes": "WebSocket upgrade:\n\nGET /chat HTTP/1.1\nUpgrade: websocket\nConnection: Upgrade\nSec-WebSocket-Key: ...\nOrigin: https://app.example.com\nCookie: session=...\n\nServer responds 101 Switching Protocols - after this, framed messages flow bidirectionally.\n\nSSE:\n\nGET /events HTTP/1.1\nAccept: text/event-stream\nCookie: session=...\n\nServer streams text/event-stream - server -> client only.\n\nTrust boundary: Handshake is the last convenient HTTP middleware checkpoint-authenticate and authorize here, then re-validate on subscription changes.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "WebSocket upgrade: GET /chat HTTP/1.1 Upgrade: websocket Connection: Upgrade...",
+      "expanded": false
+    },
+    {
+      "id": "nc9183aee9c436eb",
+      "title": "Attacks & abuse",
+      "markdown": "",
+      "notes": "",
+      "expanded": true,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n1b112e82c9822b3",
+          "title": "L2 \u2014 Cross-Site WebSocket Hijacking (CSWSH)",
+          "markdown": "When the app uses **cookie-based sessions** and the server **does not validate Origin**, a malicious page can open:\n\n```javascript\n// Attacker page at evil.com\nconst ws = new WebSocket(\"wss://bank.example.com/ws/transfers\");\n// Browser attaches victim's cookies; attacker receives/sends on victim session\n```\n\n**Mitigations:**",
+          "notes": "When the app uses cookie-based sessions and the server does not validate Origin, a malicious page can open:\n\n// Attacker page at evil.com\nconst ws = new WebSocket(\"wss://bank.example.com/ws/transfers\");\n// Browser attaches victim's cookies; attacker receives/sends on victim session\n\nMitigations:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nb90b4ac09f08933",
+              "title": "Validate Origin header against allowlist (strict).",
+              "markdown": "- Validate Origin header against allowlist (strict).",
+              "notes": "Validate Origin header against allowlist (strict).",
+              "blurb": "Validate Origin header against allowlist (strict).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb1ba5b73c3b5eb7",
+              "title": "Prefer token in header/subprotocol (Sec-WebSocket-Protocol, custom header via cookie-les",
+              "markdown": "- Prefer token in header/subprotocol (Sec-WebSocket-Protocol, custom header via cookie-les",
+              "notes": "Prefer token in header/subprotocol (Sec-WebSocket-Protocol, custom header via cookie-les",
+              "blurb": "Prefer token in header/subprotocol (Sec-WebSocket-Protocol, custom header...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf7ffa18b5cca946",
+              "title": "SameSite cookies (Strict/Lax) reduce cross-site cookie send-not sufficient alone.",
+              "markdown": "- SameSite cookies (Strict/Lax) reduce cross-site cookie send-not sufficient alone.",
+              "notes": "SameSite cookies (Strict/Lax) reduce cross-site cookie send-not sufficient alone.",
+              "blurb": "SameSite cookies (Strict/Lax) reduce cross-site cookie send-not sufficient...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf537a756c1e269b",
+              "title": "CSRF token for handshake where architecture permits.",
+              "markdown": "- CSRF token for handshake where architecture permits.",
+              "notes": "CSRF token for handshake where architecture permits.",
+              "blurb": "CSRF token for handshake where architecture permits.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "When the app uses cookie-based sessions and the server does not validate...",
+          "expanded": false
+        },
+        {
+          "id": "nadc20d9ad8f54bf",
+          "title": "L2 \u2014 Abuse: floods, fan-out, resource exhaustion",
+          "markdown": "| Attack | Mitigation |\n|--------|------------|\n| **Connection spam** | Per-IP limits, CAPTCHA on handshake, **max connections per user** |\n| **Message flood** | Rate limiter per connection, backpressure, disconnect |\n| **Large frames** | Max frame size; **compression** bomb awareness |\n| **Fan-out cost** | Quotas on channels; monitor publish QPS |\n\n**Infrastructure:** **Sticky sessions** vs **pub/sub backplane** (Redis, Kafka)-ensure **authZ** consistent across nodes.",
+          "notes": "| Attack | Mitigation |\n|--------|------------|\n| Connection spam | Per-IP limits, CAPTCHA on handshake, max connections per user |\n| Message flood | Rate limiter per connection, backpressure, disconnect |\n| Large frames | Max frame size; compression bomb awareness |\n| Fan-out cost | Quotas on channels; monitor publish QPS |\n\nInfrastructure: Sticky sessions vs pub/sub backplane (Redis, Kafka)-ensure authZ consistent across nodes.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Attack | Mitigation | |--------|------------| | Connection spam | Per-IP...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes L2 \u2014 Cross-Site WebSocket Hijacking (CSWSH)"
+    },
+    {
+      "id": "n8fc35ce5922bba6",
+      "title": "L3 \u2014 Detection",
+      "markdown": "Metrics: connections/user, subscribe denials, abnormal Origin values, frame rate.",
+      "notes": "Metrics: connections/user, subscribe denials, abnormal Origin values, frame rate.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n0e7f44d65580e51",
+          "title": "Metrics: connections/user, subscribe denials, abnormal Origin values, frame rate.",
+          "markdown": "- Metrics: connections/user, subscribe denials, abnormal Origin values, frame rate.",
+          "notes": "Metrics: connections/user, subscribe denials, abnormal Origin values, frame rate.",
+          "blurb": "Metrics: connections/user, subscribe denials, abnormal Origin values, frame...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nb55d9ee92dbf59e",
+          "title": "Logs: 4401/4403 close codes, auth failures at handshake.",
+          "markdown": "- Logs: 4401/4403 close codes, auth failures at handshake.",
+          "notes": "Logs: 4401/4403 close codes, auth failures at handshake.",
+          "blurb": "Logs: 4401/4403 close codes, auth failures at handshake.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n606c144aba2f784",
+          "title": "Correlate with API abuse and credential stuffing.",
+          "markdown": "- Correlate with API abuse and credential stuffing.",
+          "notes": "Correlate with API abuse and credential stuffing.",
+          "blurb": "Correlate with API abuse and credential stuffing.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Metrics: connections/user, subscribe denials, abnormal Origin values, frame...",
+      "expanded": true
+    },
+    {
+      "id": "nf233657dee15b7f",
+      "title": "Labs / references",
+      "markdown": "PortSwigger Cross-site WebSocket hijacking lab - OWASP WebSocket Security Cheat Sheet - RFC 6455 (WebSocket), HTML SSE spec",
+      "notes": "PortSwigger Cross-site WebSocket hijacking lab - OWASP WebSocket Security Cheat Sheet - RFC 6455 (WebSocket), HTML SSE spec",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n1f03c7c5a1b8933",
+          "title": "PortSwigger Cross-site WebSocket hijacking lab",
+          "markdown": "- PortSwigger Cross-site WebSocket hijacking lab",
+          "notes": "PortSwigger Cross-site WebSocket hijacking lab",
+          "blurb": "PortSwigger Cross-site WebSocket hijacking lab",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n65519f3a58cb243",
+          "title": "OWASP WebSocket Security Cheat Sheet",
+          "markdown": "- OWASP WebSocket Security Cheat Sheet",
+          "notes": "OWASP WebSocket Security Cheat Sheet",
+          "blurb": "OWASP WebSocket Security Cheat Sheet",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nb22fd185f4a6279",
+          "title": "RFC 6455 (WebSocket), HTML SSE spec",
+          "markdown": "- RFC 6455 (WebSocket), HTML SSE spec",
+          "notes": "RFC 6455 (WebSocket), HTML SSE spec",
+          "blurb": "RFC 6455 (WebSocket), HTML SSE spec",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "PortSwigger Cross-site WebSocket hijacking lab - OWASP WebSocket Security...",
+      "expanded": true
+    },
+    {
+      "id": "n7b4020cac87ecc3",
+      "title": "Code examples",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nb0cb6a745c604e4",
+          "title": "L2 \u2014 Authentication patterns",
+          "markdown": "| Pattern | Risk | Notes |\n|---------|------|-------|\n| **Cookie only** | CSWSH | Add Origin check + SameSite |\n| **Query string token** | Referer/log leakage | Short TTL; rotate; avoid if possible |\n| **First-message auth** | Unauthenticated window | Close quickly if auth fails; rate limit |\n| **JWT in subprotocol/header** | Implementation-specific | Validate **aud, exp, signature** every reconnect |\n\n**Reconnect storms:** Clients reconnect with **expired JWT**-handle **graceful reauth** without **silent anonymous** mode.",
+          "notes": "| Pattern | Risk | Notes |\n|---------|------|-------|\n| Cookie only | CSWSH | Add Origin check + SameSite |\n| Query string token | Referer/log leakage | Short TTL; rotate; avoid if possible |\n| First-message auth | Unauthenticated window | Close quickly if auth fails; rate limit |\n| JWT in subprotocol/header | Implementation-specific | Validate aud, exp, signature every reconnect |\n\nReconnect storms: Clients reconnect with expired JWT-handle graceful reauth without silent anonymous mode.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Pattern | Risk | Notes | |---------|------|-------| | Cookie only | CSWSH...",
+          "expanded": false
+        },
+        {
+          "id": "n59db9c7b7148965",
+          "title": "L2 \u2014 Authorization at message and channel level",
+          "markdown": "**Anti-pattern:** Auth at handshake only, then **subscribe to `/tenant/{id}`** with client-supplied ID.\n\n**Correct:**",
+          "notes": "Anti-pattern: Auth at handshake only, then subscribe to /tenant/{id} with client-supplied ID.\n\nCorrect:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n54f01b4c61c4678",
+              "title": "Map connection to principal + tenant from token claims.",
+              "markdown": "- Map connection to principal + tenant from token claims.",
+              "notes": "Map connection to principal + tenant from token claims.",
+              "blurb": "Map connection to principal + tenant from token claims.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc3a8d9a1542d4cd",
+              "title": "Server-side channel ACL - client requests subscribe:orders, server verifies membership.",
+              "markdown": "- Server-side channel ACL - client requests subscribe:orders, server verifies membership.",
+              "notes": "Server-side channel ACL - client requests subscribe:orders, server verifies membership.",
+              "blurb": "Server-side channel ACL - client requests subscribe:orders, server verifies...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n42c6acb52297c9a",
+              "title": "Re-check authZ on sensitive actions (admin broadcast, payment confirmation).",
+              "markdown": "- Re-check authZ on sensitive actions (admin broadcast, payment confirmation).",
+              "notes": "Re-check authZ on sensitive actions (admin broadcast, payment confirmation).",
+              "blurb": "Re-check authZ on sensitive actions (admin broadcast, payment confirmation).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Anti-pattern: Auth at handshake only, then subscribe to /tenant/{id} with...",
+          "expanded": false
+        },
+        {
+          "id": "n6a570099b659868",
+          "title": "L2 \u2014 SSE-specific issues",
+          "markdown": "EventSource sends cookies on cross-origin if CORS allows-Origin and CORS must be tight.",
+          "notes": "EventSource sends cookies on cross-origin if CORS allows-Origin and CORS must be tight.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "na4268097aed444e",
+              "title": "EventSource sends cookies on cross-origin if CORS allows-Origin and CORS must be tight.",
+              "markdown": "- EventSource sends cookies on cross-origin if CORS allows-Origin and CORS must be tight.",
+              "notes": "EventSource sends cookies on cross-origin if CORS allows-Origin and CORS must be tight.",
+              "blurb": "EventSource sends cookies on cross-origin if CORS allows-Origin and CORS...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nab7e05d36139c42",
+              "title": "No custom headers in classic EventSource-often cookie auth -> same CSWSH class if miscon",
+              "markdown": "- No custom headers in classic EventSource-often cookie auth -> same CSWSH class if miscon",
+              "notes": "No custom headers in classic EventSource-often cookie auth -> same CSWSH class if miscon",
+              "blurb": "No custom headers in classic EventSource-often cookie auth -> same CSWSH...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8675ecc33615e4c",
+              "title": "Fetch API + ReadableStream alternative allows headers at cost of complexity.",
+              "markdown": "- Fetch API + ReadableStream alternative allows headers at cost of complexity.",
+              "notes": "Fetch API + ReadableStream alternative allows headers at cost of complexity.",
+              "blurb": "Fetch API + ReadableStream alternative allows headers at cost of complexity.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "EventSource sends cookies on cross-origin if CORS allows-Origin and CORS...",
+          "expanded": false
+        },
+        {
+          "id": "n0a425a81f982fa3",
+          "title": "L2 \u2014 Injection and data handling",
+          "markdown": "Message content may reach HTML/DOM - treat as untrusted (XSS via WS message).",
+          "notes": "Message content may reach HTML/DOM - treat as untrusted (XSS via WS message).",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n05f7ad93a8c60d3",
+              "title": "Message content may reach HTML/DOM - treat as untrusted (XSS via WS message).",
+              "markdown": "- Message content may reach HTML/DOM - treat as untrusted (XSS via WS message).",
+              "notes": "Message content may reach HTML/DOM - treat as untrusted (XSS via WS message).",
+              "blurb": "Message content may reach HTML/DOM - treat as untrusted (XSS via WS message).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ncf73fcbe3a703a4",
+              "title": "JSON parsing - schema validate; size limits per frame.",
+              "markdown": "- JSON parsing - schema validate; size limits per frame.",
+              "notes": "JSON parsing - schema validate; size limits per frame.",
+              "blurb": "JSON parsing - schema validate; size limits per frame.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ncb0f1b1ccf12233",
+              "title": "Server-side publish endpoints protected from SSRF/open relay (don't let users broadcast",
+              "markdown": "- Server-side publish endpoints protected from SSRF/open relay (don't let users broadcast",
+              "notes": "Server-side publish endpoints protected from SSRF/open relay (don't let users broadcast",
+              "blurb": "Server-side publish endpoints protected from SSRF/open relay (don't let...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Message content may reach HTML/DOM - treat as untrusted (XSS via WS message).",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes L2 \u2014 Authentication patterns"
+    },
+    {
+      "id": "n3e5d57ebc0367dc",
+      "title": "WebSocket vs SSE (interview compare)",
+      "markdown": "| | WebSocket | SSE |\n|---|-----------|-----|\n| Direction | Bidirectional | Server -> client |\n| Browser auth headers | Limited | Limited (EventSource) |\n| CSWSH risk with cookies | High if Origin unchecked | Similar with CORS+cookies |\n| Use case | Chat, gaming, collaborative | Live feeds, notifications |",
+      "notes": "| | WebSocket | SSE |\n|---|-----------|-----|\n| Direction | Bidirectional | Server -> client |\n| Browser auth headers | Limited | Limited (EventSource) |\n| CSWSH risk with cookies | High if Origin unchecked | Similar with CORS+cookies |\n| Use case | Chat, gaming, collaborative | Live feeds, notifications |",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| | WebSocket | SSE | |---|-----------|-----| | Direction | Bidirectional |...",
+      "expanded": false
+    },
+    {
+      "id": "nb73e480c80c6fc8",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nfe74f22ac0b3a12",
+          "title": "Quick reference",
+          "markdown": "Authenticate handshake explicitly.",
+          "notes": "Authenticate handshake explicitly.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n5a6820a02acb5eb",
+              "title": "Authenticate handshake explicitly.",
+              "markdown": "- Authenticate handshake explicitly.",
+              "notes": "Authenticate handshake explicitly.",
+              "blurb": "Authenticate handshake explicitly.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc4bf2b6df8ec88a",
+              "title": "Validate origin and session context.",
+              "markdown": "- Validate origin and session context.",
+              "notes": "Validate origin and session context.",
+              "blurb": "Validate origin and session context.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n06eee2349e96b45",
+              "title": "Enforce message-level authorization.",
+              "markdown": "- Enforce message-level authorization.",
+              "notes": "Enforce message-level authorization.",
+              "blurb": "Enforce message-level authorization.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb5957646f8aa339",
+              "title": "Add rate limits, quotas, and disconnect policies.",
+              "markdown": "- Add rate limits, quotas, and disconnect policies.",
+              "notes": "Add rate limits, quotas, and disconnect policies.",
+              "blurb": "Add rate limits, quotas, and disconnect policies.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n996ee1246cd98b5",
+              "title": "Monitor unusual connection/subscription patterns.",
+              "markdown": "- Monitor unusual connection/subscription patterns.",
+              "notes": "Monitor unusual connection/subscription patterns.",
+              "blurb": "Monitor unusual connection/subscription patterns.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Authenticate handshake explicitly.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Quick reference"
+    },
+    {
+      "id": "n2328ef2e5f36a3d",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nc1147d6771eb65a",
+          "title": "\"WebSockets inherit REST security automatically.\"",
+          "markdown": "**Reality:** Persistent channels need explicit auth and authorization design.",
+          "notes": "Reality: Persistent channels need explicit auth and authorization design.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Persistent channels need explicit auth and authorization design.",
+          "expanded": false
+        },
+        {
+          "id": "naf2f2ce895bbb9b",
+          "title": "\"If upgrade is authenticated, every message is safe.\"",
+          "markdown": "**Reality:** Message-level authZ still matters for multi-tenant actions.",
+          "notes": "Reality: Message-level authZ still matters for multi-tenant actions.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Message-level authZ still matters for multi-tenant actions.",
+          "expanded": false
+        },
+        {
+          "id": "n811874af022f98a",
+          "title": "\"SSE is read-only so low risk.\"",
+          "markdown": "**Reality:** Data exposure and unauthorized subscriptions are still critical.",
+          "notes": "Reality: Data exposure and unauthorized subscriptions are still critical.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Data exposure and unauthorized subscriptions are still critical.",
+          "expanded": false
+        },
+        {
+          "id": "n8903e9027fd112d",
+          "title": "\"Origin checks are optional for WS.\"",
+          "markdown": "**Reality:** Missing origin validation enables cross-site abuse patterns.",
+          "notes": "Reality: Missing origin validation enables cross-site abuse patterns.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Missing origin validation enables cross-site abuse patterns.",
+          "expanded": false
+        },
+        {
+          "id": "na0bc8d3fe521238",
+          "title": "\"Realtime channels do not need rate limits.\"",
+          "markdown": "**Reality:** Flooding and fan-out abuse can degrade service quickly.",
+          "notes": "Reality: Flooding and fan-out abuse can degrade service quickly.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Flooding and fan-out abuse can degrade service quickly.",
+          "expanded": false
+        },
+        {
+          "id": "n9320c3e56c88002",
+          "title": "\"JWT expiry doesn\u2019t matter after connect.\"",
+          "markdown": "**Reality:** Long-lived connections need reauth/refresh handling.",
+          "notes": "Reality: Long-lived connections need reauth/refresh handling.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Long-lived connections need reauth/refresh handling.",
+          "expanded": false
+        },
+        {
+          "id": "n9bcb50332168729",
+          "title": "\"Private channel names are enough protection.\"",
+          "markdown": "**Reality:** Obscurity is not authorization.",
+          "notes": "Reality: Obscurity is not authorization.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Obscurity is not authorization.",
+          "expanded": false
+        },
+        {
+          "id": "n3548bccd91fe524",
+          "title": "\"TLS alone solves realtime security.\"",
+          "markdown": "**Reality:** Transport encryption does not fix authZ or abuse logic flaws.",
+          "notes": "Reality: Transport encryption does not fix authZ or abuse logic flaws.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Transport encryption does not fix authZ or abuse logic flaws.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \"WebSockets inherit REST security automatically.\""
+    },
+    {
+      "id": "n8f47cfff6c9a6ff",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n88a0db069c3cf2e",
+          "title": "60-second answer",
+          "markdown": "**Q: What is Cross-Site WebSocket Hijacking?**\n\n**A:** When a site uses **cookie-based auth** on WebSockets without validating **Origin**, an attacker page can open `wss://victim.app/socket` and the browser sends the victim's cookies-the attacker rides the victim session. Fix with **strict Origin allowlist**, **SameSite cookies**, and prefer **token-based auth** with short TTL; always **authorize subscriptions** server-side.",
+          "notes": "Q: What is Cross-Site WebSocket Hijacking?\n\nA: When a site uses cookie-based auth on WebSockets without validating Origin, an attacker page can open wss://victim.app/socket and the browser sends the victim's cookies-the attacker rides the victim session. Fix with strict Origin allowlist, SameSite cookies, and prefer token-based auth with short TTL; always authorize subscriptions server-side.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n120196f79e83130",
+              "title": "Cookie auth on WebSockets\u2014safe?",
+              "markdown": "**A:** Only with **Origin validation** + **SameSite** + **channel ACLs**-prefer **token in first message** or subprotocol with caveats.",
+              "notes": "A: Only with Origin validation + SameSite + channel ACLs-prefer token in first message or subprotocol with caveats.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Only with Origin validation + SameSite + channel ACLs-prefer token in...",
+              "expanded": false
+            },
+            {
+              "id": "ne7c3c2af41b3ed7",
+              "title": "WebSocket vs SSE security?",
+              "markdown": "**A:** Both need **auth at handshake**; SSE often uses cookies -> CSWSH/CORS issues; WebSocket adds **bidirectional abuse** (client flood).",
+              "notes": "A: Both need auth at handshake; SSE often uses cookies -> CSWSH/CORS issues; WebSocket adds bidirectional abuse (client flood).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Both need auth at handshake; SSE often uses cookies -> CSWSH/CORS issues;...",
+              "expanded": false
+            },
+            {
+              "id": "nda73685e8b58896",
+              "title": "How authorize pub/sub channels?",
+              "markdown": "**A:** Map connection to **principal/tenant from token**; never trust client-supplied tenant ID alone.",
+              "notes": "A: Map connection to principal/tenant from token; never trust client-supplied tenant ID alone.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Map connection to principal/tenant from token; never trust...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Q: What is Cross-Site WebSocket Hijacking?",
+          "expanded": false
+        },
+        {
+          "id": "nf54ad21bbf5fbdf",
+          "title": "Authoritative references",
+          "markdown": "- OWASP WebSocket Security Cheat Sheet\n- RFC 6455",
+          "notes": "- OWASP WebSocket Security Cheat Sheet\n- RFC 6455",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "OWASP WebSocket Security Cheat Sheet - RFC 6455",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 60-second answer"
+    }
+  ],
+  "topicId": "websockets-and-sse-security",
+  "name": "WebSockets and SSE Security",
+  "structure": "logic-right",
+  "blurb": "WebSockets and Server-Sent Events (SSE) create long-lived HTTP-derived..."
+}

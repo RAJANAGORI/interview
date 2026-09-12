@@ -1,0 +1,1474 @@
+{
+  "id": "n9dab0f5ead3b7fb",
+  "title": "File Upload Security",
+  "markdown": "**Insecure file upload** lets attackers place **malicious or unexpected content** where the application or **downstream processors** (image libraries, antivirus, document parsers, **ImageMagick**, **PDF** engines) **execute** or **mis-handle** it-leading to **RCE**, **stored XSS**, **SSRF**, **path traversal**, **quota abuse**, and **malware distribution**. Defenses combine **allowlisted types**, **content validation**, **safe storage**, **sandboxed re-encoding**, and **least privilege** on **execution** paths.\n\nAligned with **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+  "notes": "Insecure file upload lets attackers place malicious or unexpected content where the application or downstream processors (image libraries, antivirus, document parsers, ImageMagick, PDF engines) execute or mis-handle it-leading to RCE, stored XSS, SSRF, path traversal, quota abuse, and malware distribution. Defenses combine allowlisted types, content validation, safe storage, sandboxed re-encoding, and least privilege on execution paths.\n\nAligned with Content Mastery Framework.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "n6a32017ffb459d0",
+      "title": "At a glance",
+      "markdown": "**Insecure file upload** lets attackers place **malicious or unexpected content** where the application or **downstream processors** (image libraries, antivirus, document parsers, **ImageMagick**, **PDF** engines) **execute** or **mis-handle** it-leading to **RCE**, **stored XSS**, **SSRF**, **path traversal**, **quota abuse**, and **malware distribution**. Defenses combine **allowlisted types**, **content validation**, **safe storage**, **sandboxed re-encoding**, and **least privilege** on **execution** paths.\n\nAligned with **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+      "notes": "Insecure file upload lets attackers place malicious or unexpected content where the application or downstream processors (image libraries, antivirus, document parsers, ImageMagick, PDF engines) execute or mis-handle it-leading to RCE, stored XSS, SSRF, path traversal, quota abuse, and malware distribution. Defenses combine allowlisted types, content validation, safe storage, sandboxed re-encoding, and least privilege on execution paths.\n\nAligned with Content Mastery Framework.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Insecure file upload lets attackers place malicious or unexpected content...",
+      "expanded": false
+    },
+    {
+      "id": "ncbb40685a686b4c",
+      "title": "Attacks & abuse",
+      "markdown": "",
+      "notes": "",
+      "expanded": true,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n522432346b2dcd4",
+          "title": "L2 \u2014 Attack patterns",
+          "markdown": "| Pattern | Mechanism |\n|---------|-----------|\n| **Webshell** | `.php`, `.jsp`, `.aspx` uploaded into **webroot** or **interpreted** path |\n| **Double extension** | `report.pdf.php`, `shell.jpg.php` (server-dependent) |\n| **Null byte** (legacy) | `shell.php%00.jpg` |\n| **Polyglot** | File valid as **image** and **script** on weak parsers |\n| **SVG/HTML** | Stored **XSS** when served inline with **`text/html`** or weak CSP |\n| **Zip-slip** | Archive extracts **`../../../etc/cron.d/evil`** |\n| **ImageMagick / delegates** | **MVG**, **MSL** abuse -> **command** execution (**ImageTragick** class) |\n| **Metadata processors** | EXIF tools, **ffmpeg** **SSRF** or **RCE** on old builds |\n| **Office/XML** | **XXE**, macros (less \"upload\" on web, common in **assessment**) |",
+          "notes": "| Pattern | Mechanism |\n|---------|-----------|\n| Webshell | .php, .jsp, .aspx uploaded into webroot or interpreted path |\n| Double extension | report.pdf.php, shell.jpg.php (server-dependent) |\n| Null byte (legacy) | shell.php%00.jpg |\n| Polyglot | File valid as image and script on weak parsers |\n| SVG/HTML | Stored XSS when served inline with text/html or weak CSP |\n| Zip-slip | Archive extracts ../../../etc/cron.d/evil |\n| ImageMagick / delegates | MVG, MSL abuse -> command execution (ImageTragick class) |\n| Metadata processors | EXIF tools, ffmpeg SSRF or RCE on old builds |\n| Office/XML | XXE, macros (less \"upload\" on web, common in assessment) |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Pattern | Mechanism | |---------|-----------| | Webshell | .php, .jsp,...",
+          "expanded": false
+        },
+        {
+          "id": "nfb1983090827571",
+          "title": "L4 \u2014 Object storage and signed URL pitfalls",
+          "markdown": "In cloud-native systems, most failures are around policy, not extension checks:",
+          "notes": "In cloud-native systems, most failures are around policy, not extension checks:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n3c5eca141a6cbe1",
+              "title": "Over-broad bucket policy (GetObject public on upload prefix).",
+              "markdown": "- Over-broad bucket policy (GetObject public on upload prefix).",
+              "notes": "Over-broad bucket policy (GetObject public on upload prefix).",
+              "blurb": "Over-broad bucket policy (GetObject public on upload prefix).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ne72631126adcaee",
+              "title": "Long-lived signed URLs that outlive business need.",
+              "markdown": "- Long-lived signed URLs that outlive business need.",
+              "notes": "Long-lived signed URLs that outlive business need.",
+              "blurb": "Long-lived signed URLs that outlive business need.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb249adbc85a08d8",
+              "title": "Missing response header controls (Content-Type, Content-Disposition) on signed responses",
+              "markdown": "- Missing response header controls (Content-Type, Content-Disposition) on signed responses",
+              "notes": "Missing response header controls (Content-Type, Content-Disposition) on signed responses",
+              "blurb": "Missing response header controls (Content-Type, Content-Disposition) on...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "naba2fb07c774096",
+              "title": "Direct browser upload keys allowing path traversal-like key prefixes.",
+              "markdown": "- Direct browser upload keys allowing path traversal-like key prefixes.",
+              "notes": "Direct browser upload keys allowing path traversal-like key prefixes.",
+              "blurb": "Direct browser upload keys allowing path traversal-like key prefixes.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd87833dfb548bf9",
+              "title": "Strict key-prefix policy per tenant and per content class.",
+              "markdown": "- Strict key-prefix policy per tenant and per content class.",
+              "notes": "Strict key-prefix policy per tenant and per content class.",
+              "blurb": "Strict key-prefix policy per tenant and per content class.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0c7bd05966db202",
+              "title": "Short URL TTL + one-time token when feasible.",
+              "markdown": "- Short URL TTL + one-time token when feasible.",
+              "notes": "Short URL TTL + one-time token when feasible.",
+              "blurb": "Short URL TTL + one-time token when feasible.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n292ef5560e25fa8",
+              "title": "Force attachment download for untrusted file classes.",
+              "markdown": "- Force attachment download for untrusted file classes.",
+              "notes": "Force attachment download for untrusted file classes.",
+              "blurb": "Force attachment download for untrusted file classes.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na71e78cb37297e5",
+              "title": "Prevent mixed trusted/untrusted content on same domain when possible.",
+              "markdown": "- Prevent mixed trusted/untrusted content on same domain when possible.",
+              "notes": "Prevent mixed trusted/untrusted content on same domain when possible.",
+              "blurb": "Prevent mixed trusted/untrusted content on same domain when possible.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "In cloud-native systems, most failures are around policy, not extension...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes L2 \u2014 Attack patterns"
+    },
+    {
+      "id": "n902885f4f3c1f62",
+      "title": "Defenses",
+      "markdown": "",
+      "notes": "",
+      "expanded": true,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n32872031c4de50e",
+          "title": "L3 \u2014 Mitigations (tiered)",
+          "markdown": "No execution in upload prefix (nginx location, IIS handlers).",
+          "notes": "No execution in upload prefix (nginx location, IIS handlers).",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n815f809dddc913a",
+              "title": "No execution in upload prefix (nginx location, IIS handlers).",
+              "markdown": "- No execution in upload prefix (nginx location, IIS handlers).",
+              "notes": "No execution in upload prefix (nginx location, IIS handlers).",
+              "blurb": "No execution in upload prefix (nginx location, IIS handlers).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n1a7b8147db5b943",
+              "title": "Allowlist + re-encode.",
+              "markdown": "- Allowlist + re-encode.",
+              "notes": "Allowlist + re-encode.",
+              "blurb": "Allowlist + re-encode.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n4f07f729f654eab",
+              "title": "Separate service account for processor; no shell access.",
+              "markdown": "- Separate service account for processor; no shell access.",
+              "notes": "Separate service account for processor; no shell access.",
+              "blurb": "Separate service account for processor; no shell access.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na3cde5f98629489",
+              "title": "WAF on upload routes (secondary).",
+              "markdown": "- WAF on upload routes (secondary).",
+              "notes": "WAF on upload routes (secondary).",
+              "blurb": "WAF on upload routes (secondary).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n32c2a5744940ed9",
+              "title": "CSP + X-Content-Type-Options: nosniff for any user origin URLs.",
+              "markdown": "- CSP + X-Content-Type-Options: nosniff for any user origin URLs.",
+              "notes": "CSP + X-Content-Type-Options: nosniff for any user origin URLs.",
+              "blurb": "CSP + X-Content-Type-Options: nosniff for any user origin URLs.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "No execution in upload prefix (nginx location, IIS handlers).",
+          "expanded": false
+        },
+        {
+          "id": "n74482fb50d915cb",
+          "title": "L3 \u2014 Polyglot and parser differential defense",
+          "markdown": "A file can be valid for multiple parsers at once (polyglot), or one layer may treat bytes differently than another:",
+          "notes": "A file can be valid for multiple parsers at once (polyglot), or one layer may treat bytes differently than another:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n3438dac229f193b",
+              "title": "Browser sees SVG/HTML and executes script.",
+              "markdown": "- Browser sees SVG/HTML and executes script.",
+              "notes": "Browser sees SVG/HTML and executes script.",
+              "blurb": "Browser sees SVG/HTML and executes script.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n561a91ea91109ef",
+              "title": "CDN/origin infers MIME differently.",
+              "markdown": "- CDN/origin infers MIME differently.",
+              "notes": "CDN/origin infers MIME differently.",
+              "blurb": "CDN/origin infers MIME differently.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n64e492a4d1a94df",
+              "title": "AV scanner accepts file but downstream converter crashes/parses dangerous payloads.",
+              "markdown": "- AV scanner accepts file but downstream converter crashes/parses dangerous payloads.",
+              "notes": "AV scanner accepts file but downstream converter crashes/parses dangerous payloads.",
+              "blurb": "AV scanner accepts file but downstream converter crashes/parses dangerous...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "A file can be valid for multiple parsers at once (polyglot), or one layer...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes L3 \u2014 Mitigations (tiered)"
+    },
+    {
+      "id": "nfa87ef05c7d2f98",
+      "title": "L3 \u2014 Detection",
+      "markdown": "Unexpected extensions in upload dir; web server MIME mis-config.",
+      "notes": "Unexpected extensions in upload dir; web server MIME mis-config.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nff0025c756ee476",
+          "title": "Unexpected extensions in upload dir; web server MIME mis-config.",
+          "markdown": "- Unexpected extensions in upload dir; web server MIME mis-config.",
+          "notes": "Unexpected extensions in upload dir; web server MIME mis-config.",
+          "blurb": "Unexpected extensions in upload dir; web server MIME mis-config.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n3d0077aef26c4f2",
+          "title": "Outbound connections from image worker (SSRF).",
+          "markdown": "- Outbound connections from image worker (SSRF).",
+          "notes": "Outbound connections from image worker (SSRF).",
+          "blurb": "Outbound connections from image worker (SSRF).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n19e445c63c1d903",
+          "title": "Spike in upload size or count (abuse).",
+          "markdown": "- Spike in upload size or count (abuse).",
+          "notes": "Spike in upload size or count (abuse).",
+          "blurb": "Spike in upload size or count (abuse).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Unexpected extensions in upload dir; web server MIME mis-config.",
+      "expanded": true
+    },
+    {
+      "id": "nd95785fa7a78e5b",
+      "title": "Hands-on (authorized)",
+      "markdown": "- **PortSwigger** file upload labs; **OWASP** **WebGoat**; **DVWA**.\n- Build **polyglot** in lab; verify **re-encoding** **neutralizes**.\n\n**Tools:** `file`, `xxd`, **Burp**, **ImageMagick** `identify`, container **seccomp**.",
+      "notes": "- PortSwigger file upload labs; OWASP WebGoat; DVWA.\n- Build polyglot in lab; verify re-encoding neutralizes.\n\nTools: file, xxd, Burp, ImageMagick identify, container seccomp.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "ncdc515ee70626e1",
+          "title": "Junior",
+          "markdown": "- Why is **client** `Content-Type` **untrusted**?",
+          "notes": "- Why is client Content-Type untrusted?",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Why is client Content-Type untrusted?",
+          "expanded": false
+        },
+        {
+          "id": "na07997f8948261d",
+          "title": "Mid",
+          "markdown": "- **Zip-slip** mitigation (safe extract: **canonical** path **prefix** check).",
+          "notes": "- Zip-slip mitigation (safe extract: canonical path prefix check).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Zip-slip mitigation (safe extract: canonical path prefix check).",
+          "expanded": false
+        },
+        {
+          "id": "n0b66e2de20952ef",
+          "title": "Senior",
+          "markdown": "- **Async** **AV** vs **sync** **UX**; **failure** modes.",
+          "notes": "- Async AV vs sync UX; failure modes.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Async AV vs sync UX; failure modes.",
+          "expanded": false
+        },
+        {
+          "id": "n90ec7b2058f1acd",
+          "title": "Staff",
+          "markdown": "- **Global** **user-generated** **content** **CDN**-**XSS** and **malware** **program**.",
+          "notes": "- Global user-generated content CDN-XSS and malware program.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Global user-generated content CDN-XSS and malware program.",
+          "expanded": false
+        }
+      ],
+      "blurb": "PortSwigger file upload labs; OWASP WebGoat; DVWA.",
+      "expanded": false
+    },
+    {
+      "id": "n3fd802e66ecd1c3",
+      "title": "Practice & references",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n02cadd3626372e4",
+          "title": "Authoritative references",
+          "markdown": "OWASP - Unrestricted File Upload cheat sheet - CWE-434 - Unrestricted Upload of Dangerous File Type - CWE-22 - Path traversal (zip-slip)",
+          "notes": "OWASP - Unrestricted File Upload cheat sheet - CWE-434 - Unrestricted Upload of Dangerous File Type - CWE-22 - Path traversal (zip-slip)",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n1629f6ec0750614",
+              "title": "OWASP - Unrestricted File Upload cheat sheet",
+              "markdown": "- OWASP - Unrestricted File Upload cheat sheet",
+              "notes": "OWASP - Unrestricted File Upload cheat sheet",
+              "blurb": "OWASP - Unrestricted File Upload cheat sheet",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n7ee32fd8de1681d",
+              "title": "CWE-434 - Unrestricted Upload of Dangerous File Type",
+              "markdown": "- CWE-434 - Unrestricted Upload of Dangerous File Type",
+              "notes": "CWE-434 - Unrestricted Upload of Dangerous File Type",
+              "blurb": "CWE-434 - Unrestricted Upload of Dangerous File Type",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n65392673ea04916",
+              "title": "CWE-22 - Path traversal (zip-slip)",
+              "markdown": "- CWE-22 - Path traversal (zip-slip)",
+              "notes": "CWE-22 - Path traversal (zip-slip)",
+              "blurb": "CWE-22 - Path traversal (zip-slip)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "OWASP - Unrestricted File Upload cheat sheet - CWE-434 - Unrestricted Upload...",
+          "expanded": false
+        },
+        {
+          "id": "nd1d8d784ee24f45",
+          "title": "Verification checklist",
+          "markdown": "[ ] Allowlist + magic + re-encode explained without reading slides.",
+          "notes": "[ ] Allowlist + magic + re-encode explained without reading slides.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n515695f89c11824",
+              "title": "[ ] Allowlist + magic + re-encode explained without reading slides.",
+              "markdown": "- [ ] Allowlist + magic + re-encode explained without reading slides.",
+              "notes": "[ ] Allowlist + magic + re-encode explained without reading slides.",
+              "blurb": "[ ] Allowlist + magic + re-encode explained without reading slides.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ndd3942fe31ed048",
+              "title": "[ ] One ImageMagick hardening knob named.",
+              "markdown": "- [ ] One ImageMagick hardening knob named.",
+              "notes": "[ ] One ImageMagick hardening knob named.",
+              "blurb": "[ ] One ImageMagick hardening knob named.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n2704402240f9ab2",
+              "title": "[ ] Zip-slip safe extract algorithm sketched.",
+              "markdown": "- [ ] Zip-slip safe extract algorithm sketched.",
+              "notes": "[ ] Zip-slip safe extract algorithm sketched.",
+              "blurb": "[ ] Zip-slip safe extract algorithm sketched.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0f2c00c55020f30",
+              "title": "[ ] Describe the quarantine -> scan -> publish flow and TOCTOU risk.",
+              "markdown": "- [ ] Describe the quarantine -> scan -> publish flow and TOCTOU risk.",
+              "notes": "[ ] Describe the quarantine -> scan -> publish flow and TOCTOU risk.",
+              "blurb": "[ ] Describe the quarantine -> scan -> publish flow and TOCTOU risk.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6cd65bf444cde39",
+              "title": "[ ] Explain one signed URL policy failure and mitigation.",
+              "markdown": "- [ ] Explain one signed URL policy failure and mitigation.",
+              "notes": "[ ] Explain one signed URL policy failure and mitigation.",
+              "blurb": "[ ] Explain one signed URL policy failure and mitigation.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "[ ] Allowlist + magic + re-encode explained without reading slides.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Authoritative references"
+    },
+    {
+      "id": "nb1a01fb5d82b2f2",
+      "title": "Code examples",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n05839ccf3eaf0f3",
+          "title": "L2 \u2014 Validation strategy (layered)",
+          "markdown": "Allowlist extensions and expected magic signatures for the declared class (PNG/JPEG/WebP",
+          "notes": "Allowlist extensions and expected magic signatures for the declared class (PNG/JPEG/WebP",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nab25e2d62486303",
+              "title": "Allowlist extensions and expected magic signatures for the declared class (PNG/JPEG/WebP",
+              "markdown": "- Allowlist extensions and expected magic signatures for the declared class (PNG/JPEG/WebP",
+              "notes": "Allowlist extensions and expected magic signatures for the declared class (PNG/JPEG/WebP",
+              "blurb": "Allowlist extensions and expected magic signatures for the declared class...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n20c5d6c09fe2c99",
+              "title": "Re-encode or transcode through a hardened library (strip metadata; output new bytes).",
+              "markdown": "- Re-encode or transcode through a hardened library (strip metadata; output new bytes).",
+              "notes": "Re-encode or transcode through a hardened library (strip metadata; output new bytes).",
+              "blurb": "Re-encode or transcode through a hardened library (strip metadata; output...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc005b2450e899fb",
+              "title": "Randomize stored names; never echo user filename in path.",
+              "markdown": "- Randomize stored names; never echo user filename in path.",
+              "notes": "Randomize stored names; never echo user filename in path.",
+              "blurb": "Randomize stored names; never echo user filename in path.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5f18c12af80a459",
+              "title": "Store outside web root; serve via app or signed GET to object storage.",
+              "markdown": "- Store outside web root; serve via app or signed GET to object storage.",
+              "notes": "Store outside web root; serve via app or signed GET to object storage.",
+              "blurb": "Store outside web root; serve via app or signed GET to object storage.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ne0a48c462b81603",
+              "title": "Scan (AV, Cuckoo in high-risk) async; block publish until clean if policy requires.",
+              "markdown": "- Scan (AV, Cuckoo in high-risk) async; block publish until clean if policy requires.",
+              "notes": "Scan (AV, Cuckoo in high-risk) async; block publish until clean if policy requires.",
+              "blurb": "Scan (AV, Cuckoo in high-risk) async; block publish until clean if policy...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8465963406f7575",
+              "title": "Size and rate limits; quota per user.",
+              "markdown": "- Size and rate limits; quota per user.",
+              "notes": "Size and rate limits; quota per user.",
+              "blurb": "Size and rate limits; quota per user.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Allowlist extensions and expected magic signatures for the declared class...",
+          "expanded": false
+        },
+        {
+          "id": "n1f2ea217569a3d7",
+          "title": "Code / config examples (illustrative)",
+          "markdown": "**Vulnerable:** save `request.FILES['f']` to `/var/www/uploads/` with **original** name; nginx serves **`.php`**.\n\n**Safer:** write to `s3://bucket/{uuid}`; only **CloudFront** **OAC** with **no** **executable** **MIME**; app serves **download** as `attachment`.",
+          "notes": "Vulnerable: save request.FILES['f'] to /var/www/uploads/ with original name; nginx serves .php.\n\nSafer: write to s3://bucket/{uuid}; only CloudFront OAC with no executable MIME; app serves download as attachment.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Vulnerable: save request.FILES['f'] to /var/www/uploads/ with original name;...",
+          "expanded": false
+        },
+        {
+          "id": "n33d1a58301502b6",
+          "title": "L4 \u2014 Asynchronous scanning race conditions (TOCTOU)",
+          "markdown": "Many systems upload first and scan later; this creates a publication race:",
+          "notes": "Many systems upload first and scan later; this creates a publication race:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n3dec2a32d663e41",
+              "title": "Object is uploaded and immediately reachable via URL.",
+              "markdown": "- Object is uploaded and immediately reachable via URL.",
+              "notes": "Object is uploaded and immediately reachable via URL.",
+              "blurb": "Object is uploaded and immediately reachable via URL.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3df205c8bf20cf8",
+              "title": "Malware verdict arrives seconds later.",
+              "markdown": "- Malware verdict arrives seconds later.",
+              "notes": "Malware verdict arrives seconds later.",
+              "blurb": "Malware verdict arrives seconds later.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n159ff17ce00bfb3",
+              "title": "Attack window exists for download/share before quarantine.",
+              "markdown": "- Attack window exists for download/share before quarantine.",
+              "notes": "Attack window exists for download/share before quarantine.",
+              "blurb": "Attack window exists for download/share before quarantine.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n32eba0d10133edc",
+              "title": "Upload to quarantine bucket/prefix (non-public).",
+              "markdown": "- Upload to quarantine bucket/prefix (non-public).",
+              "notes": "Upload to quarantine bucket/prefix (non-public).",
+              "blurb": "Upload to quarantine bucket/prefix (non-public).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n853c195bc488fb1",
+              "title": "Run AV/CDR and policy checks.",
+              "markdown": "- Run AV/CDR and policy checks.",
+              "notes": "Run AV/CDR and policy checks.",
+              "blurb": "Run AV/CDR and policy checks.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n275e8adb96e1ee3",
+              "title": "Promote to published bucket/prefix only on clean verdict.",
+              "markdown": "- Promote to published bucket/prefix only on clean verdict.",
+              "notes": "Promote to published bucket/prefix only on clean verdict.",
+              "blurb": "Promote to published bucket/prefix only on clean verdict.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5b57d770dc7742b",
+              "title": "Keep immutable verdict metadata with object version ID.",
+              "markdown": "- Keep immutable verdict metadata with object version ID.",
+              "notes": "Keep immutable verdict metadata with object version ID.",
+              "blurb": "Keep immutable verdict metadata with object version ID.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Many systems upload first and scan later; this creates a publication race:",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes L2 \u2014 Validation strategy (layered)"
+    },
+    {
+      "id": "n2dcbb93cf5e356e",
+      "title": "L1 \u2014 Trust model",
+      "markdown": "**Never trust:** filename, `Content-Type` from client, or \"it's an image because `<input type=file accept=image>`.\"\n\n**Trust:** **re-encoded** bytes from a **known-safe** pipeline, **stored** under **non-executable** paths, **served** with **correct** `Content-Disposition` and **CSP** for any **HTML/SVG** policy.",
+      "notes": "Never trust: filename, Content-Type from client, or \"it's an image because <input type=file accept=image>.\"\n\nTrust: re-encoded bytes from a known-safe pipeline, stored under non-executable paths, served with correct Content-Disposition and CSP for any HTML/SVG policy.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Never trust: filename, Content-Type from client, or \"it's an image because...",
+      "expanded": false
+    },
+    {
+      "id": "nc0e90d35233fdee",
+      "title": "Named issues",
+      "markdown": "- **ImageTragick** (ImageMagick **delegate** abuse)-study **policy.xml** hardening (`disable` **coders**).\n- **CVE** classes on **ffmpeg**, **Pillow**, **libvips**-**patch** and **pin** versions in **containers**.",
+      "notes": "- ImageTragick (ImageMagick delegate abuse)-study policy.xml hardening (disable coders).\n- CVE classes on ffmpeg, Pillow, libvips-patch and pin versions in containers.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "ImageTragick (ImageMagick delegate abuse)-study policy.xml hardening...",
+      "expanded": false
+    },
+    {
+      "id": "ndd5c80586b41dba",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n37779283e3d197e",
+          "title": "Golden rules",
+          "markdown": "**Allowlist** \u00b7 **magic** verify \u00b7 **re-encode** \u00b7 **random** names \u00b7 **no** webroot \u00b7 **least** privilege processors",
+          "notes": "Allowlist \u00b7 magic verify \u00b7 re-encode \u00b7 random names \u00b7 no webroot \u00b7 least privilege processors",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Allowlist \u00b7 magic verify \u00b7 re-encode \u00b7 random names \u00b7 no webroot \u00b7 least...",
+          "expanded": false
+        },
+        {
+          "id": "n5350730a0f404a3",
+          "title": "Attack cheat sheet",
+          "markdown": "| Attack | Mitigation hint |\n|--------|-----------------|\n| Webshell | No **exec** path; **object** storage |\n| Polyglot | **Re-encode** / transcode |\n| Zip-slip | **Canonical** path **prefix** check |\n| SVG XSS | Rasterize or **strict** sanitize + **CSP** |\n| ImageTragick | **policy.xml**; **disable** MVG/MSL |\n| SSRF via ffmpeg | **Sandbox**; **no** **URL** inputs |",
+          "notes": "| Attack | Mitigation hint |\n|--------|-----------------|\n| Webshell | No exec path; object storage |\n| Polyglot | Re-encode / transcode |\n| Zip-slip | Canonical path prefix check |\n| SVG XSS | Rasterize or strict sanitize + CSP |\n| ImageTragick | policy.xml; disable MVG/MSL |\n| SSRF via ffmpeg | Sandbox; no URL inputs |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Attack | Mitigation hint | |--------|-----------------| | Webshell | No...",
+          "expanded": false
+        },
+        {
+          "id": "ndc31f109c7bb6a8",
+          "title": "CWEs",
+          "markdown": "- **CWE-434** - dangerous file type\n- **CWE-22** - path traversal (archives)",
+          "notes": "- CWE-434 - dangerous file type\n- CWE-22 - path traversal (archives)",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "CWE-434 - dangerous file type - CWE-22 - path traversal (archives)",
+          "expanded": false
+        },
+        {
+          "id": "n4904e7b7363fb73",
+          "title": "Headers / delivery",
+          "markdown": "`Content-Disposition: attachment` where appropriate \u00b7 **`X-Content-Type-Options: nosniff`** \u00b7 correct **Content-Type**",
+          "notes": "Content-Disposition: attachment where appropriate \u00b7 X-Content-Type-Options: nosniff \u00b7 correct Content-Type",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Content-Disposition: attachment where appropriate \u00b7 X-Content-Type-Options:...",
+          "expanded": false
+        },
+        {
+          "id": "n5c4330f52c2f91f",
+          "title": "Tools",
+          "markdown": "`file` / `xxd` \u00b7 Burp \u00b7 ImageMagick **policy** \u00b7 container **seccomp**",
+          "notes": "file / xxd \u00b7 Burp \u00b7 ImageMagick policy \u00b7 container seccomp",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "file / xxd \u00b7 Burp \u00b7 ImageMagick policy \u00b7 container seccomp",
+          "expanded": false
+        },
+        {
+          "id": "ncd2b5f198b82cfc",
+          "title": "Cross-read",
+          "markdown": "`RCE` \u00b7 `XSS` \u00b7 `SSRF` \u00b7 `Container Security`",
+          "notes": "RCE \u00b7 XSS \u00b7 SSRF \u00b7 Container Security",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "RCE \u00b7 XSS \u00b7 SSRF \u00b7 Container Security",
+          "expanded": false
+        },
+        {
+          "id": "n0af49db1491535e",
+          "title": "Practice links",
+          "markdown": "Labs map: ../Practice & Exercises/Labs Mapping.md - Payload references: ../Practice & Exercises/Payload References.md - Code examples: ../examples/file-upload/",
+          "notes": "Labs map: ../Practice & Exercises/Labs Mapping.md - Payload references: ../Practice & Exercises/Payload References.md - Code examples: ../examples/file-upload/",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "naf6cf421ffca007",
+              "title": "Labs map: ../Practice & Exercises/Labs Mapping.md",
+              "markdown": "- Labs map: ../Practice & Exercises/Labs Mapping.md",
+              "notes": "Labs map: ../Practice & Exercises/Labs Mapping.md",
+              "blurb": "Labs map: ../Practice & Exercises/Labs Mapping.md",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n379df9392b1e467",
+              "title": "Payload references: ../Practice & Exercises/Payload References.md",
+              "markdown": "- Payload references: ../Practice & Exercises/Payload References.md",
+              "notes": "Payload references: ../Practice & Exercises/Payload References.md",
+              "blurb": "Payload references: ../Practice & Exercises/Payload References.md",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5a0c3dc9bae7688",
+              "title": "Code examples: ../examples/file-upload/",
+              "markdown": "- Code examples: ../examples/file-upload/",
+              "notes": "Code examples: ../examples/file-upload/",
+              "blurb": "Code examples: ../examples/file-upload/",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Labs map: ../Practice & Exercises/Labs Mapping.md - Payload references:...",
+          "expanded": false
+        },
+        {
+          "id": "n25fc6dc091a773c",
+          "title": "30-second pitch",
+          "markdown": "\"Untrusted bytes: **allowlist** + **magic** + **re-encode**, **random** keys in **private** storage, **harden** ImageMagick/ffmpeg, **prevent** zip-slip, **CSP** for any **HTML/SVG** risk.\"",
+          "notes": "\"Untrusted bytes: allowlist + magic + re-encode, random keys in private storage, harden ImageMagick/ffmpeg, prevent zip-slip, CSP for any HTML/SVG risk.\"",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "\"Untrusted bytes: allowlist + magic + re-encode, random keys in private...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Golden rules"
+    },
+    {
+      "id": "n2227a368c491062",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n9a79d5cf4c8e96e",
+          "title": "\"We only allow images, so we check the extension.\"",
+          "markdown": "**Reality:** Extensions are **trivially** spoofed. Use **magic** bytes + **re-encode** + **allowlist**.",
+          "notes": "Reality: Extensions are trivially spoofed. Use magic bytes + re-encode + allowlist.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Extensions are trivially spoofed.",
+          "expanded": false
+        },
+        {
+          "id": "nf49a780d40e449c",
+          "title": "\"The browser sent image/jpeg, we're safe.\"",
+          "markdown": "**Reality:** **Any** client can send **arbitrary** **Content-Type**. **Server** must **verify** **content**.",
+          "notes": "Reality: Any client can send arbitrary Content-Type. Server must verify content.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Any client can send arbitrary Content-Type.",
+          "expanded": false
+        },
+        {
+          "id": "nadbf6073658e614",
+          "title": "\"Storing in S3 fixes everything.\"",
+          "markdown": "**Reality:** **Misconfigured** **bucket** **policies** (public **list**/**get**), **hotlinking**, and **signed** URL **bugs** still leak data. **CSP** and **ACLs** matter.",
+          "notes": "Reality: Misconfigured bucket policies (public list/get), hotlinking, and signed URL bugs still leak data. CSP and ACLs matter.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Misconfigured bucket policies (public list/get), hotlinking, and...",
+          "expanded": false
+        },
+        {
+          "id": "n53813e13b3325c6",
+          "title": "\"ClamAV clean means the file is safe.\"",
+          "markdown": "**Reality:** AV misses **novel** **polyglots** and **non-malware** **abuse** (SVG XSS, zip-slip). **Layer** defenses.",
+          "notes": "Reality: AV misses novel polyglots and non-malware abuse (SVG XSS, zip-slip). Layer defenses.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: AV misses novel polyglots and non-malware abuse (SVG XSS, zip-slip).",
+          "expanded": false
+        },
+        {
+          "id": "n4db78f581aa23b2",
+          "title": "\"We validate size, so no DoS.\"",
+          "markdown": "**Reality:** **Decompression** bombs (**zip**), **pixel** floods, and **CPU**-heavy **transcode** still **DoS** **workers**. **Limits** on **extracted** size and **timeouts**.",
+          "notes": "Reality: Decompression bombs (zip), pixel floods, and CPU-heavy transcode still DoS workers. Limits on extracted size and timeouts.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Decompression bombs (zip), pixel floods, and CPU-heavy transcode...",
+          "expanded": false
+        },
+        {
+          "id": "n9d8435cfcb2a830",
+          "title": "\"SVG is fine if we serve it as image/svg+xml.\"",
+          "markdown": "**Reality:** **Inline** `<svg onload=...>` can still be **dangerous** depending on **embedding** and **CSP**. Many teams **rasterize** SVGs.",
+          "notes": "Reality: Inline <svg onload=...> can still be dangerous depending on embedding and CSP. Many teams rasterize SVGs.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Inline <svg onload=...> can still be dangerous depending on...",
+          "expanded": false
+        },
+        {
+          "id": "ndf487c59c5a7249",
+          "title": "\"WAF blocks malicious uploads.\"",
+          "markdown": "**Reality:** WAF sees **multipart** **bodies** **inconsistently**; **large** files **bypass** inspection. **App** validation is **primary**.",
+          "notes": "Reality: WAF sees multipart bodies inconsistently; large files bypass inspection. App validation is primary.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: WAF sees multipart bodies inconsistently; large files bypass...",
+          "expanded": false
+        },
+        {
+          "id": "nf8ae5775341ab05",
+          "title": "\"Developers need original filenames for UX.\"",
+          "markdown": "**Reality:** Store **display** name **separately** from **storage** key; **never** build **paths** from **raw** user strings.",
+          "notes": "Reality: Store display name separately from storage key; never build paths from raw user strings.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Store display name separately from storage key; never build paths...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \"We only allow images, so we check the extension.\""
+    },
+    {
+      "id": "n118943b3eb978bf",
+      "title": "How to test",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n480ca08c5a5a2f5",
+          "title": "Objective",
+          "markdown": "Create a repeatable assessment workflow for `File Upload Security` that produces reproducible evidence and actionable remediation guidance.",
+          "notes": "Create a repeatable assessment workflow for File Upload Security that produces reproducible evidence and actionable remediation guidance.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Create a repeatable assessment workflow for File Upload Security that...",
+          "expanded": false
+        },
+        {
+          "id": "n0410ae3dbacde36",
+          "title": "Phase 1 - Scope and preparation",
+          "markdown": "Confirm in-scope assets, test windows, and prohibited actions.",
+          "notes": "Confirm in-scope assets, test windows, and prohibited actions.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n49982e72241e1f3",
+              "title": "Confirm in-scope assets, test windows, and prohibited actions.",
+              "markdown": "- Confirm in-scope assets, test windows, and prohibited actions.",
+              "notes": "Confirm in-scope assets, test windows, and prohibited actions.",
+              "blurb": "Confirm in-scope assets, test windows, and prohibited actions.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ndc5ed520c3e4ff9",
+              "title": "Identify critical user journeys and trust boundaries.",
+              "markdown": "- Identify critical user journeys and trust boundaries.",
+              "notes": "Identify critical user journeys and trust boundaries.",
+              "blurb": "Identify critical user journeys and trust boundaries.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n194f63290f4436c",
+              "title": "Define severity rubric and evidence requirements before testing.",
+              "markdown": "- Define severity rubric and evidence requirements before testing.",
+              "notes": "Define severity rubric and evidence requirements before testing.",
+              "blurb": "Define severity rubric and evidence requirements before testing.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Confirm in-scope assets, test windows, and prohibited actions.",
+          "expanded": false
+        },
+        {
+          "id": "n59e1275b4333397",
+          "title": "Phase 2 - Recon and attack-surface mapping",
+          "markdown": "Enumerate relevant endpoints, flows, and data paths.",
+          "notes": "Enumerate relevant endpoints, flows, and data paths.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n21841be82d1648c",
+              "title": "Enumerate relevant endpoints, flows, and data paths.",
+              "markdown": "- Enumerate relevant endpoints, flows, and data paths.",
+              "notes": "Enumerate relevant endpoints, flows, and data paths.",
+              "blurb": "Enumerate relevant endpoints, flows, and data paths.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n96a9d3f0819b9e0",
+              "title": "Document where security checks are expected to happen.",
+              "markdown": "- Document where security checks are expected to happen.",
+              "notes": "Document where security checks are expected to happen.",
+              "blurb": "Document where security checks are expected to happen.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n51cd4e0ef0d9a93",
+              "title": "Mark high-value assets and high-impact paths.",
+              "markdown": "- Mark high-value assets and high-impact paths.",
+              "notes": "Mark high-value assets and high-impact paths.",
+              "blurb": "Mark high-value assets and high-impact paths.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Enumerate relevant endpoints, flows, and data paths.",
+          "expanded": false
+        },
+        {
+          "id": "n7087866d58ce4f2",
+          "title": "Phase 3 - Hypothesis-driven testing",
+          "markdown": "Start with low-risk probes and baseline behavior.",
+          "notes": "Start with low-risk probes and baseline behavior.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n1e45be22fcbeefc",
+              "title": "Start with low-risk probes and baseline behavior.",
+              "markdown": "- Start with low-risk probes and baseline behavior.",
+              "notes": "Start with low-risk probes and baseline behavior.",
+              "blurb": "Start with low-risk probes and baseline behavior.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na23a7d297a61e5c",
+              "title": "Test failure hypotheses systematically (one variable at a time).",
+              "markdown": "- Test failure hypotheses systematically (one variable at a time).",
+              "notes": "Test failure hypotheses systematically (one variable at a time).",
+              "blurb": "Test failure hypotheses systematically (one variable at a time).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n63221cd0abd9b2b",
+              "title": "Capture request/response artifacts for each finding candidate.",
+              "markdown": "- Capture request/response artifacts for each finding candidate.",
+              "notes": "Capture request/response artifacts for each finding candidate.",
+              "blurb": "Capture request/response artifacts for each finding candidate.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Start with low-risk probes and baseline behavior.",
+          "expanded": false
+        },
+        {
+          "id": "n7a8614098e2739b",
+          "title": "Phase 4 - Validation and impact proof",
+          "markdown": "Reproduce findings with clean-state retests.",
+          "notes": "Reproduce findings with clean-state retests.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n4be61ca743763f7",
+              "title": "Reproduce findings with clean-state retests.",
+              "markdown": "- Reproduce findings with clean-state retests.",
+              "notes": "Reproduce findings with clean-state retests.",
+              "blurb": "Reproduce findings with clean-state retests.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n78eb25aa8319b4d",
+              "title": "Confirm exploitability and practical impact.",
+              "markdown": "- Confirm exploitability and practical impact.",
+              "notes": "Confirm exploitability and practical impact.",
+              "blurb": "Confirm exploitability and practical impact.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd55c63088b231f1",
+              "title": "Eliminate false positives; record confidence level.",
+              "markdown": "- Eliminate false positives; record confidence level.",
+              "notes": "Eliminate false positives; record confidence level.",
+              "blurb": "Eliminate false positives; record confidence level.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Reproduce findings with clean-state retests.",
+          "expanded": false
+        },
+        {
+          "id": "n6d61758fabf1fe4",
+          "title": "Phase 5 - Remediation and verification",
+          "markdown": "Provide immediate containment + structural fix recommendations.",
+          "notes": "Provide immediate containment + structural fix recommendations.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nff5561eda619313",
+              "title": "Provide immediate containment + structural fix recommendations.",
+              "markdown": "- Provide immediate containment + structural fix recommendations.",
+              "notes": "Provide immediate containment + structural fix recommendations.",
+              "blurb": "Provide immediate containment + structural fix recommendations.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n80d94b343305c22",
+              "title": "Define post-fix verification tests and telemetry checks.",
+              "markdown": "- Define post-fix verification tests and telemetry checks.",
+              "notes": "Define post-fix verification tests and telemetry checks.",
+              "blurb": "Define post-fix verification tests and telemetry checks.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb0a35757791ceba",
+              "title": "Re-test after remediation and close with evidence.",
+              "markdown": "- Re-test after remediation and close with evidence.",
+              "notes": "Re-test after remediation and close with evidence.",
+              "blurb": "Re-test after remediation and close with evidence.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Provide immediate containment + structural fix recommendations.",
+          "expanded": false
+        },
+        {
+          "id": "n7ee82d72bd7a34c",
+          "title": "Evidence template",
+          "markdown": "Asset / endpoint: - Preconditions: - Reproduction steps: - Observed behavior: - Security impact: - Business impact: - Recommended fix: - Verification result:",
+          "notes": "Asset / endpoint: - Preconditions: - Reproduction steps: - Observed behavior: - Security impact: - Business impact: - Recommended fix: - Verification result:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n722c76239f164f5",
+              "title": "Asset / endpoint",
+              "markdown": "- Asset / endpoint",
+              "notes": "Asset / endpoint",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n788e016b8e91342",
+              "title": "Preconditions",
+              "markdown": "- Preconditions",
+              "notes": "Preconditions",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5deba1447927652",
+              "title": "Reproduction steps",
+              "markdown": "- Reproduction steps",
+              "notes": "Reproduction steps",
+              "blurb": "Reproduction steps",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ne76d09d75f11064",
+              "title": "Observed behavior",
+              "markdown": "- Observed behavior",
+              "notes": "Observed behavior",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n599a091111a6720",
+              "title": "Security impact",
+              "markdown": "- Security impact",
+              "notes": "Security impact",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na4b2e27b6aa8fc9",
+              "title": "Business impact",
+              "markdown": "- Business impact",
+              "notes": "Business impact",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n66a52df2d21b433",
+              "title": "Recommended fix",
+              "markdown": "- Recommended fix",
+              "notes": "Recommended fix",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8440efb5ceb8d96",
+              "title": "Verification result",
+              "markdown": "- Verification result",
+              "notes": "Verification result",
+              "blurb": "Verification result",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Asset / endpoint: - Preconditions: - Reproduction steps: - Observed...",
+          "expanded": false
+        },
+        {
+          "id": "n198f5f8f5ce8f50",
+          "title": "Interview drill",
+          "markdown": "In 3 minutes, explain how you would run this VAPT workflow for one production-like service and what evidence you need before escalating severity.",
+          "notes": "In 3 minutes, explain how you would run this VAPT workflow for one production-like service and what evidence you need before escalating severity.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "In 3 minutes, explain how you would run this VAPT workflow for one...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Objective"
+    },
+    {
+      "id": "nf64416d7b234c91",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nd584c2ebdb348d0",
+          "title": "60-second answer",
+          "markdown": "**Q: How do you secure file uploads?**\n\n**A:** Treat uploads as **untrusted bytes**: **allowlist** file types, verify **magic** signatures-not just extensions or browser MIME-**re-encode** images through a safe library, **randomize** stored names, keep files **outside** the web root or serve via **object storage** with **signed URLs**, and never let the **shell** process user files with **concatenated** commands. Add **size** and **rate** limits, **scan** if the threat model requires, and harden **downstream** tools like **ImageMagick** (`policy.xml`). Watch **zip-slip**, **SVG** **XSS**, and **polyglots**.",
+          "notes": "Q: How do you secure file uploads?\n\nA: Treat uploads as untrusted bytes: allowlist file types, verify magic signatures-not just extensions or browser MIME-re-encode images through a safe library, randomize stored names, keep files outside the web root or serve via object storage with signed URLs, and never let the shell process user files with concatenated commands. Add size and rate limits, scan if the threat model requires, and harden downstream tools like ImageMagick (policy.xml). Watch zip-slip, SVG XSS, and polyglots.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Q: How do you secure file uploads?",
+          "expanded": false
+        },
+        {
+          "id": "nd686dea9cf63757",
+          "title": "Mechanics",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nf1c0e8c08995db7",
+              "title": "Q: Extension vs Content-Type vs magic bytes\u2014which do you trust?",
+              "markdown": "**A:** **Magic** (file signature) is **stronger** than extension or **client** Content-Type, but **attackers** can craft **polyglots**. **Best** practice: allowlist expected **signatures**, then **re-encode** to strip **dual** interpretations.",
+              "notes": "A: Magic (file signature) is stronger than extension or client Content-Type, but attackers can craft polyglots. Best practice: allowlist expected signatures, then re-encode to strip dual interpretations.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Magic (file signature) is stronger than extension or client Content-Type,...",
+              "expanded": false
+            },
+            {
+              "id": "nf7c361992514b97",
+              "title": "Q: What is zip-slip?",
+              "markdown": "**A:** Malicious archive entries with paths like `../../app/config.py` **escape** extract dir. **Fix:** resolve **canonical** path and **verify** it **stays under** target **root**; use **safe** APIs, not **raw** `tarfile`/`ZipFile` without checks.",
+              "notes": "A: Malicious archive entries with paths like ../../app/config.py escape extract dir. Fix: resolve canonical path and verify it stays under target root; use safe APIs, not raw tarfile/ZipFile without checks.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Malicious archive entries with paths like ../../app/config.py escape...",
+              "expanded": false
+            },
+            {
+              "id": "n921ba5d90f1eaa9",
+              "title": "Q: Can a \u201cPNG\u201d be XSS?",
+              "markdown": "**A:** **SVG** is XML-if served as **inline** image or mislabeled as HTML, **script** runs. **Policy:** treat SVG as **high risk**-sanitize, strip, or **convert** to raster.",
+              "notes": "A: SVG is XML-if served as inline image or mislabeled as HTML, script runs. Policy: treat SVG as high risk-sanitize, strip, or convert to raster.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: SVG is XML-if served as inline image or mislabeled as HTML, script runs.",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: Extension vs Content-Type vs magic bytes\u2014which do you trust?",
+          "expanded": false
+        },
+        {
+          "id": "n7fb6fef5a693ddf",
+          "title": "Architecture",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nb35e5a9afb947cb",
+              "title": "Q: Where should uploads live?",
+              "markdown": "**A:** **Object storage** (S3/GCS) with **no** **exec** bit, **private** ACL, **short-lived** **signed** URLs for download. Avoid **co-locating** with **app** **code**.",
+              "notes": "A: Object storage (S3/GCS) with no exec bit, private ACL, short-lived signed URLs for download. Avoid co-locating with app code.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Object storage (S3/GCS) with no exec bit, private ACL, short-lived signed...",
+              "expanded": false
+            },
+            {
+              "id": "nb07b1d39ce64226",
+              "title": "Q: ImageMagick in production\u2014your stance?",
+              "markdown": "**A:** **Pin** version; **policy.xml** **disable** dangerous **coders** (**MVG**, **MSL**, **EPHEMERAL**); run in **isolated** **worker** with **no** **network** if possible; **input** size caps.",
+              "notes": "A: Pin version; policy.xml disable dangerous coders (MVG, MSL, EPHEMERAL); run in isolated worker with no network if possible; input size caps.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Pin version; policy.xml disable dangerous coders (MVG, MSL, EPHEMERAL);...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: Where should uploads live?",
+          "expanded": false
+        },
+        {
+          "id": "n6cad7d1a5d5cc9a",
+          "title": "Incident / bug bounty",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n4e055f00263ee6e",
+              "title": "Q: Researcher uploaded JSP and got RCE\u2014what failed?",
+              "markdown": "**A:** Likely **executable** **extension** in **webroot**, **handler** mapping, or **deserialization** in **secondary** **step**. **IR:** **contain**, **rotate** **secrets**, **audit** **upload** **logs**.",
+              "notes": "A: Likely executable extension in webroot, handler mapping, or deserialization in secondary step. IR: contain, rotate secrets, audit upload logs.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Likely executable extension in webroot, handler mapping, or...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: Researcher uploaded JSP and got RCE\u2014what failed?",
+          "expanded": false
+        },
+        {
+          "id": "nc8deac57279c54c",
+          "title": "Depth: Follow-ups",
+          "markdown": "Content-Type sniffing vs X-Content-Type-Options.",
+          "notes": "Content-Type sniffing vs X-Content-Type-Options.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n963342fadef1e48",
+              "title": "Content-Type sniffing vs X-Content-Type-Options.",
+              "markdown": "- Content-Type sniffing vs X-Content-Type-Options.",
+              "notes": "Content-Type sniffing vs X-Content-Type-Options.",
+              "blurb": "Content-Type sniffing vs X-Content-Type-Options.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8b3d6a0dae1cbce",
+              "title": "Malware hosting liability and hash blocklists.",
+              "markdown": "- Malware hosting liability and hash blocklists.",
+              "notes": "Malware hosting liability and hash blocklists.",
+              "blurb": "Malware hosting liability and hash blocklists.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf18452a631334e8",
+              "title": "ffmpeg SSRF via playlist / HLS.",
+              "markdown": "- ffmpeg SSRF via playlist / HLS.",
+              "notes": "ffmpeg SSRF via playlist / HLS.",
+              "blurb": "ffmpeg SSRF via playlist / HLS.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Content-Type sniffing vs X-Content-Type-Options.",
+          "expanded": false
+        },
+        {
+          "id": "n18b05a24bc0644e",
+          "title": "Mock ladder",
+          "markdown": "| Level | Question |\n|-------|----------|\n| Junior | Why **randomize** filenames? |\n| Mid | **Polyglot** defense? |\n| Senior | **Async** **virus** scan **architecture**. |\n| Staff | **UGC** **CDN** **abuse** **program** metrics. |",
+          "notes": "| Level | Question |\n|-------|----------|\n| Junior | Why randomize filenames? |\n| Mid | Polyglot defense? |\n| Senior | Async virus scan architecture. |\n| Staff | UGC CDN abuse program metrics. |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Level | Question | |-------|----------| | Junior | Why randomize filenames?",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 60-second answer"
+    }
+  ],
+  "topicId": "file-upload-security",
+  "name": "File Upload Security",
+  "structure": "logic-right",
+  "blurb": "Insecure file upload lets attackers place malicious or unexpected content..."
+}

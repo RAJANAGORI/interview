@@ -8,3 +8,5 @@
 
 [**Cookie Security - Quick Reference Guide**](Cookie Security - Quick Reference Guide.md)
 
+
+[**Cookie Security - Mind Map**](Cookie%20Security%20-%20Mind%20Map.md)

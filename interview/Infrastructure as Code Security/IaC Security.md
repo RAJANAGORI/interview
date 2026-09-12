@@ -8,3 +8,5 @@
 
 [**IaC Security - Quick Reference**](IaC%20Security%20-%20Quick%20Reference.md)
 
+
+[**Infrastructure as Code (IaC) Security - Mind Map**](Infrastructure%20as%20Code%20%28IaC%29%20Security%20-%20Mind%20Map.md)

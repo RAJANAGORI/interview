@@ -1,0 +1,1137 @@
+{
+  "id": "nece5c2a879028a0",
+  "title": "TCP vs UDP",
+  "markdown": "**TCP (Transmission Control Protocol)** and **UDP (User Datagram Protocol)** are both **Layer 4 (transport)** protocols on the Internet. TCP is **connection-oriented**, **reliable**, and **ordered**, with **congestion control** and **flow control**. UDP is **connectionless** and **best-effort**: no delivery guarantees, minimal state, and no built-in congestion control-applications must supply whatever semantics they need. Interviews reward crisp trade-offs (latency vs correctness), concrete examples (**DNS**, **QUIC**, **real-time media**), and security intuition (**SYN floods**, **UDP amplification**, **IP spoofing**, **DTLS** vs **TLS**).",
+  "notes": "TCP (Transmission Control Protocol) and UDP (User Datagram Protocol) are both Layer 4 (transport) protocols on the Internet. TCP is connection-oriented, reliable, and ordered, with congestion control and flow control. UDP is connectionless and best-effort: no delivery guarantees, minimal state, and no built-in congestion control-applications must supply whatever semantics they need. Interviews reward crisp trade-offs (latency vs correctness), concrete examples (DNS, QUIC, real-time media), and security intuition (SYN floods, UDP amplification, IP spoofing, DTLS vs TLS).",
+  "expanded": true,
+  "children": [
+    {
+      "id": "nfc27f643c7ffcdf",
+      "title": "At a glance",
+      "markdown": "**TCP (Transmission Control Protocol)** and **UDP (User Datagram Protocol)** are both **Layer 4 (transport)** protocols on the Internet. TCP is **connection-oriented**, **reliable**, and **ordered**, with **congestion control** and **flow control**. UDP is **connectionless** and **best-effort**: no delivery guarantees, minimal state, and no built-in congestion control-applications must supply whatever semantics they need. Interviews reward crisp trade-offs (latency vs correctness), concrete examples (**DNS**, **QUIC**, **real-time media**), and security intuition (**SYN floods**, **UDP amplification**, **IP spoofing**, **DTLS** vs **TLS**).",
+      "notes": "TCP (Transmission Control Protocol) and UDP (User Datagram Protocol) are both Layer 4 (transport) protocols on the Internet. TCP is connection-oriented, reliable, and ordered, with congestion control and flow control. UDP is connectionless and best-effort: no delivery guarantees, minimal state, and no built-in congestion control-applications must supply whatever semantics they need. Interviews reward crisp trade-offs (latency vs correctness), concrete examples (DNS, QUIC, real-time media), and security intuition (SYN floods, UDP amplification, IP spoofing, DTLS vs TLS).",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "TCP (Transmission Control Protocol) and UDP (User Datagram Protocol) are...",
+      "expanded": false
+    },
+    {
+      "id": "nd0c7974415257b4",
+      "title": "Connection-oriented vs connectionless",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nb8936105e3c1139",
+          "title": "TCP: connection-oriented",
+          "markdown": "TCP communication is modeled as a **bidirectional byte stream** between two endpoints identified by **(IP, port)** on each side. Before application data flows in the steady state, peers typically perform a **three-way handshake** (SYN, SYN-ACK, ACK) that synchronizes **initial sequence numbers** and allocates **connection state** on both ends.\n\n**Why it matters:** \"Connected\" does not mean \"authenticated\"-it means both stacks agreed on parameters and maintain **per-connection** state (sequence numbers, window sizes, retransmission timers, congestion state). Firewalls and middleboxes often **key** decisions on this state.",
+          "notes": "TCP communication is modeled as a bidirectional byte stream between two endpoints identified by (IP, port) on each side. Before application data flows in the steady state, peers typically perform a three-way handshake (SYN, SYN-ACK, ACK) that synchronizes initial sequence numbers and allocates connection state on both ends.\n\nWhy it matters: \"Connected\" does not mean \"authenticated\"-it means both stacks agreed on parameters and maintain per-connection state (sequence numbers, window sizes, retransmission timers, congestion state). Firewalls and middleboxes often key decisions on this state.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "TCP communication is modeled as a bidirectional byte stream between two...",
+          "expanded": false
+        },
+        {
+          "id": "n4293774d1b8932b",
+          "title": "UDP: connectionless",
+          "markdown": "UDP exposes **datagrams**: each send is largely independent. There is **no handshake** in the protocol itself; the first application datagram can go straight out. Receivers demultiplex solely by **destination IP/port** (and may apply filters).\n\n**Why it matters:** Lower setup latency and simpler servers for **request/response** workloads-but also **no transport-level backpressure contract** unless you build one.",
+          "notes": "UDP exposes datagrams: each send is largely independent. There is no handshake in the protocol itself; the first application datagram can go straight out. Receivers demultiplex solely by destination IP/port (and may apply filters).\n\nWhy it matters: Lower setup latency and simpler servers for request/response workloads-but also no transport-level backpressure contract unless you build one.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "UDP exposes datagrams: each send is largely independent.",
+          "expanded": false
+        },
+        {
+          "id": "nd67fa68304851d5",
+          "title": "The \u201cconnection\u201d in QUIC",
+          "markdown": "**QUIC** (used by **HTTP/3**) runs over **UDP** but implements its own **connection establishment**, **streams**, **reliability per stream**, and **encryption** in user space. Interview tip: treat QUIC as \"**reliable, encrypted, multiplexed transport over UDP datagrams**,\" not as \"UDP with TCP's semantics for free.\"",
+          "notes": "QUIC (used by HTTP/3) runs over UDP but implements its own connection establishment, streams, reliability per stream, and encryption in user space. Interview tip: treat QUIC as \"reliable, encrypted, multiplexed transport over UDP datagrams,\" not as \"UDP with TCP's semantics for free.\"",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "QUIC (used by HTTP/3) runs over UDP but implements its own connection...",
+          "expanded": false
+        },
+        {
+          "id": "na684b128227cf9f",
+          "title": "Quick comparison table",
+          "markdown": "| Aspect | TCP | UDP |\n|--------|-----|-----|\n| Connection model | Connection-oriented (handshake, state) | Connectionless datagrams |\n| Reliability | Acknowledged, retransmits on loss | Best-effort; loss silent to protocol |\n| Ordering | Single in-order byte stream | No ordering guarantee |\n| Flow control | Per-connection receive window | None in protocol |\n| Congestion control | Built-in (algorithm family varies) | None in base protocol |\n| Overhead | Headers + state + handshake | Small header; minimal state |\n| Multiplexing | One stream per connection (HTTP/1.1); HTTP/2 multiplexes over one TCP | N/A at UDP layer; QUIC multiplexes streams over one QUIC connection |\n| Typical misuse risk | SYN/state exhaustion, L7 slow attacks | Amplification, spoofed floods, \"UDP is faster so we used it\" without congestion ethics |",
+          "notes": "| Aspect | TCP | UDP |\n|--------|-----|-----|\n| Connection model | Connection-oriented (handshake, state) | Connectionless datagrams |\n| Reliability | Acknowledged, retransmits on loss | Best-effort; loss silent to protocol |\n| Ordering | Single in-order byte stream | No ordering guarantee |\n| Flow control | Per-connection receive window | None in protocol |\n| Congestion control | Built-in (algorithm family varies) | None in base protocol |\n| Overhead | Headers + state + handshake | Small header; minimal state |\n| Multiplexing | One stream per connection (HTTP/1.1); HTTP/2 multiplexes over one TCP | N/A at UDP layer; QUIC multiplexes streams over one QUIC connection |\n| Typical misuse risk | SYN/state exhaustion, L7 slow attacks | Amplification, spoofed floods, \"UDP is faster so we used it\" without congestion ethics |",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "| Aspect | TCP | UDP | |--------|-----|-----| | Connection model |...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes TCP: connection-oriented",
+      "expanded": true
+    },
+    {
+      "id": "n8189bcafa6bb314",
+      "title": "Reliability and ordering",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nb3d0d9803f11b2f",
+          "title": "TCP reliability",
+          "markdown": "TCP achieves reliability through:",
+          "notes": "TCP achieves reliability through:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n2e0431099f09d40",
+              "title": "Sequence numbers and acknowledgments so the receiver can detect loss and duplicates.",
+              "markdown": "- Sequence numbers and acknowledgments so the receiver can detect loss and duplicates.",
+              "notes": "Sequence numbers and acknowledgments so the receiver can detect loss and duplicates.",
+              "blurb": "Sequence numbers and acknowledgments so the receiver can detect loss and...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n32db7a4d5754fff",
+              "title": "Retransmissions after timeout or duplicate ACK patterns (modern stacks also use variants",
+              "markdown": "- Retransmissions after timeout or duplicate ACK patterns (modern stacks also use variants",
+              "notes": "Retransmissions after timeout or duplicate ACK patterns (modern stacks also use variants",
+              "blurb": "Retransmissions after timeout or duplicate ACK patterns (modern stacks also...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd9a674f585e1bb5",
+              "title": "Checksum coverage of TCP header and payload (integrity at the segment level; it is not a",
+              "markdown": "- Checksum coverage of TCP header and payload (integrity at the segment level; it is not a",
+              "notes": "Checksum coverage of TCP header and payload (integrity at the segment level; it is not a",
+              "blurb": "Checksum coverage of TCP header and payload (integrity at the segment level;...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "TCP achieves reliability through:",
+          "expanded": false
+        },
+        {
+          "id": "ne14d70b448492ba",
+          "title": "UDP best-effort",
+          "markdown": "UDP provides **no acknowledgments** and **no retransmissions** in the protocol. Duplicates, reordering, and loss are all possible. If you need reliability on UDP, you implement **application protocols** (e.g. **RTP** with **NACK**, **SCTP** where available, or custom ACK schemes)-or you use **QUIC** instead of raw UDP.\n\n**Interview framing:** choose UDP when **timeliness** beats **completeness** (late video frame is worthless), or when **statelessness** and **simplicity** dominate.",
+          "notes": "UDP provides no acknowledgments and no retransmissions in the protocol. Duplicates, reordering, and loss are all possible. If you need reliability on UDP, you implement application protocols (e.g. RTP with NACK, SCTP where available, or custom ACK schemes)-or you use QUIC instead of raw UDP.\n\nInterview framing: choose UDP when timeliness beats completeness (late video frame is worthless), or when statelessness and simplicity dominate.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "UDP provides no acknowledgments and no retransmissions in the protocol.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes TCP reliability",
+      "expanded": true
+    },
+    {
+      "id": "nae409832b95acb9",
+      "title": "Flow control and congestion control",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n24356b862bcbd82",
+          "title": "Flow control (TCP)",
+          "markdown": "TCP's **sliding window** prevents a fast sender from overwhelming a slow receiver's buffers. Receivers advertise **rwnd** (receive window); senders must respect it.",
+          "notes": "TCP's sliding window prevents a fast sender from overwhelming a slow receiver's buffers. Receivers advertise rwnd (receive window); senders must respect it.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "TCP's sliding window prevents a fast sender from overwhelming a slow...",
+          "expanded": false
+        },
+        {
+          "id": "n7d179d480ce53a1",
+          "title": "Congestion control (TCP)",
+          "markdown": "TCP includes **congestion control** algorithms (Reno, CUBIC, BBR, etc., depending on OS and tuning) that adjust sending rate in response to **loss** and **delay signals**. The goal is to avoid **congestion collapse** and share bottleneck capacity somewhat fairly among flows.\n\nSenders track a **congestion window (cwnd)** and obey **min(cwnd, rwnd)**-style constraints along with **slow start**, **congestion avoidance**, and **fast recovery** behaviors (exact details vary by algorithm). Interview tip: you do not need to derive formulas-explain **why** TCP reduces rate after loss and **why** that matters for shared networks.\n\n**Security tie-in:** historically, **low-rate** attacks and certain **ACK manipulation** ideas targeted assumptions in congestion control; modern stacks and **network edge** protections matter. For interviews, the headline is: **TCP backs off**; **raw UDP does not** unless the app does.",
+          "notes": "TCP includes congestion control algorithms (Reno, CUBIC, BBR, etc., depending on OS and tuning) that adjust sending rate in response to loss and delay signals. The goal is to avoid congestion collapse and share bottleneck capacity somewhat fairly among flows.\n\nSenders track a congestion window (cwnd) and obey min(cwnd, rwnd)-style constraints along with slow start, congestion avoidance, and fast recovery behaviors (exact details vary by algorithm). Interview tip: you do not need to derive formulas-explain why TCP reduces rate after loss and why that matters for shared networks.\n\nSecurity tie-in: historically, low-rate attacks and certain ACK manipulation ideas targeted assumptions in congestion control; modern stacks and network edge protections matter. For interviews, the headline is: TCP backs off; raw UDP does not unless the app does.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "TCP includes congestion control algorithms (Reno, CUBIC, BBR, etc.,...",
+          "expanded": false
+        },
+        {
+          "id": "n440949aab9db8e2",
+          "title": "UDP and congestion",
+          "markdown": "UDP has **no standard congestion control** in the base protocol. That is powerful for **low-latency** media but dangerous for the **Internet ecosystem** if abused-large UDP senders can **crowd out** TCP and harm shared links. Responsible UDP applications implement **congestion-aware** sending (common in **WebRTC** stacks) or run in controlled networks.",
+          "notes": "UDP has no standard congestion control in the base protocol. That is powerful for low-latency media but dangerous for the Internet ecosystem if abused-large UDP senders can crowd out TCP and harm shared links. Responsible UDP applications implement congestion-aware sending (common in WebRTC stacks) or run in controlled networks.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "UDP has no standard congestion control in the base protocol.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Flow control (TCP)",
+      "expanded": true
+    },
+    {
+      "id": "nbaa2a5a8f88a933",
+      "title": "Use cases (with nuance)",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nb9991fdb29ae974",
+          "title": "DNS",
+          "markdown": "Traditional DNS often uses **UDP/53** for small queries because **one round trip** is enough and **server state** stays minimal. Large responses may be **truncated** (TC bit), prompting **TCP** (or **TLS** on 853, or **HTTPS** on 443 for **DoH**) for the retry. **DNSSEC** increases response sizes and pushes deployments toward **TCP/TLS** more often.",
+          "notes": "Traditional DNS often uses UDP/53 for small queries because one round trip is enough and server state stays minimal. Large responses may be truncated (TC bit), prompting TCP (or TLS on 853, or HTTPS on 443 for DoH) for the retry. DNSSEC increases response sizes and pushes deployments toward TCP/TLS more often.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Traditional DNS often uses UDP/53 for small queries because one round trip...",
+          "expanded": false
+        },
+        {
+          "id": "n68fb45fd09a2e55",
+          "title": "Web and APIs: TCP + TLS",
+          "markdown": "**HTTPS** is overwhelmingly **TLS over TCP** (with **ALPN** negotiating **h2** or **http/1.1**). The connection is **reliable** and **ordered**, which matches **file-like** resource fetch and **RPC** semantics.",
+          "notes": "HTTPS is overwhelmingly TLS over TCP (with ALPN negotiating h2 or http/1.1). The connection is reliable and ordered, which matches file-like resource fetch and RPC semantics.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "HTTPS is overwhelmingly TLS over TCP (with ALPN negotiating h2 or http/1.1).",
+          "expanded": false
+        },
+        {
+          "id": "n3b2a8da7841a5f2",
+          "title": "QUIC and HTTP/3",
+          "markdown": "**HTTP/3** uses **QUIC over UDP**. Benefits often cited: **0-RTT** resumption (with careful security trade-offs), **stream-level** multiplexing without TCP's **head-of-line blocking** across independent resources, and **integrated** encryption. QUIC still has to solve **NAT rebinding**, **migration**, and **loss recovery**-it is complex, but that complexity lives in **userspace** stacks and **kernel UDP** fast paths.",
+          "notes": "HTTP/3 uses QUIC over UDP. Benefits often cited: 0-RTT resumption (with careful security trade-offs), stream-level multiplexing without TCP's head-of-line blocking across independent resources, and integrated encryption. QUIC still has to solve NAT rebinding, migration, and loss recovery-it is complex, but that complexity lives in userspace stacks and kernel UDP fast paths.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "HTTP/3 uses QUIC over UDP.",
+          "expanded": false
+        },
+        {
+          "id": "n35655df95fe0d80",
+          "title": "Real-time voice, video, gaming",
+          "markdown": "**VoIP** and **interactive games** frequently prefer **UDP** (or QUIC's unreliable datagram extensions in newer designs) because:\n\n- Retransmitting **old** audio/video frames can **waste bandwidth** and **increase jitter**.\n- **PLC** (packet loss concealment), **FEC**, and **adaptive bitrate** handle loss at the application layer.\n\nWhen **every packet must arrive**, TCP (or QUIC reliable streams) is usually simpler than reinventing TCP poorly on UDP.",
+          "notes": "VoIP and interactive games frequently prefer UDP (or QUIC's unreliable datagram extensions in newer designs) because:\n- Retransmitting old audio/video frames can waste bandwidth and increase jitter.\n- PLC (packet loss concealment), FEC, and adaptive bitrate handle loss at the application layer.\n\nWhen every packet must arrive, TCP (or QUIC reliable streams) is usually simpler than reinventing TCP poorly on UDP.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "VoIP and interactive games frequently prefer UDP (or QUIC's unreliable...",
+          "expanded": false
+        },
+        {
+          "id": "n9d1907024fb4c43",
+          "title": "File transfer and messaging",
+          "markdown": "**FTP** historically used TCP; modern systems prefer **HTTPS**, **SFTP**, or **object storage APIs**-all typically **TCP**. Message queues and database protocols overwhelmingly use **TCP** for **durability** and **backpressure** that align with business semantics.",
+          "notes": "FTP historically used TCP; modern systems prefer HTTPS, SFTP, or object storage APIs-all typically TCP. Message queues and database protocols overwhelmingly use TCP for durability and backpressure that align with business semantics.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "FTP historically used TCP; modern systems prefer HTTPS, SFTP, or object...",
+          "expanded": false
+        },
+        {
+          "id": "n06afce6fe4464dd",
+          "title": "NAT, firewalls, and UDP longevity",
+          "markdown": "Many home and enterprise **NATs** track **UDP flows** heuristically (often with **short timeouts**) because there is no explicit **TEARDOWN** like TCP's **FIN/RST** sequence. Long-lived UDP sessions (**VoIP**, **VPN**, **some games**) sometimes need **keepalives** so middleboxes do not drop the binding. **TCP** tends to be easier for **corporate firewalls** that default-allow **outbound 443** and expect **stateful** return traffic.\n\n**Interview angle:** choosing UDP for a new product means planning for **enterprise egress**, **UDP blocking**, and **TURN/TCP fallback** in WebRTC-style architectures-not only raw performance.",
+          "notes": "Many home and enterprise NATs track UDP flows heuristically (often with short timeouts) because there is no explicit TEARDOWN like TCP's FIN/RST sequence. Long-lived UDP sessions (VoIP, VPN, some games) sometimes need keepalives so middleboxes do not drop the binding. TCP tends to be easier for corporate firewalls that default-allow outbound 443 and expect stateful return traffic.\n\nInterview angle: choosing UDP for a new product means planning for enterprise egress, UDP blocking, and TURN/TCP fallback in WebRTC-style architectures-not only raw performance.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Many home and enterprise NATs track UDP flows heuristically (often with...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes DNS",
+      "expanded": false
+    },
+    {
+      "id": "nc2f42a25efacde5",
+      "title": "Security implications",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n4ade64287e61792",
+          "title": "IP spoofing and reflection",
+          "markdown": "Because UDP is **connectionless**, **source IP spoofing** plus **open services** enables **reflection**: the attacker sends a small request with the victim's IP as source; the **reflector** replies to the victim. With **amplification** (response larger than request), this becomes **reflection/amplification DDoS**.\n\n**Common reflectors:** misconfigured **DNS**, **NTP**, **SSDP**, **memcached**, **CLDAP**, etc. Defenses include **BCP 38 / uRPF**-style **ingress filtering**, **disable unnecessary services**, **response rate limiting**, **RRL** for DNS, and **edge scrubbing**.",
+          "notes": "Because UDP is connectionless, source IP spoofing plus open services enables reflection: the attacker sends a small request with the victim's IP as source; the reflector replies to the victim. With amplification (response larger than request), this becomes reflection/amplification DDoS.\n\nCommon reflectors: misconfigured DNS, NTP, SSDP, memcached, CLDAP, etc. Defenses include BCP 38 / uRPF-style ingress filtering, disable unnecessary services, response rate limiting, RRL for DNS, and edge scrubbing.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Because UDP is connectionless, source IP spoofing plus open services enables...",
+          "expanded": false
+        },
+        {
+          "id": "n853affd64140ac4",
+          "title": "UDP amplification (interview pattern)",
+          "markdown": "Attacker -> (small UDP query, spoofed src = victim) -> open resolver/service -> **large UDP response** -> victim.\n\nMitigation themes: **do not run open resolvers** on the public Internet unless engineered for it, **cap** response sizes, **authenticate** where feasible, and **monitor** abnormal **query/response ratios**.",
+          "notes": "Attacker -> (small UDP query, spoofed src = victim) -> open resolver/service -> large UDP response -> victim.\n\nMitigation themes: do not run open resolvers on the public Internet unless engineered for it, cap response sizes, authenticate where feasible, and monitor abnormal query/response ratios.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Attacker -> (small UDP query, spoofed src = victim) -> open resolver/service...",
+          "expanded": false
+        },
+        {
+          "id": "n838179ec8b6a178",
+          "title": "TCP state exhaustion (SYN floods)",
+          "markdown": "In **SYN flood** attacks, attackers send many **SYN** segments (often from **spoofed** sources), forcing the server to hold **half-open** state until timeouts expire. If tables fill, **legitimate handshakes** fail.\n\n**Mitigations:** **SYN cookies** (encode state in sequence numbers so memory is not reserved until ACK), **tune backlogs**, **SYN proxies** at **load balancers**, **firewall/ratelimit** SYNs, **DDoS appliances** / **cloud scrubbing**.\n\nRelated protocol attacks (often mitigated at **edge** and in **kernel** hardening) include **ACK floods** that stress **stateful** middleboxes and certain **fragmentation** tricks aimed at reassembly or inspection cost. The transport lesson stays the same: **anything that forces expensive state or work per packet** is weaponizable at scale.",
+          "notes": "In SYN flood attacks, attackers send many SYN segments (often from spoofed sources), forcing the server to hold half-open state until timeouts expire. If tables fill, legitimate handshakes fail.\n\nMitigations: SYN cookies (encode state in sequence numbers so memory is not reserved until ACK), tune backlogs, SYN proxies at load balancers, firewall/ratelimit SYNs, DDoS appliances / cloud scrubbing.\n\nRelated protocol attacks (often mitigated at edge and in kernel hardening) include ACK floods that stress stateful middleboxes and certain fragmentation tricks aimed at reassembly or inspection cost. The transport lesson stays the same: anything that forces expensive state or work per packet is weaponizable at scale.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "In SYN flood attacks, attackers send many SYN segments (often from spoofed...",
+          "expanded": false
+        },
+        {
+          "id": "n5809e0a502f622a",
+          "title": "Application-level parallels",
+          "markdown": "Even with TCP's reliability, apps face **Slowloris**-style **connection** exhaustion and **L7** abuse. UDP services face **packet-rate** floods without the cushion of **TCP's** congestion backing off-**stateless** UDP servers can still be CPU-bound by **parsing** and **crypto**.",
+          "notes": "Even with TCP's reliability, apps face Slowloris-style connection exhaustion and L7 abuse. UDP services face packet-rate floods without the cushion of TCP's congestion backing off-stateless UDP servers can still be CPU-bound by parsing and crypto.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Even with TCP's reliability, apps face Slowloris-style connection exhaustion...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes IP spoofing and reflection",
+      "expanded": false
+    },
+    {
+      "id": "nd7c3b8f8bbcda5a",
+      "title": "TLS over TCP vs DTLS vs QUIC",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nf5a60eb574b38ca",
+          "title": "TLS over TCP",
+          "markdown": "**TLS** assumes a **reliable, ordered** stream: record framing expects **in-order** delivery. In practice, **HTTPS** = **TCP** connection + **TLS** + HTTP semantics. **mTLS** adds **client certificates** at the TLS layer-still on **TCP** for typical web stacks.\n\n**Interview point:** TLS provides **confidentiality, integrity, and identity** between endpoints; it does **not** fix **application authZ** bugs.",
+          "notes": "TLS assumes a reliable, ordered stream: record framing expects in-order delivery. In practice, HTTPS = TCP connection + TLS + HTTP semantics. mTLS adds client certificates at the TLS layer-still on TCP for typical web stacks.\n\nInterview point: TLS provides confidentiality, integrity, and identity between endpoints; it does not fix application authZ bugs.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "TLS assumes a reliable, ordered stream: record framing expects in-order...",
+          "expanded": false
+        },
+        {
+          "id": "n9809f4a76e5e8fc",
+          "title": "DTLS (Datagram TLS)",
+          "markdown": "**DTLS** adapts TLS for **datagram** transports (UDP). It handles **loss** and **reordering** with explicit **sequence** handling and **anti-replay** windows. You see DTLS with **WebRTC** (SRTP keying), some **VPN** products, and constrained **IoT** scenarios.\n\nUnlike TLS over TCP, a **DTLS** implementation must tolerate **gaps**: handshake messages may need **retransmission** at the DTLS layer because UDP does not retransmit. Record boundaries are preserved per datagram in ways that differ from TLS's **streaming** records-getting this wrong is a classic **interop** and **security** footgun in custom stacks.\n\n**Contrast:** DTLS must be careful about **path MTU**; **DTLS 1.3** improves handshake efficiency and aligns more closely with **TLS 1.3** concepts.\n\n**Interview sound bite:** \"**TLS needs TCP's reliability**; **DTLS brings a datagram-safe handshake and record layer** so keys and counters stay consistent when packets reorder or disappear.\"",
+          "notes": "DTLS adapts TLS for datagram transports (UDP). It handles loss and reordering with explicit sequence handling and anti-replay windows. You see DTLS with WebRTC (SRTP keying), some VPN products, and constrained IoT scenarios.\n\nUnlike TLS over TCP, a DTLS implementation must tolerate gaps: handshake messages may need retransmission at the DTLS layer because UDP does not retransmit. Record boundaries are preserved per datagram in ways that differ from TLS's streaming records-getting this wrong is a classic interop and security footgun in custom stacks.\n\nContrast: DTLS must be careful about path MTU; DTLS 1.3 improves handshake efficiency and aligns more closely with TLS 1.3 concepts.\n\nInterview sound bite: \"TLS needs TCP's reliability; DTLS brings a datagram-safe handshake and record layer so keys and counters stay consistent when packets reorder or disappear.\"",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "DTLS adapts TLS for datagram transports (UDP).",
+          "expanded": false
+        },
+        {
+          "id": "nda87eaabcef3761",
+          "title": "QUIC\u2019s encryption model",
+          "markdown": "QUIC encrypts **most of the transport header** and carries **TLS 1.3** handshake messages inside its frames (the exact integration is specified in **RFC 9000** series). Interview answer: QUIC provides **encrypted, authenticated transport** with **per-connection** crypto and **multiple streams**, built atop **UDP** as the substrate for **NAT traversal** and **deployment** in the wild.",
+          "notes": "QUIC encrypts most of the transport header and carries TLS 1.3 handshake messages inside its frames (the exact integration is specified in RFC 9000 series). Interview answer: QUIC provides encrypted, authenticated transport with per-connection crypto and multiple streams, built atop UDP as the substrate for NAT traversal and deployment in the wild.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "QUIC encrypts most of the transport header and carries TLS 1.3 handshake...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes TLS over TCP",
+      "expanded": false
+    },
+    {
+      "id": "n16bb8702fa0af88",
+      "title": "Operational debugging cues",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n6e5cc2f5e09c974",
+          "title": "TCP",
+          "markdown": "- **Wireshark**: SYN/SYN-ACK/ACK, retransmissions, duplicate ACKs, **RST** storms, **zero-window** probes.\n- **Symptoms**: stalls with **good link** but **lossy Wi-Fi**, **proxy** timeouts, **MTU black holes** (PMTUD issues manifest as TCP weirdness).",
+          "notes": "- Wireshark: SYN/SYN-ACK/ACK, retransmissions, duplicate ACKs, RST storms, zero-window probes.\n- Symptoms: stalls with good link but lossy Wi-Fi, proxy timeouts, MTU black holes (PMTUD issues manifest as TCP weirdness).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Wireshark: SYN/SYN-ACK/ACK, retransmissions, duplicate ACKs, RST storms,...",
+          "expanded": false
+        },
+        {
+          "id": "n9d5589bbcdd2e3e",
+          "title": "UDP",
+          "markdown": "- **Wireshark**: gaps in RTP sequence numbers, **ICMP port unreachable**, **fragmentation**.\n- **Symptoms**: \"**works on LAN**, flaky on Internet\" often means **missing congestion control**, **MTU/fragmentation**, or **NAT** behavior with **long** UDP flows.",
+          "notes": "- Wireshark: gaps in RTP sequence numbers, ICMP port unreachable, fragmentation.\n- Symptoms: \"works on LAN, flaky on Internet\" often means missing congestion control, MTU/fragmentation, or NAT behavior with long UDP flows.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Wireshark: gaps in RTP sequence numbers, ICMP port unreachable, fragmentation.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes TCP",
+      "expanded": false
+    },
+    {
+      "id": "nafaffd51ddffa99",
+      "title": "Decision checklist (for interviews)",
+      "markdown": "Choose **TCP** (or **QUIC reliable streams**) when:",
+      "notes": "Choose TCP (or QUIC reliable streams) when:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "ne7435f4dc94c690",
+          "title": "You need in-order, complete delivery and want standard congestion behavior.",
+          "markdown": "- You need in-order, complete delivery and want standard congestion behavior.",
+          "notes": "You need in-order, complete delivery and want standard congestion behavior.",
+          "blurb": "You need in-order, complete delivery and want standard congestion behavior.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n561516fde53ac6e",
+          "title": "You expose a service on the public Internet without a specialized media stack.",
+          "markdown": "- You expose a service on the public Internet without a specialized media stack.",
+          "notes": "You expose a service on the public Internet without a specialized media stack.",
+          "blurb": "You expose a service on the public Internet without a specialized media stack.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nb5da5728023ced7",
+          "title": "Latency and timeliness dominate and controlled loss is acceptable.",
+          "markdown": "- Latency and timeliness dominate and controlled loss is acceptable.",
+          "notes": "Latency and timeliness dominate and controlled loss is acceptable.",
+          "blurb": "Latency and timeliness dominate and controlled loss is acceptable.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n2ba2a49a4b8a699",
+          "title": "You are implementing a carefully engineered protocol (media, games, DNS-like patterns) w",
+          "markdown": "- You are implementing a carefully engineered protocol (media, games, DNS-like patterns) w",
+          "notes": "You are implementing a carefully engineered protocol (media, games, DNS-like patterns) w",
+          "blurb": "You are implementing a carefully engineered protocol (media, games, DNS-like...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Choose TCP (or QUIC reliable streams) when:",
+      "expanded": false
+    },
+    {
+      "id": "nc931f0400ef3c59",
+      "title": "Authoritative references",
+      "markdown": "RFC 9293 - Transmission Control Protocol (TCP) - RFC 768 - User Datagram Protocol - RFC 9000 - QUIC: A UDP-Based Multiplexed and Secure Transport - RFC 9147 - The Datagram Transport Layer Security (DTLS) Protocol...",
+      "notes": "RFC 9293 - Transmission Control Protocol (TCP) - RFC 768 - User Datagram Protocol - RFC 9000 - QUIC: A UDP-Based Multiplexed and Secure Transport - RFC 9147 - The Datagram Transport Layer Security (DTLS) Protocol...",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "ne8946f62ea9e908",
+          "title": "RFC 9293 - Transmission Control Protocol (TCP)",
+          "markdown": "- RFC 9293 - Transmission Control Protocol (TCP)",
+          "notes": "RFC 9293 - Transmission Control Protocol (TCP)",
+          "blurb": "RFC 9293 - Transmission Control Protocol (TCP)",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n0486a5e7d8864cd",
+          "title": "RFC 768 - User Datagram Protocol",
+          "markdown": "- RFC 768 - User Datagram Protocol",
+          "notes": "RFC 768 - User Datagram Protocol",
+          "blurb": "RFC 768 - User Datagram Protocol",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ne6d4d9fe4af4791",
+          "title": "RFC 9000 - QUIC: A UDP-Based Multiplexed and Secure Transport",
+          "markdown": "- RFC 9000 - QUIC: A UDP-Based Multiplexed and Secure Transport",
+          "notes": "RFC 9000 - QUIC: A UDP-Based Multiplexed and Secure Transport",
+          "blurb": "RFC 9000 - QUIC: A UDP-Based Multiplexed and Secure Transport",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n663627845317bc5",
+          "title": "RFC 9147 - The Datagram Transport Layer Security (DTLS) Protocol Version 1.3",
+          "markdown": "- RFC 9147 - The Datagram Transport Layer Security (DTLS) Protocol Version 1.3",
+          "notes": "RFC 9147 - The Datagram Transport Layer Security (DTLS) Protocol Version 1.3",
+          "blurb": "RFC 9147 - The Datagram Transport Layer Security (DTLS) Protocol Version 1.3",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n25ae3458a4fdbc4",
+          "title": "IANA Service Name and Transport Protocol Port Number Registry",
+          "markdown": "- IANA Service Name and Transport Protocol Port Number Registry",
+          "notes": "IANA Service Name and Transport Protocol Port Number Registry",
+          "blurb": "IANA Service Name and Transport Protocol Port Number Registry",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "RFC 9293 - Transmission Control Protocol (TCP) - RFC 768 - User Datagram...",
+      "expanded": false
+    },
+    {
+      "id": "n6b1b88e3b29539a",
+      "title": "Cross-reads in this repo",
+      "markdown": "Pair with **TLS**, **DDoS and Resilience**, **Rate Limiting and Abuse Prevention**, and **Cloud / network architecture** notes for full-stack interview depth.",
+      "notes": "Pair with TLS, DDoS and Resilience, Rate Limiting and Abuse Prevention, and Cloud / network architecture notes for full-stack interview depth.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Pair with TLS, DDoS and Resilience, Rate Limiting and Abuse Prevention, and...",
+      "expanded": false
+    },
+    {
+      "id": "ndf070c01db4008b",
+      "title": "Appendix: handshake and teardown (TCP mental model)",
+      "markdown": "**Three-way handshake (simplified):**",
+      "notes": "Three-way handshake (simplified):",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n1d4d8cdbb95f52a",
+          "title": "Client -> Server: SYN (pick ISN).",
+          "markdown": "- Client -> Server: SYN (pick ISN).",
+          "notes": "Client -> Server: SYN (pick ISN).",
+          "blurb": "Client -> Server: SYN (pick ISN).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nbbd19f920d8f3df",
+          "title": "Server -> Client: SYN-ACK (pick ISN, acknowledge client's ISN+1).",
+          "markdown": "- Server -> Client: SYN-ACK (pick ISN, acknowledge client's ISN+1).",
+          "notes": "Server -> Client: SYN-ACK (pick ISN, acknowledge client's ISN+1).",
+          "blurb": "Server -> Client: SYN-ACK (pick ISN, acknowledge client's ISN+1).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n55769e4ef7735e7",
+          "title": "Client -> Server: ACK (acknowledge server's ISN+1).",
+          "markdown": "- Client -> Server: ACK (acknowledge server's ISN+1).",
+          "notes": "Client -> Server: ACK (acknowledge server's ISN+1).",
+          "blurb": "Client -> Server: ACK (acknowledge server's ISN+1).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Three-way handshake (simplified):",
+      "expanded": false
+    },
+    {
+      "id": "n8da166c97e375d8",
+      "title": "Appendix: UDP header and semantics (interview facts)",
+      "markdown": "UDP adds an **8-byte header** with **source port**, **destination port**, **length**, and **checksum** (IPv4 checksum usage has nuances; IPv6 expects **UDP checksum** for correctness on the wire). Payload is opaque to UDP-**parsing** and **authorization** belong to the **application** or **session** protocol above.\n\nBecause UDP is **message-oriented**, APIs expose **sendto/recvfrom** style boundaries (modulo OS behaviors). That pairs naturally with **DNS** questions and **RTP** frames, and contrasts with TCP's **byte stream** where applications must **frame** messages themselves (length-prefix, delimiters, or HTTP parsing).",
+      "notes": "UDP adds an 8-byte header with source port, destination port, length, and checksum (IPv4 checksum usage has nuances; IPv6 expects UDP checksum for correctness on the wire). Payload is opaque to UDP-parsing and authorization belong to the application or session protocol above.\n\nBecause UDP is message-oriented, APIs expose sendto/recvfrom style boundaries (modulo OS behaviors). That pairs naturally with DNS questions and RTP frames, and contrasts with TCP's byte stream where applications must frame messages themselves (length-prefix, delimiters, or HTTP parsing).",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "UDP adds an 8-byte header with source port, destination port, length, and...",
+      "expanded": false
+    },
+    {
+      "id": "nedb8a4ec1d2eb4e",
+      "title": "Appendix: SCTP and \u201cTCP vs UDP\u201d in the wild",
+      "markdown": "**SCTP** is a less common interview topic but useful as a **pattern**: it offers **message framing**, **multi-homing**, and configurable **reliability** (ordered vs unordered streams) in one protocol-showing that the transport design space is wider than a strict binary. In many cloud-native stacks you still ship **gRPC over HTTP/2 over TCP/TLS** or **HTTP/3 over QUIC/UDP** rather than raw SCTP end-to-end.",
+      "notes": "SCTP is a less common interview topic but useful as a pattern: it offers message framing, multi-homing, and configurable reliability (ordered vs unordered streams) in one protocol-showing that the transport design space is wider than a strict binary. In many cloud-native stacks you still ship gRPC over HTTP/2 over TCP/TLS or HTTP/3 over QUIC/UDP rather than raw SCTP end-to-end.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "SCTP is a less common interview topic but useful as a pattern: it offers...",
+      "expanded": false
+    },
+    {
+      "id": "nf3e5ceb86593d6f",
+      "title": "Appendix: measurement and SRE hooks",
+      "markdown": "Healthy production systems usually track **TCP retransmit rate**, **RTO events**, **SYN backlog drops**, **active open failures**, and **UDP packet errors** (where exposed by the OS). For **customer-impacting** incidents, correlate **edge SYN rates** with **origin connection churn** and watch for **asymmetric routing** that breaks TCP without obvious \"packet loss\" on a single ping test.\n\nFor **UDP services**, monitor **query-to-response size ratios**, **unique source entropy** (spoofed floods look different from organic clients), and **ICMP unreachable** spikes that may indicate **scanning** or **misdirected** traffic.",
+      "notes": "Healthy production systems usually track TCP retransmit rate, RTO events, SYN backlog drops, active open failures, and UDP packet errors (where exposed by the OS). For customer-impacting incidents, correlate edge SYN rates with origin connection churn and watch for asymmetric routing that breaks TCP without obvious \"packet loss\" on a single ping test.\n\nFor UDP services, monitor query-to-response size ratios, unique source entropy (spoofed floods look different from organic clients), and ICMP unreachable spikes that may indicate scanning or misdirected traffic.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Healthy production systems usually track TCP retransmit rate, RTO events,...",
+      "expanded": false
+    },
+    {
+      "id": "n3f96e547597bffe",
+      "title": "More notes",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n25c718544af2710",
+          "title": "In this folder",
+          "markdown": "- **[TCP vs UDP - Comprehensive Guide](TCP%20vs%20UDP%20-%20Comprehensive%20Guide.md)** - Connection vs connectionless behavior, reliability, ordering, congestion control, DNS/QUIC/streaming use cases, security (amplification, spoofing, state exhaustion), TLS over TCP, and DTLS.\n- **[TCP vs UDP - Interview Questions & Answers](TCP%20vs%20UDP%20-%20Interview%20Questions%20%26%20Answers.md)** - Condensed Q&A for interview practice.",
+          "notes": "- TCP vs UDP - Comprehensive Guide - Connection vs connectionless behavior, reliability, ordering, congestion control, DNS/QUIC/streaming use cases, security (amplification, spoofing, state exhaustion), TLS over TCP, and DTLS.\n- TCP vs UDP - Interview Questions & Answers - Condensed Q&A for interview practice.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "TCP vs UDP - Comprehensive Guide - Connection vs connectionless behavior,...",
+          "expanded": false
+        },
+        {
+          "id": "nfe00be142119e5b",
+          "title": "Cross-reads",
+          "markdown": "Pair with **TLS**, **DDoS and Resilience**, and **Rate Limiting and Abuse Prevention** elsewhere in this repo for edge and abuse context.",
+          "notes": "Pair with TLS, DDoS and Resilience, and Rate Limiting and Abuse Prevention elsewhere in this repo for edge and abuse context.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Pair with TLS, DDoS and Resilience, and Rate Limiting and Abuse Prevention...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes In this folder"
+    },
+    {
+      "id": "n9f04f03287aa47b",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nc0e8d53ff9799b6",
+          "title": "TCP (Transmission Control Protocol)",
+          "markdown": "Connection-oriented \u00b7 reliable, ordered byte stream \u00b7 flow control + congestion control - Use when: HTTP/1.1, SMTP, SSH, DB protocols needing reliable delivery - Watch for: stream reassembly, TIME-WAIT, SYN floods,...",
+          "notes": "Connection-oriented \u00b7 reliable, ordered byte stream \u00b7 flow control + congestion control - Use when: HTTP/1.1, SMTP, SSH, DB protocols needing reliable delivery - Watch for: stream reassembly, TIME-WAIT, SYN floods,...",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n0d6720db23579fd",
+              "title": "Connection-oriented \u00b7 reliable, ordered byte stream \u00b7 flow control + congestion control",
+              "markdown": "- Connection-oriented \u00b7 reliable, ordered byte stream \u00b7 flow control + congestion control",
+              "notes": "Connection-oriented \u00b7 reliable, ordered byte stream \u00b7 flow control + congestion control",
+              "blurb": "Connection-oriented \u00b7 reliable, ordered byte stream \u00b7 flow control +...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc50a647c2575e21",
+              "title": "Use when: HTTP/1.1, SMTP, SSH, DB protocols needing reliable delivery",
+              "markdown": "- Use when: HTTP/1.1, SMTP, SSH, DB protocols needing reliable delivery",
+              "notes": "Use when: HTTP/1.1, SMTP, SSH, DB protocols needing reliable delivery",
+              "blurb": "Use when: HTTP/1.1, SMTP, SSH, DB protocols needing reliable delivery",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6c1429ce3c9cb0d",
+              "title": "Watch for: stream reassembly, TIME-WAIT, SYN floods, middlebox tampering",
+              "markdown": "- Watch for: stream reassembly, TIME-WAIT, SYN floods, middlebox tampering",
+              "notes": "Watch for: stream reassembly, TIME-WAIT, SYN floods, middlebox tampering",
+              "blurb": "Watch for: stream reassembly, TIME-WAIT, SYN floods, middlebox tampering",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Connection-oriented \u00b7 reliable, ordered byte stream \u00b7 flow control +...",
+          "expanded": false
+        },
+        {
+          "id": "nc37bb70ffaa5c1b",
+          "title": "UDP (User Datagram Protocol)",
+          "markdown": "Connectionless datagrams \u00b7 best-effort \u00b7 no ordering/retransmission in the protocol - Use when: DNS, VoIP, gaming, QUIC/HTTP3 stack - Watch for: amplification, spoofing, app-level reliability needed elsewhere",
+          "notes": "Connectionless datagrams \u00b7 best-effort \u00b7 no ordering/retransmission in the protocol - Use when: DNS, VoIP, gaming, QUIC/HTTP3 stack - Watch for: amplification, spoofing, app-level reliability needed elsewhere",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ncb9545af1aa17dc",
+              "title": "Connectionless datagrams \u00b7 best-effort \u00b7 no ordering/retransmission in the protocol",
+              "markdown": "- Connectionless datagrams \u00b7 best-effort \u00b7 no ordering/retransmission in the protocol",
+              "notes": "Connectionless datagrams \u00b7 best-effort \u00b7 no ordering/retransmission in the protocol",
+              "blurb": "Connectionless datagrams \u00b7 best-effort \u00b7 no ordering/retransmission in the...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n7c6a398694eb3c9",
+              "title": "Use when: DNS, VoIP, gaming, QUIC/HTTP3 stack",
+              "markdown": "- Use when: DNS, VoIP, gaming, QUIC/HTTP3 stack",
+              "notes": "Use when: DNS, VoIP, gaming, QUIC/HTTP3 stack",
+              "blurb": "Use when: DNS, VoIP, gaming, QUIC/HTTP3 stack",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9548da231fa2273",
+              "title": "Watch for: amplification, spoofing, app-level reliability needed elsewhere",
+              "markdown": "- Watch for: amplification, spoofing, app-level reliability needed elsewhere",
+              "notes": "Watch for: amplification, spoofing, app-level reliability needed elsewhere",
+              "blurb": "Watch for: amplification, spoofing, app-level reliability needed elsewhere",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Connectionless datagrams \u00b7 best-effort \u00b7 no ordering/retransmission in the...",
+          "expanded": false
+        },
+        {
+          "id": "n165cb1e971a7c0f",
+          "title": "QUIC / HTTP/3 note",
+          "markdown": "**QUIC** runs over **UDP** but adds **encryption**, **streams**, **multiplexing** without **HOL** blocking-**not** \"raw UDP\".",
+          "notes": "QUIC runs over UDP but adds encryption, streams, multiplexing without HOL blocking-not \"raw UDP\".",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "QUIC runs over UDP but adds encryption, streams, multiplexing without HOL...",
+          "expanded": false
+        },
+        {
+          "id": "n7919f260bde8459",
+          "title": "Interview framing",
+          "markdown": "\"**Pick** **transport** for **reliability**/**latency** **needs**, then add **TLS** or **app** **crypto** for **security** **properties**.\"",
+          "notes": "\"Pick transport for reliability/latency needs, then add TLS or app crypto for security properties.\"",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "\"Pick transport for reliability/latency needs, then add TLS or app crypto...",
+          "expanded": false
+        },
+        {
+          "id": "n516ba4b9f1a988c",
+          "title": "Cross-read",
+          "markdown": "`TLS` \u00b7 `HTTP Request Smuggling` (shared **edge** **protocol** literacy)",
+          "notes": "TLS \u00b7 HTTP Request Smuggling (shared edge protocol literacy)",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "TLS \u00b7 HTTP Request Smuggling (shared edge protocol literacy)",
+          "expanded": false
+        },
+        {
+          "id": "n5ef3eb0385fb2fb",
+          "title": "One-liner",
+          "markdown": "\"**TCP** = **ordered** **stream**; **UDP** = **datagrams**; **security** = **what** you **layer** **on** **top**.\"",
+          "notes": "\"TCP = ordered stream; UDP = datagrams; security = what you layer on top.\"",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "\"TCP = ordered stream; UDP = datagrams; security = what you layer on top.\"",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes TCP (Transmission Control Protocol)"
+    },
+    {
+      "id": "ne91e805b13dcfc0",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n6e7effc467a52bb",
+          "title": "\u201cUDP is always less secure than TCP.\u201d",
+          "markdown": "**Reality:** **Security** comes from **TLS**, **app** **crypto**, and **auth**-**UDP** **transports** (**QUIC**) can be **as** **strong** as **TCP** **+** **TLS** when **properly** **implemented**.",
+          "notes": "Reality: Security comes from TLS, app crypto, and auth-UDP transports (QUIC) can be as strong as TCP + TLS when properly implemented.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Security comes from TLS, app crypto, and auth-UDP transports (QUIC)...",
+          "expanded": false
+        },
+        {
+          "id": "n1844d7b63a6de4a",
+          "title": "\u201cTCP guarantees message boundaries.\u201d",
+          "markdown": "**Reality:** TCP is a **byte** **stream**; **framing** is **application** **responsibility** (**length** **prefix**, **delimiters**).",
+          "notes": "Reality: TCP is a byte stream; framing is application responsibility (length prefix, delimiters).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: TCP is a byte stream; framing is application responsibility (length...",
+          "expanded": false
+        },
+        {
+          "id": "nd3080a3745c1ef3",
+          "title": "\u201cFirewalls block UDP, so UDP services are safe.\u201d",
+          "markdown": "**Reality:** **Exposed** **UDP** **services** (**DNS**, **NTP**, **VPN**) are **common** **amplification** and **spoofing** **targets**.",
+          "notes": "Reality: Exposed UDP services (DNS, NTP, VPN) are common amplification and spoofing targets.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Exposed UDP services (DNS, NTP, VPN) are common amplification and...",
+          "expanded": false
+        },
+        {
+          "id": "n646673577fe397e",
+          "title": "\u201cNo handshake means UDP cannot be scanned.\u201d",
+          "markdown": "**Reality:** **Probes** and **error** **responses** still **reveal** **state**; **OS** **fingerprinting** uses **both** **protocols**.",
+          "notes": "Reality: Probes and error responses still reveal state; OS fingerprinting uses both protocols.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Probes and error responses still reveal state; OS fingerprinting...",
+          "expanded": false
+        },
+        {
+          "id": "n3a2ef438255e0da",
+          "title": "\u201cReliable delivery is free with TCP.\u201d",
+          "markdown": "**Reality:** **Head-of-line** **blocking** and **bufferbloat** hurt **latency**; **some** **apps** **prefer** **QUIC**/**UDP** **patterns**.",
+          "notes": "Reality: Head-of-line blocking and bufferbloat hurt latency; some apps prefer QUIC/UDP patterns.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Head-of-line blocking and bufferbloat hurt latency; some apps...",
+          "expanded": false
+        },
+        {
+          "id": "n5e91409d31a842c",
+          "title": "\u201cSYN flood only affects TCP.\u201d",
+          "markdown": "**Reality:** **UDP** **floods** and **stateless** **reflection** **attacks** are **parallel** **DoS** **classes**.",
+          "notes": "Reality: UDP floods and stateless reflection attacks are parallel DoS classes.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: UDP floods and stateless reflection attacks are parallel DoS classes.",
+          "expanded": false
+        },
+        {
+          "id": "n8e20f7c2c7b234e",
+          "title": "\u201cPort numbers imply encryption.\u201d",
+          "markdown": "**Reality:** **443** **often** carries **TLS**, but **protocol** **negotiation** **defines** **security**-not **the** **port** **magic** **number**.",
+          "notes": "Reality: 443 often carries TLS, but protocol negotiation defines security-not the port magic number.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: 443 often carries TLS, but protocol negotiation defines...",
+          "expanded": false
+        },
+        {
+          "id": "ne5ea1f1e74e0822",
+          "title": "\u201cUDP is only for DNS and video.\u201d",
+          "markdown": "**Reality:** **HTTP/3** over **QUIC** is **UDP**-based-**major** **web** **traffic** **shift**.",
+          "notes": "Reality: HTTP/3 over QUIC is UDP-based-major web traffic shift.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: HTTP/3 over QUIC is UDP-based-major web traffic shift.",
+          "expanded": false
+        },
+        {
+          "id": "n1e9607ee5fdde15",
+          "title": "\u201cConnectionless means stateless server.\u201d",
+          "markdown": "**Reality:** **Servers** **track** **sessions** **above** **UDP**; **state** **exists** in **app** **memory** or **DB**.",
+          "notes": "Reality: Servers track sessions above UDP; state exists in app memory or DB.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Servers track sessions above UDP; state exists in app memory or DB.",
+          "expanded": false
+        },
+        {
+          "id": "n03474cee4ae5e08",
+          "title": "\u201cChoosing TCP vs UDP is purely a performance decision.\u201d",
+          "markdown": "**Reality:** **Threat** **model** (**spoofing**, **replay**, **NAT** **binding**) **feeds** **into** **transport** **choice** and **whether** you add **TLS**/custom **integrity**.",
+          "notes": "Reality: Threat model (spoofing, replay, NAT binding) feeds into transport choice and whether you add TLS/custom integrity.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Threat model (spoofing, replay, NAT binding) feeds into transport...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \u201cUDP is always less secure than TCP.\u201d"
+    },
+    {
+      "id": "nb5f1203385c03ec",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n2be04450bb3d189",
+          "title": "In one minute, what is the fundamental difference between TCP and UDP?",
+          "markdown": "**Answer:** **TCP** is **connection-oriented**: endpoints perform a **handshake**, maintain **per-connection state**, and present a **single ordered byte stream** to applications. The stack **retransmits** lost data, **orders** delivery, and applies **flow** and **congestion control**. **UDP** is **connectionless**: it sends **datagrams** with **preserved message boundaries**, minimal header overhead, and **no** built-in reliability, ordering, or congestion control. Applications that use UDP own those semantics-or delegate them to a higher layer such as **QUIC**, **WebRTC**, or a custom protocol. Neither TCP nor UDP provides **authentication** by itself; **TLS** (typically on TCP), **DTLS**, or **QUIC's integrated TLS 1.3** address confidentiality, integrity, and peer authentication where needed.",
+          "notes": "Answer: TCP is connection-oriented: endpoints perform a handshake, maintain per-connection state, and present a single ordered byte stream to applications. The stack retransmits lost data, orders delivery, and applies flow and congestion control. UDP is connectionless: it sends datagrams with preserved message boundaries, minimal header overhead, and no built-in reliability, ordering, or congestion control. Applications that use UDP own those semantics-or delegate them to a higher layer such as QUIC, WebRTC, or a custom protocol. Neither TCP nor UDP provides authentication by itself; TLS (typically on TCP), DTLS, or QUIC's integrated TLS 1.3 address confidentiality, integrity, and peer authentication where needed.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: TCP is connection-oriented: endpoints perform a handshake, maintain...",
+          "expanded": false
+        },
+        {
+          "id": "n8c4c4eb30c2c706",
+          "title": "How does TCP provide reliability, and what are its limits?",
+          "markdown": "**Answer:** TCP numbers **bytes** with **sequence numbers** and uses **acknowledgments** so the sender knows what the receiver has **contiguously** accepted. **Loss** is inferred from **timeouts** or **duplicate ACK** patterns (implementation-dependent), which trigger **retransmission**. A **checksum** covers the TCP pseudo-header and payload for a basic integrity check, but it is not a substitute for **cryptographic authentication** on hostile paths. Reliability is **best-effort at the transport layer**: connections can still fail with **RST**, **middlebox** interference, or application **close** semantics. TCP does not give you application-level **idempotency** or **exactly-once processing**-only an ordered byte stream that either delivers bytes or signals failure at the socket API.",
+          "notes": "Answer: TCP numbers bytes with sequence numbers and uses acknowledgments so the sender knows what the receiver has contiguously accepted. Loss is inferred from timeouts or duplicate ACK patterns (implementation-dependent), which trigger retransmission. A checksum covers the TCP pseudo-header and payload for a basic integrity check, but it is not a substitute for cryptographic authentication on hostile paths. Reliability is best-effort at the transport layer: connections can still fail with RST, middlebox interference, or application close semantics. TCP does not give you application-level idempotency or exactly-once processing-only an ordered byte stream that either delivers bytes or signals failure at the socket API.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: TCP numbers bytes with sequence numbers and uses acknowledgments so...",
+          "expanded": false
+        },
+        {
+          "id": "n6cc6fbf014aa6de",
+          "title": "How does TCP preserve ordering, and what is head-of-line blocking?",
+          "markdown": "**Answer:** The receiver **buffers** out-of-order segments and only releases data to the application **in sequence**. That hides reordering from the app but creates **head-of-line (HOL) blocking**: if segment *N* is missing, **later** segments cannot be delivered even though they already arrived. For a **single** logical stream, that is usually desirable. For **multiplexed** workloads on **one** TCP connection-classic **HTTP/2**-a single loss event can stall **all** streams until the gap is repaired, because they share one TCP **byte stream**. **QUIC** multiplexes **independent streams** with **per-stream** delivery state on top of UDP, which reduces cross-stream HOL blocking at the cost of more complexity in user space and in endpoints.",
+          "notes": "Answer: The receiver buffers out-of-order segments and only releases data to the application in sequence. That hides reordering from the app but creates head-of-line (HOL) blocking: if segment N is missing, later segments cannot be delivered even though they already arrived. For a single logical stream, that is usually desirable. For multiplexed workloads on one TCP connection-classic HTTP/2-a single loss event can stall all streams until the gap is repaired, because they share one TCP byte stream. QUIC multiplexes independent streams with per-stream delivery state on top of UDP, which reduces cross-stream HOL blocking at the cost of more complexity in user space and in endpoints.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: The receiver buffers out-of-order segments and only releases data to...",
+          "expanded": false
+        },
+        {
+          "id": "n7d7757820687bae",
+          "title": "What is the difference between flow control and congestion control?",
+          "markdown": "**Answer:** **Flow control** (the receive **window**, `rwnd`) protects the **receiver**: \"do not send more than I can buffer.\" **Congestion control** protects the **network** and other flows: algorithms adjust the **congestion window** (`cwnd`) and pacing using signals such as **loss** and, in modern stacks, **delay** and **ECN**. TCP implements both. Raw UDP implements **neither**; a high-rate UDP sender can overrun a slow consumer or congest a shared bottleneck unless the application or framework adds **rate limits**, **FEC**, **adaptive encoding**, or an explicit congestion-control story (as in **WebRTC** or **QUIC**).",
+          "notes": "Answer: Flow control (the receive window, rwnd) protects the receiver: \"do not send more than I can buffer.\" Congestion control protects the network and other flows: algorithms adjust the congestion window (cwnd) and pacing using signals such as loss and, in modern stacks, delay and ECN. TCP implements both. Raw UDP implements neither; a high-rate UDP sender can overrun a slow consumer or congest a shared bottleneck unless the application or framework adds rate limits, FEC, adaptive encoding, or an explicit congestion-control story (as in WebRTC or QUIC).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: Flow control (the receive window, rwnd) protects the receiver: \"do...",
+          "expanded": false
+        },
+        {
+          "id": "nb4bfa9ee596ed70",
+          "title": "Why is TCP described as \u201cnetwork friendly,\u201d and why does naive UDP...",
+          "markdown": "**Answer:** Standard TCP **backs off** when it infers congestion, which helps avoid **congestion collapse** and tends to **share** bottleneck capacity among competing flows. A careless UDP application that blasts at line rate does not automatically participate in that social contract and can **starve** TCP traffic or harm shared links. Interviewers expect you to name **congestion control** as the main differentiator, not moral superiority-**QUIC** and ** SCTP**-style designs still implement congestion control; they just package it differently than classic TCP on the wire.",
+          "notes": "Answer: Standard TCP backs off when it infers congestion, which helps avoid congestion collapse and tends to share bottleneck capacity among competing flows. A careless UDP application that blasts at line rate does not automatically participate in that social contract and can starve TCP traffic or harm shared links. Interviewers expect you to name congestion control as the main differentiator, not moral superiority-QUIC and  SCTP-style designs still implement congestion control; they just package it differently than classic TCP on the wire.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: Standard TCP backs off when it infers congestion, which helps avoid...",
+          "expanded": false
+        },
+        {
+          "id": "n4630d3c992ca49f",
+          "title": "What problem does QUIC solve relative to TCP plus TLS plus HTTP/2?",
+          "markdown": "**Answer:** **QUIC** (RFC 9000) runs over **UDP** as a **substrate** to traverse deployed **NATs** and **firewalls** while implementing a **modern transport** in **user space**. It **encrypts** most transport headers, integrates **TLS 1.3** for key agreement and record protection, supports **multiple streams** with independent loss recovery, and can offer **connection migration** (e.g., Wi-Fi to cellular) without tying identity only to a four-tuple. Trade-offs include **CPU** cost in user space, **UDP**-specific **DDoS** and **policy** challenges, and operational need to understand **0-RTT** resumption risks (replay-like semantics unless applications constrain what 0-RTT data may trigger).",
+          "notes": "Answer: QUIC (RFC 9000) runs over UDP as a substrate to traverse deployed NATs and firewalls while implementing a modern transport in user space. It encrypts most transport headers, integrates TLS 1.3 for key agreement and record protection, supports multiple streams with independent loss recovery, and can offer connection migration (e.g., Wi-Fi to cellular) without tying identity only to a four-tuple. Trade-offs include CPU cost in user space, UDP-specific DDoS and policy challenges, and operational need to understand 0-RTT resumption risks (replay-like semantics unless applications constrain what 0-RTT data may trigger).",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: QUIC (RFC 9000) runs over UDP as a substrate to traverse deployed...",
+          "expanded": false
+        },
+        {
+          "id": "n08a07028db6b54a",
+          "title": "Why does DNS traditionally use UDP, and when does it switch to TCP or...",
+          "markdown": "**Answer:** Typical DNS queries and responses are **small**; UDP offers **low overhead** and a **single round trip** for simple lookups. The **TC (truncation)** bit in DNS responses signals that the answer did not fit; resolvers often **retry over TCP** on port **53** for the same query. **Large** responses (**DNSSEC**, big **TXT** or **SVCB** records) increasingly force TCP or **EDNS** sizing discipline. **DNS over TLS** (DoT, port **853**) and **DNS over HTTPS** (DoH, HTTPS/TCP **443**) move DNS into **TLS** stacks for **privacy** (encryption against on-path observers), **integrity**, and better traversal of networks that filter raw DNS UDP. The choice is a **product and threat-model** decision-centralized resolver trust, logging, and enterprise visibility-not a purity contest between UDP and TCP.",
+          "notes": "Answer: Typical DNS queries and responses are small; UDP offers low overhead and a single round trip for simple lookups. The TC (truncation) bit in DNS responses signals that the answer did not fit; resolvers often retry over TCP on port 53 for the same query. Large responses (DNSSEC, big TXT or SVCB records) increasingly force TCP or EDNS sizing discipline. DNS over TLS (DoT, port 853) and DNS over HTTPS (DoH, HTTPS/TCP 443) move DNS into TLS stacks for privacy (encryption against on-path observers), integrity, and better traversal of networks that filter raw DNS UDP. The choice is a product and threat-model decision-centralized resolver trust, logging, and enterprise visibility-not a purity contest between UDP and TCP.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: Typical DNS queries and responses are small; UDP offers low overhead...",
+          "expanded": false
+        },
+        {
+          "id": "n00a530ce9be8c24",
+          "title": "Why are UDP-based services associated with amplification and...",
+          "markdown": "**Answer:** UDP is **connectionless**, so if **ingress filtering** is absent, attackers can **spoof** the **source IP** on small requests sent to **open** servers that emit **large** replies. The reply goes to the **victim**, not the attacker-**reflection**-and the **bandwidth multiplier** is **amplification**. **DNS** open resolvers, **NTP** `monlist`-style history, **memcached**, and **SSDP** have been classic examples. Defenses include **BCP 38 / uRPF** (prevent spoofed egress from your network), **closing** or **authenticating** services, **response rate limiting (RRL)**, **cap** response sizes, **anycast** and **scrubbing** at the edge, and **monitoring** abnormal **bytes-out per query** ratios. Security answers should tie **spoofability** to **UDP's lack of handshake**, not claim UDP is \"insecure\" in the abstract.",
+          "notes": "Answer: UDP is connectionless, so if ingress filtering is absent, attackers can spoof the source IP on small requests sent to open servers that emit large replies. The reply goes to the victim, not the attacker-reflection-and the bandwidth multiplier is amplification. DNS open resolvers, NTP monlist-style history, memcached, and SSDP have been classic examples. Defenses include BCP 38 / uRPF (prevent spoofed egress from your network), closing or authenticating services, response rate limiting (RRL), cap response sizes, anycast and scrubbing at the edge, and monitoring abnormal bytes-out per query ratios. Security answers should tie spoofability to UDP's lack of handshake, not claim UDP is \"insecure\" in the abstract.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: UDP is connectionless, so if ingress filtering is absent, attackers...",
+          "expanded": false
+        },
+        {
+          "id": "n4bd311fe211b066",
+          "title": "How do SYN floods exploit TCP, and how do defenders mitigate them?",
+          "markdown": "**Answer:** The TCP **three-way handshake** obliges servers to track **half-open** or embryonic connections when **SYN** segments arrive. Attackers flood **SYNs** (often with **spoofed** sources), exhausting **per-OS** connection tables, **firewall** state, or **CPU** on SYN handling before **application** logic runs-**state exhaustion** at layer 4. Mitigations include **SYN cookies** (cryptographically encode state in the handshake so minimal memory is reserved pre-ACK), **SYN proxies** on **load balancers**, **backlog** and **timeout** tuning, **SYN rate limiting**, and **DDoS** mitigation at **edge** or **cloud** scrubbers. The interview point: **cheap** ingress work against connection-oriented transports can deny service without touching HTTPS.",
+          "notes": "Answer: The TCP three-way handshake obliges servers to track half-open or embryonic connections when SYN segments arrive. Attackers flood SYNs (often with spoofed sources), exhausting per-OS connection tables, firewall state, or CPU on SYN handling before application logic runs-state exhaustion at layer 4. Mitigations include SYN cookies (cryptographically encode state in the handshake so minimal memory is reserved pre-ACK), SYN proxies on load balancers, backlog and timeout tuning, SYN rate limiting, and DDoS mitigation at edge or cloud scrubbers. The interview point: cheap ingress work against connection-oriented transports can deny service without touching HTTPS.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: The TCP three-way handshake obliges servers to track half-open or...",
+          "expanded": false
+        },
+        {
+          "id": "n4af12f85f74e94f",
+          "title": "Compare TLS over TCP with DTLS over UDP.",
+          "markdown": "**Answer:** **TLS** on TCP assumes a **reliable, ordered byte stream**. Record framing and the handshake state machine expect no **gaps** or **reordering** at the transport layer; the OS delivers TLS bytes in order. **DTLS** (RFC 9147 for DTLS 1.3) adapts the handshake and record layer for **datagrams**: explicit **sequence** handling, **anti-replay** windows, and **retransmission** of handshake flights at the DTLS layer. DTLS is common in **WebRTC** (with **SRTP** for media keys), some **VPN** and **IoT** profiles, and anywhere you need **datagram semantics** with **cryptography**. Saying \"TLS does not work on UDP\" without naming **DTLS** or **QUIC** sounds incomplete in senior interviews.",
+          "notes": "Answer: TLS on TCP assumes a reliable, ordered byte stream. Record framing and the handshake state machine expect no gaps or reordering at the transport layer; the OS delivers TLS bytes in order. DTLS (RFC 9147 for DTLS 1.3) adapts the handshake and record layer for datagrams: explicit sequence handling, anti-replay windows, and retransmission of handshake flights at the DTLS layer. DTLS is common in WebRTC (with SRTP for media keys), some VPN and IoT profiles, and anywhere you need datagram semantics with cryptography. Saying \"TLS does not work on UDP\" without naming DTLS or QUIC sounds incomplete in senior interviews.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: TLS on TCP assumes a reliable, ordered byte stream.",
+          "expanded": false
+        },
+        {
+          "id": "nc0945476c9ceca7",
+          "title": "Can you run \u201cplain\u201d TLS records directly over UDP without DTLS or QUIC?",
+          "markdown": "**Answer:** **No**, not as a sound, interoperable pattern for general Internet use. TLS record processing assumes **in-order, loss-free** delivery of the **handshake** and **application** streams; datagram **loss** and **reordering** break framing and state unless a **datagram-safe** layer adds retransmission, replay protection, and path MTU awareness-precisely what **DTLS** specifies, or what **QUIC** provides as a full transport. Hand-waving \"we will encrypt UDP with TLS\" without DTLS/QUIC signals a gap in understanding **reliability coupling**.",
+          "notes": "Answer: No, not as a sound, interoperable pattern for general Internet use. TLS record processing assumes in-order, loss-free delivery of the handshake and application streams; datagram loss and reordering break framing and state unless a datagram-safe layer adds retransmission, replay protection, and path MTU awareness-precisely what DTLS specifies, or what QUIC provides as a full transport. Hand-waving \"we will encrypt UDP with TLS\" without DTLS/QUIC signals a gap in understanding reliability coupling.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: No, not as a sound, interoperable pattern for general Internet use.",
+          "expanded": false
+        },
+        {
+          "id": "n8c502a086c24764",
+          "title": "When would you choose UDP (or QUIC datagrams) for a real-time product,...",
+          "markdown": "**Answer:** Choose UDP-family transports when **timeliness** beats **completeness**-**voice**, **video**, **interactive games**-so you do not retransmit **stale** frames or block the whole channel behind one lost packet. You still engineer **jitter buffers**, **FEC** or **PLC**, **congestion-aware** rate control, **identity** and **keying** (often **DTLS** / **SRTP** in WebRTC), **abuse** controls, and **corporate** egress fallbacks (**TURN over TCP/TLS**). Product security also needs **anti-cheat**, **rate limits**, and clarity on **consent** and **metadata** exposure.",
+          "notes": "Answer: Choose UDP-family transports when timeliness beats completeness-voice, video, interactive games-so you do not retransmit stale frames or block the whole channel behind one lost packet. You still engineer jitter buffers, FEC or PLC, congestion-aware rate control, identity and keying (often DTLS / SRTP in WebRTC), abuse controls, and corporate egress fallbacks (TURN over TCP/TLS). Product security also needs anti-cheat, rate limits, and clarity on consent and metadata exposure.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: Choose UDP-family transports when timeliness beats...",
+          "expanded": false
+        },
+        {
+          "id": "nae2856739c34644",
+          "title": "Is video always UDP?",
+          "markdown": "**Answer:** **No.** **Live** and **interactive** stacks often use UDP, QUIC, or RTP; **video on demand** and **progressive** delivery commonly use **HTTPS over TCP** because **reliable** delivery, **range requests**, and **CDN** tooling matter more than shaving milliseconds. **ABR** (adaptive bitrate) tolerates TCP's latency spikes on many consumer networks; **conferencing** prioritizes **low latency** and may accept **controlled loss** with application-layer recovery.",
+          "notes": "Answer: No. Live and interactive stacks often use UDP, QUIC, or RTP; video on demand and progressive delivery commonly use HTTPS over TCP because reliable delivery, range requests, and CDN tooling matter more than shaving milliseconds. ABR (adaptive bitrate) tolerates TCP's latency spikes on many consumer networks; conferencing prioritizes low latency and may accept controlled loss with application-layer recovery.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "",
+          "expanded": false
+        },
+        {
+          "id": "nfdf5214b7ee0282",
+          "title": "When would you insist on TCP or QUIC reliable streams for an internal...",
+          "markdown": "**Answer:** When you want the transport to provide **ordered, complete** delivery of **request/response** or **RPC** streams without reimplementing **retransmission**, **congestion control**, and **flow control** correctly-typical for **control plane**, **billing**, **workflow** commands, and **admin** APIs. If you pick **raw UDP**, you owe a concrete story for **loss**, **ordering**, **backpressure**, **security** (spoofing, amplification if the service is exposed), and **observability**. Many teams default to **gRPC over HTTP/2/TCP** or **QUIC**-capable HTTP/3 rather than bespoke UDP for business-critical calls.",
+          "notes": "Answer: When you want the transport to provide ordered, complete delivery of request/response or RPC streams without reimplementing retransmission, congestion control, and flow control correctly-typical for control plane, billing, workflow commands, and admin APIs. If you pick raw UDP, you owe a concrete story for loss, ordering, backpressure, security (spoofing, amplification if the service is exposed), and observability. Many teams default to gRPC over HTTP/2/TCP or QUIC-capable HTTP/3 rather than bespoke UDP for business-critical calls.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: When you want the transport to provide ordered, complete delivery of...",
+          "expanded": false
+        },
+        {
+          "id": "n541dcc61bd32d4b",
+          "title": "How do you debug intermittent loss differently for TCP-heavy vs...",
+          "markdown": "**Answer:** For **TCP**, inspect **pcaps** for **retransmissions**, **RTO** spikes, **zero-window** stalls, **RST** storms, and **SYN** anomalies; correlate with **Wi-Fi**, **MTU / PMTUD black holes**, **proxy idle timeouts**, and **load balancer** settings. For **UDP**, the kernel will not **retransmit**-look for **application sequence gaps** (e.g., RTP), **timeouts** in app logs, **ICMP** errors, **silent middlebox drops** of large UDP payloads, and **NAT binding** expiry. End-to-end captures, **RTT** and **jitter** histograms, and **path MTU** probes are often mandatory for UDP mysteries.",
+          "notes": "Answer: For TCP, inspect pcaps for retransmissions, RTO spikes, zero-window stalls, RST storms, and SYN anomalies; correlate with Wi-Fi, MTU / PMTUD black holes, proxy idle timeouts, and load balancer settings. For UDP, the kernel will not retransmit-look for application sequence gaps (e.g., RTP), timeouts in app logs, ICMP errors, silent middlebox drops of large UDP payloads, and NAT binding expiry. End-to-end captures, RTT and jitter histograms, and path MTU probes are often mandatory for UDP mysteries.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: For TCP, inspect pcaps for retransmissions, RTO spikes, zero-window...",
+          "expanded": false
+        },
+        {
+          "id": "nd3913505863cce0",
+          "title": "How does NAT behavior differ for long-lived TCP vs UDP flows?",
+          "markdown": "**Answer:** **TCP** state machines give middleboxes explicit **lifecycle** signals (**SYN**, **FIN**, **RST**), so session tables are easier to reason about. **UDP** \"connections\" are often **heuristic** mappings with **idle timeouts**; **VoIP**, **games**, and **VPNs** may need **application keepalives** to prevent **silent** binding loss. Product plans should include **fallback transports** for **guest Wi-Fi** and **corporate** egress that permits **443/TCP** but blocks arbitrary UDP.",
+          "notes": "Answer: TCP state machines give middleboxes explicit lifecycle signals (SYN, FIN, RST), so session tables are easier to reason about. UDP \"connections\" are often heuristic mappings with idle timeouts; VoIP, games, and VPNs may need application keepalives to prevent silent binding loss. Product plans should include fallback transports for guest Wi-Fi and corporate egress that permits 443/TCP but blocks arbitrary UDP.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: TCP state machines give middleboxes explicit lifecycle signals (SYN,...",
+          "expanded": false
+        },
+        {
+          "id": "n142fe11d368ab1f",
+          "title": "What operational metrics should you watch on TCP-heavy vs UDP-heavy...",
+          "markdown": "**Answer:** **TCP:** SYN **backlog** drops, **active open** failures, **retransmit** rates, **RTT** distributions, **connection churn** behind load balancers, TLS **handshake** latency. **UDP:** packets per second vs **CPU**, **average response size** (amplification risk), **ICMP unreachable** bursts, **error** counters, resolver **qps** vs **bytes-out** for DNS-like services. Tie spikes to **DDoS** scrubbing, **autoscale**, and **upstream** capacity during attacks.",
+          "notes": "Answer: TCP: SYN backlog drops, active open failures, retransmit rates, RTT distributions, connection churn behind load balancers, TLS handshake latency. UDP: packets per second vs CPU, average response size (amplification risk), ICMP unreachable bursts, error counters, resolver qps vs bytes-out for DNS-like services. Tie spikes to DDoS scrubbing, autoscale, and upstream capacity during attacks.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: TCP: SYN backlog drops, active open failures, retransmit rates, RTT...",
+          "expanded": false
+        },
+        {
+          "id": "n2b0b4d73766c7ab",
+          "title": "What is BCP 38, and why do security engineers care on UDP abuse threads?",
+          "markdown": "**Answer:** **BCP 38** recommends **ingress filtering** so packets leaving a network use **source addresses that belong** to that network. It prevents **spoofed** sources, which underpin many **reflection** and **amplification** attacks against **UDP** services and **SYN** floods with forged sources. It is primarily **routing hygiene** at **ISPs** and **enterprises**, not an app toggle-but advocating for it reduces global attack surface against your **authoritative DNS**, **gaming**, or **custom UDP** ports.",
+          "notes": "Answer: BCP 38 recommends ingress filtering so packets leaving a network use source addresses that belong to that network. It prevents spoofed sources, which underpin many reflection and amplification attacks against UDP services and SYN floods with forged sources. It is primarily routing hygiene at ISPs and enterprises, not an app toggle-but advocating for it reduces global attack surface against your authoritative DNS, gaming, or custom UDP ports.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Answer: BCP 38 recommends ingress filtering so packets leaving a network use...",
+          "expanded": false
+        },
+        {
+          "id": "nb663e7cb1da3083",
+          "title": "References and follow-ups",
+          "markdown": "**RFCs:** [RFC 9293](https://www.rfc-editor.org/rfc/rfc9293) (TCP); [RFC 768](https://www.rfc-editor.org/rfc/rfc768) (UDP); [RFC 9000](https://www.rfc-editor.org/rfc/rfc9000) (QUIC); [RFC 9147](https://www.rfc-editor.org/rfc/rfc9147) (DTLS 1.3).\n\n**Interview follow-ups:** QUIC **0-RTT** replay semantics, **HTTP/3** deployment constraints, **DoH** privacy vs **resolver centralization**, **WebRTC** identity and **TURN** abuse, **SYN cookie** trade-offs.\n\n**Cross-read:** TLS, DDoS and Resilience, Rate Limiting and Abuse Prevention, Cloud Networking.",
+          "notes": "RFCs: RFC 9293 (TCP); RFC 768 (UDP); RFC 9000 (QUIC); RFC 9147 (DTLS 1.3).\n\nInterview follow-ups: QUIC 0-RTT replay semantics, HTTP/3 deployment constraints, DoH privacy vs resolver centralization, WebRTC identity and TURN abuse, SYN cookie trade-offs.\n\nCross-read: TLS, DDoS and Resilience, Rate Limiting and Abuse Prevention, Cloud Networking.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "RFCs: RFC 9293 (TCP); RFC 768 (UDP); RFC 9000 (QUIC); RFC 9147 (DTLS 1.3).",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes In one minute, what is the fundamental difference between TCP and UDP"
+    }
+  ],
+  "topicId": "tcp-vs-udp",
+  "name": "TCP vs UDP",
+  "structure": "logic-right",
+  "blurb": "TCP (Transmission Control Protocol) and UDP (User Datagram Protocol) are..."
+}

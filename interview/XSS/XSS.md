@@ -9,3 +9,5 @@
 [**XSS - Quick Reference**](XSS%20-%20Quick%20Reference.md)
 
 [**XSS - VAPT Methodology**](XSS%20-%20VAPT%20Methodology.md)
+
+[**XSS - Mind Map**](XSS%20-%20Mind%20Map.md)

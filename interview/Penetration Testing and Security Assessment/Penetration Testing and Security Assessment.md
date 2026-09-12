@@ -7,3 +7,5 @@
 [**Critical Clarification: Penetration Testing and Security Assessment Misconceptions**](Critical%20Clarification%20Penetration%20Testing%20and%20Sec.md)
 
 [**Penetration Testing and Security Assessment - Quick Reference**](Penetration%20Testing%20and%20Security%20Assessment%20-%20Quic.md)
+
+[**Penetration Testing and Security Assessment - Mind Map**](Penetration%20Testing%20and%20Security%20Assessment%20-%20Mind%20Map.md)

@@ -1,0 +1,1285 @@
+{
+  "id": "n211f53a1da17441",
+  "title": "Rate Limiting and Abuse Prevention",
+  "markdown": "**Rate limiting** bounds how often a client (or class of clients) may invoke an operation in a time window. **Abuse prevention** adds **intent-aware** controls: credential stuffing, scraping, payment fraud, and **economic denial of service** often stay *below* crude throughput caps if you only count HTTP requests. Strong designs combine **edge absorption**, **identity-aware quotas**, **cost-aware** budgets, and **progressive** responses so legitimate users are not collateral damage.\n\nThis guide focuses on **algorithms**, **distributed enforcement**, **HTTP semantics**, **multi-dimensional limits**, **GraphQL cost controls**, **abuse signals**, **progressive enforcement**, and **observability**-the topics product-security and platform interviews most often stress-test.",
+  "notes": "Rate limiting bounds how often a client (or class of clients) may invoke an operation in a time window. Abuse prevention adds intent-aware controls: credential stuffing, scraping, payment fraud, and economic denial of service often stay below crude throughput caps if you only count HTTP requests. Strong designs combine edge absorption, identity-aware quotas, cost-aware budgets, and progressive responses so legitimate users are not collateral damage.\n\nThis guide focuses on algorithms, distributed enforcement, HTTP semantics, multi-dimensional limits, GraphQL cost controls, abuse signals, progressive enforcement, and observability-the topics product-security and platform interviews most often stress-test.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "n762e20113e0dc40",
+      "title": "At a glance",
+      "markdown": "**Rate limiting** bounds how often a client (or class of clients) may invoke an operation in a time window. **Abuse prevention** adds **intent-aware** controls: credential stuffing, scraping, payment fraud, and **economic denial of service** often stay *below* crude throughput caps if you only count HTTP requests. Strong designs combine **edge absorption**, **identity-aware quotas**, **cost-aware** budgets, and **progressive** responses so legitimate users are not collateral damage.\n\nThis guide focuses on **algorithms**, **distributed enforcement**, **HTTP semantics**, **multi-dimensional limits**, **GraphQL cost controls**, **abuse signals**, **progressive enforcement**, and **observability**-the topics product-security and platform interviews most often stress-test.",
+      "notes": "Rate limiting bounds how often a client (or class of clients) may invoke an operation in a time window. Abuse prevention adds intent-aware controls: credential stuffing, scraping, payment fraud, and economic denial of service often stay below crude throughput caps if you only count HTTP requests. Strong designs combine edge absorption, identity-aware quotas, cost-aware budgets, and progressive responses so legitimate users are not collateral damage.\n\nThis guide focuses on algorithms, distributed enforcement, HTTP semantics, multi-dimensional limits, GraphQL cost controls, abuse signals, progressive enforcement, and observability-the topics product-security and platform interviews most often stress-test.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Rate limiting bounds how often a client (or class of clients) may invoke an...",
+      "expanded": false
+    },
+    {
+      "id": "n4ca64f09dcebdf3",
+      "title": "Core model: capacity, fairness, and economics",
+      "markdown": "**Infrastructure rate limiting** protects **availability**: CPU, connections, DB QPS, egress bandwidth. **Application abuse controls** protect **economics and integrity**: signup funnels, login, search, exports, payouts, and partner integrations.\n\nThe same HTTP path can cost **microseconds** or **minutes** depending on arguments (nested GraphQL, unbounded `limit`, report generation). **Throughput limits** (requests per second) and **cost limits** (abstract \"units\" per minute) answer different questions; mature systems use **both**.",
+      "notes": "Infrastructure rate limiting protects availability: CPU, connections, DB QPS, egress bandwidth. Application abuse controls protect economics and integrity: signup funnels, login, search, exports, payouts, and partner integrations.\n\nThe same HTTP path can cost microseconds or minutes depending on arguments (nested GraphQL, unbounded limit, report generation). Throughput limits (requests per second) and cost limits (abstract \"units\" per minute) answer different questions; mature systems use both.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Infrastructure rate limiting protects availability: CPU, connections, DB...",
+      "expanded": false
+    },
+    {
+      "id": "n5821f71cd24a2f2",
+      "title": "Algorithms",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n662c30f983fded7",
+          "title": "Token bucket",
+          "markdown": "**Idea:** A bucket holds up to **B** tokens. Tokens refill continuously at rate **r** tokens per second (or per fixed tick). Each accepted request **consumes one token** (or a weighted amount). If insufficient tokens, the request is **delayed**, **rejected**, or **degraded**.\n\n**Behavior:** Allows **controlled bursts** up to **B** without permanently raising the average rate above **r**. Popular for APIs where short bursts are normal (mobile apps batching calls, UI waterfalls) but sustained overload must be capped.\n\n**Implementation notes:**",
+          "notes": "Idea: A bucket holds up to B tokens. Tokens refill continuously at rate r tokens per second (or per fixed tick). Each accepted request consumes one token (or a weighted amount). If insufficient tokens, the request is delayed, rejected, or degraded.\n\nBehavior: Allows controlled bursts up to B without permanently raising the average rate above r. Popular for APIs where short bursts are normal (mobile apps batching calls, UI waterfalls) but sustained overload must be capped.\n\nImplementation notes:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nc5a64c88bdfdbb7",
+              "title": "Refill can be computed lazily: store tokens and last_refill_time; on each check, add (no",
+              "markdown": "- Refill can be computed lazily: store tokens and last_refill_time; on each check, add (no",
+              "notes": "Refill can be computed lazily: store tokens and last_refill_time; on each check, add (no",
+              "blurb": "Refill can be computed lazily: store tokens and lastrefilltime; on each...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb9c3facc14239d6",
+              "title": "Concurrency: In multithreaded or distributed systems, compare-and-set loops, Lua scripts",
+              "markdown": "- Concurrency: In multithreaded or distributed systems, compare-and-set loops, Lua scripts",
+              "notes": "Concurrency: In multithreaded or distributed systems, compare-and-set loops, Lua scripts",
+              "blurb": "Concurrency: In multithreaded or distributed systems, compare-and-set loops,...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd237b5a30060efe",
+              "title": "Weighted costs: Deduct k tokens for expensive operations so one route cannot exhaust the",
+              "markdown": "- Weighted costs: Deduct k tokens for expensive operations so one route cannot exhaust the",
+              "notes": "Weighted costs: Deduct k tokens for expensive operations so one route cannot exhaust the",
+              "blurb": "Weighted costs: Deduct k tokens for expensive operations so one route cannot...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Idea: A bucket holds up to B tokens.",
+          "expanded": false
+        },
+        {
+          "id": "n403dfff10dcacf3",
+          "title": "Leaky bucket",
+          "markdown": "**Idea:** Requests arrive into a queue (the \"bucket\"). The bucket **leaks** at a constant rate **r** (smooth output). If the queue exceeds capacity **B**, **overflow** is dropped or rejected.\n\n**Behavior:** **Smoothes** traffic more than token bucket when strictly enforced as a queue. Variants exist: **as a meter** without queuing (arrival is shaped to leak rate; excess dropped immediately)-behaviorally similar to a token bucket with different queuing semantics.\n\n**Implementation notes:**\n\n- **Queued leaky bucket** introduces **latency** under burst: requests wait to be released at rate **r**. For interactive APIs, unbounded queues are dangerous; cap queue depth and shed load explicitly.\n- **Drop-on-arrival** variants avoid queue latency but need clear **client-visible signals** (429) and **monitoring** on drops.\n\n**Trade-offs:** Excellent when you need **steady** downstream pressure; poor default for user-facing latency if you accidentally implement an unbounded wait.",
+          "notes": "Idea: Requests arrive into a queue (the \"bucket\"). The bucket leaks at a constant rate r (smooth output). If the queue exceeds capacity B, overflow is dropped or rejected.\n\nBehavior: Smoothes traffic more than token bucket when strictly enforced as a queue. Variants exist: as a meter without queuing (arrival is shaped to leak rate; excess dropped immediately)-behaviorally similar to a token bucket with different queuing semantics.\n\nImplementation notes:\n- Queued leaky bucket introduces latency under burst: requests wait to be released at rate r. For interactive APIs, unbounded queues are dangerous; cap queue depth and shed load explicitly.\n- Drop-on-arrival variants avoid queue latency but need clear client-visible signals (429) and monitoring on drops.\n\nTrade-offs: Excellent when you need steady downstream pressure; poor default for user-facing latency if you accidentally implement an unbounded wait.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Idea: Requests arrive into a queue (the \"bucket\").",
+          "expanded": false
+        },
+        {
+          "id": "n4921a59a38397d4",
+          "title": "Fixed window counter",
+          "markdown": "**Idea:** Partition time into windows of length **T** (e.g., one minute). Count requests per key (IP, user) in the current window. If count **> N**, reject.\n\n**Behavior:** Extremely simple: one counter per key per window.\n\n**Major caveat - boundary spikes:** A client can send **N** requests at the end of window *W* and **N** at the start of window *W+1*, achieving **2N** in a span shorter than **T** (nearly **2N/T** instantaneous). Attackers learn window boundaries from headers or empirical testing.\n\n**Mitigations:** **Sliding** approaches, smaller windows (increases churn), or **token bucket** for burst control.\n\n**Distributed note:** Rolling windows at clock boundaries requires **consistent keying** (`user:2025-04-12T12:34`) and **TTL** equal to **T** plus skew buffer.",
+          "notes": "Idea: Partition time into windows of length T (e.g., one minute). Count requests per key (IP, user) in the current window. If count > N, reject.\n\nBehavior: Extremely simple: one counter per key per window.\n\nMajor caveat - boundary spikes: A client can send N requests at the end of window W and N at the start of window W+1, achieving 2N in a span shorter than T (nearly 2N/T instantaneous). Attackers learn window boundaries from headers or empirical testing.\n\nMitigations: Sliding approaches, smaller windows (increases churn), or token bucket for burst control.\n\nDistributed note: Rolling windows at clock boundaries requires consistent keying (user:2025-04-12T12:34) and TTL equal to T plus skew buffer.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Idea: Partition time into windows of length T (e.g., one minute).",
+          "expanded": false
+        },
+        {
+          "id": "n732dd5ecae4645c",
+          "title": "Sliding window log",
+          "markdown": "**Idea:** Store **timestamps** of accepted requests for each key. On each request, **purge** entries older than **T**, then if count **\u2265 N**, reject; else append **now**.\n\n**Behavior:** **Accurate** and fair with respect to the last **T** seconds-no boundary doubling artifact.\n\n**Trade-offs:** **Memory heavy** at high QPS; not ideal for millions of keys each with thousands of events.\n\n**Practical variant - sliding window counter (approximate):** Combine **current fixed window count** with **previous window count**, weighted by overlap fraction. Example: for a 60s limit, `estimated = count_current + count_previous * (remaining_seconds_in_window / 60)`. This is **memory cheap** and **smooths** boundary effects, though it is **approximate**.",
+          "notes": "Idea: Store timestamps of accepted requests for each key. On each request, purge entries older than T, then if count \u2265 N, reject; else append now.\n\nBehavior: Accurate and fair with respect to the last T seconds-no boundary doubling artifact.\n\nTrade-offs: Memory heavy at high QPS; not ideal for millions of keys each with thousands of events.\n\nPractical variant - sliding window counter (approximate): Combine current fixed window count with previous window count, weighted by overlap fraction. Example: for a 60s limit, estimated = countcurrent + countprevious  (remainingsecondsinwindow / 60). This is memory cheap and smooths boundary effects, though it is approximate.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Idea: Store timestamps of accepted requests for each key.",
+          "expanded": false
+        },
+        {
+          "id": "n41b4973988ee5d6",
+          "title": "Choosing among algorithms",
+          "markdown": "| Algorithm | Burst handling | State per key | Fairness vs window edge | Typical use |\n|-----------|----------------|---------------|-------------------------|-------------|\n| Token bucket | Explicit burst budget **B** | Small (tokens + timestamp) | Good | General API quotas, tenant budgets |\n| Leaky bucket (queued) | Smooths bursts into delay | Queue or timestamps | Good | Shaping to downstream steady rate |\n| Fixed window | Allows 2\u00d7 spike at edges | Tiny (integer) | Poor | Cheap guardrails, coarse WAF rules |\n| Sliding log | Precise | Large | Excellent | Sensitive endpoints, low volume |\n| Sliding window counter | Approximate | Small | Good | High-scale HTTP and gateway limits |",
+          "notes": "| Algorithm | Burst handling | State per key | Fairness vs window edge | Typical use |\n|-----------|----------------|---------------|-------------------------|-------------|\n| Token bucket | Explicit burst budget B | Small (tokens + timestamp) | Good | General API quotas, tenant budgets |\n| Leaky bucket (queued) | Smooths bursts into delay | Queue or timestamps | Good | Shaping to downstream steady rate |\n| Fixed window | Allows 2\u00d7 spike at edges | Tiny (integer) | Poor | Cheap guardrails, coarse WAF rules |\n| Sliding log | Precise | Large | Excellent | Sensitive endpoints, low volume |\n| Sliding window counter | Approximate | Small | Good | High-scale HTTP and gateway limits |",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "| Algorithm | Burst handling | State per key | Fairness vs window edge |...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Token bucket",
+      "expanded": true
+    },
+    {
+      "id": "n93ed95fbf11cc8f",
+      "title": "Distributed rate limiting",
+      "markdown": "Single-host limits fail when traffic spreads across many instances, regions, or cells. Common patterns:",
+      "notes": "Single-host limits fail when traffic spreads across many instances, regions, or cells. Common patterns:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nf6ba14e5b0a5995",
+          "title": "Centralized decision service",
+          "markdown": "All instances call a **small, fast** service (or sidecar) that owns limit state. **Pros:** consistent policy, easier audits. **Cons:** extra hop, must be highly available; failure modes must be defined (fail open vs closed).",
+          "notes": "All instances call a small, fast service (or sidecar) that owns limit state. Pros: consistent policy, easier audits. Cons: extra hop, must be highly available; failure modes must be defined (fail open vs closed).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "All instances call a small, fast service (or sidecar) that owns limit state.",
+          "expanded": false
+        },
+        {
+          "id": "nc3b61e1de2b9652",
+          "title": "Shared datastore (Redis, DynamoDB, etc.)",
+          "markdown": "**Atomic increments** with TTL for fixed windows; **Lua scripts** or **transactions** for read-modify-write on token bucket fields. **Pros:** mature, scalable. **Cons:** replication lag, clock skew, hot keys; cross-region latency.\n\n**Hot key mitigation:** Shard counters (`user:123:shard7`), local soft limits with occasional sync, or hierarchical limits (per-instance local cap + global cap).",
+          "notes": "Atomic increments with TTL for fixed windows; Lua scripts or transactions for read-modify-write on token bucket fields. Pros: mature, scalable. Cons: replication lag, clock skew, hot keys; cross-region latency.\n\nHot key mitigation: Shard counters (user:123:shard7), local soft limits with occasional sync, or hierarchical limits (per-instance local cap + global cap).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Atomic increments with TTL for fixed windows; Lua scripts or transactions...",
+          "expanded": false
+        },
+        {
+          "id": "n4216d6e9441f1e9",
+          "title": "Eventually consistent / approximate limits",
+          "markdown": "For abuse prevention, **slight overrun** is often acceptable if detection catches sustained abuse. **Pros:** simpler at extreme scale. **Cons:** unfair short bursts; avoid for **strict billing** quotas unless you reconcile asynchronously.",
+          "notes": "For abuse prevention, slight overrun is often acceptable if detection catches sustained abuse. Pros: simpler at extreme scale. Cons: unfair short bursts; avoid for strict billing quotas unless you reconcile asynchronously.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "For abuse prevention, slight overrun is often acceptable if detection...",
+          "expanded": false
+        },
+        {
+          "id": "n5ebc690127d2e60",
+          "title": "Per-instance limits with global floor",
+          "markdown": "Each instance enforces `N / instances` (or adaptive share). **Pros:** no central bottleneck. **Cons:** uneven routing causes skew; attackers target quiet instances unless load balancing is perfect.",
+          "notes": "Each instance enforces N / instances (or adaptive share). Pros: no central bottleneck. Cons: uneven routing causes skew; attackers target quiet instances unless load balancing is perfect.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Each instance enforces N / instances (or adaptive share).",
+          "expanded": false
+        },
+        {
+          "id": "nbc628f4c5a2ac61",
+          "title": "Sticky sessions",
+          "markdown": "Routing a user to the same instance makes local counters more accurate but **weakens resilience** and **complicates deploys**; generally avoid as a primary strategy for limits.",
+          "notes": "Routing a user to the same instance makes local counters more accurate but weakens resilience and complicates deploys; generally avoid as a primary strategy for limits.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Routing a user to the same instance makes local counters more accurate but...",
+          "expanded": false
+        },
+        {
+          "id": "n19977af5393460a",
+          "title": "Clock skew and boundaries",
+          "markdown": "Use **UTC**, **monotonic** time for refill math where possible, and **TTL buffers** so counters do not expire mid-window incorrectly. In multi-region systems, prefer **server-side clocks** authoritative for enforcement.",
+          "notes": "Use UTC, monotonic time for refill math where possible, and TTL buffers so counters do not expire mid-window incorrectly. In multi-region systems, prefer server-side clocks authoritative for enforcement.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Use UTC, monotonic time for refill math where possible, and TTL buffers so...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Single-host limits fail when traffic spreads across many instances, regions,...",
+      "expanded": true
+    },
+    {
+      "id": "n4276a97d3262f45",
+      "title": "HTTP semantics: 429, Retry-After, and related headers",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nc31f751c38025f0",
+          "title": "429 Too Many Requests",
+          "markdown": "**Meaning:** The **client** has exceeded a **rate limit** or quota policy. The server understood the request; refusal is due to **policy**, not inability to process valid traffic in general.\n\n**Contrast with 503:** **503** indicates the server (or dependency) **cannot currently handle** the request-overload, maintenance, circuit open. Clients often retry **503** with backoff; **429** should be treated as **policy** with **respect for Retry-After**.\n\n**Bad practice:** Using **429** for generic auth failures (prefer **401/403**) confuses client libraries and observability.",
+          "notes": "Meaning: The client has exceeded a rate limit or quota policy. The server understood the request; refusal is due to policy, not inability to process valid traffic in general.\n\nContrast with 503: 503 indicates the server (or dependency) cannot currently handle the request-overload, maintenance, circuit open. Clients often retry 503 with backoff; 429 should be treated as policy with respect for Retry-After.\n\nBad practice: Using 429 for generic auth failures (prefer 401/403) confuses client libraries and observability.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Meaning: The client has exceeded a rate limit or quota policy.",
+          "expanded": false
+        },
+        {
+          "id": "n363e731fd2183b1",
+          "title": "Retry-After",
+          "markdown": "**Retry-After** may be:",
+          "notes": "Retry-After may be:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nfc88c5b25e20a97",
+              "title": "HTTP-date (absolute time), or",
+              "markdown": "- HTTP-date (absolute time), or",
+              "notes": "HTTP-date (absolute time), or",
+              "blurb": "HTTP-date (absolute time), or",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0b5d8ba1f31258e",
+              "title": "Delay-seconds (integer seconds from now).",
+              "markdown": "- Delay-seconds (integer seconds from now).",
+              "notes": "Delay-seconds (integer seconds from now).",
+              "blurb": "Delay-seconds (integer seconds from now).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3a4eff97d8e5d0a",
+              "title": "Always send Retry-After on 429 when possible, especially for bursty clients (SDKs, mobil",
+              "markdown": "- Always send Retry-After on 429 when possible, especially for bursty clients (SDKs, mobil",
+              "notes": "Always send Retry-After on 429 when possible, especially for bursty clients (SDKs, mobil",
+              "blurb": "Always send Retry-After on 429 when possible, especially for bursty clients...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n15da66dfe081591",
+              "title": "For token bucket style, Retry-After can approximate time until one token is available.",
+              "markdown": "- For token bucket style, Retry-After can approximate time until one token is available.",
+              "notes": "For token bucket style, Retry-After can approximate time until one token is available.",
+              "blurb": "For token bucket style, Retry-After can approximate time until one token is...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n668fcf2338c8246",
+              "title": "Ensure consistent behavior: if Retry-After says 30s, do not accept meaningful traffic be",
+              "markdown": "- Ensure consistent behavior: if Retry-After says 30s, do not accept meaningful traffic be",
+              "notes": "Ensure consistent behavior: if Retry-After says 30s, do not accept meaningful traffic be",
+              "blurb": "Ensure consistent behavior: if Retry-After says 30s, do not accept...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Retry-After may be:",
+          "expanded": false
+        },
+        {
+          "id": "n544068ebd59ae87",
+          "title": "Rate limit headers (informative)",
+          "markdown": "De facto conventions include:",
+          "notes": "De facto conventions include:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n1dc2d7760de64ad",
+              "title": "X-RateLimit-Limit - policy maximum in the window.",
+              "markdown": "- X-RateLimit-Limit - policy maximum in the window.",
+              "notes": "X-RateLimit-Limit - policy maximum in the window.",
+              "blurb": "X-RateLimit-Limit - policy maximum in the window.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "neb15ff9ecb7ae94",
+              "title": "X-RateLimit-Remaining - remaining quota.",
+              "markdown": "- X-RateLimit-Remaining - remaining quota.",
+              "notes": "X-RateLimit-Remaining - remaining quota.",
+              "blurb": "X-RateLimit-Remaining - remaining quota.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc37de80a05b2919",
+              "title": "X-RateLimit-Reset - Unix timestamp or seconds until reset.",
+              "markdown": "- X-RateLimit-Reset - Unix timestamp or seconds until reset.",
+              "notes": "X-RateLimit-Reset - Unix timestamp or seconds until reset.",
+              "blurb": "X-RateLimit-Reset - Unix timestamp or seconds until reset.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "De facto conventions include:",
+          "expanded": false
+        },
+        {
+          "id": "n54a11915e3f6574",
+          "title": "Idempotency and 429",
+          "markdown": "Safe retries depend on **idempotency keys** for mutating operations. A client that retries a **non-idempotent** POST after 429 risks **duplicates**-document required patterns.",
+          "notes": "Safe retries depend on idempotency keys for mutating operations. A client that retries a non-idempotent POST after 429 risks duplicates-document required patterns.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Safe retries depend on idempotency keys for mutating operations.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 429 Too Many Requests",
+      "expanded": true
+    },
+    {
+      "id": "nc1866f23872bda3",
+      "title": "Dimensions: what to key the limit on",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nde30858fc5d8823",
+          "title": "IP address",
+          "markdown": "**Strengths:** Works for **unauthenticated** endpoints; easy at edge/CDN/WAF. **Weaknesses:** **Carrier-grade NAT** and corporate egress collapse many users into one address; blocking or throttling IP harms innocents. **VPNs** and **botnets** rotate IPs.\n\n**Use:** Edge **coarse** limits, **DDoS** companions, and **first-line** login throttles combined with other keys-not alone for high-stakes authenticated flows.",
+          "notes": "Strengths: Works for unauthenticated endpoints; easy at edge/CDN/WAF. Weaknesses: Carrier-grade NAT and corporate egress collapse many users into one address; blocking or throttling IP harms innocents. VPNs and botnets rotate IPs.\n\nUse: Edge coarse limits, DDoS companions, and first-line login throttles combined with other keys-not alone for high-stakes authenticated flows.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Strengths: Works for unauthenticated endpoints; easy at edge/CDN/WAF.",
+          "expanded": false
+        },
+        {
+          "id": "n15b232b47721a96",
+          "title": "Authenticated user or session",
+          "markdown": "**Strengths:** Ties limits to **account** behavior-essential when attackers authenticate (stolen tokens, compromised accounts). **Weaknesses:** Does not help **signup** abuse before stable identity; collides for **shared** service accounts unless you sub-key.",
+          "notes": "Strengths: Ties limits to account behavior-essential when attackers authenticate (stolen tokens, compromised accounts). Weaknesses: Does not help signup abuse before stable identity; collides for shared service accounts unless you sub-key.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Strengths: Ties limits to account behavior-essential when attackers...",
+          "expanded": false
+        },
+        {
+          "id": "n324ee6e26daca25",
+          "title": "API key / client credentials",
+          "markdown": "**Strengths:** Ideal for **B2B** integrations-per-customer quotas, plan tiers, and **billing** alignment. Rotate keys without changing user passwords.",
+          "notes": "Strengths: Ideal for B2B integrations-per-customer quotas, plan tiers, and billing alignment. Rotate keys without changing user passwords.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Strengths: Ideal for B2B integrations-per-customer quotas, plan tiers, and...",
+          "expanded": false
+        },
+        {
+          "id": "nfba027cd09adbf7",
+          "title": "Tenant / organization",
+          "markdown": "**Strengths:** Prevents **noisy neighbor** impact in multi-tenant SaaS; aligns with **enterprise** contracts (\"100k calls/day\"). **Implementation:** tenant ID from token claims plus **defense in depth** against token forgery.",
+          "notes": "Strengths: Prevents noisy neighbor impact in multi-tenant SaaS; aligns with enterprise contracts (\"100k calls/day\"). Implementation: tenant ID from token claims plus defense in depth against token forgery.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Strengths: Prevents noisy neighbor impact in multi-tenant SaaS; aligns with...",
+          "expanded": false
+        },
+        {
+          "id": "n817aa4bd59122a4",
+          "title": "Endpoint, route, or operation",
+          "markdown": "**Strengths:** Protects **expensive** handlers (reports, exports, bulk deletes) without throttling cheap health checks. Combine with **cost weighting**.",
+          "notes": "Strengths: Protects expensive handlers (reports, exports, bulk deletes) without throttling cheap health checks. Combine with cost weighting.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Strengths: Protects expensive handlers (reports, exports, bulk deletes)...",
+          "expanded": false
+        },
+        {
+          "id": "n29e6637ee4bc46a",
+          "title": "Cost dimension (compute, data, money)",
+          "markdown": "**Strengths:** Expresses **real** backend work: DB rows scanned, resolver count, external API fees, GPU ms. **Implementation:** static table of weights, **dynamic** estimates (GraphQL complexity), or **post-hoc** billing with soft limits.\n\n**Example composite key:** `(tenant_id, operation_class)` with **token bucket** refill **r** and burst **B** sized per plan.",
+          "notes": "Strengths: Expresses real backend work: DB rows scanned, resolver count, external API fees, GPU ms. Implementation: static table of weights, dynamic estimates (GraphQL complexity), or post-hoc billing with soft limits.\n\nExample composite key: (tenantid, operationclass) with token bucket refill r and burst B sized per plan.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Strengths: Expresses real backend work: DB rows scanned, resolver count,...",
+          "expanded": false
+        },
+        {
+          "id": "nc6a7dc5eac66009",
+          "title": "Concurrency and in-flight limits",
+          "markdown": "**Rate limits** bound **arrival rate**; they do not cap how many **long-running** requests overlap. A **concurrency limit** (semaphore per tenant, per route, or global) bounds **simultaneous** expensive work-report generation, file conversion, admin exports.\n\n**Pattern:** Admit requests until **in-flight == C**; additional requests receive **429**, **503** with `Retry-After`, or **queue** with strict **timeouts**. Pair **token bucket** (short bursts) with **concurrency** (sustained parallel load) on hot paths.",
+          "notes": "Rate limits bound arrival rate; they do not cap how many long-running requests overlap. A concurrency limit (semaphore per tenant, per route, or global) bounds simultaneous expensive work-report generation, file conversion, admin exports.\n\nPattern: Admit requests until in-flight == C; additional requests receive 429, 503 with Retry-After, or queue with strict timeouts. Pair token bucket (short bursts) with concurrency (sustained parallel load) on hot paths.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Rate limits bound arrival rate; they do not cap how many long-running...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes IP address",
+      "expanded": false
+    },
+    {
+      "id": "n3d8a9c8324330f8",
+      "title": "GraphQL: why HTTP rate limits are insufficient",
+      "markdown": "A single **POST** may expand into **deep** resolver trees, **N+1** database queries, or **batch** calls to microservices. **Per-request** HTTP throttles miss **amplification**.\n\n**Controls (combine multiple):**",
+      "notes": "A single POST may expand into deep resolver trees, N+1 database queries, or batch calls to microservices. Per-request HTTP throttles miss amplification.\n\nControls (combine multiple):",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n371596fbadb5c85",
+          "title": "Query depth limit - cap nesting (e.g., friends { friends { ... } }).",
+          "markdown": "- Query depth limit - cap nesting (e.g., friends { friends { ... } }).",
+          "notes": "Query depth limit - cap nesting (e.g., friends { friends { ... } }).",
+          "blurb": "Query depth limit - cap nesting (e.g., friends { friends { ...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n848ebbc1b5837b5",
+          "title": "Complexity / cost analysis - assign costs per field; reject queries above threshold befo",
+          "markdown": "- Complexity / cost analysis - assign costs per field; reject queries above threshold befo",
+          "notes": "Complexity / cost analysis - assign costs per field; reject queries above threshold befo",
+          "blurb": "Complexity / cost analysis - assign costs per field; reject queries above...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "na76cd79ceeb7506",
+          "title": "Pagination limits - maximum first/last; reject unbounded lists.",
+          "markdown": "- Pagination limits - maximum first/last; reject unbounded lists.",
+          "notes": "Pagination limits - maximum first/last; reject unbounded lists.",
+          "blurb": "Pagination limits - maximum first/last; reject unbounded lists.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n64d443588f9e6c4",
+          "title": "Aliases and batching - cap repeated fields/aliases that multiply work.",
+          "markdown": "- Aliases and batching - cap repeated fields/aliases that multiply work.",
+          "notes": "Aliases and batching - cap repeated fields/aliases that multiply work.",
+          "blurb": "Aliases and batching - cap repeated fields/aliases that multiply work.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n194ad5fd448666c",
+          "title": "Persisted queries / allowlists - for mobile and first-party clients, ship query IDs inst",
+          "markdown": "- Persisted queries / allowlists - for mobile and first-party clients, ship query IDs inst",
+          "notes": "Persisted queries / allowlists - for mobile and first-party clients, ship query IDs inst",
+          "blurb": "Persisted queries / allowlists - for mobile and first-party clients, ship...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n0be149a0e58a992",
+          "title": "Timeouts and concurrency - per-request deadlines; limit parallel resolver fan-out.",
+          "markdown": "- Timeouts and concurrency - per-request deadlines; limit parallel resolver fan-out.",
+          "notes": "Timeouts and concurrency - per-request deadlines; limit parallel resolver fan-out.",
+          "blurb": "Timeouts and concurrency - per-request deadlines; limit parallel resolver...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "A single POST may expand into deep resolver trees, N+1 database queries, or...",
+      "expanded": false
+    },
+    {
+      "id": "n0bfa1498d426638",
+      "title": "Bot and abuse signals (beyond counters)",
+      "markdown": "Raw QPS limits catch **simple** scripts; sophisticated abuse **blends in**. Layer **signals**:",
+      "notes": "Raw QPS limits catch simple scripts; sophisticated abuse blends in. Layer signals:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "ndbb497a9aa14e4a",
+          "title": "TLS/JA3/JA4 fingerprints, HTTP/2 behavior, header order anomalies.",
+          "markdown": "- TLS/JA3/JA4 fingerprints, HTTP/2 behavior, header order anomalies.",
+          "notes": "TLS/JA3/JA4 fingerprints, HTTP/2 behavior, header order anomalies.",
+          "blurb": "TLS/JA3/JA4 fingerprints, HTTP/2 behavior, header order anomalies.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nfdfdd0344938589",
+          "title": "JavaScript challenges and proof-of-work (use sparingly; accessibility and UX cost).",
+          "markdown": "- JavaScript challenges and proof-of-work (use sparingly; accessibility and UX cost).",
+          "notes": "JavaScript challenges and proof-of-work (use sparingly; accessibility and UX cost).",
+          "blurb": "JavaScript challenges and proof-of-work (use sparingly; accessibility and UX...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nec3a64618310d9e",
+          "title": "Device IDs and app attestation (mobile)-not spoof-proof alone but raises cost.",
+          "markdown": "- Device IDs and app attestation (mobile)-not spoof-proof alone but raises cost.",
+          "notes": "Device IDs and app attestation (mobile)-not spoof-proof alone but raises cost.",
+          "blurb": "Device IDs and app attestation (mobile)-not spoof-proof alone but raises cost.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n4d6cc52019bfeae",
+          "title": "Behavioral signals: velocity of account actions, impossible travel, password spray patte",
+          "markdown": "- Behavioral signals: velocity of account actions, impossible travel, password spray patte",
+          "notes": "Behavioral signals: velocity of account actions, impossible travel, password spray patte",
+          "blurb": "Behavioral signals: velocity of account actions, impossible travel, password...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nb83619f1771287a",
+          "title": "Payment and PII velocity: card BIN failures, chargeback rates, linked accounts.",
+          "markdown": "- Payment and PII velocity: card BIN failures, chargeback rates, linked accounts.",
+          "notes": "Payment and PII velocity: card BIN failures, chargeback rates, linked accounts.",
+          "blurb": "Payment and PII velocity: card BIN failures, chargeback rates, linked...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n5efaa7bbc31fa7b",
+          "title": "Content signals for spam/scams when applicable.",
+          "markdown": "- Content signals for spam/scams when applicable.",
+          "notes": "Content signals for spam/scams when applicable.",
+          "blurb": "Content signals for spam/scams when applicable.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Raw QPS limits catch simple scripts; sophisticated abuse blends in.",
+      "expanded": false
+    },
+    {
+      "id": "n6dd39b3f1829945",
+      "title": "Progressive enforcement",
+      "markdown": "Order of escalation typically:",
+      "notes": "Order of escalation typically:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n37db954c005caf5",
+          "title": "Shadow mode - log would-have throttles/blocks; compare to baseline; tune thresholds.",
+          "markdown": "- Shadow mode - log would-have throttles/blocks; compare to baseline; tune thresholds.",
+          "notes": "Shadow mode - log would-have throttles/blocks; compare to baseline; tune thresholds.",
+          "blurb": "Shadow mode - log would-have throttles/blocks; compare to baseline; tune...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nd86d1e68861733a",
+          "title": "Soft throttle - delay, deprioritize queue, or serve degraded results (cached).",
+          "markdown": "- Soft throttle - delay, deprioritize queue, or serve degraded results (cached).",
+          "notes": "Soft throttle - delay, deprioritize queue, or serve degraded results (cached).",
+          "blurb": "Soft throttle - delay, deprioritize queue, or serve degraded results (cached).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n0ecc452bfca5988",
+          "title": "Challenge - CAPTCHA, MFA step-up, email proof-only when signals justify.",
+          "markdown": "- Challenge - CAPTCHA, MFA step-up, email proof-only when signals justify.",
+          "notes": "Challenge - CAPTCHA, MFA step-up, email proof-only when signals justify.",
+          "blurb": "Challenge - CAPTCHA, MFA step-up, email proof-only when signals justify.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nea3691d60970b61",
+          "title": "Hard throttle / 429 - clear policy response with Retry-After.",
+          "markdown": "- Hard throttle / 429 - clear policy response with Retry-After.",
+          "notes": "Hard throttle / 429 - clear policy response with Retry-After.",
+          "blurb": "Hard throttle / 429 - clear policy response with Retry-After.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nfc6e9232fa1e03f",
+          "title": "Block - IP/account/org denylists; legal/trust review for long-lived blocks.",
+          "markdown": "- Block - IP/account/org denylists; legal/trust review for long-lived blocks.",
+          "notes": "Block - IP/account/org denylists; legal/trust review for long-lived blocks.",
+          "blurb": "Block - IP/account/org denylists; legal/trust review for long-lived blocks.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Order of escalation typically:",
+      "expanded": false
+    },
+    {
+      "id": "n3873ef6f7ca5ffa",
+      "title": "Monitoring, testing, and operations",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nd7e1bd270c054da",
+          "title": "Metrics",
+          "markdown": "429 rate overall and per route, per tenant, per integration partner.",
+          "notes": "429 rate overall and per route, per tenant, per integration partner.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n3355be664980ebb",
+              "title": "429 rate overall and per route, per tenant, per integration partner.",
+              "markdown": "- 429 rate overall and per route, per tenant, per integration partner.",
+              "notes": "429 rate overall and per route, per tenant, per integration partner.",
+              "blurb": "429 rate overall and per route, per tenant, per integration partner.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n316586263749685",
+              "title": "Retry-After distribution; client retry volume after 429/503.",
+              "markdown": "- Retry-After distribution; client retry volume after 429/503.",
+              "notes": "Retry-After distribution; client retry volume after 429/503.",
+              "blurb": "Retry-After distribution; client retry volume after 429/503.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3fbd2ba5c64944c",
+              "title": "Latency added by limit checks (p50/p95).",
+              "markdown": "- Latency added by limit checks (p50/p95).",
+              "notes": "Latency added by limit checks (p50/p95).",
+              "blurb": "Latency added by limit checks (p50/p95).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n48667450ddc9675",
+              "title": "False positive proxies: support tickets tagged \"blocked,\" checkout abandonment near limi",
+              "markdown": "- False positive proxies: support tickets tagged \"blocked,\" checkout abandonment near limi",
+              "notes": "False positive proxies: support tickets tagged \"blocked,\" checkout abandonment near limi",
+              "blurb": "False positive proxies: support tickets tagged \"blocked,\" checkout...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na189e94a30d71da",
+              "title": "Abuse caught: challenges shown, login velocity triggers, fraud model scores at enforceme",
+              "markdown": "- Abuse caught: challenges shown, login velocity triggers, fraud model scores at enforceme",
+              "notes": "Abuse caught: challenges shown, login velocity triggers, fraud model scores at enforceme",
+              "blurb": "Abuse caught: challenges shown, login velocity triggers, fraud model scores...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "429 rate overall and per route, per tenant, per integration partner.",
+          "expanded": false
+        },
+        {
+          "id": "n5d479e3d00991ce",
+          "title": "Dashboards and alerts",
+          "markdown": "- Alert on **sudden 429 spikes** (misconfiguration) and on **429 drops to zero** during attacks (bypass).\n- Track **quota consumption** against **commitments** for large customers.",
+          "notes": "- Alert on sudden 429 spikes (misconfiguration) and on 429 drops to zero during attacks (bypass).\n- Track quota consumption against commitments for large customers.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Alert on sudden 429 spikes (misconfiguration) and on 429 drops to zero...",
+          "expanded": false
+        },
+        {
+          "id": "n665a13f7b602a35",
+          "title": "Load and adversarial testing",
+          "markdown": "Burst tests at window boundaries for fixed windows-verify you do not see 2\u00d7 acceptance spikes unless intended.",
+          "notes": "Burst tests at window boundaries for fixed windows-verify you do not see 2\u00d7 acceptance spikes unless intended.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n8feb6801aa0342c",
+              "title": "Burst tests at window boundaries for fixed windows-verify you do not see 2\u00d7 acceptance s",
+              "markdown": "- Burst tests at window boundaries for fixed windows-verify you do not see 2\u00d7 acceptance s",
+              "notes": "Burst tests at window boundaries for fixed windows-verify you do not see 2\u00d7 acceptance s",
+              "blurb": "Burst tests at window boundaries for fixed windows-verify you do not see 2\u00d7...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9e816b50c541093",
+              "title": "GraphQL fuzzing: deep queries, alias multiplication, introspection (disable in prod if p",
+              "markdown": "- GraphQL fuzzing: deep queries, alias multiplication, introspection (disable in prod if p",
+              "notes": "GraphQL fuzzing: deep queries, alias multiplication, introspection (disable in prod if p",
+              "blurb": "GraphQL fuzzing: deep queries, alias multiplication, introspection (disable...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3543e88373109ba",
+              "title": "Chaos on Redis/limit service: ensure fail-open vs fail-closed matches policy and does no",
+              "markdown": "- Chaos on Redis/limit service: ensure fail-open vs fail-closed matches policy and does no",
+              "notes": "Chaos on Redis/limit service: ensure fail-open vs fail-closed matches policy and does no",
+              "blurb": "Chaos on Redis/limit service: ensure fail-open vs fail-closed matches policy...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Burst tests at window boundaries for fixed windows-verify you do not see 2\u00d7...",
+          "expanded": false
+        },
+        {
+          "id": "n74f1c7000d4398c",
+          "title": "Edge, WAF, and API gateway integration",
+          "markdown": "**CDN/WAF** limits excel at **L7 volumetric** absorption and **bot management**-TLS termination, geographic spread, managed rule sets. Push **coarse** IP and path limits to the edge to protect origin **connectivity**; keep **fine-grained** quotas (tenant, user, cost) where **claims** are validated-typically **API gateway** or **service mesh** after auth.\n\n**Consistency:** Edge counts may **diverge** from origin counts (cache hits, retries). Define which layer is **authoritative** for **billing** vs **abuse**; avoid two incompatible **429** stories for the same client.\n\n**Managed rules:** Commercial WAFs ship **rate-based rules** (often fixed-window). Tune carefully-**false positives** on shared IPs are common. Prefer **logged/count-only** mode before enforcement.",
+          "notes": "CDN/WAF limits excel at L7 volumetric absorption and bot management-TLS termination, geographic spread, managed rule sets. Push coarse IP and path limits to the edge to protect origin connectivity; keep fine-grained quotas (tenant, user, cost) where claims are validated-typically API gateway or service mesh after auth.\n\nConsistency: Edge counts may diverge from origin counts (cache hits, retries). Define which layer is authoritative for billing vs abuse; avoid two incompatible 429 stories for the same client.\n\nManaged rules: Commercial WAFs ship rate-based rules (often fixed-window). Tune carefully-false positives on shared IPs are common. Prefer logged/count-only mode before enforcement.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "CDN/WAF limits excel at L7 volumetric absorption and bot management-TLS...",
+          "expanded": false
+        },
+        {
+          "id": "n9395ed9ec621a22",
+          "title": "Documentation and UX",
+          "markdown": "Publish limits, header meanings, and **how to request** higher quotas. Client SDKs should **parse** Retry-After and **back off** with jitter.",
+          "notes": "Publish limits, header meanings, and how to request higher quotas. Client SDKs should parse Retry-After and back off with jitter.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Publish limits, header meanings, and how to request higher quotas.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Metrics",
+      "expanded": false
+    },
+    {
+      "id": "n47027a7732a6011",
+      "title": "Failure modes (what breaks in the real world)",
+      "markdown": "Shared IP punishment - offices, schools, mobile carriers.",
+      "notes": "Shared IP punishment - offices, schools, mobile carriers.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n86d82021b2bf24f",
+          "title": "Shared IP punishment - offices, schools, mobile carriers.",
+          "markdown": "- Shared IP punishment - offices, schools, mobile carriers.",
+          "notes": "Shared IP punishment - offices, schools, mobile carriers.",
+          "blurb": "Shared IP punishment - offices, schools, mobile carriers.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nb9cb761f2a25e01",
+          "title": "Authenticated attackers - per-IP limits irrelevant; need account and device signals.",
+          "markdown": "- Authenticated attackers - per-IP limits irrelevant; need account and device signals.",
+          "notes": "Authenticated attackers - per-IP limits irrelevant; need account and device signals.",
+          "blurb": "Authenticated attackers - per-IP limits irrelevant; need account and device...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nb3cb91666d98dc4",
+          "title": "Distributed low-rate bots - aggregate abuse under per-IP thresholds.",
+          "markdown": "- Distributed low-rate bots - aggregate abuse under per-IP thresholds.",
+          "notes": "Distributed low-rate bots - aggregate abuse under per-IP thresholds.",
+          "blurb": "Distributed low-rate bots - aggregate abuse under per-IP thresholds.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n991fba9e78698bf",
+          "title": "GraphQL amplifier - HTTP 200 with catastrophic backend cost.",
+          "markdown": "- GraphQL amplifier - HTTP 200 with catastrophic backend cost.",
+          "notes": "GraphQL amplifier - HTTP 200 with catastrophic backend cost.",
+          "blurb": "GraphQL amplifier - HTTP 200 with catastrophic backend cost.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n157f30d8ecc6762",
+          "title": "Retry storms - missing Retry-After or clients ignoring it.",
+          "markdown": "- Retry storms - missing Retry-After or clients ignoring it.",
+          "notes": "Retry storms - missing Retry-After or clients ignoring it.",
+          "blurb": "Retry storms - missing Retry-After or clients ignoring it.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n1f089de7fc02911",
+          "title": "Misconfigured WAF/CDN - country blocks or bot scores catching legitimate markets.",
+          "markdown": "- Misconfigured WAF/CDN - country blocks or bot scores catching legitimate markets.",
+          "notes": "Misconfigured WAF/CDN - country blocks or bot scores catching legitimate markets.",
+          "blurb": "Misconfigured WAF/CDN - country blocks or bot scores catching legitimate...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n62acc514e529ef0",
+          "title": "Strict consistency obsession - engineering months for exact counts where approximate abu",
+          "markdown": "- Strict consistency obsession - engineering months for exact counts where approximate abu",
+          "notes": "Strict consistency obsession - engineering months for exact counts where approximate abu",
+          "blurb": "Strict consistency obsession - engineering months for exact counts where...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Shared IP punishment - offices, schools, mobile carriers.",
+      "expanded": false
+    },
+    {
+      "id": "n22122ab895f95d9",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nd1eea7baf6c0cb1",
+          "title": "Quick reference",
+          "markdown": "| Limit dimension | When |\n|-----------------|------|\n| IP | First line; watch NAT/shared IPs |\n| User / API key | Authenticated abuse |\n| Tenant | Noisy neighbor / B2B |\n| Operation cost | Reports, exports, search |\n\n**Algorithms:** token bucket / sliding window (common at scale).\n\n**Signals:** velocity, device, geo anomaly, payment risk.\n\n**Interview tip:** Pair **limits** with **observability** and **customer impact** metrics.",
+          "notes": "| Limit dimension | When |\n|-----------------|------|\n| IP | First line; watch NAT/shared IPs |\n| User / API key | Authenticated abuse |\n| Tenant | Noisy neighbor / B2B |\n| Operation cost | Reports, exports, search |\n\nAlgorithms: token bucket / sliding window (common at scale).\n\nSignals: velocity, device, geo anomaly, payment risk.\n\nInterview tip: Pair limits with observability and customer impact metrics.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Limit dimension | When | |-----------------|------| | IP | First line;...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Quick reference"
+    },
+    {
+      "id": "n338d1888cc895d5",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nea7c3fc383f5d16",
+          "title": "\u201cRate limiting stops all bots\u201d",
+          "markdown": "**Truth:** Sophisticated actors stay **below** thresholds across many IPs/accounts. You need **behavioral** signals, **device** context, and **business** rules-not only request counts.",
+          "notes": "Truth: Sophisticated actors stay below thresholds across many IPs/accounts. You need behavioral signals, device context, and business rules-not only request counts.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Truth: Sophisticated actors stay below thresholds across many IPs/accounts.",
+          "expanded": false
+        },
+        {
+          "id": "n6fdd81516ef2bca",
+          "title": "\u201c429 errors mean we\u2019re secure\u201d",
+          "markdown": "**Truth:** Clients may **retry** aggressively; attackers may **tune** to your limits. Measure **outcomes**: fraud rate, scraping volume, service health-not only HTTP status codes.",
+          "notes": "Truth: Clients may retry aggressively; attackers may tune to your limits. Measure outcomes: fraud rate, scraping volume, service health-not only HTTP status codes.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Truth: Clients may retry aggressively; attackers may tune to your limits.",
+          "expanded": false
+        },
+        {
+          "id": "n0a46c71e698da26",
+          "title": "\u201cSame limit for every endpoint\u201d",
+          "markdown": "**Truth:** **Expensive** operations (exports, searches, admin) deserve **tighter** or **token-cost** based limits than cheap reads.",
+          "notes": "Truth: Expensive operations (exports, searches, admin) deserve tighter or token-cost based limits than cheap reads.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Truth: Expensive operations (exports, searches, admin) deserve tighter or...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \u201cRate limiting stops all bots\u201d"
+    },
+    {
+      "id": "n282df91c1c73a85",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n1c25d94c2974ad1",
+          "title": "Beginner",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n7ac0904f87876ad",
+              "title": "What is rate limiting, and what problem does it solve?",
+              "markdown": "**Answer:** **Rate limiting** caps how many actions a client (or class of clients) may perform in a time window-requests per second, tokens per minute, or weighted **cost** units. It solves **overload** and **abuse** at the boundary of your system: it protects **CPU**, **connections**, databases, and third-party APIs from being drowned by traffic spikes, misconfigured clients, or malicious automation. It is not a complete security program by itself; it is a **capacity and fairness** control that you combine with authentication, fraud detection, and architecture (queues, autoscaling, CDNs). In interviews I also name what we are *not* solving-e.g., a distributed botnet sending a **low rate per IP** may still aggregate into an attack, which is why **multi-dimensional** limits and **edge** defenses matter.",
+              "notes": "Answer: Rate limiting caps how many actions a client (or class of clients) may perform in a time window-requests per second, tokens per minute, or weighted cost units. It solves overload and abuse at the boundary of your system: it protects CPU, connections, databases, and third-party APIs from being drowned by traffic spikes, misconfigured clients, or malicious automation. It is not a complete security program by itself; it is a capacity and fairness control that you combine with authentication, fraud detection, and architecture (queues, autoscaling, CDNs). In interviews I also name what we are not solving-e.g., a distributed botnet sending a low rate per IP may still aggregate into an attack, which is why multi-dimensional limits and edge defenses matter.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Rate limiting caps how many actions a client (or class of clients)...",
+              "expanded": false
+            },
+            {
+              "id": "n9a24513125ccbd2",
+              "title": "Explain the token bucket algorithm in terms a PM could follow.",
+              "markdown": "**Answer:** Imagine a bucket that holds at most **B** tokens. Tokens drip in at a steady rate **r** (for example, 100 tokens per minute). Each API call spends one token (or more for expensive calls). If the bucket is empty, you reject or delay the request. **Bursts** are allowed: a quiet client can accumulate up to **B** tokens and then spend them quickly, which matches real apps that batch work when the user opens a screen. The PM-relevant trade-off is **burstiness versus protection**-a large **B** feels responsive but can still overwhelm downstream services if every client bursts together, so we often pair token buckets with **per-route** limits or **concurrency** caps on heavy operations.",
+              "notes": "Answer: Imagine a bucket that holds at most B tokens. Tokens drip in at a steady rate r (for example, 100 tokens per minute). Each API call spends one token (or more for expensive calls). If the bucket is empty, you reject or delay the request. Bursts are allowed: a quiet client can accumulate up to B tokens and then spend them quickly, which matches real apps that batch work when the user opens a screen. The PM-relevant trade-off is burstiness versus protection-a large B feels responsive but can still overwhelm downstream services if every client bursts together, so we often pair token buckets with per-route limits or concurrency caps on heavy operations.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Imagine a bucket that holds at most B tokens.",
+              "expanded": false
+            },
+            {
+              "id": "n32db2811d9e81f2",
+              "title": "What is wrong with a naive fixed-window counter, and how do people fix...",
+              "markdown": "**Answer:** A **fixed window** counts events in clock buckets-for example, \"max 1000 calls per minute,\" resetting at the top of each minute. The classic flaw is the **boundary spike**: a client can send 1000 requests at 12:00:59 and another 1000 at 12:01:00-2000 calls in two seconds while each minute looks legal. Fixes include **smaller windows** (reduces worst-case doubling but adds churn), **sliding window** approximations that blend current and previous window counts, **sliding logs** of timestamps (accurate but memory-heavy), or switching to **token bucket** / **leaky bucket** semantics that explicitly model refill and burst. In production I mention **testing** at window boundaries because this bug is easy to ship accidentally.",
+              "notes": "Answer: A fixed window counts events in clock buckets-for example, \"max 1000 calls per minute,\" resetting at the top of each minute. The classic flaw is the boundary spike: a client can send 1000 requests at 12:00:59 and another 1000 at 12:01:00-2000 calls in two seconds while each minute looks legal. Fixes include smaller windows (reduces worst-case doubling but adds churn), sliding window approximations that blend current and previous window counts, sliding logs of timestamps (accurate but memory-heavy), or switching to token bucket / leaky bucket semantics that explicitly model refill and burst. In production I mention testing at window boundaries because this bug is easy to ship accidentally.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: A fixed window counts events in clock buckets-for example, \"max 1000...",
+              "expanded": false
+            },
+            {
+              "id": "n6f6220d8d3b789f",
+              "title": "When should you return HTTP 429 versus 503?",
+              "markdown": "**Answer:** **429 Too Many Requests** means \"this **client** (or key / tenant) hit a **policy limit**.\" The service is generally healthy; the refusal is **intentional** throttling or quota enforcement. **503 Service Unavailable** means the server or an upstream dependency **cannot serve** right now-overload, outage, or maintenance-often with **Retry-After** as a hint. Clients and intermediaries treat them differently: retries on **503** are common; on **429** they should **back off** and respect **Retry-After** to avoid **retry storms**. I avoid using **429** for generic authentication failures (prefer **401/403**) because that pollutes dashboards and confuses SDKs. Edge cases exist-some teams use **503** for global load shedding-but the story should be **documented** and **consistent** across layers.",
+              "notes": "Answer: 429 Too Many Requests means \"this client (or key / tenant) hit a policy limit.\" The service is generally healthy; the refusal is intentional throttling or quota enforcement. 503 Service Unavailable means the server or an upstream dependency cannot serve right now-overload, outage, or maintenance-often with Retry-After as a hint. Clients and intermediaries treat them differently: retries on 503 are common; on 429 they should back off and respect Retry-After to avoid retry storms. I avoid using 429 for generic authentication failures (prefer 401/403) because that pollutes dashboards and confuses SDKs. Edge cases exist-some teams use 503 for global load shedding-but the story should be documented and consistent across layers.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: 429 Too Many Requests means \"this client (or key / tenant) hit a...",
+              "expanded": false
+            },
+            {
+              "id": "n4a190c54eba7141",
+              "title": "What is the purpose of the Retry-After header?",
+              "markdown": "**Answer:** **Retry-After** tells the client **when** it may retry-either as a **delay in seconds** or an **HTTP date**. It reduces **thundering herds** after outages or mass throttling: without it, every client may retry at once and deepen the outage. For **429**, I tie Retry-After to something defensible-time until the next **token** in a bucket, window reset, or a conservative upper bound. I also warn that lying Retry-After (saying 10s but accepting traffic immediately) erodes trust in automation. For **idempotent** retries, pairing limits with **idempotency keys** prevents duplicate side effects when clients back off and replay.",
+              "notes": "Answer: Retry-After tells the client when it may retry-either as a delay in seconds or an HTTP date. It reduces thundering herds after outages or mass throttling: without it, every client may retry at once and deepen the outage. For 429, I tie Retry-After to something defensible-time until the next token in a bucket, window reset, or a conservative upper bound. I also warn that lying Retry-After (saying 10s but accepting traffic immediately) erodes trust in automation. For idempotent retries, pairing limits with idempotency keys prevents duplicate side effects when clients back off and replay.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Retry-After tells the client when it may retry-either as a delay in...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes What is rate limiting, and what problem does it solve?",
+          "expanded": false
+        },
+        {
+          "id": "n4b0fc215653ca73",
+          "title": "Intermediate",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nb1ffbd19792c7db",
+              "title": "How do you implement rate limiting in a distributed system with many...",
+              "markdown": "**Answer:** Single-host counters break when load balancers spread traffic. Common patterns: a **central Redis** (or similar) with **INCR** and **TTL** for fixed windows, **Lua scripts** or **transactions** for atomic read-modify-write on token-bucket fields, or a **dedicated rate-limit service / sidecar** that owns decisions. Trade-offs: extra **latency** per check, **hot keys** for popular tenants, **replication lag** if you rely on non-primary reads, and **failure mode**-whether to **fail open** (risk abuse) or **fail closed** (risk outage). At very large scale, **approximate** or **hierarchical** limits (local per instance plus global correction) reduce central bottlenecks. I always mention **clock skew** and **UTC**, and that strict **billing** quotas may need stronger consistency than **abuse** throttles.",
+              "notes": "Answer: Single-host counters break when load balancers spread traffic. Common patterns: a central Redis (or similar) with INCR and TTL for fixed windows, Lua scripts or transactions for atomic read-modify-write on token-bucket fields, or a dedicated rate-limit service / sidecar that owns decisions. Trade-offs: extra latency per check, hot keys for popular tenants, replication lag if you rely on non-primary reads, and failure mode-whether to fail open (risk abuse) or fail closed (risk outage). At very large scale, approximate or hierarchical limits (local per instance plus global correction) reduce central bottlenecks. I always mention clock skew and UTC, and that strict billing quotas may need stronger consistency than abuse throttles.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Single-host counters break when load balancers spread traffic.",
+              "expanded": false
+            },
+            {
+              "id": "nb8168210ec169f6",
+              "title": "Why is per-IP limiting insufficient for many abuse scenarios?",
+              "markdown": "**Answer:** **Carrier-grade NAT**, corporate VPNs, and schools put many legitimate users behind one IP-throttle the IP and you punish innocents. Conversely, attackers **rotate IPs** across botnets, staying under per-IP thresholds while aggregate traffic is huge. **Authenticated** abuse (stolen session cookies, API keys) is invisible to IP-only policies. So IP limits are still useful as a **coarse edge** control and for **unauthenticated** endpoints, but production designs add **user**, **tenant**, **API key**, **device**, and **behavioral** signals. The interview win is naming **false positives** and **bypass** in the same breath.",
+              "notes": "Answer: Carrier-grade NAT, corporate VPNs, and schools put many legitimate users behind one IP-throttle the IP and you punish innocents. Conversely, attackers rotate IPs across botnets, staying under per-IP thresholds while aggregate traffic is huge. Authenticated abuse (stolen session cookies, API keys) is invisible to IP-only policies. So IP limits are still useful as a coarse edge control and for unauthenticated endpoints, but production designs add user, tenant, API key, device, and behavioral signals. The interview win is naming false positives and bypass in the same breath.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Carrier-grade NAT, corporate VPNs, and schools put many legitimate...",
+              "expanded": false
+            },
+            {
+              "id": "n16c2e0ea3fe1d0d",
+              "title": "How would you rate-limit a multi-tenant SaaS API fairly?",
+              "markdown": "**Answer:** I separate **global** platform protection from **per-tenant** fairness. Each tenant gets quotas keyed by **tenant ID** from signed tokens-**requests per minute**, **cost units**, and **concurrency** limits on expensive jobs (exports, bulk APIs). Premium tiers get higher **r** and **B** in token-bucket terms. I add **per-user** limits inside a tenant for insider abuse, and **per-integration** limits for noisy partners. Monitoring focuses on **noisy neighbor** metrics: one tenant's 429 rate, latency, and share of shared pool usage. If a tenant is a **good citizen** but spikes for Black Friday, **temporary** quota grants are better than permanent cap raises-documented and auditable.",
+              "notes": "Answer: I separate global platform protection from per-tenant fairness. Each tenant gets quotas keyed by tenant ID from signed tokens-requests per minute, cost units, and concurrency limits on expensive jobs (exports, bulk APIs). Premium tiers get higher r and B in token-bucket terms. I add per-user limits inside a tenant for insider abuse, and per-integration limits for noisy partners. Monitoring focuses on noisy neighbor metrics: one tenant's 429 rate, latency, and share of shared pool usage. If a tenant is a good citizen but spikes for Black Friday, temporary quota grants are better than permanent cap raises-documented and auditable.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: I separate global platform protection from per-tenant fairness.",
+              "expanded": false
+            },
+            {
+              "id": "n94d137083366f26",
+              "title": "How does GraphQL change your approach compared to REST?",
+              "markdown": "**Answer:** One **POST** can trigger enormous backend work through **depth**, **aliases**, wide **pagination**, and **N+1** resolvers-HTTP request rate alone is a weak signal. I combine **depth limits**, **complexity / cost** analysis with per-field weights, **pagination caps**, and optionally **persisted queries** or allowlists for first-party clients. Rate limiting should consume **estimated or actual cost** from a tenant bucket, not just \"one POST = one unit.\" I still keep **edge** HTTP limits for transport abuse, but the **authoritative** protection for GraphQL lives **after** parsing or on **trusted** query shapes. Testing includes **adversarial** queries and introspection policy (often disabled externally).",
+              "notes": "Answer: One POST can trigger enormous backend work through depth, aliases, wide pagination, and N+1 resolvers-HTTP request rate alone is a weak signal. I combine depth limits, complexity / cost analysis with per-field weights, pagination caps, and optionally persisted queries or allowlists for first-party clients. Rate limiting should consume estimated or actual cost from a tenant bucket, not just \"one POST = one unit.\" I still keep edge HTTP limits for transport abuse, but the authoritative protection for GraphQL lives after parsing or on trusted query shapes. Testing includes adversarial queries and introspection policy (often disabled externally).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: One POST can trigger enormous backend work through depth, aliases,...",
+              "expanded": false
+            },
+            {
+              "id": "n963b480344caac7",
+              "title": "What is the difference between rate limiting and abuse prevention?",
+              "markdown": "**Answer:** **Rate limiting** answers \"how many?\"-throughput and quotas. **Abuse prevention** answers \"**who** and **why**?\"-credential stuffing, scraping, payment fraud, **bonus abuse**, and **economic** denial of service. It layers **signals**: velocity of failed logins across usernames, device fingerprints, behavioral anomalies, payment risk scores, and account history. Rate limits are one **lever**; others are **step-up MFA**, **CAPTCHA** only on risk, **honeypots**, **fraud models**, and **manual** review queues. Cross-functional reality: security partners with **fraud**, **trust & safety**, and **product** because false positives hit revenue.",
+              "notes": "Answer: Rate limiting answers \"how many?\"-throughput and quotas. Abuse prevention answers \"who and why?\"-credential stuffing, scraping, payment fraud, bonus abuse, and economic denial of service. It layers signals: velocity of failed logins across usernames, device fingerprints, behavioral anomalies, payment risk scores, and account history. Rate limits are one lever; others are step-up MFA, CAPTCHA only on risk, honeypots, fraud models, and manual review queues. Cross-functional reality: security partners with fraud, trust & safety, and product because false positives hit revenue.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Rate limiting answers \"how many?\"-throughput and quotas.",
+              "expanded": false
+            },
+            {
+              "id": "nf4d2e6c419f9bd9",
+              "title": "How would you protect a login endpoint without wrecking UX?",
+              "markdown": "**Answer:** I combine **per-IP** and **per-username** throttles so password spraying across many accounts is damped, and one IP cannot hammer one user. Responses should be **uniform** in timing and error text to reduce **account enumeration**-interviews care that you name that trade-off. **Risk-based** friction beats always-on CAPTCHA: show challenges when signals fire (new device, impossible travel, high failure velocity). I log and **shadow** new rules, watch **support** tickets and **conversion**, and tune thresholds. **Lockout** is a last resort; **temporary** backoff is usually safer for real users fat-fingering passwords.",
+              "notes": "Answer: I combine per-IP and per-username throttles so password spraying across many accounts is damped, and one IP cannot hammer one user. Responses should be uniform in timing and error text to reduce account enumeration-interviews care that you name that trade-off. Risk-based friction beats always-on CAPTCHA: show challenges when signals fire (new device, impossible travel, high failure velocity). I log and shadow new rules, watch support tickets and conversion, and tune thresholds. Lockout is a last resort; temporary backoff is usually safer for real users fat-fingering passwords.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: I combine per-IP and per-username throttles so password spraying...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes How do you implement rate limiting in a distributed system with many.",
+          "expanded": false
+        },
+        {
+          "id": "n73e8304abf89ae0",
+          "title": "Advanced",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n9086d9de2832f51",
+              "title": "How do you prevent retry storms from your own clients?",
+              "markdown": "**Answer:** First, always return **Retry-After** on **429** and often on **503** during incidents. Second, **SDKs** should use **exponential backoff with jitter**-never tight loops. Third, distinguish **non-retryable** errors so clients do not hammer **400** forever. Fourth, **idempotency keys** on mutating operations so safe retries do not duplicate writes. Operationally, I monitor **retry ratio** and **duplicate** submission rates after incidents. If a **bad deploy** causes mass **429**, the incident is not over until **client behavior** stabilizes, not just when servers recover.",
+              "notes": "Answer: First, always return Retry-After on 429 and often on 503 during incidents. Second, SDKs should use exponential backoff with jitter-never tight loops. Third, distinguish non-retryable errors so clients do not hammer 400 forever. Fourth, idempotency keys on mutating operations so safe retries do not duplicate writes. Operationally, I monitor retry ratio and duplicate submission rates after incidents. If a bad deploy causes mass 429, the incident is not over until client behavior stabilizes, not just when servers recover.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: First, always return Retry-After on 429 and often on 503 during...",
+              "expanded": false
+            },
+            {
+              "id": "nd09ea7497131c4d",
+              "title": "Explain leaky bucket versus token bucket for shaping traffic to a...",
+              "markdown": "**Answer:** A **token bucket** allows bursts up to **B** then enforces average rate **r**-good when occasional bursts are okay if downstream has headroom. A **leaky bucket** (especially **queued**) releases work at a steady **r**, smoothing spikes; bursts become **queueing delay** or **drops** when the queue exceeds capacity. For a fragile dependency that dies on spikes-say, a legacy mainframe-I lean **leaky** or **strict concurrency** with small queues and explicit **timeouts**. For user-facing APIs where short bursts are normal, **token bucket** plus **per-route concurrency** is often simpler to explain and tune. The failure mode of an unbounded queue is **latency explosions**, which I call out explicitly.",
+              "notes": "Answer: A token bucket allows bursts up to B then enforces average rate r-good when occasional bursts are okay if downstream has headroom. A leaky bucket (especially queued) releases work at a steady r, smoothing spikes; bursts become queueing delay or drops when the queue exceeds capacity. For a fragile dependency that dies on spikes-say, a legacy mainframe-I lean leaky or strict concurrency with small queues and explicit timeouts. For user-facing APIs where short bursts are normal, token bucket plus per-route concurrency is often simpler to explain and tune. The failure mode of an unbounded queue is latency explosions, which I call out explicitly.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: A token bucket allows bursts up to B then enforces average rate...",
+              "expanded": false
+            },
+            {
+              "id": "nd298de7d8a4e2bb",
+              "title": "How would you roll out a new aggressive limit safely?",
+              "markdown": "**Answer:** I start in **shadow mode**: evaluate the rule, log **would-block** decisions, and compare volume to baseline-no user impact. Then **canary** by tenant cohort or percentage of traffic with **monitoring** on **429**, **latency**, **error budgets**, and **support** volume. I pre-publish **documentation** and **headers** for partners. Rollback is one click-feature flags for rule packs. Post-launch, I review **top blocked** clients: false positives often show up as **paid** customers or **shared** NAT pools. I avoid changing limits silently during **marketing** events without a **runbook** and comms.",
+              "notes": "Answer: I start in shadow mode: evaluate the rule, log would-block decisions, and compare volume to baseline-no user impact. Then canary by tenant cohort or percentage of traffic with monitoring on 429, latency, error budgets, and support volume. I pre-publish documentation and headers for partners. Rollback is one click-feature flags for rule packs. Post-launch, I review top blocked clients: false positives often show up as paid customers or shared NAT pools. I avoid changing limits silently during marketing events without a runbook and comms.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: I start in shadow mode: evaluate the rule, log would-block...",
+              "expanded": false
+            },
+            {
+              "id": "n8b64517c3a11964",
+              "title": "What metrics and alerts do you use to operate rate limits in production?",
+              "markdown": "**Answer:** I track **429 rate** globally and **per route**, **per tenant**, and **per API key**; **Retry-After** distribution; **latency** of the limit check itself; and **synchronization** errors if using Redis. **Business proxies** matter: spike in checkout failures correlated with 429, or surge in support tickets tagged \"API blocked.\" Alerts fire on **sudden 429 spikes** (misconfiguration), **429 dropping to zero** during attacks (possible bypass), and **limiter downtime** if fail-open enables abuse. For **GraphQL**, I add **rejected query cost** and **p95 resolver time** by tenant. Dashboards should separate **infrastructure** throttles from **fraud** challenges so on-call knows which playbook to open.",
+              "notes": "Answer: I track 429 rate globally and per route, per tenant, and per API key; Retry-After distribution; latency of the limit check itself; and synchronization errors if using Redis. Business proxies matter: spike in checkout failures correlated with 429, or surge in support tickets tagged \"API blocked.\" Alerts fire on sudden 429 spikes (misconfiguration), 429 dropping to zero during attacks (possible bypass), and limiter downtime if fail-open enables abuse. For GraphQL, I add rejected query cost and p95 resolver time by tenant. Dashboards should separate infrastructure throttles from fraud challenges so on-call knows which playbook to open.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: I track 429 rate globally and per route, per tenant, and per API...",
+              "expanded": false
+            },
+            {
+              "id": "n2c6ffdc2ef0c555",
+              "title": "How do you handle limits at the CDN/WAF versus the application?",
+              "markdown": "**Answer:** **Edge** limits excel at **absorbing** volumetric junk, **TLS** exhaustion, and obvious **bot** patterns close to the source-cheap for the origin. **Application** limits excel when you need **identity**-tenant and user from **validated tokens**-and **cost-aware** decisions after parsing. The pitfall is **inconsistent policy**: edge says 200 while origin would have said 429, confusing partners. I define which layer is **authoritative** for **billing** documentation versus **best-effort** protection. I use WAF **count-only** modes before blocking, because **shared IP** false positives are common. Origin stays responsible for **GraphQL cost** and **business** rules the edge cannot see.",
+              "notes": "Answer: Edge limits excel at absorbing volumetric junk, TLS exhaustion, and obvious bot patterns close to the source-cheap for the origin. Application limits excel when you need identity-tenant and user from validated tokens-and cost-aware decisions after parsing. The pitfall is inconsistent policy: edge says 200 while origin would have said 429, confusing partners. I define which layer is authoritative for billing documentation versus best-effort protection. I use WAF count-only modes before blocking, because shared IP false positives are common. Origin stays responsible for GraphQL cost and business rules the edge cannot see.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Edge limits excel at absorbing volumetric junk, TLS exhaustion, and...",
+              "expanded": false
+            },
+            {
+              "id": "ne1c48edf2c19657",
+              "title": "What is \u201ceconomic\u201d denial of service, and how do rate limits help?",
+              "markdown": "**Answer:** **Economic DoS** forces the defender to spend **real money**-DB, egress, human review, paid third-party API calls-without crossing thresholds that trigger classic **DDoS** mitigations. Attackers pick **expensive** endpoints (search, PDF export, LLM inference) and stay under per-IP QPS. **Cost-based** rate limits and **per-tenant budgets** directly target this: weight operations by **estimated** CPU, rows scanned, or dollars. **Concurrency** limits stop **parallel** expensive jobs. **CAPTCHAs** and **authentication** raise attacker cost. **Async** processing with **bounded queues** converts synchronous burn into **manageable** backlog with **clear** user messaging.",
+              "notes": "Answer: Economic DoS forces the defender to spend real money-DB, egress, human review, paid third-party API calls-without crossing thresholds that trigger classic DDoS mitigations. Attackers pick expensive endpoints (search, PDF export, LLM inference) and stay under per-IP QPS. Cost-based rate limits and per-tenant budgets directly target this: weight operations by estimated CPU, rows scanned, or dollars. Concurrency limits stop parallel expensive jobs. CAPTCHAs and authentication raise attacker cost. Async processing with bounded queues converts synchronous burn into manageable backlog with clear user messaging.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Economic DoS forces the defender to spend real money-DB, egress,...",
+              "expanded": false
+            },
+            {
+              "id": "ne596e448e4de790",
+              "title": "How do progressive enforcement and bot signals fit together?",
+              "markdown": "**Answer:** I treat enforcement as a **ladder**, not a binary block: **shadow** logging -> **soft throttle** or degraded mode -> **challenge** (MFA, proof-of-work sparingly) -> **429** with **Retry-After** -> **hard block** for clear malicious infrastructure. **Bot signals**-TLS fingerprint anomalies, header order, headless automation, failed JS challenges, impossible navigation speeds-feed a **risk score** that decides how high to climb the ladder. The goal is **raising attacker cost** while keeping **low-risk** users fast. I emphasize **measurement**: every step has metrics, and **escalation** requires **evidence** to defend to legal or exec stakeholders when blocking at scale.",
+              "notes": "Answer: I treat enforcement as a ladder, not a binary block: shadow logging -> soft throttle or degraded mode -> challenge (MFA, proof-of-work sparingly) -> 429 with Retry-After -> hard block for clear malicious infrastructure. Bot signals-TLS fingerprint anomalies, header order, headless automation, failed JS challenges, impossible navigation speeds-feed a risk score that decides how high to climb the ladder. The goal is raising attacker cost while keeping low-risk users fast. I emphasize measurement: every step has metrics, and escalation requires evidence to defend to legal or exec stakeholders when blocking at scale.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: I treat enforcement as a ladder, not a binary block: shadow logging...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes How do you prevent retry storms from your own clients?",
+          "expanded": false
+        },
+        {
+          "id": "nda9e9594405da89",
+          "title": "Depth: Interview follow-ups \u2014 Rate Limiting and Abuse Prevention",
+          "markdown": "**Authoritative references:** [OWASP Automated Threats](https://owasp.org/www-project-automated-threats-to-web-applications/); [OWASP API Security](https://owasp.org/www-project-api-security/) (API4:2023 Unlimited Resource Consumption); [RFC 6585](https://www.rfc-editor.org/rfc/rfc6585) (429 and Retry-After).\n\n**Follow-ups:**",
+          "notes": "Authoritative references: OWASP Automated Threats; OWASP API Security (API4:2023 Unlimited Resource Consumption); RFC 6585 (429 and Retry-After).\n\nFollow-ups:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n8f0131708cd2e2e",
+              "title": "GraphQL/API cost: Limiting expensive operations vs naive per-IP HTTP limits; depth and c",
+              "markdown": "- GraphQL/API cost: Limiting expensive operations vs naive per-IP HTTP limits; depth and c",
+              "notes": "GraphQL/API cost: Limiting expensive operations vs naive per-IP HTTP limits; depth and c",
+              "blurb": "GraphQL/API cost: Limiting expensive operations vs naive per-IP HTTP limits;...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd83dc10a603d1ec",
+              "title": "Credential stuffing: Per-username throttles + risk signals-avoid locking out legitimate",
+              "markdown": "- Credential stuffing: Per-username throttles + risk signals-avoid locking out legitimate",
+              "notes": "Credential stuffing: Per-username throttles + risk signals-avoid locking out legitimate",
+              "blurb": "Credential stuffing: Per-username throttles + risk signals-avoid locking out...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n99545c79b79103f",
+              "title": "False positives: Shadow mode, NAT, enterprise egress, paid tier handling; support and re",
+              "markdown": "- False positives: Shadow mode, NAT, enterprise egress, paid tier handling; support and re",
+              "notes": "False positives: Shadow mode, NAT, enterprise egress, paid tier handling; support and re",
+              "blurb": "False positives: Shadow mode, NAT, enterprise egress, paid tier handling;...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n4e884949577f9b7",
+              "title": "Distributed systems: Hot keys, fail open vs closed, approximate limits for abuse vs stri",
+              "markdown": "- Distributed systems: Hot keys, fail open vs closed, approximate limits for abuse vs stri",
+              "notes": "Distributed systems: Hot keys, fail open vs closed, approximate limits for abuse vs stri",
+              "blurb": "Distributed systems: Hot keys, fail open vs closed, approximate limits for...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Authoritative references: OWASP Automated Threats; OWASP API Security...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Beginner"
+    }
+  ],
+  "topicId": "rate-limiting-and-abuse-prevention",
+  "name": "Rate Limiting and Abuse Prevention",
+  "structure": "logic-right",
+  "blurb": "Rate limiting bounds how often a client (or class of clients) may invoke an..."
+}

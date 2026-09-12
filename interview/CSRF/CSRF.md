@@ -8,3 +8,5 @@
 
 [**Critical Clarification CSRF Misconceptions**](Critical Clarification CSRF Misconceptions.md)
 
+
+[**CSRF - Mind Map**](CSRF%20-%20Mind%20Map.md)

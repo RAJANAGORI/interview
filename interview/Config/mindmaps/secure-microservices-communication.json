@@ -1,0 +1,2218 @@
+{
+  "id": "naca04e45c26df6d",
+  "title": "Secure Microservices Communication",
+  "markdown": "This guide focuses on **east-west** traffic: service-to-service calls inside a platform (Kubernetes, VMs, serverless with VPC connectors). The goal is **strong identity**, **encrypted transport**, **least-privilege authorization**, and **operable rotation**-not \"the private network is enough.\"",
+  "notes": "This guide focuses on east-west traffic: service-to-service calls inside a platform (Kubernetes, VMs, serverless with VPC connectors). The goal is strong identity, encrypted transport, least-privilege authorization, and operable rotation-not \"the private network is enough.\"",
+  "expanded": true,
+  "children": [
+    {
+      "id": "n41f9b12c71485de",
+      "title": "Threat model and design goals",
+      "markdown": "**What you are defending against**",
+      "notes": "What you are defending against",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n19d9589f430db32",
+          "title": "A compromised workload reading or calling other services from \"inside\" the network.",
+          "markdown": "- A compromised workload reading or calling other services from \"inside\" the network.",
+          "notes": "A compromised workload reading or calling other services from \"inside\" the network.",
+          "blurb": "A compromised workload reading or calling other services from \"inside\" the...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n47a54868d1a56d4",
+          "title": "Stolen long-lived secrets replayed across environments.",
+          "markdown": "- Stolen long-lived secrets replayed across environments.",
+          "notes": "Stolen long-lived secrets replayed across environments.",
+          "blurb": "Stolen long-lived secrets replayed across environments.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n56ac0af04fa50cd",
+          "title": "Lateral movement after a container escape or stolen kubeconfig.",
+          "markdown": "- Lateral movement after a container escape or stolen kubeconfig.",
+          "notes": "Lateral movement after a container escape or stolen kubeconfig.",
+          "blurb": "Lateral movement after a container escape or stolen kubeconfig.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ne2a26c1a779628f",
+          "title": "Operator mistakes: wide security groups, allow all namespaces, debug endpoints exposed c",
+          "markdown": "- Operator mistakes: wide security groups, allow all namespaces, debug endpoints exposed c",
+          "notes": "Operator mistakes: wide security groups, allow all namespaces, debug endpoints exposed c",
+          "blurb": "Operator mistakes: wide security groups, allow all namespaces, debug...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n61dc9f6e0894664",
+          "title": "Supply-chain and runtime drift: a malicious or vulnerable dependency that starts probing",
+          "markdown": "- Supply-chain and runtime drift: a malicious or vulnerable dependency that starts probing",
+          "notes": "Supply-chain and runtime drift: a malicious or vulnerable dependency that starts probing",
+          "blurb": "Supply-chain and runtime drift: a malicious or vulnerable dependency that...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "What you are defending against",
+      "expanded": true
+    },
+    {
+      "id": "na342c481d2c6312",
+      "title": "Mutual TLS (mTLS)",
+      "markdown": "**What it is.** Normal TLS proves the **server** to the **client**. **Mutual** TLS also proves the **client** to the **server** using an X.509 client certificate. Both peers negotiate cipher suites and verify chains against trusted CAs.\n\n**Handshake mental model**\n\n1. TCP connect, **ClientHello** with supported versions and cipher suites.\n2. **ServerHello**, server certificate chain, **CertificateRequest** (for mTLS).\n3. Client sends its **certificate chain**; both sides prove possession of private keys (`CertificateVerify`).\n4. Derived session keys; application data flows with **AEAD** ciphers (TLS 1.3) or negotiated legacy ciphers (TLS 1.2).\n\n**Why it matters for microservices**",
+      "notes": "What it is. Normal TLS proves the server to the client. Mutual TLS also proves the client to the server using an X.509 client certificate. Both peers negotiate cipher suites and verify chains against trusted CAs.\n\nHandshake mental model\n\n1. TCP connect, ClientHello with supported versions and cipher suites.\n2. ServerHello, server certificate chain, CertificateRequest (for mTLS).\n3. Client sends its certificate chain; both sides prove possession of private keys (CertificateVerify).\n4. Derived session keys; application data flows with AEAD ciphers (TLS 1.3) or negotiated legacy ciphers (TLS 1.2).\n\nWhy it matters for microservices",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n5e2b28acec200c4",
+          "title": "Cryptographic identity bound to a key pair, not just an IP or pod name.",
+          "markdown": "- Cryptographic identity bound to a key pair, not just an IP or pod name.",
+          "notes": "Cryptographic identity bound to a key pair, not just an IP or pod name.",
+          "blurb": "Cryptographic identity bound to a key pair, not just an IP or pod name.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nf501ddad00a7d00",
+          "title": "Channel integrity and confidentiality for TCP-based protocols (HTTP/gRPC, many queues' T",
+          "markdown": "- Channel integrity and confidentiality for TCP-based protocols (HTTP/gRPC, many queues' T",
+          "notes": "Channel integrity and confidentiality for TCP-based protocols (HTTP/gRPC, many queues' T",
+          "blurb": "Channel integrity and confidentiality for TCP-based protocols (HTTP/gRPC,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n287a8e6f228c587",
+          "title": "Fits service mesh data planes (Envoy, etc.) that terminate TLS and forward identity to a",
+          "markdown": "- Fits service mesh data planes (Envoy, etc.) that terminate TLS and forward identity to a",
+          "notes": "Fits service mesh data planes (Envoy, etc.) that terminate TLS and forward identity to a",
+          "blurb": "Fits service mesh data planes (Envoy, etc.) that terminate TLS and forward...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n7a526f00be6ef87",
+          "title": "Certificate lifecycle dominates cost: issuance, renewal before expiry, revocation strate",
+          "markdown": "- Certificate lifecycle dominates cost: issuance, renewal before expiry, revocation strate",
+          "notes": "Certificate lifecycle dominates cost: issuance, renewal before expiry, revocation strate",
+          "blurb": "Certificate lifecycle dominates cost: issuance, renewal before expiry,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n4db6a43ebbecfb3",
+          "title": "Trust store management: which CAs are trusted, how many intermediates, and how you preve",
+          "markdown": "- Trust store management: which CAs are trusted, how many intermediates, and how you preve",
+          "notes": "Trust store management: which CAs are trusted, how many intermediates, and how you preve",
+          "blurb": "Trust store management: which CAs are trusted, how many intermediates, and...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nf9a36f215b1877c",
+          "title": "Application vs mesh termination: mesh mTLS between proxies is powerful, but you must be",
+          "markdown": "- Application vs mesh termination: mesh mTLS between proxies is powerful, but you must be",
+          "notes": "Application vs mesh termination: mesh mTLS between proxies is powerful, but you must be",
+          "blurb": "Application vs mesh termination: mesh mTLS between proxies is powerful, but...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nabd11f7c41205c6",
+          "title": "Revocation is often weaker than people assume: OCSP stapling helps for public web PKI; i",
+          "markdown": "- Revocation is often weaker than people assume: OCSP stapling helps for public web PKI; i",
+          "notes": "Revocation is often weaker than people assume: OCSP stapling helps for public web PKI; i",
+          "blurb": "Revocation is often weaker than people assume: OCSP stapling helps for...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nbbb467fe71d1e02",
+          "title": "Strict mTLS: reject plain-text on the mesh port; only TLS with valid peer certs.",
+          "markdown": "- Strict mTLS: reject plain-text on the mesh port; only TLS with valid peer certs.",
+          "notes": "Strict mTLS: reject plain-text on the mesh port; only TLS with valid peer certs.",
+          "blurb": "Strict mTLS: reject plain-text on the mesh port; only TLS with valid peer...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nea1e57a9a70064c",
+          "title": "Permissive / gradual: tolerate plain-text during migration; risk is prolonged accidental",
+          "markdown": "- Permissive / gradual: tolerate plain-text during migration; risk is prolonged accidental",
+          "notes": "Permissive / gradual: tolerate plain-text during migration; risk is prolonged accidental",
+          "blurb": "Permissive / gradual: tolerate plain-text during migration; risk is...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n622f379ef5f57cb",
+          "title": "TLS from client to gateway + mTLS behind: edge TLS for users; internal mTLS for service",
+          "markdown": "- TLS from client to gateway + mTLS behind: edge TLS for users; internal mTLS for service",
+          "notes": "TLS from client to gateway + mTLS behind: edge TLS for users; internal mTLS for service",
+          "blurb": "TLS from client to gateway + mTLS behind: edge TLS for users; internal mTLS...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Cryptographic identity bound to a key pair, not just an IP or pod nam",
+      "expanded": true
+    },
+    {
+      "id": "neb8592004868f04",
+      "title": "Service identity with SPIFFE and SPIRE",
+      "markdown": "**Problem.** IPs and pod names are ephemeral. API keys in config maps are secrets, not identities. You want a **stable, attestable identity** per workload that security policy can reference.\n\n**SPIFFE** (Secure Production Identity Framework for Everyone) defines:",
+      "notes": "Problem. IPs and pod names are ephemeral. API keys in config maps are secrets, not identities. You want a stable, attestable identity per workload that security policy can reference.\n\nSPIFFE (Secure Production Identity Framework for Everyone) defines:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n4e08e134d60f069",
+          "title": "A SPIFFE ID (URI like spiffe://trust.domain/ns/production/sa/payments-api).",
+          "markdown": "- A SPIFFE ID (URI like spiffe://trust.domain/ns/production/sa/payments-api).",
+          "notes": "A SPIFFE ID (URI like spiffe://trust.domain/ns/production/sa/payments-api).",
+          "blurb": "A SPIFFE ID (URI like spiffe://trust.domain/ns/production/sa/payments-api).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nb13be404995d61a",
+          "title": "SVIDs (SPIFFE Verifiable Identity Documents), typically X.509 certificates or JWT-SVIDs,",
+          "markdown": "- SVIDs (SPIFFE Verifiable Identity Documents), typically X.509 certificates or JWT-SVIDs,",
+          "notes": "SVIDs (SPIFFE Verifiable Identity Documents), typically X.509 certificates or JWT-SVIDs,",
+          "blurb": "SVIDs (SPIFFE Verifiable Identity Documents), typically X.509 certificates...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n34b04d292a305c1",
+          "title": "Operators define registration entries: which attestation attributes map to which SPIFFE",
+          "markdown": "- Operators define registration entries: which attestation attributes map to which SPIFFE",
+          "notes": "Operators define registration entries: which attestation attributes map to which SPIFFE",
+          "blurb": "Operators define registration entries: which attestation attributes map to...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n1b90301f29f097a",
+          "title": "Attestation examples",
+          "markdown": "- Attestation examples",
+          "notes": "Attestation examples",
+          "blurb": "Attestation examples",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n92d018bf54c88f8",
+          "title": "Kubernetes: service account token + node attestation.",
+          "markdown": "- Kubernetes: service account token + node attestation.",
+          "notes": "Kubernetes: service account token + node attestation.",
+          "blurb": "Kubernetes: service account token + node attestation.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nbf24a47297c6432",
+          "title": "Cloud: instance identity documents matched to node metadata.",
+          "markdown": "- Cloud: instance identity documents matched to node metadata.",
+          "notes": "Cloud: instance identity documents matched to node metadata.",
+          "blurb": "Cloud: instance identity documents matched to node metadata.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n3ab36dbe60c9c64",
+          "title": "CI/CD runners: custom node attestation with tight registration policies.",
+          "markdown": "- CI/CD runners: custom node attestation with tight registration policies.",
+          "notes": "CI/CD runners: custom node attestation with tight registration policies.",
+          "blurb": "CI/CD runners: custom node attestation with tight registration policies.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nf63b0949210d10b",
+          "title": "Tight entry design prevents \"any pod on this node can become admin\"-bind identities to s",
+          "markdown": "- Tight entry design prevents \"any pod on this node can become admin\"-bind identities to s",
+          "notes": "Tight entry design prevents \"any pod on this node can become admin\"-bind identities to s",
+          "blurb": "Tight entry design prevents \"any pod on this node can become admin\"-bind...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n70f847b63d94b11",
+          "title": "A trust domain is the authority portion of the SPIFFE ID (spiffe://prod.example/... vs s",
+          "markdown": "- A trust domain is the authority portion of the SPIFFE ID (spiffe://prod.example/... vs s",
+          "notes": "A trust domain is the authority portion of the SPIFFE ID (spiffe://prod.example/... vs s",
+          "blurb": "A trust domain is the authority portion of the SPIFFE ID...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n84367c73230b310",
+          "title": "Federation exchanges trust bundles (JWT keys or X.509 roots) so workloads in different c",
+          "markdown": "- Federation exchanges trust bundles (JWT keys or X.509 roots) so workloads in different c",
+          "notes": "Federation exchanges trust bundles (JWT keys or X.509 roots) so workloads in different c",
+          "blurb": "Federation exchanges trust bundles (JWT keys or X.509 roots) so workloads in...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes A SPIFFE ID (URI like spiffe://trust.domain/ns/production/sa/payments",
+      "expanded": true
+    },
+    {
+      "id": "n347255f57a84763",
+      "title": "JWT between services",
+      "markdown": "**When JWTs help**",
+      "notes": "When JWTs help",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n220327f5c5c0028",
+          "title": "Cross-cluster or cross-trust-domain calls where a single mesh CA is not shared.",
+          "markdown": "- Cross-cluster or cross-trust-domain calls where a single mesh CA is not shared.",
+          "notes": "Cross-cluster or cross-trust-domain calls where a single mesh CA is not shared.",
+          "blurb": "Cross-cluster or cross-trust-domain calls where a single mesh CA is not...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n0614b23377d6c3d",
+          "title": "Application-layer propagation of caller context to downstream services (subject, tenant,",
+          "markdown": "- Application-layer propagation of caller context to downstream services (subject, tenant,",
+          "notes": "Application-layer propagation of caller context to downstream services (subject, tenant,",
+          "blurb": "Application-layer propagation of caller context to downstream services...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n669c64d121bd310",
+          "title": "Bridging to OAuth2/OIDC-style patterns for APIs that already speak bearer tokens.",
+          "markdown": "- Bridging to OAuth2/OIDC-style patterns for APIs that already speak bearer tokens.",
+          "notes": "Bridging to OAuth2/OIDC-style patterns for APIs that already speak bearer tokens.",
+          "blurb": "Bridging to OAuth2/OIDC-style patterns for APIs that already speak bearer...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nd63e6726f8ed8f7",
+          "title": "iss / sub: who issued the token and the subject; pin expected issuers in verifiers.",
+          "markdown": "- iss / sub: who issued the token and the subject; pin expected issuers in verifiers.",
+          "notes": "iss / sub: who issued the token and the subject; pin expected issuers in verifiers.",
+          "blurb": "iss / sub: who issued the token and the subject; pin expected issuers in...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n43c0c8ebfa5be4d",
+          "title": "aud: intended recipient; every service should reject tokens not aimed at itself (or its",
+          "markdown": "- aud: intended recipient; every service should reject tokens not aimed at itself (or its",
+          "notes": "aud: intended recipient; every service should reject tokens not aimed at itself (or its",
+          "blurb": "aud: intended recipient; every service should reject tokens not aimed at...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n8d0cf2358ce8627",
+          "title": "exp / iat / nbf: clock skew windows should be explicit (e.g., \u00b160s) and monitored.",
+          "markdown": "- exp / iat / nbf: clock skew windows should be explicit (e.g., \u00b160s) and monitored.",
+          "notes": "exp / iat / nbf: clock skew windows should be explicit (e.g., \u00b160s) and monitored.",
+          "blurb": "exp / iat / nbf: clock skew windows should be explicit (e.g., \u00b160s) and...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nae28f3c770346fa",
+          "title": "jti: helps replay detection for very short-lived tokens when you keep a replay cache-usu",
+          "markdown": "- jti: helps replay detection for very short-lived tokens when you keep a replay cache-usu",
+          "notes": "jti: helps replay detection for very short-lived tokens when you keep a replay cache-usu",
+          "blurb": "jti: helps replay detection for very short-lived tokens when you keep a...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ncb7e4b912853983",
+          "title": "Client credentials grant (or platform-specific equivalents) can mint access tokens for m",
+          "markdown": "- Client credentials grant (or platform-specific equivalents) can mint access tokens for m",
+          "notes": "Client credentials grant (or platform-specific equivalents) can mint access tokens for m",
+          "blurb": "Client credentials grant (or platform-specific equivalents) can mint access...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n2152d5a4061e4ca",
+          "title": "Token exchange (RFC 8693 pattern): trade an incoming token for a downstream token with t",
+          "markdown": "- Token exchange (RFC 8693 pattern): trade an incoming token for a downstream token with t",
+          "notes": "Token exchange (RFC 8693 pattern): trade an incoming token for a downstream token with t",
+          "blurb": "Token exchange (RFC 8693 pattern): trade an incoming token for a downstream...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n672d4c95ebcab87",
+          "title": "Token theft from logs, traces, or compromised proxies-prefer short TTL, audience binding",
+          "markdown": "- Token theft from logs, traces, or compromised proxies-prefer short TTL, audience binding",
+          "notes": "Token theft from logs, traces, or compromised proxies-prefer short TTL, audience binding",
+          "blurb": "Token theft from logs, traces, or compromised proxies-prefer short TTL,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Cross-cluster or cross-trust-domain calls where a single mesh CA is n",
+      "expanded": false
+    },
+    {
+      "id": "n1ba18b0fd884ef5",
+      "title": "Network policies and segmentation",
+      "markdown": "Network controls **complement** identity; they do not replace it.\n\n**Kubernetes NetworkPolicy**",
+      "notes": "Network controls complement identity; they do not replace it.\n\nKubernetes NetworkPolicy",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n81118974eec806c",
+          "title": "Default allow-all east-west is common; explicit deny-by-default requires a CNI that enfo",
+          "markdown": "- Default allow-all east-west is common; explicit deny-by-default requires a CNI that enfo",
+          "notes": "Default allow-all east-west is common; explicit deny-by-default requires a CNI that enfo",
+          "blurb": "Default allow-all east-west is common; explicit deny-by-default requires a...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n4f576835394d57b",
+          "title": "Express who may talk to whom using pod selectors, namespaces, ports, and IP blocks (for",
+          "markdown": "- Express who may talk to whom using pod selectors, namespaces, ports, and IP blocks (for",
+          "notes": "Express who may talk to whom using pod selectors, namespaces, ports, and IP blocks (for",
+          "blurb": "Express who may talk to whom using pod selectors, namespaces, ports, and IP...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n0a67daecae3e325",
+          "title": "Default deny ingress to sensitive namespaces, then allow only from known caller labels (",
+          "markdown": "- Default deny ingress to sensitive namespaces, then allow only from known caller labels (",
+          "notes": "Default deny ingress to sensitive namespaces, then allow only from known caller labels (",
+          "blurb": "Default deny ingress to sensitive namespaces, then allow only from known...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nf02ef1695f0ba03",
+          "title": "Combine with namespace per team/env, dedicated nodes for sensitive tiers, and egress res",
+          "markdown": "- Combine with namespace per team/env, dedicated nodes for sensitive tiers, and egress res",
+          "notes": "Combine with namespace per team/env, dedicated nodes for sensitive tiers, and egress res",
+          "blurb": "Combine with namespace per team/env, dedicated nodes for sensitive tiers,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n245701dcf06728e",
+          "title": "Tighten ingress to load balancers and admin planes only.",
+          "markdown": "- Tighten ingress to load balancers and admin planes only.",
+          "notes": "Tighten ingress to load balancers and admin planes only.",
+          "blurb": "Tighten ingress to load balancers and admin planes only.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nbe3282ceb360852",
+          "title": "For service-to-service on VPC networks, use security groups referencing security groups",
+          "markdown": "- For service-to-service on VPC networks, use security groups referencing security groups",
+          "notes": "For service-to-service on VPC networks, use security groups referencing security groups",
+          "blurb": "For service-to-service on VPC networks, use security groups referencing...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n480f95cd729defc",
+          "title": "Separate data-plane subnets from management subnets; avoid sharing broad \"internal\" SGs",
+          "markdown": "- Separate data-plane subnets from management subnets; avoid sharing broad \"internal\" SGs",
+          "notes": "Separate data-plane subnets from management subnets; avoid sharing broad \"internal\" SGs",
+          "blurb": "Separate data-plane subnets from management subnets; avoid sharing broad...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n160c1f29247ecba",
+          "title": "AuthorizationPolicy (Istio) or equivalents: L7 rules on methods, paths, JWT claims, and",
+          "markdown": "- AuthorizationPolicy (Istio) or equivalents: L7 rules on methods, paths, JWT claims, and",
+          "notes": "AuthorizationPolicy (Istio) or equivalents: L7 rules on methods, paths, JWT claims, and",
+          "blurb": "AuthorizationPolicy (Istio) or equivalents: L7 rules on methods, paths, JWT...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n1fbb8994ba181e5",
+          "title": "Egress gateways or controlled egress to audit and limit outbound Internet access from wo",
+          "markdown": "- Egress gateways or controlled egress to audit and limit outbound Internet access from wo",
+          "notes": "Egress gateways or controlled egress to audit and limit outbound Internet access from wo",
+          "blurb": "Egress gateways or controlled egress to audit and limit outbound Internet...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nf091c220addb8af",
+          "title": "Restrict egress to IMDS (instance metadata) where possible using network policy or hop l",
+          "markdown": "- Restrict egress to IMDS (instance metadata) where possible using network policy or hop l",
+          "notes": "Restrict egress to IMDS (instance metadata) where possible using network policy or hop l",
+          "blurb": "Restrict egress to IMDS (instance metadata) where possible using network...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Network controls complement identity; they do not replace it.",
+      "expanded": false
+    },
+    {
+      "id": "nd3f94c0fcc1ebab",
+      "title": "API gateways and internal \u201cedges\u201d",
+      "markdown": "**Roles**",
+      "notes": "Roles",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n7409af005d1d7bb",
+          "title": "North-south gateway: users and partners hit TLS here; WAF, bot defense, OAuth/OIDC, rate",
+          "markdown": "- North-south gateway: users and partners hit TLS here; WAF, bot defense, OAuth/OIDC, rate",
+          "notes": "North-south gateway: users and partners hit TLS here; WAF, bot defense, OAuth/OIDC, rate",
+          "blurb": "North-south gateway: users and partners hit TLS here; WAF, bot defense,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nef13eb15a7e7666",
+          "title": "Backend-for-frontend (BFF): shapes aggregates for a specific client; still should not be",
+          "markdown": "- Backend-for-frontend (BFF): shapes aggregates for a specific client; still should not be",
+          "notes": "Backend-for-frontend (BFF): shapes aggregates for a specific client; still should not be",
+          "blurb": "Backend-for-frontend (BFF): shapes aggregates for a specific client; still...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nd8148bb4da7a8c0",
+          "title": "East-west gateway (less common as a single choke point): can centralize mTLS, JWT valida",
+          "markdown": "- East-west gateway (less common as a single choke point): can centralize mTLS, JWT valida",
+          "notes": "East-west gateway (less common as a single choke point): can centralize mTLS, JWT valida",
+          "blurb": "East-west gateway (less common as a single choke point): can centralize...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n95357a893629c86",
+          "title": "Do not turn the gateway into a universal trust broker that strips security context-prese",
+          "markdown": "- Do not turn the gateway into a universal trust broker that strips security context-prese",
+          "notes": "Do not turn the gateway into a universal trust broker that strips security context-prese",
+          "blurb": "Do not turn the gateway into a universal trust broker that strips security...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nfcaeba9ef367e16",
+          "title": "Authenticate early, authorize close to data: gateways enforce coarse policy; services en",
+          "markdown": "- Authenticate early, authorize close to data: gateways enforce coarse policy; services en",
+          "notes": "Authenticate early, authorize close to data: gateways enforce coarse policy; services en",
+          "blurb": "Authenticate early, authorize close to data: gateways enforce coarse policy;...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n3ffa04b90f89197",
+          "title": "Idempotency keys, request size limits, and timeouts belong at the edge to protect backen",
+          "markdown": "- Idempotency keys, request size limits, and timeouts belong at the edge to protect backen",
+          "notes": "Idempotency keys, request size limits, and timeouts belong at the edge to protect backen",
+          "blurb": "Idempotency keys, request size limits, and timeouts belong at the edge to...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n53b461fcf24bbb2",
+          "title": "mTLS between gateway and mesh ingress is a common pattern: the gateway presents a client",
+          "markdown": "- mTLS between gateway and mesh ingress is a common pattern: the gateway presents a client",
+          "notes": "mTLS between gateway and mesh ingress is a common pattern: the gateway presents a client",
+          "blurb": "mTLS between gateway and mesh ingress is a common pattern: the gateway...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "na95c7f26eecc139",
+          "title": "Ensure gateways support needed features (trailers, streaming, graceful GOAWAY) or termin",
+          "markdown": "- Ensure gateways support needed features (trailers, streaming, graceful GOAWAY) or termin",
+          "notes": "Ensure gateways support needed features (trailers, streaming, graceful GOAWAY) or termin",
+          "blurb": "Ensure gateways support needed features (trailers, streaming, graceful...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n7105182dd93a765",
+          "title": "Apply max message size and deadlines consistently; streaming RPCs need per-stream limits",
+          "markdown": "- Apply max message size and deadlines consistently; streaming RPCs need per-stream limits",
+          "notes": "Apply max message size and deadlines consistently; streaming RPCs need per-stream limits",
+          "blurb": "Apply max message size and deadlines consistently; streaming RPCs need...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nf20d25a35e73053",
+          "title": "Traditional WAFs focus on browser attack patterns; internal JSON/gRPC traffic may need s",
+          "markdown": "- Traditional WAFs focus on browser attack patterns; internal JSON/gRPC traffic may need s",
+          "notes": "Traditional WAFs focus on browser attack patterns; internal JSON/gRPC traffic may need s",
+          "blurb": "Traditional WAFs focus on browser attack patterns; internal JSON/gRPC...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes North-south gateway: users and partners hit TLS here; WAF, bot defens",
+      "expanded": false
+    },
+    {
+      "id": "nc6aa7619fd87edb",
+      "title": "Zero trust for east\u2013west traffic",
+      "markdown": "**Definition in practice.** Every call carries **evidence** (cryptographic identity and/or signed token), is **authorized** by policy, is **encrypted on the wire**, and is **logged** with that evidence-even if both pods sit in the same subnet.\n\n**Implementation stack (example)**\n\n1. **Identity**: SPIRE-issued SVIDs; mesh maps certs to `source.principal`.\n2. **Transport**: STRICT mTLS in the mesh data plane.\n3. **Policy**: L4/L7 authorization (who can call `checkout` from `cart` only on `POST /orders`).\n4. **Secrets**: Vault or cloud secret stores for bootstrap tokens and signing keys-not for every inter-service hop if SVIDs cover identity.\n5. **Observability**: access logs with principal, `trace_id`, decision, and rule ID.\n\n**Mapping to common zero-trust themes**",
+      "notes": "Definition in practice. Every call carries evidence (cryptographic identity and/or signed token), is authorized by policy, is encrypted on the wire, and is logged with that evidence-even if both pods sit in the same subnet.\n\nImplementation stack (example)\n\n1. Identity: SPIRE-issued SVIDs; mesh maps certs to source.principal.\n2. Transport: STRICT mTLS in the mesh data plane.\n3. Policy: L4/L7 authorization (who can call checkout from cart only on POST /orders).\n4. Secrets: Vault or cloud secret stores for bootstrap tokens and signing keys-not for every inter-service hop if SVIDs cover identity.\n5. Observability: access logs with principal, traceid, decision, and rule ID.\n\nMapping to common zero-trust themes",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n00efb0d82e3d635",
+          "title": "Strong identity: SPIFFE ID / mesh principal on every request path you care about.",
+          "markdown": "- Strong identity: SPIFFE ID / mesh principal on every request path you care about.",
+          "notes": "Strong identity: SPIFFE ID / mesh principal on every request path you care about.",
+          "blurb": "Strong identity: SPIFFE ID / mesh principal on every request path you care...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ndb69c19cb96170f",
+          "title": "Least privilege: allowlists, not \"same VPC.\"",
+          "markdown": "- Least privilege: allowlists, not \"same VPC.\"",
+          "notes": "Least privilege: allowlists, not \"same VPC.\"",
+          "blurb": "Least privilege: allowlists, not \"same VPC.\"",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n0f5baa9014eff53",
+          "title": "Assume breach: segmentation plus detect unusual lateral movement.",
+          "markdown": "- Assume breach: segmentation plus detect unusual lateral movement.",
+          "notes": "Assume breach: segmentation plus detect unusual lateral movement.",
+          "blurb": "Assume breach: segmentation plus detect unusual lateral movement.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "na1fec43a3137de7",
+          "title": "Continuous validation: short-lived certs/tokens, automated rotation, policy tests in CI.",
+          "markdown": "- Continuous validation: short-lived certs/tokens, automated rotation, policy tests in CI.",
+          "notes": "Continuous validation: short-lived certs/tokens, automated rotation, policy tests in CI.",
+          "blurb": "Continuous validation: short-lived certs/tokens, automated rotation, policy...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nb4e7aa22ef38f44",
+          "title": "\"mTLS is enough\" without authorization-any compromised cert can reach any service.",
+          "markdown": "- \"mTLS is enough\" without authorization-any compromised cert can reach any service.",
+          "notes": "\"mTLS is enough\" without authorization-any compromised cert can reach any service.",
+          "blurb": "\"mTLS is enough\" without authorization-any compromised cert can reach any...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n38ddd6624f64721",
+          "title": "Trusting the network because VPCs feel private.",
+          "markdown": "- Trusting the network because VPCs feel private.",
+          "notes": "Trusting the network because VPCs feel private.",
+          "blurb": "Trusting the network because VPCs feel private.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "na2ecb960dfb5766",
+          "title": "Overloading JWTs with PII-keep them lean; fetch details server-side after authz.",
+          "markdown": "- Overloading JWTs with PII-keep them lean; fetch details server-side after authz.",
+          "notes": "Overloading JWTs with PII-keep them lean; fetch details server-side after authz.",
+          "blurb": "Overloading JWTs with PII-keep them lean; fetch details server-side after...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n0105f4931ec1904",
+          "title": "Silent bypasses: kubectl port-forward, debug containers, and shared node filesystem can",
+          "markdown": "- Silent bypasses: kubectl port-forward, debug containers, and shared node filesystem can",
+          "notes": "Silent bypasses: kubectl port-forward, debug containers, and shared node filesystem can",
+          "blurb": "Silent bypasses: kubectl port-forward, debug containers, and shared node...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Definition in practice.",
+      "expanded": false
+    },
+    {
+      "id": "n20cda3254cb821c",
+      "title": "Secrets, keys, and bootstrap",
+      "markdown": "**Categories**",
+      "notes": "Categories",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n70b294ed14da2be",
+          "title": "Workload identity secrets: SVID private keys, kube service account tokens (prefer short-",
+          "markdown": "- Workload identity secrets: SVID private keys, kube service account tokens (prefer short-",
+          "notes": "Workload identity secrets: SVID private keys, kube service account tokens (prefer short-",
+          "blurb": "Workload identity secrets: SVID private keys, kube service account tokens...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n15f241a2ccc5db5",
+          "title": "Signing keys for service-issued JWTs: asymmetric keys in KMS/HSM, published via JWKS.",
+          "markdown": "- Signing keys for service-issued JWTs: asymmetric keys in KMS/HSM, published via JWKS.",
+          "notes": "Signing keys for service-issued JWTs: asymmetric keys in KMS/HSM, published via JWKS.",
+          "blurb": "Signing keys for service-issued JWTs: asymmetric keys in KMS/HSM, published...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n63d5a997c43a2cd",
+          "title": "Symmetric keys for HMAC (avoid wide distribution; prefer asymmetric for multi-service ve",
+          "markdown": "- Symmetric keys for HMAC (avoid wide distribution; prefer asymmetric for multi-service ve",
+          "notes": "Symmetric keys for HMAC (avoid wide distribution; prefer asymmetric for multi-service ve",
+          "blurb": "Symmetric keys for HMAC (avoid wide distribution; prefer asymmetric for...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n1c641b450d0e7e2",
+          "title": "Data-layer credentials: DB passwords, API keys for SaaS-scoped, rotated, never checked i",
+          "markdown": "- Data-layer credentials: DB passwords, API keys for SaaS-scoped, rotated, never checked i",
+          "notes": "Data-layer credentials: DB passwords, API keys for SaaS-scoped, rotated, never checked i",
+          "blurb": "Data-layer credentials: DB passwords, API keys for SaaS-scoped, rotated,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n3554bb8cf4733e9",
+          "title": "Secret manager (Vault, AWS Secrets Manager, GCP Secret Manager, Azure Key Vault) with IA",
+          "markdown": "- Secret manager (Vault, AWS Secrets Manager, GCP Secret Manager, Azure Key Vault) with IA",
+          "notes": "Secret manager (Vault, AWS Secrets Manager, GCP Secret Manager, Azure Key Vault) with IA",
+          "blurb": "Secret manager (Vault, AWS Secrets Manager, GCP Secret Manager, Azure Key...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ndaed23673fd2be4",
+          "title": "Kubernetes: encrypt etcd at rest; restrict RBAC on Secret objects; prefer CSI secret dri",
+          "markdown": "- Kubernetes: encrypt etcd at rest; restrict RBAC on Secret objects; prefer CSI secret dri",
+          "notes": "Kubernetes: encrypt etcd at rest; restrict RBAC on Secret objects; prefer CSI secret dri",
+          "blurb": "Kubernetes: encrypt etcd at rest; restrict RBAC on Secret objects; prefer...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n233999f2a179b61",
+          "title": "Envelope encryption: data encryption keys wrapped by KMS; limits blast radius if a pod s",
+          "markdown": "- Envelope encryption: data encryption keys wrapped by KMS; limits blast radius if a pod s",
+          "notes": "Envelope encryption: data encryption keys wrapped by KMS; limits blast radius if a pod s",
+          "blurb": "Envelope encryption: data encryption keys wrapped by KMS; limits blast...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n246c9617fc3c9fb",
+          "title": "Databases: prefer short-lived users or IAM database auth patterns over one static DB_PAS",
+          "markdown": "- Databases: prefer short-lived users or IAM database auth patterns over one static DB_PAS",
+          "notes": "Databases: prefer short-lived users or IAM database auth patterns over one static DB_PAS",
+          "blurb": "Databases: prefer short-lived users or IAM database auth patterns over one...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ne8e15769367c95a",
+          "title": "Break-glass procedures for compromised CA or root KMS keys should be rehearsed; know who",
+          "markdown": "- Break-glass procedures for compromised CA or root KMS keys should be rehearsed; know who",
+          "notes": "Break-glass procedures for compromised CA or root KMS keys should be rehearsed; know who",
+          "blurb": "Break-glass procedures for compromised CA or root KMS keys should be...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n4c1b85c696438ce",
+          "title": "Overlap two valid signing keys during JWKS rotation.",
+          "markdown": "- Overlap two valid signing keys during JWKS rotation.",
+          "notes": "Overlap two valid signing keys during JWKS rotation.",
+          "blurb": "Overlap two valid signing keys during JWKS rotation.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Workload identity secrets: SVID private keys, kube service account to",
+      "expanded": false
+    },
+    {
+      "id": "ne65bdc5ff57a9f1",
+      "title": "Putting it together \u2014 reference patterns",
+      "markdown": "| Pattern | Identity & transport | Authorization | Best when |\n|--------|----------------------|---------------|-----------|\n| **Mesh-first** | Mesh or SPIRE CA, STRICT mTLS between sidecars | Mesh L7 + app checks | Most services on K8s, HTTP/gRPC |\n| **JWT + TLS** | TLS to service; optional mTLS for high assurance | JWT scopes + app RBAC | Multi-cloud, SaaS glue, brownfield |\n| **Gateway + mesh** | User OAuth at edge; mTLS from gateway to mesh | Edge coarse; mesh + app fine | Large orgs with strong edge standards |\n\n**Pattern A - Mesh-first**",
+      "notes": "| Pattern | Identity & transport | Authorization | Best when |\n|--------|----------------------|---------------|-----------|\n| Mesh-first | Mesh or SPIRE CA, STRICT mTLS between sidecars | Mesh L7 + app checks | Most services on K8s, HTTP/gRPC |\n| JWT + TLS | TLS to service; optional mTLS for high assurance | JWT scopes + app RBAC | Multi-cloud, SaaS glue, brownfield |\n| Gateway + mesh | User OAuth at edge; mTLS from gateway to mesh | Edge coarse; mesh + app fine | Large orgs with strong edge standards |\n\nPattern A - Mesh-first",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "ncd8767b0a6e7b8c",
+          "title": "SPIRE or mesh CA issues certs; STRICT mTLS; L7 authz in mesh; apps trust localhost sidec",
+          "markdown": "- SPIRE or mesh CA issues certs; STRICT mTLS; L7 authz in mesh; apps trust localhost sidec",
+          "notes": "SPIRE or mesh CA issues certs; STRICT mTLS; L7 authz in mesh; apps trust localhost sidec",
+          "blurb": "SPIRE or mesh CA issues certs; STRICT mTLS; L7 authz in mesh; apps trust...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n4a825f4b0a7bd40",
+          "title": "Best when most services are on Kubernetes and speak HTTP/gRPC.",
+          "markdown": "- Best when most services are on Kubernetes and speak HTTP/gRPC.",
+          "notes": "Best when most services are on Kubernetes and speak HTTP/gRPC.",
+          "blurb": "Best when most services are on Kubernetes and speak HTTP/gRPC.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n7996c62ff3448d4",
+          "title": "TLS to service; validate OAuth2 service tokens or internally signed JWTs; optional mTLS",
+          "markdown": "- TLS to service; validate OAuth2 service tokens or internally signed JWTs; optional mTLS",
+          "notes": "TLS to service; validate OAuth2 service tokens or internally signed JWTs; optional mTLS",
+          "blurb": "TLS to service; validate OAuth2 service tokens or internally signed JWTs;...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nadf394413c34b6f",
+          "title": "Common when integrating SaaS, multi-cloud, or brownfield services.",
+          "markdown": "- Common when integrating SaaS, multi-cloud, or brownfield services.",
+          "notes": "Common when integrating SaaS, multi-cloud, or brownfield services.",
+          "blurb": "Common when integrating SaaS, multi-cloud, or brownfield services.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n8a4fda836544e77",
+          "title": "Edge gateway for external auth; internal mesh for east-west mTLS and policy; gateway for",
+          "markdown": "- Edge gateway for external auth; internal mesh for east-west mTLS and policy; gateway for",
+          "notes": "Edge gateway for external auth; internal mesh for east-west mTLS and policy; gateway for",
+          "blurb": "Edge gateway for external auth; internal mesh for east-west mTLS and policy;...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "| Pattern | Identity & transport | Authorization | Best when |...",
+      "expanded": false
+    },
+    {
+      "id": "na70f530768dae08",
+      "title": "Operational metrics, testing, and incidents",
+      "markdown": "**Metrics and alerts**",
+      "notes": "Metrics and alerts",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nb3465fbdaaf4fb2",
+          "title": "Certificate expiry dashboards per trust domain; SLOs on renewal success rate.",
+          "markdown": "- Certificate expiry dashboards per trust domain; SLOs on renewal success rate.",
+          "notes": "Certificate expiry dashboards per trust domain; SLOs on renewal success rate.",
+          "blurb": "Certificate expiry dashboards per trust domain; SLOs on renewal success rate.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n133e3e955f09e91",
+          "title": "Authz deny rate anomalies (sudden spikes may indicate attack or mis-deploy).",
+          "markdown": "- Authz deny rate anomalies (sudden spikes may indicate attack or mis-deploy).",
+          "notes": "Authz deny rate anomalies (sudden spikes may indicate attack or mis-deploy).",
+          "blurb": "Authz deny rate anomalies (sudden spikes may indicate attack or mis-deploy).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n9e032136c86cff2",
+          "title": "TLS handshake error rate by workload version.",
+          "markdown": "- TLS handshake error rate by workload version.",
+          "notes": "TLS handshake error rate by workload version.",
+          "blurb": "TLS handshake error rate by workload version.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ncf7d0bc36e9416f",
+          "title": "JWKS fetch failures and signature verification errors.",
+          "markdown": "- JWKS fetch failures and signature verification errors.",
+          "notes": "JWKS fetch failures and signature verification errors.",
+          "blurb": "JWKS fetch failures and signature verification errors.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n4035a38a0ff9a82",
+          "title": "Chaos tests: revoke a trust bundle, drain nodes, verify backoff and failover without glo",
+          "markdown": "- Chaos tests: revoke a trust bundle, drain nodes, verify backoff and failover without glo",
+          "notes": "Chaos tests: revoke a trust bundle, drain nodes, verify backoff and failover without glo",
+          "blurb": "Chaos tests: revoke a trust bundle, drain nodes, verify backoff and failover...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n05e3238940ae83f",
+          "title": "Policy regression tests: CI applies NetworkPolicy and mesh manifests to a kind/cluster a",
+          "markdown": "- Policy regression tests: CI applies NetworkPolicy and mesh manifests to a kind/cluster a",
+          "notes": "Policy regression tests: CI applies NetworkPolicy and mesh manifests to a kind/cluster a",
+          "blurb": "Policy regression tests: CI applies NetworkPolicy and mesh manifests to a...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n114f413acacf039",
+          "title": "Tabletop exercises for stolen SVID or leaked signing key: disable issuance, rotate roots",
+          "markdown": "- Tabletop exercises for stolen SVID or leaked signing key: disable issuance, rotate roots",
+          "notes": "Tabletop exercises for stolen SVID or leaked signing key: disable issuance, rotate roots",
+          "blurb": "Tabletop exercises for stolen SVID or leaked signing key: disable issuance,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n59326a828a90606",
+          "title": "If a workload identity is compromised, treat all tokens and certs issued under that regi",
+          "markdown": "- If a workload identity is compromised, treat all tokens and certs issued under that regi",
+          "notes": "If a workload identity is compromised, treat all tokens and certs issued under that regi",
+          "blurb": "If a workload identity is compromised, treat all tokens and certs issued...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n84e2ebaffd30fca",
+          "title": "Preserve audit logs with principal and trace IDs for forensic timelines.",
+          "markdown": "- Preserve audit logs with principal and trace IDs for forensic timelines.",
+          "notes": "Preserve audit logs with principal and trace IDs for forensic timelines.",
+          "blurb": "Preserve audit logs with principal and trace IDs for forensic timelines.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Metrics and alerts",
+      "expanded": false
+    },
+    {
+      "id": "nbb5c009a6ffa029",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n0c5be7d542945f3",
+          "title": "Zero-Trust Principles",
+          "markdown": "Never trust network location",
+          "notes": "Never trust network location",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nc847ba91808b22c",
+              "title": "Never trust network location",
+              "markdown": "- Never trust network location",
+              "notes": "Never trust network location",
+              "blurb": "Never trust network location",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb4d6e70f5061137",
+              "title": "Authenticate all communication",
+              "markdown": "- Authenticate all communication",
+              "notes": "Authenticate all communication",
+              "blurb": "Authenticate all communication",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ndd3bee9d44f7570",
+              "title": "Authorize every request",
+              "markdown": "- Authorize every request",
+              "notes": "Authorize every request",
+              "blurb": "Authorize every request",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3e468ed101f4928",
+              "title": "Encrypt all traffic",
+              "markdown": "- Encrypt all traffic",
+              "notes": "Encrypt all traffic",
+              "blurb": "Encrypt all traffic",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ncd88e74a02ab519",
+              "title": "Monitor and audit",
+              "markdown": "- Monitor and audit",
+              "notes": "Monitor and audit",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Never trust network location",
+          "expanded": false
+        },
+        {
+          "id": "n978ba4077eeeca8",
+          "title": "Authentication Methods",
+          "markdown": "| Method | Security | Complexity | Best For |\n| --- | --- | --- | --- |\n| **mTLS** | High | High | Service mesh, high security |\n| **JWT Tokens** | Medium-High | Medium | API-based, distributed |\n| **API Keys** | Low-Medium | Low | Low-risk, internal services |",
+          "notes": "| Method | Security | Complexity | Best For |\n| --- | --- | --- | --- |\n| mTLS | High | High | Service mesh, high security |\n| JWT Tokens | Medium-High | Medium | API-based, distributed |\n| API Keys | Low-Medium | Low | Low-risk, internal services |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Method | Security | Complexity | Best For | | --- | --- | --- | --- | |...",
+          "expanded": false
+        },
+        {
+          "id": "nb3eccbf9b785a8f",
+          "title": "Service-to-Service Security Checklist",
+          "markdown": "\u2705 Authenticate all service-to-service communication - \u2705 Encrypt all traffic (TLS/mTLS) - \u2705 Service identity verification - \u2705 Least privilege authorization - \u2705 Secret management for credentials - \u2705 Service mesh for...",
+          "notes": "\u2705 Authenticate all service-to-service communication - \u2705 Encrypt all traffic (TLS/mTLS) - \u2705 Service identity verification - \u2705 Least privilege authorization - \u2705 Secret management for credentials - \u2705 Service mesh for...",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nd5ca2a89a6c4356",
+              "title": "Authenticate all service-to-service communication",
+              "markdown": "- Authenticate all service-to-service communication",
+              "notes": "Authenticate all service-to-service communication",
+              "blurb": "Authenticate all service-to-service communication",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5d637baadf057a6",
+              "title": "Encrypt all traffic (TLS/mTLS)",
+              "markdown": "- Encrypt all traffic (TLS/mTLS)",
+              "notes": "Encrypt all traffic (TLS/mTLS)",
+              "blurb": "Encrypt all traffic (TLS/mTLS)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n65e9bbb1f90f7ee",
+              "title": "Service identity verification",
+              "markdown": "- Service identity verification",
+              "notes": "Service identity verification",
+              "blurb": "Service identity verification",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6c99c7b1906590c",
+              "title": "Least privilege authorization",
+              "markdown": "- Least privilege authorization",
+              "notes": "Least privilege authorization",
+              "blurb": "Least privilege authorization",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5d81f8502b71f15",
+              "title": "Secret management for credentials",
+              "markdown": "- Secret management for credentials",
+              "notes": "Secret management for credentials",
+              "blurb": "Secret management for credentials",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc452e5c8f8f3f4b",
+              "title": "Service mesh for policy enforcement (optional)",
+              "markdown": "- Service mesh for policy enforcement (optional)",
+              "notes": "Service mesh for policy enforcement (optional)",
+              "blurb": "Service mesh for policy enforcement (optional)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na5ec8ddbd59f99d",
+              "title": "Monitoring and audit logging",
+              "markdown": "- Monitoring and audit logging",
+              "notes": "Monitoring and audit logging",
+              "blurb": "Monitoring and audit logging",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "\u2705 Authenticate all service-to-service communication - \u2705 Encrypt all traffic...",
+          "expanded": false
+        },
+        {
+          "id": "nc7bc15e94d0e028",
+          "title": "Service Mesh Benefits",
+          "markdown": "Automatic mTLS encryption - Service-to-service authentication - Traffic policy enforcement - Observability - Load balancing",
+          "notes": "Automatic mTLS encryption - Service-to-service authentication - Traffic policy enforcement - Observability - Load balancing",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ndb7951f9506ab20",
+              "title": "Automatic mTLS encryption",
+              "markdown": "- Automatic mTLS encryption",
+              "notes": "Automatic mTLS encryption",
+              "blurb": "Automatic mTLS encryption",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0cfd2bc13b894dd",
+              "title": "Service-to-service authentication",
+              "markdown": "- Service-to-service authentication",
+              "notes": "Service-to-service authentication",
+              "blurb": "Service-to-service authentication",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n84edce7639b6197",
+              "title": "Traffic policy enforcement",
+              "markdown": "- Traffic policy enforcement",
+              "notes": "Traffic policy enforcement",
+              "blurb": "Traffic policy enforcement",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n73c32f6852d8f37",
+              "title": "Observability",
+              "markdown": "- Observability",
+              "notes": "Observability",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n40f6db591e5d52c",
+              "title": "Load balancing",
+              "markdown": "- Load balancing",
+              "notes": "Load balancing",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Automatic mTLS encryption - Service-to-service authentication - Traffic...",
+          "expanded": false
+        },
+        {
+          "id": "n70b8b32826f75e8",
+          "title": "Common Service Mesh Solutions",
+          "markdown": "| Solution | Description |\n| --- | --- |\n| **Istio** | Full-featured service mesh |\n| **Linkerd** | Lightweight, user-friendly |\n| **Consul Connect** | HashiCorp service mesh |\n| **AWS App Mesh** | AWS-managed service mesh |",
+          "notes": "| Solution | Description |\n| --- | --- |\n| Istio | Full-featured service mesh |\n| Linkerd | Lightweight, user-friendly |\n| Consul Connect | HashiCorp service mesh |\n| AWS App Mesh | AWS-managed service mesh |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Solution | Description | | --- | --- | | Istio | Full-featured service...",
+          "expanded": false
+        },
+        {
+          "id": "n6b19c5e004a8376",
+          "title": "Secret Management",
+          "markdown": "| Requirement | Solution |\n| --- | --- |\n| Secure storage | HashiCorp Vault, AWS Secrets Manager |\n| Credential rotation | Automated rotation |\n| Access control | Role-based access |\n| Audit | Credential usage logging |",
+          "notes": "| Requirement | Solution |\n| --- | --- |\n| Secure storage | HashiCorp Vault, AWS Secrets Manager |\n| Credential rotation | Automated rotation |\n| Access control | Role-based access |\n| Audit | Credential usage logging |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Requirement | Solution | | --- | --- | | Secure storage | HashiCorp Vault,...",
+          "expanded": false
+        },
+        {
+          "id": "n3b1e7bbe8193245",
+          "title": "Key Principles",
+          "markdown": "Zero-trust architecture - Encrypt everything (including internal traffic) - Authenticate every request - Service identity for all services - Defense in depth",
+          "notes": "Zero-trust architecture - Encrypt everything (including internal traffic) - Authenticate every request - Service identity for all services - Defense in depth",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n3e9491ea2bd37d4",
+              "title": "Zero-trust architecture",
+              "markdown": "- Zero-trust architecture",
+              "notes": "Zero-trust architecture",
+              "blurb": "Zero-trust architecture",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6ce9ea8d15e95d8",
+              "title": "Encrypt everything (including internal traffic)",
+              "markdown": "- Encrypt everything (including internal traffic)",
+              "notes": "Encrypt everything (including internal traffic)",
+              "blurb": "Encrypt everything (including internal traffic)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8c994f79ce605cf",
+              "title": "Authenticate every request",
+              "markdown": "- Authenticate every request",
+              "notes": "Authenticate every request",
+              "blurb": "Authenticate every request",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n2b9abbb9a4c036c",
+              "title": "Service identity for all services",
+              "markdown": "- Service identity for all services",
+              "notes": "Service identity for all services",
+              "blurb": "Service identity for all services",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n93942cabd3c3698",
+              "title": "Defense in depth",
+              "markdown": "- Defense in depth",
+              "notes": "Defense in depth",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Zero-trust architecture - Encrypt everything (including internal traffic) -...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Zero-Trust Principles"
+    },
+    {
+      "id": "n2f54ddfad12f229",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nb7bc3ed2e381ab8",
+          "title": "Common Misconceptions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n9c26acd0cbb9057",
+              "title": "\"Network isolation is sufficient for microservices security\"",
+              "markdown": "**Truth:** Network isolation is **one layer** - zero-trust principles require authentication and authorization for all communication.\n\n**Zero-Trust Approach:**",
+              "notes": "Truth: Network isolation is one layer - zero-trust principles require authentication and authorization for all communication.\n\nZero-Trust Approach:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "nc847ba91808b22c",
+                  "title": "Never trust network location",
+                  "markdown": "- Never trust network location",
+                  "notes": "Never trust network location",
+                  "blurb": "Never trust network location",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n56578956743ca61",
+                  "title": "Authenticate all service-to-service communication",
+                  "markdown": "- Authenticate all service-to-service communication",
+                  "notes": "Authenticate all service-to-service communication",
+                  "blurb": "Authenticate all service-to-service communication",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ndd3bee9d44f7570",
+                  "title": "Authorize every request",
+                  "markdown": "- Authorize every request",
+                  "notes": "Authorize every request",
+                  "blurb": "Authorize every request",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n3e468ed101f4928",
+                  "title": "Encrypt all traffic",
+                  "markdown": "- Encrypt all traffic",
+                  "notes": "Encrypt all traffic",
+                  "blurb": "Encrypt all traffic",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nec64cf3c1366a6f",
+                  "title": "Monitor and audit all communication",
+                  "markdown": "- Monitor and audit all communication",
+                  "notes": "Monitor and audit all communication",
+                  "blurb": "Monitor and audit all communication",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: Network isolation is one layer - zero-trust principles require...",
+              "expanded": false
+            },
+            {
+              "id": "n87746b89724d94d",
+              "title": "\"API keys are sufficient for service-to-service authentication\"",
+              "markdown": "**Truth:** API keys are **weak authentication** - mutual TLS (mTLS) or JWT tokens are preferred for microservices.\n\n**API Key Limitations:**",
+              "notes": "Truth: API keys are weak authentication - mutual TLS (mTLS) or JWT tokens are preferred for microservices.\n\nAPI Key Limitations:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n0f0a7b613a60034",
+                  "title": "Static and long-lived (higher risk if compromised)",
+                  "markdown": "- Static and long-lived (higher risk if compromised)",
+                  "notes": "Static and long-lived (higher risk if compromised)",
+                  "blurb": "Static and long-lived (higher risk if compromised)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nef4de8d8723bca5",
+                  "title": "No encryption (unless combined with TLS)",
+                  "markdown": "- No encryption (unless combined with TLS)",
+                  "notes": "No encryption (unless combined with TLS)",
+                  "blurb": "No encryption (unless combined with TLS)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n33227786aa48469",
+                  "title": "Limited revocation capabilities",
+                  "markdown": "- Limited revocation capabilities",
+                  "notes": "Limited revocation capabilities",
+                  "blurb": "Limited revocation capabilities",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n449b3e822ec5e0c",
+                  "title": "No fine-grained permissions",
+                  "markdown": "- No fine-grained permissions",
+                  "notes": "No fine-grained permissions",
+                  "blurb": "No fine-grained permissions",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n7f1c4c1c8f05ad6",
+                  "title": "mTLS: Strong authentication, built-in encryption",
+                  "markdown": "- mTLS: Strong authentication, built-in encryption",
+                  "notes": "mTLS: Strong authentication, built-in encryption",
+                  "blurb": "mTLS: Strong authentication, built-in encryption",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nf9d65bd24c5a162",
+                  "title": "JWT tokens: Short-lived, scoped permissions, easier rotation",
+                  "markdown": "- JWT tokens: Short-lived, scoped permissions, easier rotation",
+                  "notes": "JWT tokens: Short-lived, scoped permissions, easier rotation",
+                  "blurb": "JWT tokens: Short-lived, scoped permissions, easier rotation",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: API keys are weak authentication - mutual TLS (mTLS) or JWT tokens...",
+              "expanded": false
+            },
+            {
+              "id": "n6d1f8d8835d5ff2",
+              "title": "\"All microservices should trust each other by default\"",
+              "markdown": "**Truth:** Microservices should follow **zero-trust model** - authenticate and authorize every request.\n\n**Zero-Trust Principles:**",
+              "notes": "Truth: Microservices should follow zero-trust model - authenticate and authorize every request.\n\nZero-Trust Principles:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "nfaa49c43392e04c",
+                  "title": "Verify explicitly (authenticate all requests)",
+                  "markdown": "- Verify explicitly (authenticate all requests)",
+                  "notes": "Verify explicitly (authenticate all requests)",
+                  "blurb": "Verify explicitly (authenticate all requests)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n9c53f6c2029bcde",
+                  "title": "Use least privilege access",
+                  "markdown": "- Use least privilege access",
+                  "notes": "Use least privilege access",
+                  "blurb": "Use least privilege access",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nf84fb451401227d",
+                  "title": "Assume breach (monitor and audit)",
+                  "markdown": "- Assume breach (monitor and audit)",
+                  "notes": "Assume breach (monitor and audit)",
+                  "blurb": "Assume breach (monitor and audit)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: Microservices should follow zero-trust model - authenticate and...",
+              "expanded": false
+            },
+            {
+              "id": "nb2dc98d1a361042",
+              "title": "\"Service mesh handles all security automatically\"",
+              "markdown": "**Truth:** Service mesh provides **security infrastructure** but requires proper configuration and doesn't handle application-level security.\n\n**What Service Mesh Provides:**",
+              "notes": "Truth: Service mesh provides security infrastructure but requires proper configuration and doesn't handle application-level security.\n\nWhat Service Mesh Provides:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "na8b9539f00f0c3f",
+                  "title": "mTLS encryption",
+                  "markdown": "- mTLS encryption",
+                  "notes": "mTLS encryption",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n0cfd2bc13b894dd",
+                  "title": "Service-to-service authentication",
+                  "markdown": "- Service-to-service authentication",
+                  "notes": "Service-to-service authentication",
+                  "blurb": "Service-to-service authentication",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n84edce7639b6197",
+                  "title": "Traffic policy enforcement",
+                  "markdown": "- Traffic policy enforcement",
+                  "notes": "Traffic policy enforcement",
+                  "blurb": "Traffic policy enforcement",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n73c32f6852d8f37",
+                  "title": "Observability",
+                  "markdown": "- Observability",
+                  "notes": "Observability",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n39197837add1a67",
+                  "title": "Application-level authentication/authorization",
+                  "markdown": "- Application-level authentication/authorization",
+                  "notes": "Application-level authentication/authorization",
+                  "blurb": "Application-level authentication/authorization",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n40f94f97468861d",
+                  "title": "Input validation",
+                  "markdown": "- Input validation",
+                  "notes": "Input validation",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n02cc9f96e559917",
+                  "title": "Business logic security",
+                  "markdown": "- Business logic security",
+                  "notes": "Business logic security",
+                  "blurb": "Business logic security",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd46f7b7d412ee30",
+                  "title": "Data protection at rest",
+                  "markdown": "- Data protection at rest",
+                  "notes": "Data protection at rest",
+                  "blurb": "Data protection at rest",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: Service mesh provides security infrastructure but requires proper...",
+              "expanded": false
+            },
+            {
+              "id": "ncc13c838355876a",
+              "title": "\"Internal microservices don't need encryption\"",
+              "markdown": "**Truth:** **All traffic should be encrypted**, including internal service-to-service communication.\n\n**Why Internal Encryption Matters:**",
+              "notes": "Truth: All traffic should be encrypted, including internal service-to-service communication.\n\nWhy Internal Encryption Matters:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n4af86f99ced00dc",
+                  "title": "Defense in depth",
+                  "markdown": "- Defense in depth",
+                  "notes": "Defense in depth",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n5a93ab024dcf55b",
+                  "title": "Protection against insider threats",
+                  "markdown": "- Protection against insider threats",
+                  "notes": "Protection against insider threats",
+                  "blurb": "Protection against insider threats",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n6ec56c3192973b9",
+                  "title": "Compliance requirements",
+                  "markdown": "- Compliance requirements",
+                  "notes": "Compliance requirements",
+                  "blurb": "Compliance requirements",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n60cb6ac8b8f8421",
+                  "title": "Protection against network attacks",
+                  "markdown": "- Protection against network attacks",
+                  "notes": "Protection against network attacks",
+                  "blurb": "Protection against network attacks",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n0660464bff8ce3d",
+                  "title": "Future-proofing (if network is compromised)",
+                  "markdown": "- Future-proofing (if network is compromised)",
+                  "notes": "Future-proofing (if network is compromised)",
+                  "blurb": "Future-proofing (if network is compromised)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: All traffic should be encrypted, including internal...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes \"Network isolation is sufficient for microservices security\"",
+          "expanded": false
+        },
+        {
+          "id": "n117ebf5f27302f8",
+          "title": "Key Takeaways",
+          "markdown": "Zero-Trust: Never trust network location, authenticate and authorize all communication",
+          "notes": "Zero-Trust: Never trust network location, authenticate and authorize all communication",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nc2a872872a0ef6a",
+              "title": "Zero-Trust: Never trust network location, authenticate and authorize all communication",
+              "markdown": "- Zero-Trust: Never trust network location, authenticate and authorize all communication",
+              "notes": "Zero-Trust: Never trust network location, authenticate and authorize all communication",
+              "blurb": "Zero-Trust: Never trust network location, authenticate and authorize all...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8295f4bb5892adb",
+              "title": "Strong Authentication: Use mTLS or JWT, not just API keys",
+              "markdown": "- Strong Authentication: Use mTLS or JWT, not just API keys",
+              "notes": "Strong Authentication: Use mTLS or JWT, not just API keys",
+              "blurb": "Strong Authentication: Use mTLS or JWT, not just API keys",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nec122c4ab17c3ad",
+              "title": "Verify Everything: Don't assume trust between services",
+              "markdown": "- Verify Everything: Don't assume trust between services",
+              "notes": "Verify Everything: Don't assume trust between services",
+              "blurb": "Verify Everything: Don't assume trust between services",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na7e3644708cb52d",
+              "title": "Service Mesh is Infrastructure: Requires proper configuration, doesn't handle app-level",
+              "markdown": "- Service Mesh is Infrastructure: Requires proper configuration, doesn't handle app-level",
+              "notes": "Service Mesh is Infrastructure: Requires proper configuration, doesn't handle app-level",
+              "blurb": "Service Mesh is Infrastructure: Requires proper configuration, doesn't...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd9648f91d0c368b",
+              "title": "Encrypt Everything: All traffic, including internal, should be encrypted",
+              "markdown": "- Encrypt Everything: All traffic, including internal, should be encrypted",
+              "notes": "Encrypt Everything: All traffic, including internal, should be encrypted",
+              "blurb": "Encrypt Everything: All traffic, including internal, should be encrypted",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Zero-Trust: Never trust network location, authenticate and authorize all...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Common Misconceptions"
+    },
+    {
+      "id": "n0768bbf441313da",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "ndcf0b649467adae",
+          "title": "Fundamentals",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "na12824c839c525e",
+              "title": "How do you secure communication between microservices end to end?",
+              "markdown": "**Answer.** Treat east-west traffic like it crosses a hostile network: **encrypt** (TLS, ideally **mTLS**), **authenticate workloads** with **cryptographic identity** (for example **SPIFFE X509-SVIDs** or mesh-issued client certs), **authorize every request** with explicit policy (mesh **AuthorizationPolicy** or app middleware), and **segment** with **network policies** so a compromised pod cannot reach every port. Store bootstrap material in a **secret manager**, rotate credentials, and log **who called whom** with correlation IDs-not just source IPs.",
+              "notes": "Answer. Treat east-west traffic like it crosses a hostile network: encrypt (TLS, ideally mTLS), authenticate workloads with cryptographic identity (for example SPIFFE X509-SVIDs or mesh-issued client certs), authorize every request with explicit policy (mesh AuthorizationPolicy or app middleware), and segment with network policies so a compromised pod cannot reach every port. Store bootstrap material in a secret manager, rotate credentials, and log who called whom with correlation IDs-not just source IPs.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            },
+            {
+              "id": "nd5c1d9aeb79d07a",
+              "title": "What is mTLS and why use it between services?",
+              "markdown": "**Answer.** **Mutual TLS** adds **client certificate authentication** to TLS. Both peers present certs signed by a trusted CA, so you get **mutual authentication** plus **confidentiality and integrity** on the channel. For microservices it binds identity to a **key pair** instead of ephemeral IPs or pod names. Operational cost is **certificate lifecycle** (issuance, renewal, trust bundles); service meshes automate much of this on the data plane.",
+              "notes": "Answer. Mutual TLS adds client certificate authentication to TLS. Both peers present certs signed by a trusted CA, so you get mutual authentication plus confidentiality and integrity on the channel. For microservices it binds identity to a key pair instead of ephemeral IPs or pod names. Operational cost is certificate lifecycle (issuance, renewal, trust bundles); service meshes automate much of this on the data plane.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            },
+            {
+              "id": "nb9de9966adcd1ac",
+              "title": "How does SPIFFE/SPIRE help compared to \u201ceach service gets an API key\u201d?",
+              "markdown": "**Answer.** **SPIFFE** defines a **workload identity** (SPIFFE ID) and **SVIDs** (commonly short-lived **X.509** certs or JWTs). **SPIRE** attests the workload (via Kubernetes, cloud instance identity, etc.) and mints SVIDs. That is **stronger than static API keys**: keys are long-lived secrets with high blast radius; SVIDs are **short-lived**, **cryptographically bound**, and **attested** to a specific running workload. API keys can still exist for external SaaS, but they should be **scoped**, **rotated**, and **audited**-not the primary east-west identity.",
+              "notes": "Answer. SPIFFE defines a workload identity (SPIFFE ID) and SVIDs (commonly short-lived X.509 certs or JWTs). SPIRE attests the workload (via Kubernetes, cloud instance identity, etc.) and mints SVIDs. That is stronger than static API keys: keys are long-lived secrets with high blast radius; SVIDs are short-lived, cryptographically bound, and attested to a specific running workload. API keys can still exist for external SaaS, but they should be scoped, rotated, and audited-not the primary east-west identity.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            },
+            {
+              "id": "nac28ddca2fc3e23",
+              "title": "When would you use JWTs between services instead of\u2014or in addition...",
+              "markdown": "**Answer.** Use **JWTs** to carry **authorization context** (`sub`, `tenant`, `scopes`, `aud`) across hops or trust boundaries where a single mesh CA is not shared, or where downstream services need **delegation** semantics (acting on behalf of a user). Prefer **short TTLs**, strict **`aud`** checks, and **asymmetric signing** with JWKS rotation. **mTLS** answers \"which **service** is this connection?\"; a JWT answers \"**what** is this request allowed to do?\"-they are complementary. Avoid long-lived shared **HMAC** secrets across many services.",
+              "notes": "Answer. Use JWTs to carry authorization context (sub, tenant, scopes, aud) across hops or trust boundaries where a single mesh CA is not shared, or where downstream services need delegation semantics (acting on behalf of a user). Prefer short TTLs, strict aud checks, and asymmetric signing with JWKS rotation. mTLS answers \"which service is this connection?\"; a JWT answers \"what is this request allowed to do?\"-they are complementary. Avoid long-lived shared HMAC secrets across many services.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            },
+            {
+              "id": "n1734e5abae2a431",
+              "title": "What is zero trust in the context of internal (east\u2013west) microservice...",
+              "markdown": "**Answer.** **Zero trust** means **no implicit trust from network location**. Every call is **authenticated** (service identity), **authorized** by policy, **encrypted on the wire**, and **logged**. A pod in the same namespace as production data is not trusted **because** it is internal; it is trusted only if its **identity** and **claims** satisfy policy. Network segmentation and mesh rules **reduce** blast radius; identity and authz **enforce** intent.",
+              "notes": "Answer. Zero trust means no implicit trust from network location. Every call is authenticated (service identity), authorized by policy, encrypted on the wire, and logged. A pod in the same namespace as production data is not trusted because it is internal; it is trusted only if its identity and claims satisfy policy. Network segmentation and mesh rules reduce blast radius; identity and authz enforce intent.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes How do you secure communication between microservices end to end?",
+          "expanded": false
+        },
+        {
+          "id": "na226dfa089536d3",
+          "title": "Design and architecture",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n970f163aabd39b6",
+              "title": "How do Kubernetes NetworkPolicies fit with mTLS and service mesh?",
+              "markdown": "**Answer.** **NetworkPolicy** is **L3/L4** segmentation: which pods may reach which ports and namespaces. **mTLS** proves **identity** on the connection. **Mesh authorization** can be **L7** (paths, methods, JWT claims). Use all three layers: NetworkPolicy to **shrink the attack surface** (deny unexpected east-west), mTLS to **authenticate peers**, and L7 policy for **fine-grained** rules. If the CNI does not enforce policies, document that gap-your \"segmentation\" may be illusory.",
+              "notes": "Answer. NetworkPolicy is L3/L4 segmentation: which pods may reach which ports and namespaces. mTLS proves identity on the connection. Mesh authorization can be L7 (paths, methods, JWT claims). Use all three layers: NetworkPolicy to shrink the attack surface (deny unexpected east-west), mTLS to authenticate peers, and L7 policy for fine-grained rules. If the CNI does not enforce policies, document that gap-your \"segmentation\" may be illusory.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            },
+            {
+              "id": "nebad9d111227ba9",
+              "title": "What responsibilities belong at an API gateway versus inside each...",
+              "markdown": "**Answer.** The **gateway** should handle **north-south** concerns: TLS termination for clients, **WAF/bot** controls, **OAuth/OIDC** for users, coarse **rate limits**, routing, and **DDoS** absorption. Each **service** should enforce **business authorization** and **data-scoped** rules (\"this tenant may read this row\"). Gateways should not become a **black box** that strips identity-forward or **re-issue** minimal signed context so downstream hops can still **verify** callers. For east-west, prefer **mesh** or **direct mTLS** rather than forcing all traffic through one gateway.",
+              "notes": "Answer. The gateway should handle north-south concerns: TLS termination for clients, WAF/bot controls, OAuth/OIDC for users, coarse rate limits, routing, and DDoS absorption. Each service should enforce business authorization and data-scoped rules (\"this tenant may read this row\"). Gateways should not become a black box that strips identity-forward or re-issue minimal signed context so downstream hops can still verify callers. For east-west, prefer mesh or direct mTLS rather than forcing all traffic through one gateway.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            },
+            {
+              "id": "n477d11529a4b0d1",
+              "title": "What is the difference between mesh mTLS and application mTLS?",
+              "markdown": "**Answer.** **Mesh mTLS** terminates TLS between **Envoy sidecars** (or similar); applications often speak plain HTTP to `localhost`. **Application mTLS** means the **app** itself terminates TLS and validates peer certs. Mesh mode is faster to roll out and centralizes policy; app mode gives **end-to-end** crypto inside the process-useful when you distrust the local UDS/TCP hop or run **outside** a mesh. Be explicit in reviews which trust boundary you are protecting.",
+              "notes": "Answer. Mesh mTLS terminates TLS between Envoy sidecars (or similar); applications often speak plain HTTP to localhost. Application mTLS means the app itself terminates TLS and validates peer certs. Mesh mode is faster to roll out and centralizes policy; app mode gives end-to-end crypto inside the process-useful when you distrust the local UDS/TCP hop or run outside a mesh. Be explicit in reviews which trust boundary you are protecting.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            },
+            {
+              "id": "n59f236037979f78",
+              "title": "How do you prevent a compromised service from calling every other...",
+              "markdown": "**Answer.** Combine **least privilege**: **authorization** lists which **source identities** may invoke which **APIs**; **network policies** block unexpected ports; **egress controls** limit outbound Internet and lateral paths; **secrets** scoped per workload so stolen creds do not unlock all databases. Monitor **deny** logs and **anomalous** call graphs. **Break-glass** accounts and **admin APIs** need extra isolation and auditing.",
+              "notes": "Answer. Combine least privilege: authorization lists which source identities may invoke which APIs; network policies block unexpected ports; egress controls limit outbound Internet and lateral paths; secrets scoped per workload so stolen creds do not unlock all databases. Monitor deny logs and anomalous call graphs. Break-glass accounts and admin APIs need extra isolation and auditing.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes How do Kubernetes NetworkPolicies fit with mTLS and service mesh?",
+          "expanded": false
+        },
+        {
+          "id": "n66b429c1e07d21f",
+          "title": "Implementation and operations",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n556ab8a9c018221",
+              "title": "Walk through how you would roll out STRICT mTLS without taking down...",
+              "markdown": "**Answer.** Start **permissive** or **peer-only** mode in shadow environments, validate **SNI**, **SANs**, and **trust bundles**, then enable **STRICT** namespace by namespace with **canaries**. Pre-deploy **automation** for cert renewal and dashboards for **expiry**. Run **game days** revoking one trust bundle to test failure modes. Communicate **rollback**: temporary permissive mode is a **risk**-time-box it and fix root cause quickly.",
+              "notes": "Answer. Start permissive or peer-only mode in shadow environments, validate SNI, SANs, and trust bundles, then enable STRICT namespace by namespace with canaries. Pre-deploy automation for cert renewal and dashboards for expiry. Run game days revoking one trust bundle to test failure modes. Communicate rollback: temporary permissive mode is a risk-time-box it and fix root cause quickly.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            },
+            {
+              "id": "n6d96b29e9e95219",
+              "title": "What do you store in a secret manager for microservices, and what...",
+              "markdown": "**Answer.** Store **signing private keys**, **database passwords**, **third-party API keys**, **bootstrap tokens**, and **mesh CA** material appropriate to your architecture. Prefer **workload identity** (SPIRE, IAM roles, projected tokens) for **calling cloud APIs** instead of static cloud keys in every pod. Avoid copying the **same** symmetric JWT secret into twelve repos-use **asymmetric** keys and JWKS, or centralized issuance.",
+              "notes": "Answer. Store signing private keys, database passwords, third-party API keys, bootstrap tokens, and mesh CA material appropriate to your architecture. Prefer workload identity (SPIRE, IAM roles, projected tokens) for calling cloud APIs instead of static cloud keys in every pod. Avoid copying the same symmetric JWT secret into twelve repos-use asymmetric keys and JWKS, or centralized issuance.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            },
+            {
+              "id": "n1105a2c5dbf39f7",
+              "title": "How do you rotate JWT signing keys without breaking all services?",
+              "markdown": "**Answer.** Publish **JWKS** with **two valid keys** during rotation: new key signs tokens; old key still verifies until outstanding tokens expire. Coordinate **TTL** so overlap covers max clock skew. Automate **key ID** (`kid`) handling in verifiers. For symmetric keys (if unavoidable), use **blue/green** verifiers or dual secrets with a cutover window-document maximum token lifetime during migration.",
+              "notes": "Answer. Publish JWKS with two valid keys during rotation: new key signs tokens; old key still verifies until outstanding tokens expire. Coordinate TTL so overlap covers max clock skew. Automate key ID (kid) handling in verifiers. For symmetric keys (if unavoidable), use blue/green verifiers or dual secrets with a cutover window-document maximum token lifetime during migration.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            },
+            {
+              "id": "n0756b107fcd9e4c",
+              "title": "What certificate fields matter when using client certs for service...",
+              "markdown": "**Answer.** Verify **chain** to a trusted CA, check **SAN** or **URI** for **SPIFFE ID** or your naming convention, enforce **EKU**/`keyUsage` for client auth where applicable, respect **notBefore/notAfter**, and pin **minimum TLS** version and **cipher** policy. Align **SPIFFE ID** in policy engines with what operators expect-avoid ambiguous **CN-only** checks for services.",
+              "notes": "Answer. Verify chain to a trusted CA, check SAN or URI for SPIFFE ID or your naming convention, enforce EKU/keyUsage for client auth where applicable, respect notBefore/notAfter, and pin minimum TLS version and cipher policy. Align SPIFFE ID in policy engines with what operators expect-avoid ambiguous CN-only checks for services.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Walk through how you would roll out STRICT mTLS without taking down..",
+          "expanded": false
+        },
+        {
+          "id": "ncc1539a54627809",
+          "title": "Threats and edge cases",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n89ad33dfbea568e",
+              "title": "What is a \u201cconfused deputy\u201d risk with JWTs in microservice chains?",
+              "markdown": "**Answer.** Service A receives a **user** JWT and forwards it to Service B. B may authorize based on **user claims** without knowing whether **A** was allowed to act on behalf of that user for **this** action. Mitigations: include **service identity** from mTLS in the authz decision, use **audience** so tokens are **receiver-specific**, prefer **token exchange** at controlled boundaries, or sign **downstream** tokens with **scoped** claims after A's own authorization.",
+              "notes": "Answer. Service A receives a user JWT and forwards it to Service B. B may authorize based on user claims without knowing whether A was allowed to act on behalf of that user for this action. Mitigations: include service identity from mTLS in the authz decision, use audience so tokens are receiver-specific, prefer token exchange at controlled boundaries, or sign downstream tokens with scoped claims after A's own authorization.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            },
+            {
+              "id": "n1fe1c47a501111d",
+              "title": "How do you handle multi-cluster or multi-cloud service calls securely?",
+              "markdown": "**Answer.** Establish **trust domains**: separate **CAs** or **federated** SPIFFE trust bundles, **mTLS** or **TLS + verified JWT** with strict `aud`, and **network** controls between clusters (private links, firewalls). Avoid **flat** kubeconfig access across clusters. Centralize **observability** with shared **trace** context but **redact** secrets in logs.",
+              "notes": "Answer. Establish trust domains: separate CAs or federated SPIFFE trust bundles, mTLS or TLS + verified JWT with strict aud, and network controls between clusters (private links, firewalls). Avoid flat kubeconfig access across clusters. Centralize observability with shared trace context but redact secrets in logs.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            },
+            {
+              "id": "n3b599360ca65590",
+              "title": "What observability signals prove that security controls are actually...",
+              "markdown": "**Answer.** Logs or metrics for **TLS handshake failures**, **authz denies** with **rule IDs**, **certificate days-to-expiry**, **JWKS fetch errors**, and **unexpected** east-west connections blocked by NetworkPolicy. Correlate with **distributed traces** using **W3C trace context**. Alert on **sudden deny spikes** or **new** calling patterns between principals.",
+              "notes": "Answer. Logs or metrics for TLS handshake failures, authz denies with rule IDs, certificate days-to-expiry, JWKS fetch errors, and unexpected east-west connections blocked by NetworkPolicy. Correlate with distributed traces using W3C trace context. Alert on sudden deny spikes or new calling patterns between principals.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes What is a \u201cconfused deputy\u201d risk with JWTs in microservice chains?",
+          "expanded": false
+        },
+        {
+          "id": "n43f61fc40cc4342",
+          "title": "Trade-offs and judgment",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n3d79a82e89729cd",
+              "title": "mTLS everywhere vs selective mTLS\u2014how do you decide?",
+              "markdown": "**Answer.** **Everywhere** reduces policy exceptions and audit arguments but increases **operational** load and **latency** sensitivity on very chatty paths-usually still acceptable on modern meshes. **Selective** mTLS may fit **legacy** binaries or **batch** jobs-document **exceptions**, **compensating controls** (network policy, dedicated VLANs, app JWT), and **review cadence**. In regulated environments, bias toward **consistent** mTLS with automation.",
+              "notes": "Answer. Everywhere reduces policy exceptions and audit arguments but increases operational load and latency sensitivity on very chatty paths-usually still acceptable on modern meshes. Selective mTLS may fit legacy binaries or batch jobs-document exceptions, compensating controls (network policy, dedicated VLANs, app JWT), and review cadence. In regulated environments, bias toward consistent mTLS with automation.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            },
+            {
+              "id": "n547dc907489cd3e",
+              "title": "Can network segmentation replace strong service identity?",
+              "markdown": "**Answer.** **No.** Segmentation **limits** who can reach a port, but any **allowed** path is still ambiguous about **which workload** is calling-IPs and pods change, and attackers move laterally within allowed zones. **Identity + authorization** answers \"**this** principal may perform **this** action.\" Use segmentation as **defense in depth**, not as the sole control.",
+              "notes": "Answer. No. Segmentation limits who can reach a port, but any allowed path is still ambiguous about which workload is calling-IPs and pods change, and attackers move laterally within allowed zones. Identity + authorization answers \"this principal may perform this action.\" Use segmentation as defense in depth, not as the sole control.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            },
+            {
+              "id": "n152f5f1c6ae9d9d",
+              "title": "How do gRPC and HTTP/2 change your gateway and security posture?",
+              "markdown": "**Answer.** You need gateways and WAFs that understand **HTTP/2**, **streams**, and **gRPC** routing; naive HTTP/1 assumptions break. Keep **timeouts**, **max streams**, and **message size** limits to prevent abuse. mTLS and JWT validation apply the same principles; ensure **trailers** and streaming errors do not leak sensitive data in logs.",
+              "notes": "Answer. You need gateways and WAFs that understand HTTP/2, streams, and gRPC routing; naive HTTP/1 assumptions break. Keep timeouts, max streams, and message size limits to prevent abuse. mTLS and JWT validation apply the same principles; ensure trailers and streaming errors do not leak sensitive data in logs.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            },
+            {
+              "id": "nc9593c6ec4c44c3",
+              "title": "How do you secure asynchronous messaging (queues, event buses) between...",
+              "markdown": "**Answer.** Apply the same principles **out of band** of HTTP: **TLS** to the broker, **mutual authentication** where the broker supports **client certs** or **SASL/OAUTHBEARER** with short-lived tokens, **topic-level ACLs** tied to **workload identity** (not shared `kafka_user` passwords). Sign messages or attach **signed attributes** only when you need **non-repudiation** or cross-domain proof-but then manage **keys** and **replay** carefully. **Network policy** should limit which pods may reach broker ports. **Never** put bearer tokens or PII in headers you log at the broker; treat payloads as **untrusted** at consumers and **re-validate** authorization against your source-of-truth store.",
+              "notes": "Answer. Apply the same principles out of band of HTTP: TLS to the broker, mutual authentication where the broker supports client certs or SASL/OAUTHBEARER with short-lived tokens, topic-level ACLs tied to workload identity (not shared kafkauser passwords). Sign messages or attach signed attributes only when you need non-repudiation or cross-domain proof-but then manage keys and replay carefully. Network policy should limit which pods may reach broker ports. Never put bearer tokens or PII in headers you log at the broker; treat payloads as untrusted at consumers and re-validate authorization against your source-of-truth store.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes mTLS everywhere vs selective mTLS\u2014how do you decide?",
+          "expanded": false
+        },
+        {
+          "id": "nffc1bbaafcc86b7",
+          "title": "Depth: Interview follow-ups \u2014 Secure Microservices Communication",
+          "markdown": "**Authoritative references:** [NIST SP 800-204](https://csrc.nist.gov/publications/sp800) series for microservices security themes; [SPIFFE](https://spiffe.io/) specifications; mesh documentation (Istio, Linkerd) for mTLS and authorization resources.\n\n**Follow-ups**",
+          "notes": "Authoritative references: NIST SP 800-204 series for microservices security themes; SPIFFE specifications; mesh documentation (Istio, Linkerd) for mTLS and authorization resources.\n\nFollow-ups",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n90804ccec4bd1e1",
+              "title": "STRICT mTLS migration - canary strategy, rollback ethics, and measuring handshake failur",
+              "markdown": "- STRICT mTLS migration - canary strategy, rollback ethics, and measuring handshake failur",
+              "notes": "STRICT mTLS migration - canary strategy, rollback ethics, and measuring handshake failur",
+              "blurb": "STRICT mTLS migration - canary strategy, rollback ethics, and measuring...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0b1d074782e81b7",
+              "title": "SPIFFE trust bundle federation - roots of trust across clusters and organizational bound",
+              "markdown": "- SPIFFE trust bundle federation - roots of trust across clusters and organizational bound",
+              "notes": "SPIFFE trust bundle federation - roots of trust across clusters and organizational bound",
+              "blurb": "SPIFFE trust bundle federation - roots of trust across clusters and...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb62dd7d9a57c722",
+              "title": "JWT aud design - per-service audiences vs shared API audience; trade-offs for fan-out ca",
+              "markdown": "- JWT aud design - per-service audiences vs shared API audience; trade-offs for fan-out ca",
+              "notes": "JWT aud design - per-service audiences vs shared API audience; trade-offs for fan-out ca",
+              "blurb": "JWT aud design - per-service audiences vs shared API audience; trade-offs...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n389a42bfd8accd9",
+              "title": "Policy-as-code - testing NetworkPolicy and mesh rules in CI before deploy.",
+              "markdown": "- Policy-as-code - testing NetworkPolicy and mesh rules in CI before deploy.",
+              "notes": "Policy-as-code - testing NetworkPolicy and mesh rules in CI before deploy.",
+              "blurb": "Policy-as-code - testing NetworkPolicy and mesh rules in CI before deploy.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Authoritative references: NIST SP 800-204 series for microservices security...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Fundamentals"
+    }
+  ],
+  "topicId": "secure-microservices-communication",
+  "name": "Secure Microservices Communication",
+  "structure": "logic-right",
+  "blurb": "This guide focuses on east-west traffic: service-to-service calls inside a..."
+}

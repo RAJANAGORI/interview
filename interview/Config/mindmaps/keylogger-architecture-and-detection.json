@@ -1,0 +1,523 @@
+{
+  "id": "n1dd9b0b4f213e4d",
+  "title": "Keylogger Architecture and Detection",
+  "markdown": "A **keylogger** captures **keystrokes** (or **clipboard**, **IME**, **auto-fill**) to **steal** **credentials** and **secrets**. Architectures span **user-mode** hooks (`SetWindowsHookEx`, **raw input**), **polling** **screens**/accessibility APIs, **kernel** **filter** drivers, **hardware** implants, and **browser** **extensions**. **Detection** blends **behavioral** telemetry, **driver** **signing** policy, and **endpoint** **integrity**.\n\nAligned with the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+  "notes": "A keylogger captures keystrokes (or clipboard, IME, auto-fill) to steal credentials and secrets. Architectures span user-mode hooks (SetWindowsHookEx, raw input), polling screens/accessibility APIs, kernel filter drivers, hardware implants, and browser extensions. Detection blends behavioral telemetry, driver signing policy, and endpoint integrity.\n\nAligned with the Content Mastery Framework.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "nf533e4851ac97cc",
+      "title": "At a glance",
+      "markdown": "A **keylogger** captures **keystrokes** (or **clipboard**, **IME**, **auto-fill**) to **steal** **credentials** and **secrets**. Architectures span **user-mode** hooks (`SetWindowsHookEx`, **raw input**), **polling** **screens**/accessibility APIs, **kernel** **filter** drivers, **hardware** implants, and **browser** **extensions**. **Detection** blends **behavioral** telemetry, **driver** **signing** policy, and **endpoint** **integrity**.\n\nAligned with the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+      "notes": "A keylogger captures keystrokes (or clipboard, IME, auto-fill) to steal credentials and secrets. Architectures span user-mode hooks (SetWindowsHookEx, raw input), polling screens/accessibility APIs, kernel filter drivers, hardware implants, and browser extensions. Detection blends behavioral telemetry, driver signing policy, and endpoint integrity.\n\nAligned with the Content Mastery Framework.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "A keylogger captures keystrokes (or clipboard, IME, auto-fill) to steal...",
+      "expanded": false
+    },
+    {
+      "id": "na81c1533612ae5f",
+      "title": "Bypass / limitations",
+      "markdown": "- **Encrypted** **keystroke** **paths** don't exist for **legacy** apps-**focus** on **early** **detection**.\n- **Hardware** keyloggers bypass **software** entirely.",
+      "notes": "- Encrypted keystroke paths don't exist for legacy apps-focus on early detection.\n- Hardware keyloggers bypass software entirely.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Encrypted keystroke paths don't exist for legacy apps-focus on early...",
+      "expanded": false
+    },
+    {
+      "id": "nc284d0885ccbb28",
+      "title": "Mitigations (tier order)",
+      "markdown": "Least privilege; block unauthorized driver loads (HVCI, WDAC).",
+      "notes": "Least privilege; block unauthorized driver loads (HVCI, WDAC).",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n5e4357f05f91a1e",
+          "title": "Least privilege; block unauthorized driver loads (HVCI, WDAC).",
+          "markdown": "- Least privilege; block unauthorized driver loads (HVCI, WDAC).",
+          "notes": "Least privilege; block unauthorized driver loads (HVCI, WDAC).",
+          "blurb": "Least privilege; block unauthorized driver loads (HVCI, WDAC).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nd8dc53ec4d6a068",
+          "title": "EDR kernel telemetry + user hook visibility where available.",
+          "markdown": "- EDR kernel telemetry + user hook visibility where available.",
+          "notes": "EDR kernel telemetry + user hook visibility where available.",
+          "blurb": "EDR kernel telemetry + user hook visibility where available.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n774f58b92bbc71e",
+          "title": "Phishing-resistant MFA so stolen passwords hurt less.",
+          "markdown": "- Phishing-resistant MFA so stolen passwords hurt less.",
+          "notes": "Phishing-resistant MFA so stolen passwords hurt less.",
+          "blurb": "Phishing-resistant MFA so stolen passwords hurt less.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n8b61866f5dad57e",
+          "title": "Physical security for high assurance workstations.",
+          "markdown": "- Physical security for high assurance workstations.",
+          "notes": "Physical security for high assurance workstations.",
+          "blurb": "Physical security for high assurance workstations.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n142acdf7d835383",
+          "title": "Application password fields with secure desktop / isolated input (rare, specialized).",
+          "markdown": "- Application password fields with secure desktop / isolated input (rare, specialized).",
+          "notes": "Application password fields with secure desktop / isolated input (rare, specialized).",
+          "blurb": "Application password fields with secure desktop / isolated input (rare,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Least privilege; block unauthorized driver loads (HVCI, WDAC).",
+      "expanded": true
+    },
+    {
+      "id": "n5ae4c7d93913844",
+      "title": "L2 \u2014 Detection signals",
+      "markdown": "| Signal | Notes |\n|--------|-------|\n| **Unexpected** `SetWindowsHookEx` from **unknown** **modules** | noisy-**baseline** |\n| **Cross-process** **DLL** **injection** into **explorer**/**winlogon** | high **severity** |\n| **New** **keyboard** **filter** **driver** | **blocklist**/HVCI context |\n| **Browser** **extension** with **broad** **permissions** | **enterprise** **policy** |",
+      "notes": "| Signal | Notes |\n|--------|-------|\n| Unexpected SetWindowsHookEx from unknown modules | noisy-baseline |\n| Cross-process DLL injection into explorer/winlogon | high severity |\n| New keyboard filter driver | blocklist/HVCI context |\n| Browser extension with broad permissions | enterprise policy |",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Signal | Notes | |--------|-------| | Unexpected SetWindowsHookEx from...",
+      "expanded": false
+    },
+    {
+      "id": "na0edd6bb995fe68",
+      "title": "Labs (authorized)",
+      "markdown": "- **Sysinternals** **Autoruns** to see **persistence**.\n- **API Monitor** on **toy** **hook** **demos** in **VMs**.",
+      "notes": "- Sysinternals Autoruns to see persistence.\n- API Monitor on toy hook demos in VMs.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Sysinternals Autoruns to see persistence.",
+      "expanded": false
+    },
+    {
+      "id": "n7092cd7fdf78cc1",
+      "title": "Practice & references",
+      "markdown": "",
+      "notes": "",
+      "expanded": true,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n2d2ef90f12fc56e",
+          "title": "Toolchain",
+          "markdown": "**Sysmon** (DLL loads), **PE-sieve**/similar concepts, **EDR** queries for **hook** modules, **driver** inventory tools.",
+          "notes": "Sysmon (DLL loads), PE-sieve/similar concepts, EDR queries for hook modules, driver inventory tools.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Sysmon (DLL loads), PE-sieve/similar concepts, EDR queries for hook modules,...",
+          "expanded": false
+        },
+        {
+          "id": "na5a6c0b646da5c1",
+          "title": "Authoritative references",
+          "markdown": "MITRE ATT&CK T1056 (Input Capture) and sub-techniques.",
+          "notes": "MITRE ATT&CK T1056 (Input Capture) and sub-techniques.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n029cf96ca1e85b2",
+              "title": "MITRE ATT&CK T1056 (Input Capture) and sub-techniques.",
+              "markdown": "- MITRE ATT&CK T1056 (Input Capture) and sub-techniques.",
+              "notes": "MITRE ATT&CK T1056 (Input Capture) and sub-techniques.",
+              "blurb": "MITRE ATT&CK T1056 (Input Capture) and sub-techniques.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n20579e13600dcd2",
+              "title": "Microsoft driver signing requirements.",
+              "markdown": "- Microsoft driver signing requirements.",
+              "notes": "Microsoft driver signing requirements.",
+              "blurb": "Microsoft driver signing requirements.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5f186ac7201c162",
+              "title": "NIST guidance on insider threat and endpoint hardening.",
+              "markdown": "- NIST guidance on insider threat and endpoint hardening.",
+              "notes": "NIST guidance on insider threat and endpoint hardening.",
+              "blurb": "NIST guidance on insider threat and endpoint hardening.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "MITRE ATT&CK T1056 (Input Capture) and sub-techniques.",
+          "expanded": false
+        },
+        {
+          "id": "n0ae36113252c1d1",
+          "title": "Verification checklist",
+          "markdown": "- [ ] Name **two** **user-mode** vs **kernel** **detection** **differences**.\n- [ ] Explain **why** **MFA** **still** **matters** when **passwords** are **keylogged**.",
+          "notes": "- [ ] Name two user-mode vs kernel detection differences.\n- [ ] Explain why MFA still matters when passwords are keylogged.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "[ ] Name two user-mode vs kernel detection differences.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Toolchain"
+    },
+    {
+      "id": "nc3c1fdd3e678c3a",
+      "title": "Code examples",
+      "markdown": "",
+      "notes": "",
+      "expanded": true,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n5640bcdb91fd19a",
+          "title": "L2 \u2014 User-mode sketch (conceptual)",
+          "markdown": "**Legitimate:** accessibility software, **RDP** clients, **hotkey** managers.\n**Malicious:** **injected** **DLL** in **every** GUI process via **hooks**; **persistence** via **Run** keys or **COM** hijacks.\n\n**No weaponized** API sequences-understand **categories** only.",
+          "notes": "Legitimate: accessibility software, RDP clients, hotkey managers.\nMalicious: injected DLL in every GUI process via hooks; persistence via Run keys or COM hijacks.\n\nNo weaponized API sequences-understand categories only.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Legitimate: accessibility software, RDP clients, hotkey managers.",
+          "expanded": false
+        },
+        {
+          "id": "ncadb598beff48bb",
+          "title": "L2 \u2014 macOS / Linux (brief)",
+          "markdown": "- **macOS:** **Input** **Monitoring** **TCC** prompt; **evasion** targets **prompt** **fatigue**.\n- **Linux:** **X11** **key** **sniffing** vs **Wayland** **compositor** model-**different** **exposure**.",
+          "notes": "- macOS: Input Monitoring TCC prompt; evasion targets prompt fatigue.\n- Linux: X11 key sniffing vs Wayland compositor model-different exposure.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "macOS: Input Monitoring TCC prompt; evasion targets prompt fatigue.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes L2 \u2014 User-mode sketch (conceptual)"
+    },
+    {
+      "id": "n8b9e21754cbbdb9",
+      "title": "L1 \u2014 Architecture map",
+      "markdown": "| Layer | Mechanism | Visibility |\n|-------|-----------|------------|\n| **User-mode hook** | `WH_KEYBOARD_LL` / `WH_KEYBOARD` | EDR **user** hooks may see **DLL** **injection** |\n| **Polling/UIA** | Accessibility, **screen** **scraping** | **Different** **IOC** **profile** |\n| **Kernel filter** | keyboard class driver filter | **Strong** **stealth**, **needs** **driver** |\n| **Hardware** | USB dongle | **Host** **OS** **blind** without **physical** **controls** |\n| **Browser ext** | Content script **key** events | **Extension** **inventory** |",
+      "notes": "| Layer | Mechanism | Visibility |\n|-------|-----------|------------|\n| User-mode hook | WHKEYBOARDLL / WHKEYBOARD | EDR user hooks may see DLL injection |\n| Polling/UIA | Accessibility, screen scraping | Different IOC profile |\n| Kernel filter | keyboard class driver filter | Strong stealth, needs driver |\n| Hardware | USB dongle | Host OS blind without physical controls |\n| Browser ext | Content script key events | Extension inventory |",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Layer | Mechanism | Visibility | |-------|-----------|------------| |...",
+      "expanded": false
+    },
+    {
+      "id": "n94d127ea6f8d3eb",
+      "title": "L1 \u2014 Trust boundary",
+      "markdown": "**OS input pipeline** -> **applications**. Anything **subscribed** **early** in the pipeline sees **keystrokes** before **app** **handlers** in many designs.",
+      "notes": "OS input pipeline -> applications. Anything subscribed early in the pipeline sees keystrokes before app handlers in many designs.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "OS input pipeline -> applications.",
+      "expanded": false
+    },
+    {
+      "id": "n14fb689ff35004e",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n89c821bce2d299c",
+          "title": "Layers",
+          "markdown": "User **hooks** \u00b7 **UIA**/screen \u00b7 **kernel** **filter** \u00b7 **hardware** \u00b7 **browser** **ext**",
+          "notes": "User hooks \u00b7 UIA/screen \u00b7 kernel filter \u00b7 hardware \u00b7 browser ext",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "User hooks \u00b7 UIA/screen \u00b7 kernel filter \u00b7 hardware \u00b7 browser ext",
+          "expanded": false
+        },
+        {
+          "id": "nbbc1e83df44e004",
+          "title": "Detection",
+          "markdown": "Hook **DLLs** \u00b7 **injection** \u00b7 **new** **drivers** \u00b7 **Sysmon** **Image** loads \u00b7 **extension** **policy**",
+          "notes": "Hook DLLs \u00b7 injection \u00b7 new drivers \u00b7 Sysmon Image loads \u00b7 extension policy",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Hook DLLs \u00b7 injection \u00b7 new drivers \u00b7 Sysmon Image loads \u00b7 extension policy",
+          "expanded": false
+        },
+        {
+          "id": "n5e42d7a50662d8d",
+          "title": "Mitigation",
+          "markdown": "**HVCI**/driver policy \u00b7 **EDR** \u00b7 **strong** MFA \u00b7 **physical** controls",
+          "notes": "HVCI/driver policy \u00b7 EDR \u00b7 strong MFA \u00b7 physical controls",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "HVCI/driver policy \u00b7 EDR \u00b7 strong MFA \u00b7 physical controls",
+          "expanded": false
+        },
+        {
+          "id": "n811716373f72846",
+          "title": "ATT&CK",
+          "markdown": "**T1056** Input Capture",
+          "notes": "T1056 Input Capture",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "T1056 Input Capture",
+          "expanded": false
+        },
+        {
+          "id": "nda7e167babb7d6f",
+          "title": "Cross-read",
+          "markdown": "`EDR Evasion Awareness` \u00b7 `Windows Security Boundaries`",
+          "notes": "EDR Evasion Awareness \u00b7 Windows Security Boundaries",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "EDR Evasion Awareness \u00b7 Windows Security Boundaries",
+          "expanded": false
+        },
+        {
+          "id": "na8099cf473f64ac",
+          "title": "One-liner",
+          "markdown": "\"**Input** **pipeline** **interception**-**layer** **driver** **policy**, **hook** **visibility**, and **identity** **resilience**.\"",
+          "notes": "\"Input pipeline interception-layer driver policy, hook visibility, and identity resilience.\"",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "\"Input pipeline interception-layer driver policy, hook visibility, and...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Layers"
+    },
+    {
+      "id": "ndbbd1f8b4f81ca7",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n4cbaba6c4582ac4",
+          "title": "\u201cAntivirus always catches keyloggers.\u201d",
+          "markdown": "**Reality:** **Signed** **or** **fileless** **variants** **evade** **static** **scans**.",
+          "notes": "Reality: Signed or fileless variants evade static scans.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Signed or fileless variants evade static scans.",
+          "expanded": false
+        },
+        {
+          "id": "ne4a6748c3685770",
+          "title": "\u201cKernel loggers are extinct.\u201d",
+          "markdown": "**Reality:** **Abused** where **drivers** **can** **load**; **policy** **matters**.",
+          "notes": "Reality: Abused where drivers can load; policy matters.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Abused where drivers can load; policy matters.",
+          "expanded": false
+        },
+        {
+          "id": "na91773a8c9ef15b",
+          "title": "\u201cHTTPS stops keyloggers.\u201d",
+          "markdown": "**Reality:** **TLS** protects **network**; **keyloggers** read **before** **encryption**.",
+          "notes": "Reality: TLS protects network; keyloggers read before encryption.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: TLS protects network; keyloggers read before encryption.",
+          "expanded": false
+        },
+        {
+          "id": "n8af43acdaa22468",
+          "title": "\u201cScreen keyboards are always safe.\u201d",
+          "markdown": "**Reality:** **OSK** can still be **scraped** or **clicked** by **malware** with **access**; **raises** **bar**, not **absolute**.",
+          "notes": "Reality: OSK can still be scraped or clicked by malware with access; raises bar, not absolute.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: OSK can still be scraped or clicked by malware with access; raises...",
+          "expanded": false
+        },
+        {
+          "id": "na96923011590754",
+          "title": "\u201cOnly malware uses keyboard hooks.\u201d",
+          "markdown": "**Reality:** **Legit** **assistive** tech uses **same** **APIs**-**context** and **reputation** **matter**.",
+          "notes": "Reality: Legit assistive tech uses same APIs-context and reputation matter.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Legit assistive tech uses same APIs-context and reputation matter.",
+          "expanded": false
+        },
+        {
+          "id": "n94eab002c2d040f",
+          "title": "\u201cmacOS TCC blocks all capture.\u201d",
+          "markdown": "**Reality:** **Users** **approve** **prompts**; **fatigue** and **bundled** **malware** **exist**.",
+          "notes": "Reality: Users approve prompts; fatigue and bundled malware exist.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Users approve prompts; fatigue and bundled malware exist.",
+          "expanded": false
+        },
+        {
+          "id": "naea40c25255d48e",
+          "title": "\u201cHardware keyloggers are fiction.\u201d",
+          "markdown": "**Reality:** **Rare** in **enterprise** but **real** in **physical** **access** **scenarios**.",
+          "notes": "Reality: Rare in enterprise but real in physical access scenarios.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Rare in enterprise but real in physical access scenarios.",
+          "expanded": false
+        },
+        {
+          "id": "na825f5772c2eb8a",
+          "title": "\u201cKeyloggers only steal passwords.\u201d",
+          "markdown": "**Reality:** **Tokens**, **PII**, **2FA** **codes** typed as **SMS** **OTP**, and **clipboard** **sniffing** **expand** **impact**.",
+          "notes": "Reality: Tokens, PII, 2FA codes typed as SMS OTP, and clipboard sniffing expand impact.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Tokens, PII, 2FA codes typed as SMS OTP, and clipboard sniffing...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \u201cAntivirus always catches keyloggers.\u201d"
+    },
+    {
+      "id": "n53185d1ccd882a7",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n1dee551e180d8e0",
+          "title": "60-second answer",
+          "markdown": "**Q: How do keyloggers work and how do you detect them?**\n\n**A:** They **intercept** **keystrokes** through **user-mode** **hooks**, **accessibility** APIs, **kernel** **filters**, or **hardware** **devices**. Detection uses **EDR** **telemetry** on **hooking** **DLLs**, **cross-process** **injection**, **new** **keyboard** **drivers**, and **browser** **extensions**. **HVCI**/driver policy **blocks** many **kernel** paths. **Phishing-resistant** MFA **limits** **password** **theft** value.",
+          "notes": "Q: How do keyloggers work and how do you detect them?\n\nA: They intercept keystrokes through user-mode hooks, accessibility APIs, kernel filters, or hardware devices. Detection uses EDR telemetry on hooking DLLs, cross-process injection, new keyboard drivers, and browser extensions. HVCI/driver policy blocks many kernel paths. Phishing-resistant MFA limits password theft value.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Q: How do keyloggers work and how do you detect them?",
+          "expanded": false
+        },
+        {
+          "id": "na926da394ff6f2f",
+          "title": "Architecture",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n64107e8b42915b5",
+              "title": "Q: Why are kernel keyloggers harder to detect?",
+              "markdown": "**A:** They sit **below** **user-mode** sensors-defenders rely on **kernel** **telemetry**, **driver** **allow** **listing**, and **integrity** checks.",
+              "notes": "A: They sit below user-mode sensors-defenders rely on kernel telemetry, driver allow listing, and integrity checks.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: They sit below user-mode sensors-defenders rely on kernel telemetry,...",
+              "expanded": false
+            },
+            {
+              "id": "n5fdf5081d1d85b1",
+              "title": "Q: Can Wayland stop keyloggers?",
+              "markdown": "**Reality:** **Reduces** **classic** **X11** **sniffing**; **doesn't** solve **malware** in **session** with **legitimate** **input** **APIs** or **compositor** **bugs**.",
+              "notes": "Reality: Reduces classic X11 sniffing; doesn't solve malware in session with legitimate input APIs or compositor bugs.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Reality: Reduces classic X11 sniffing; doesn't solve malware in session with...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: Why are kernel keyloggers harder to detect?",
+          "expanded": false
+        },
+        {
+          "id": "nf7c6ab8ab5c7701",
+          "title": "Enterprise",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ne5830673560cb65",
+              "title": "Q: Accessibility tool vs malware?",
+              "markdown": "**A:** **Baseline** **known** **vendors**; **alert** on **new** **unsigned** **hook** **modules** and **persistence** **changes**.",
+              "notes": "A: Baseline known vendors; alert on new unsigned hook modules and persistence changes.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Baseline known vendors; alert on new unsigned hook modules and...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: Accessibility tool vs malware?",
+          "expanded": false
+        },
+        {
+          "id": "n74ad57d515fd2a0",
+          "title": "Mock ladder",
+          "markdown": "| Level | Question |\n|-------|----------|\n| Junior | Keylogger definition |\n| Mid | User vs kernel |\n| Senior | Detection program |\n| Staff | Legal/policy |",
+          "notes": "| Level | Question |\n|-------|----------|\n| Junior | Keylogger definition |\n| Mid | User vs kernel |\n| Senior | Detection program |\n| Staff | Legal/policy |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Level | Question | |-------|----------| | Junior | Keylogger definition |...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 60-second answer"
+    }
+  ],
+  "topicId": "keylogger-architecture-and-detection",
+  "name": "Keylogger Architecture and Detection",
+  "structure": "logic-right",
+  "blurb": "A keylogger captures keystrokes (or clipboard, IME, auto-fill) to steal..."
+}

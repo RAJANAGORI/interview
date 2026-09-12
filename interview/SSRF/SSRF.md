@@ -7,3 +7,5 @@
 [**Critical Clarification: SSRF Security Misconceptions**](Critical Clarification SSRF Misconceptions.md)
 
 [**SSRF - Quick Reference Guide**](SSRF - Quick Reference.md)
+
+[**SSRF - Mind Map**](SSRF%20-%20Mind%20Map.md)

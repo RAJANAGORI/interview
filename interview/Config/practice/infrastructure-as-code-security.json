@@ -1,0 +1,91 @@
+{
+  "topicId": "infrastructure-as-code-security",
+  "name": "Infrastructure as Code (IaC) Security",
+  "source": "Infrastructure as Code Security/IaC Security - Interview Questions.md",
+  "prompts": [
+    {
+      "id": "pbc0275b23d74fc",
+      "cluster": "Fundamental Questions",
+      "title": "What are the main security risks in Infrastructure as Code?",
+      "seconds": 120,
+      "answerMarkdown": "**Primary Security Risks:**\n\n1. **Hardcoded Secrets:**\n   - Credentials in plaintext\n   - Committed to version control\n   - Accessible to anyone with repo access\n   - Risk: Credential exposure\n\n2. **Overly Permissive IAM:**\n   - Policies with \"*\" actions\n   - Missing conditions\n   - Risk: Unauthorized access, privilege escalation\n\n3. **Public Resources:**\n   - S3 buckets publicly accessible\n   - Databases exposed to internet\n   - Risk: Data exposure\n\n4. **Missing Encryption:**\n   - Data stored unencrypted\n   - No encryption at rest\n   - Risk: Data breach\n\n5. **Insecure Network Configurations:**\n   - Security groups allowing 0.0.0.0/0\n   - Missing network segmentation\n   - Risk: Unauthorized network access\n\n6. **State File Exposure:**\n   - State files in version control\n   - Unencrypted state\n   - Risk: Infrastructure compromise\n\n**Mitigation:**\n- Use secret management services\n- Follow least privilege for IAM\n- Enable encryption by default\n- Implement network security\n- Secure state management\n\n---"
+    },
+    {
+      "id": "p0e3509b404f827",
+      "cluster": "Fundamental Questions",
+      "title": "How do you manage secrets in Terraform?",
+      "seconds": 120,
+      "answerMarkdown": "**Secrets Management Strategies:**\n\n1. **Environment Variables:**\n   ```bash\n   export TF_VAR_db_password=\"secret\"\n   terraform apply\n   ```\n\n2. **AWS Secrets Manager:**\n   ```hcl\n   data \"aws_secretsmanager_secret\" \"db_password\" {\n     name = \"database/password\"\n   }\n\n   data \"aws_secretsmanager_secret_version\" \"db_password\" {\n     secret_id = data.aws_secretsmanager_secret.db_password.id\n   }\n\n   resource \"aws_db_instance\" \"database\" {\n     password = data.aws_secretsmanager_secret_version.db_password.secret_string\n   }\n   ```\n\n3. **HashiCorp Vault:**\n   ```hcl\n   data \"vault_generic_secret\" \"db_password\" {\n     path = \"secret/database\"\n   }\n\n   resource \"aws_db_instance\" \"database\" {\n     password = data.vault_generic_secret.db_password.data[\"password\"]\n   }\n   ```\n\n4. **Variables with Sensitive Flag:**\n   ```hcl\n   variable \"db_password\" {\n     type        = string\n     sensitive   = true\n     description = \"Database password\"\n   }\n   ```\n\n**Best Practices:**\n- Never hardcode secrets\n- Use secret management services\n- Mark variables as sensitive\n- Rotate secrets regularly\n- Restrict access to secrets\n\n---"
+    },
+    {
+      "id": "p2bcc822a61952f",
+      "cluster": "Fundamental Questions",
+      "title": "How do you implement least privilege in IaC IAM policies?",
+      "seconds": 120,
+      "answerMarkdown": "**Least Privilege Implementation:**\n\n1. **Specific Actions:**\n   ```json\n   // Good: Specific actions\n   {\n     \"Effect\": \"Allow\",\n     \"Action\": [\n       \"s3:GetObject\",\n       \"s3:PutObject\"\n     ],\n     \"Resource\": \"arn:aws:s3:::my-bucket/*\"\n   }\n\n   // Bad: Overly broad\n   {\n     \"Effect\": \"Allow\",\n     \"Action\": [\"s3:*\"],\n     \"Resource\": \"*\"\n   }\n   ```\n\n2. **Resource-Level Permissions:**\n   - Restrict to specific resources\n   - Use resource ARNs\n   - Avoid wildcards\n\n3. **Conditions:**\n   ```json\n   {\n     \"Effect\": \"Allow\",\n     \"Action\": [\"s3:GetObject\"],\n     \"Resource\": \"arn:aws:s3:::my-bucket/*\",\n     \"Condition\": {\n       \"IpAddress\": {\n         \"aws:SourceIp\": \"203.0.113.0/24\"\n       },\n       \"StringEquals\": {\n         \"aws:MultiFactorAuthPresent\": \"true\"\n       }\n     }\n   }\n   ```\n\n4. **Terraform Example:**\n   ```hcl\n   resource \"aws_iam_policy\" \"s3_access\" {\n     name = \"s3-read-only\"\n     policy = jsonencode({\n       Version = \"2012-10-17\"\n       Statement = [{\n         Effect = \"Allow\"\n         Action = [\"s3:GetObject\", \"s3:ListBucket\"]\n         Resource = [\n           \"arn:aws:s3:::my-bucket\",\n           \"arn:aws:s3:::my-bucket/*\"\n         ]\n       }]\n     })\n   }\n   ```\n\n**Best Practices:**\n- Start with deny all\n- Grant minimum necessary permissions\n- Use conditions\n- Regular access reviews\n- Separate read and write permissions\n\n---"
+    },
+    {
+      "id": "pd2cc59b0a4b280",
+      "cluster": "Fundamental Questions",
+      "title": "What tools do you use for IaC security scanning?",
+      "seconds": 120,
+      "answerMarkdown": "**Security Scanning Tools:**\n\n1. **Checkov:**\n   - Open-source static analysis\n   - Multi-cloud support\n   - Policy as code\n   - CI/CD integration\n\n   ```bash\n   checkov -d terraform/\n   checkov -f template.yaml --framework cloudformation\n   ```\n\n2. **Terrascan:**\n   - Static code analysis\n   - Multi-IaC support\n   - Policy library\n\n   ```bash\n   terrascan scan -t terraform\n   ```\n\n3. **TFLint:**\n   - Terraform linter\n   - Plugin system\n   - Fast scanning\n\n   ```bash\n   tflint\n   ```\n\n4. **cfn-lint:**\n   - CloudFormation linter\n   - AWS best practices\n   - Custom rules\n\n   ```bash\n   cfn-lint template.yaml\n   ```\n\n5. **OPA (Open Policy Agent):**\n   - Policy engine\n   - Rego language\n   - Multi-tool support\n\n**Integration:**\n- Pre-commit hooks\n- CI/CD pipelines\n- IDE plugins\n- Automated scanning\n\n---"
+    },
+    {
+      "id": "pb17f70b98d34b3",
+      "cluster": "Fundamental Questions",
+      "title": "How do you secure Terraform state files?",
+      "seconds": 120,
+      "answerMarkdown": "**State File Security:**\n\n1. **Remote State Backend:**\n   ```hcl\n   terraform {\n     backend \"s3\" {\n       bucket         = \"my-terraform-state\"\n       key            = \"production/terraform.tfstate\"\n       region         = \"us-west-2\"\n       encrypt        = true\n       kms_key_id     = \"arn:aws:kms:us-west-2:123456789012:key/12345678\"\n       dynamodb_table = \"terraform-state-lock\"\n     }\n   }\n   ```\n\n2. **Encryption:**\n   - Enable encryption at rest\n   - Use KMS for key management\n   - Encrypt in transit\n\n3. **Access Control:**\n   - Restrict state file access\n   - Use IAM policies\n   - Enable versioning\n\n4. **State Locking:**\n   - Use DynamoDB for locking\n   - Prevent concurrent modifications\n   - Avoid state corruption\n\n5. **Best Practices:**\n   - Never commit state to version control\n   - Use remote backends\n   - Enable versioning\n   - Regular backups\n   - Separate state per environment\n\n---"
+    },
+    {
+      "id": "p61301a418393ca",
+      "cluster": "Tool-Specific Questions",
+      "title": "How do you prevent public S3 buckets in Terraform?",
+      "seconds": 120,
+      "answerMarkdown": "**Prevention Methods:**\n\n1. **Block Public Access:**\n   ```hcl\n   resource \"aws_s3_bucket\" \"data\" {\n     bucket = \"my-bucket\"\n   }\n\n   resource \"aws_s3_bucket_public_access_block\" \"data\" {\n     bucket = aws_s3_bucket.data.id\n\n     block_public_acls       = true\n     block_public_policy     = true\n     ignore_public_acls      = true\n     restrict_public_buckets = true\n   }\n   ```\n\n2. **Bucket Policy:**\n   ```hcl\n   resource \"aws_s3_bucket_policy\" \"data\" {\n     bucket = aws_s3_bucket.data.id\n\n     policy = jsonencode({\n       Version = \"2012-10-17\"\n       Statement = [{\n         Effect = \"Deny\"\n         Principal = \"*\"\n         Action = \"s3:*\"\n         Resource = [\n           aws_s3_bucket.data.arn,\n           \"${aws_s3_bucket.data.arn}/*\"\n         ]\n         Condition = {\n           Bool = {\n             \"aws:PublicAccess\" = \"true\"\n           }\n         }\n       }]\n     })\n   }\n   ```\n\n3. **Policy as Code:**\n   - Use Checkov or Terrascan\n   - Enforce in CI/CD\n   - Block deployment if public\n\n---"
+    },
+    {
+      "id": "p1c1eb940bb358f",
+      "cluster": "Tool-Specific Questions",
+      "title": "How do you implement policy as code for IaC?",
+      "seconds": 120,
+      "answerMarkdown": "**Policy as Code Approaches:**\n\n1. **OPA (Open Policy Agent):**\n   ```rego\n   package terraform\n\n   deny[msg] {\n       resource := input.resource_changes[_]\n       resource.type == \"aws_s3_bucket\"\n       not resource.change.after.server_side_encryption_configuration\n       msg := \"S3 buckets must have encryption enabled\"\n   }\n   ```\n\n2. **Sentinel (HashiCorp):**\n   ```javascript\n   import \"tfplan\"\n\n   main = rule {\n       all tfplan.resource_changes as _, rc {\n           rc.type is not \"aws_s3_bucket\" or\n           rc.change.after.server_side_encryption_configuration is not null\n       }\n   }\n   ```\n\n3. **Checkov Custom Policies:**\n   ```python\n   from checkov.common.models.enums import CheckResult\n   from checkov.terraform.checks.resource.base_resource_check import BaseResourceCheck\n\n   class S3EncryptionCheck(BaseResourceCheck):\n       def scan_resource_conf(self, conf):\n           if 'server_side_encryption_configuration' not in conf:\n               return CheckResult.FAILED\n           return CheckResult.PASSED\n   ```\n\n4. **Pulumi Policy Pack:**\n   ```typescript\n   new policy.PolicyPack(\"aws-security\", {\n       policies: [{\n           name: \"s3-encryption\",\n           enforcementLevel: \"mandatory\",\n           validateResource: (args, reportViolation) => {\n               if (args.type === \"aws:s3/bucket:Bucket\" &&\n                   !args.props.serverSideEncryptionConfiguration) {\n                   reportViolation(\"S3 buckets must have encryption enabled\");\n               }\n           },\n       }],\n   });\n   ```\n\n---"
+    },
+    {
+      "id": "p69c8411afb1544",
+      "cluster": "CI/CD Integration Questions",
+      "title": "How do you integrate IaC security scanning into CI/CD?",
+      "seconds": 120,
+      "answerMarkdown": "**CI/CD Integration:**\n\n1. **GitHub Actions:**\n   ```yaml\n   name: IaC Security Scan\n   on: [pull_request]\n   jobs:\n     security-scan:\n       runs-on: ubuntu-latest\n       steps:\n       - uses: actions/checkout@v3\n       - name: Run Checkov\n         uses: bridgecrewio/checkov-action@master\n         with:\n           directory: .\n           framework: terraform\n       - name: Run TFLint\n         uses: terraform-linters/setup-tflint@v3\n       - name: TFLint\n         run: tflint\n   ```\n\n2. **Pre-Commit Hooks:**\n   ```yaml\n   # .pre-commit-config.yaml\n   repos:\n     - repo: https://github.com/bridgecrewio/checkov\n       rev: 2.3.313\n       hooks:\n         - id: checkov\n           args: ['--framework', 'terraform']\n   ```\n\n3. **GitLab CI:**\n   ```yaml\n   security-scan:\n     stage: security\n     image: bridgecrew/checkov:latest\n     script:\n       - checkov -d . --framework terraform\n     rules:\n       - if: $CI_PIPELINE_SOURCE == \"merge_request_event\"\n   ```\n\n4. **Jenkins:**\n   ```groovy\n   stage('Security Scan') {\n       steps {\n           sh 'checkov -d . --framework terraform'\n       }\n   }\n   ```\n\n**Best Practices:**\n- Scan on every PR\n- Block merge on failures\n- Generate reports\n- Integrate with security tools\n\n---"
+    },
+    {
+      "id": "pf5d04bbf9713aa",
+      "cluster": "Scenario-Based Questions",
+      "title": "You discover hardcoded credentials in Terraform code. What do you do?",
+      "seconds": 120,
+      "answerMarkdown": "**Immediate Actions:**\n\n1. **Assess Risk:**\n   - Determine if credentials are exposed\n   - Check git history\n   - Identify who had access\n\n2. **Rotate Credentials:**\n   - Immediately rotate exposed credentials\n   - Update all systems using credentials\n   - Revoke old credentials\n\n3. **Remove from Code:**\n   - Remove hardcoded credentials\n   - Use secret management\n   - Update all references\n\n4. **Clean Git History:**\n   - Use git-filter-repo or BFG\n   - Remove from all commits\n   - Force push (coordinate with team)\n\n5. **Prevention:**\n   - Implement pre-commit hooks\n   - Add scanning to CI/CD\n   - Use secret detection tools\n   - Train team on best practices\n\n**Example Fix:**\n```hcl\n# Before\nresource \"aws_db_instance\" \"database\" {\n  password = \"MySecretPassword123!\"\n}\n\n# After\ndata \"aws_secretsmanager_secret\" \"db_password\" {\n  name = \"database/password\"\n}\n\nresource \"aws_db_instance\" \"database\" {\n  password = data.aws_secretsmanager_secret_version.db_password.secret_string\n}\n```\n\n---"
+    },
+    {
+      "id": "pfa1a274b8b1bde",
+      "cluster": "Scenario-Based Questions",
+      "title": "How would you design a secure IaC workflow?",
+      "seconds": 120,
+      "answerMarkdown": "**Secure IaC Workflow:**\n\n1. **Development:**\n   - Local development with Terraform\n   - Pre-commit hooks for validation\n   - Secret detection\n   - Code formatting\n\n2. **Version Control:**\n   - Store code in Git\n   - Branch protection rules\n   - Require reviews\n   - No secrets in code\n\n3. **CI/CD Pipeline:**\n   - Validate Terraform\n   - Security scanning (Checkov, Terrascan)\n   - Policy enforcement\n   - Generate plan\n\n4. **Review:**\n   - Peer review required\n   - Security review\n   - Plan review\n   - Approval workflow\n\n5. **Deployment:**\n   - Apply in staging first\n   - Validate changes\n   - Monitor deployment\n   - Rollback plan\n\n6. **Post-Deployment:**\n   - Verify security controls\n   - Monitor infrastructure\n   - Audit logs\n   - Regular reviews\n\n**Tools:**\n- Pre-commit hooks\n- Checkov/Terrascan\n- Terraform Cloud/Enterprise\n- Policy as code\n- Secret management\n\n---"
+    },
+    {
+      "id": "p0c176de260dd57",
+      "cluster": "Advanced Questions",
+      "title": "How do you handle secrets rotation in IaC?",
+      "seconds": 120,
+      "answerMarkdown": "**Secrets Rotation:**\n\n1. **Automated Rotation:**\n   - Use AWS Secrets Manager rotation\n   - Lambda functions for rotation\n   - Update applications automatically\n\n2. **Terraform State:**\n   - Update secret references\n   - Apply changes\n   - No downtime\n\n3. **Multi-Environment:**\n   - Rotate per environment\n   - Staged rollout\n   - Validation after rotation\n\n**Example:**\n```hcl\nresource \"aws_secretsmanager_secret\" \"db_password\" {\n  name = \"database/password\"\n\n  rotation_rules {\n    automatically_after_days = 30\n  }\n}\n\nresource \"aws_secretsmanager_secret_rotation\" \"db_password\" {\n  secret_id = aws_secretsmanager_secret.db_password.id\n\n  rotation_lambda_arn = aws_lambda_function.rotation.arn\n\n  rotation_rules {\n    automatically_after_days = 30\n  }\n}\n```\n\n---"
+    },
+    {
+      "id": "pc8d93041512582",
+      "cluster": "Advanced Questions",
+      "title": "How do you ensure compliance in IaC?",
+      "seconds": 120,
+      "answerMarkdown": "**Compliance in IaC:**\n\n1. **Policy as Code:**\n   - Define compliance policies\n   - Enforce automatically\n   - Use OPA, Sentinel, Checkov\n\n2. **Automated Scanning:**\n   - Scan for compliance violations\n   - Block non-compliant deployments\n   - Generate compliance reports\n\n3. **Documentation:**\n   - Document compliance requirements\n   - Map to controls\n   - Regular audits\n\n4. **Monitoring:**\n   - Continuous compliance monitoring\n   - Alert on violations\n   - Regular assessments\n\n**Example - Compliance Policy:**\n```rego\npackage compliance\n\n# PCI-DSS: Encryption required\ndeny[msg] {\n    resource := input.resource_changes[_]\n    resource.type == \"aws_db_instance\"\n    not resource.change.after.storage_encrypted\n    msg := \"PCI-DSS: Databases must have encryption enabled\"\n}\n```\n\n---"
+    }
+  ]
+}

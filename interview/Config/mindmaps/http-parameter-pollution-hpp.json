@@ -1,0 +1,1083 @@
+{
+  "id": "nd5e043a35ea841f",
+  "title": "HTTP Parameter Pollution (HPP)",
+  "markdown": "**HTTP Parameter Pollution** arises when **the same parameter name appears multiple times** in a query string or body, and **different components** (WAF, cache, reverse proxy, application framework) **parse or merge** duplicates **differently**. Attackers abuse that **split view** to **smuggle** payloads past filters or **alter** server-side logic.\n\nAligned with the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+  "notes": "HTTP Parameter Pollution arises when the same parameter name appears multiple times in a query string or body, and different components (WAF, cache, reverse proxy, application framework) parse or merge duplicates differently. Attackers abuse that split view to smuggle payloads past filters or alter server-side logic.\n\nAligned with the Content Mastery Framework.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "ncb8632bfab4092f",
+      "title": "At a glance",
+      "markdown": "**HTTP Parameter Pollution** arises when **the same parameter name appears multiple times** in a query string or body, and **different components** (WAF, cache, reverse proxy, application framework) **parse or merge** duplicates **differently**. Attackers abuse that **split view** to **smuggle** payloads past filters or **alter** server-side logic.\n\nAligned with the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+      "notes": "HTTP Parameter Pollution arises when the same parameter name appears multiple times in a query string or body, and different components (WAF, cache, reverse proxy, application framework) parse or merge duplicates differently. Attackers abuse that split view to smuggle payloads past filters or alter server-side logic.\n\nAligned with the Content Mastery Framework.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "HTTP Parameter Pollution arises when the same parameter name appears...",
+      "expanded": false
+    },
+    {
+      "id": "n30af64fc9c42335",
+      "title": "L1 \u2014 Mechanism",
+      "markdown": "```\nClient sends: ?id=safe&id=malicious\n                     \u2502\n        \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n        \u25bc                         \u25bc\n   WAF sees \"safe\"            App sees \"malicious\"\n   (first-only)              (last-wins concat)\n```\n\n- **No single HTTP standard** mandates first/last/all for duplicates across **all** stacks-**behavior is implementation-defined**.\n- **Risk** appears at **trust boundaries** between **parsers**.",
+      "notes": "Client sends: ?id=safe&id=malicious\n                     \u2502\n        \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n        \u25bc                         \u25bc\n   WAF sees \"safe\"            App sees \"malicious\"\n   (first-only)              (last-wins concat)\n- No single HTTP standard mandates first/last/all for duplicates across all stacks-behavior is implementation-defined.\n- Risk appears at trust boundaries between parsers.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Client sends: ?id=safe&id=malicious \u2502 \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510 \u25bc \u25bc WAF...",
+      "expanded": false
+    },
+    {
+      "id": "n3d21075cda49073",
+      "title": "L2 \u2014 Variant map",
+      "markdown": "| Behavior | Who often does it | Attacker angle |\n|----------|-------------------|----------------|\n| **First wins** | Some WAFs / caches | Hide bad token in **second** copy |\n| **Last wins** | Many app frameworks | Hide bad token where WAF reads **first** |\n| **Concatenate** | Rare legacy patterns | Split **tokens** across pairs |\n| **Array** | PHP-style `key[]` | Type confusion with **expected** scalar |",
+      "notes": "| Behavior | Who often does it | Attacker angle |\n|----------|-------------------|----------------|\n| First wins | Some WAFs / caches | Hide bad token in second copy |\n| Last wins | Many app frameworks | Hide bad token where WAF reads first |\n| Concatenate | Rare legacy patterns | Split tokens across pairs |\n| Array | PHP-style key[] | Type confusion with expected scalar |",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Behavior | Who often does it | Attacker angle |...",
+      "expanded": false
+    },
+    {
+      "id": "n54e6a74e8115aeb",
+      "title": "Bypass of mitigations",
+      "markdown": "- **Different** **encodings** (`;` **style** **legacy** **param** **splitters** in some stacks-**know** **your** **framework**).\n- **JSON** bodies where **duplicate** keys **parse** **unpredictably**-**reject** **dupes** in **parser** **config** if supported.",
+      "notes": "- Different encodings (; style legacy param splitters in some stacks-know your framework).\n- JSON bodies where duplicate keys parse unpredictably-reject dupes in parser config if supported.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Different encodings (; style legacy param splitters in some stacks-know your...",
+      "expanded": false
+    },
+    {
+      "id": "n9cc8092f395760d",
+      "title": "Defenses",
+      "markdown": "",
+      "notes": "",
+      "expanded": true,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n04d6591ef9d7d59",
+          "title": "Mitigations (tier order)",
+          "markdown": "Reject duplicates on sensitive parameters (IDs, redirect targets).",
+          "notes": "Reject duplicates on sensitive parameters (IDs, redirect targets).",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nf50ea06db0752c6",
+              "title": "Reject duplicates on sensitive parameters (IDs, redirect targets).",
+              "markdown": "- Reject duplicates on sensitive parameters (IDs, redirect targets).",
+              "notes": "Reject duplicates on sensitive parameters (IDs, redirect targets).",
+              "blurb": "Reject duplicates on sensitive parameters (IDs, redirect targets).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nbe681ffbdfa7a01",
+              "title": "Normalize at a single middleware layer; document behavior.",
+              "markdown": "- Normalize at a single middleware layer; document behavior.",
+              "notes": "Normalize at a single middleware layer; document behavior.",
+              "blurb": "Normalize at a single middleware layer; document behavior.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na18808b90a404ed",
+              "title": "Schema-validate APIs (OpenAPI strict).",
+              "markdown": "- Schema-validate APIs (OpenAPI strict).",
+              "notes": "Schema-validate APIs (OpenAPI strict).",
+              "blurb": "Schema-validate APIs (OpenAPI strict).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n433d3123b20d73f",
+              "title": "WAF rules aware of all duplicate representations (high maintenance-app fix preferred).",
+              "markdown": "- WAF rules aware of all duplicate representations (high maintenance-app fix preferred).",
+              "notes": "WAF rules aware of all duplicate representations (high maintenance-app fix preferred).",
+              "blurb": "WAF rules aware of all duplicate representations (high maintenance-app fix...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Reject duplicates on sensitive parameters (IDs, redirect targets).",
+          "expanded": false
+        },
+        {
+          "id": "n1af096e750da5f4",
+          "title": "L4 \u2014 Engineering controls and regression testing",
+          "markdown": "To prevent recurrence:",
+          "notes": "To prevent recurrence:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n71d8ce5ca00c666",
+              "title": "Define parameter uniqueness in API contracts (OpenAPI/schema policy checks).",
+              "markdown": "- Define parameter uniqueness in API contracts (OpenAPI/schema policy checks).",
+              "notes": "Define parameter uniqueness in API contracts (OpenAPI/schema policy checks).",
+              "blurb": "Define parameter uniqueness in API contracts (OpenAPI/schema policy checks).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc85eafe98c06f6c",
+              "title": "Add unit/integration tests for duplicate-sensitive fields (id, tenant, redirect, role).",
+              "markdown": "- Add unit/integration tests for duplicate-sensitive fields (id, tenant, redirect, role).",
+              "notes": "Add unit/integration tests for duplicate-sensitive fields (id, tenant, redirect, role).",
+              "blurb": "Add unit/integration tests for duplicate-sensitive fields (id, tenant,...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n791bb39eaec5569",
+              "title": "Include HPP payloads in WAF/edge regression suites.",
+              "markdown": "- Include HPP payloads in WAF/edge regression suites.",
+              "notes": "Include HPP payloads in WAF/edge regression suites.",
+              "blurb": "Include HPP payloads in WAF/edge regression suites.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nfb2c3cc5dace960",
+              "title": "Log and alarm on duplicate-key requests reaching sensitive handlers.",
+              "markdown": "- Log and alarm on duplicate-key requests reaching sensitive handlers.",
+              "notes": "Log and alarm on duplicate-key requests reaching sensitive handlers.",
+              "blurb": "Log and alarm on duplicate-key requests reaching sensitive handlers.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "To prevent recurrence:",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Mitigations (tier order)"
+    },
+    {
+      "id": "n25942c809b4869f",
+      "title": "Detection",
+      "markdown": "Logs with multiple same-name keys reaching the app.",
+      "notes": "Logs with multiple same-name keys reaching the app.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n0e2e1d3f260cc33",
+          "title": "Logs with multiple same-name keys reaching the app.",
+          "markdown": "- Logs with multiple same-name keys reaching the app.",
+          "notes": "Logs with multiple same-name keys reaching the app.",
+          "blurb": "Logs with multiple same-name keys reaching the app.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nbe024ae6052ef7a",
+          "title": "WAF miss correlated with duplicate parameters in access logs.",
+          "markdown": "- WAF miss correlated with duplicate parameters in access logs.",
+          "notes": "WAF miss correlated with duplicate parameters in access logs.",
+          "blurb": "WAF miss correlated with duplicate parameters in access logs.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nc6189b4d1d8fd57",
+          "title": "Tests that assert 400 on duplicate IDs for sensitive operations.",
+          "markdown": "- Tests that assert 400 on duplicate IDs for sensitive operations.",
+          "notes": "Tests that assert 400 on duplicate IDs for sensitive operations.",
+          "blurb": "Tests that assert 400 on duplicate IDs for sensitive operations.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Logs with multiple same-name keys reaching the app.",
+      "expanded": true
+    },
+    {
+      "id": "ndd756e63c8cb0b1",
+      "title": "Labs",
+      "markdown": "- **PortSwigger** topics touching **HTTP** **parameter** **pollution** / **routing** anomalies.\n- Custom **Flask/Django** mini-app to **observe** `getlist` behavior.",
+      "notes": "- PortSwigger topics touching HTTP parameter pollution / routing anomalies.\n- Custom Flask/Django mini-app to observe getlist behavior.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "PortSwigger topics touching HTTP parameter pollution / routing anomalies.",
+      "expanded": false
+    },
+    {
+      "id": "nf2dc0a47f6aebaf",
+      "title": "Practice & references",
+      "markdown": "",
+      "notes": "",
+      "expanded": true,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n02060e46502ba3f",
+          "title": "Toolchain",
+          "markdown": "**Burp Suite** (parameter fuzzing), **curl** with repeated `-d` flags, **framework** docs.",
+          "notes": "Burp Suite (parameter fuzzing), curl with repeated -d flags, framework docs.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Burp Suite (parameter fuzzing), curl with repeated -d flags, framework docs.",
+          "expanded": false
+        },
+        {
+          "id": "n8b3eb803e785764",
+          "title": "Authoritative references",
+          "markdown": "RFC 3875 - CGI environment variable conventions (historical context).",
+          "notes": "RFC 3875 - CGI environment variable conventions (historical context).",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "na40346d925b0f4b",
+              "title": "RFC 3875 - CGI environment variable conventions (historical context).",
+              "markdown": "- RFC 3875 - CGI environment variable conventions (historical context).",
+              "notes": "RFC 3875 - CGI environment variable conventions (historical context).",
+              "blurb": "RFC 3875 - CGI environment variable conventions (historical context).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9acb552767eb07f",
+              "title": "OWASP testing guidance on duplicate parameters (check current edition).",
+              "markdown": "- OWASP testing guidance on duplicate parameters (check current edition).",
+              "notes": "OWASP testing guidance on duplicate parameters (check current edition).",
+              "blurb": "OWASP testing guidance on duplicate parameters (check current edition).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na0240483af6ae80",
+              "title": "CWE-20 / CWE-444 (HTTP request smuggling adjacent-different root, similar parser theme).",
+              "markdown": "- CWE-20 / CWE-444 (HTTP request smuggling adjacent-different root, similar parser theme).",
+              "notes": "CWE-20 / CWE-444 (HTTP request smuggling adjacent-different root, similar parser theme).",
+              "blurb": "CWE-20 / CWE-444 (HTTP request smuggling adjacent-different root, similar...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "RFC 3875 - CGI environment variable conventions (historical context).",
+          "expanded": false
+        },
+        {
+          "id": "ne84ae6ed440e2dc",
+          "title": "Verification checklist",
+          "markdown": "[ ] Document your framework's duplicate key behavior in two sentences.",
+          "notes": "[ ] Document your framework's duplicate key behavior in two sentences.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n7aae3757527f1b2",
+              "title": "[ ] Document your framework's duplicate key behavior in two sentences.",
+              "markdown": "- [ ] Document your framework's duplicate key behavior in two sentences.",
+              "notes": "[ ] Document your framework's duplicate key behavior in two sentences.",
+              "blurb": "[ ] Document your framework's duplicate key behavior in two sentences.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3c067fa54129ef3",
+              "title": "[ ] Add a test that sends two redirect parameters and expects 400.",
+              "markdown": "- [ ] Add a test that sends two redirect parameters and expects 400.",
+              "notes": "[ ] Add a test that sends two redirect parameters and expects 400.",
+              "blurb": "[ ] Add a test that sends two redirect parameters and expects 400.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nbcaba74aec41456",
+              "title": "[ ] Explain one gateway/WAF/app parser mismatch chain.",
+              "markdown": "- [ ] Explain one gateway/WAF/app parser mismatch chain.",
+              "notes": "[ ] Explain one gateway/WAF/app parser mismatch chain.",
+              "blurb": "[ ] Explain one gateway/WAF/app parser mismatch chain.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n161a3048f08cbfd",
+              "title": "[ ] Define duplicate-key policy for query and JSON bodies.",
+              "markdown": "- [ ] Define duplicate-key policy for query and JSON bodies.",
+              "notes": "[ ] Define duplicate-key policy for query and JSON bodies.",
+              "blurb": "[ ] Define duplicate-key policy for query and JSON bodies.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "[ ] Document your framework's duplicate key behavior in two sentences.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Toolchain"
+    },
+    {
+      "id": "n5ab07a7318b6660",
+      "title": "Code examples",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n3f7a83ed60a35ca",
+          "title": "L2 \u2014 Illustrative requests (authorized testing)",
+          "markdown": "```http\nGET /search?q=news&q=<script>alert(1)</script> HTTP/1.1\nHost: example.com\n```\n\nIf edge uses **first** `q` for **filtering** but app uses **last** for **render**, XSS **filters** **fail**.\n\n**Body** duplicates in `application/x-www-form-urlencoded` follow **similar** **logic** splits.",
+          "notes": "GET /search?q=news&q=<script>alert(1)</script> HTTP/1.1\nHost: example.com\n\nIf edge uses first q for filtering but app uses last for render, XSS filters fail.\n\nBody duplicates in application/x-www-form-urlencoded follow similar logic splits.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "GET /search?q=news&q=<script>alert(1)</script> HTTP/1.1 Host: example.com If...",
+          "expanded": false
+        },
+        {
+          "id": "nd0d2e62b87c26d9",
+          "title": "L2 \u2014 Code lesson (normalize once)",
+          "markdown": "**Anti-pattern:** ad-hoc `request.GET.get(\"id\")` vs `request.GET.getlist(\"id\")` mismatch across modules.\n\n**Pattern:** canonicalize at **boundary**:\n\n```python\ndef single_param(params: dict, name: str) -> str:\n    values = params.getlist(name)\n    if len(values) != 1:\n        raise BadRequest(\"duplicate or missing parameter\")\n    return values[0]\n```\n\nFramework APIs differ-**principle** is **one** **policy** for duplicates.",
+          "notes": "Anti-pattern: ad-hoc request.GET.get(\"id\") vs request.GET.getlist(\"id\") mismatch across modules.\n\nPattern: canonicalize at boundary:\n\ndef singleparam(params: dict, name: str) -> str:\n    values = params.getlist(name)\n    if len(values) != 1:\n        raise BadRequest(\"duplicate or missing parameter\")\n    return values[0]\n\nFramework APIs differ-principle is one policy for duplicates.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Anti-pattern: ad-hoc request.GET.get(\"id\") vs request.GET.getlist(\"id\")...",
+          "expanded": false
+        },
+        {
+          "id": "nea10395b4cba9d4",
+          "title": "L2 \u2014 Real patterns",
+          "markdown": "- **WAF bypass** write-ups frequently combine **encoding** + **HPP**-signature sees **benign** **first** token.\n- **Cache poisoning** research (e.g., **web cache deception** adjacent) sometimes touches **key** **canonicalization**-**overlaps** with **parameter** **routing**.",
+          "notes": "- WAF bypass write-ups frequently combine encoding + HPP-signature sees benign first token.\n- Cache poisoning research (e.g., web cache deception adjacent) sometimes touches key canonicalization-overlaps with parameter routing.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "WAF bypass write-ups frequently combine encoding + HPP-signature sees benign...",
+          "expanded": false
+        },
+        {
+          "id": "nadc1fa8752f0616",
+          "title": "L3 \u2014 Gateway/backend parser differential matrix",
+          "markdown": "HPP often appears when API gateway, WAF, and app framework disagree:\n\n| Layer | Typical duplicate handling risk | Result |\n|-------|----------------------------------|--------|\n| **Gateway** | Canonicalizes query order / may dedupe | Security checks see one value |\n| **WAF** | First-value inspection | Misses malicious second value |\n| **App framework** | Last-value wins or array merge | Business logic uses attacker value |\n| **Cache** | Key normalization mismatch | Wrong cache object reused |\n\nInterview framing: HPP is a distributed parsing bug, not just an app bug.",
+          "notes": "HPP often appears when API gateway, WAF, and app framework disagree:\n\n| Layer | Typical duplicate handling risk | Result |\n|-------|----------------------------------|--------|\n| Gateway | Canonicalizes query order / may dedupe | Security checks see one value |\n| WAF | First-value inspection | Misses malicious second value |\n| App framework | Last-value wins or array merge | Business logic uses attacker value |\n| Cache | Key normalization mismatch | Wrong cache object reused |\n\nInterview framing: HPP is a distributed parsing bug, not just an app bug.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "HPP often appears when API gateway, WAF, and app framework disagree: | Layer...",
+          "expanded": false
+        },
+        {
+          "id": "n871584dccb3ffe2",
+          "title": "L4 \u2014 JSON/body duplicate key edge cases",
+          "markdown": "Duplicate semantics are not limited to query strings:",
+          "notes": "Duplicate semantics are not limited to query strings:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ne59250d4fca94cd",
+              "title": "Some JSON parsers keep last key, others first, some reject.",
+              "markdown": "- Some JSON parsers keep last key, others first, some reject.",
+              "notes": "Some JSON parsers keep last key, others first, some reject.",
+              "blurb": "Some JSON parsers keep last key, others first, some reject.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5f77b1a8f43db8d",
+              "title": "Transcoding layers (REST->RPC) can collapse duplicates differently.",
+              "markdown": "- Transcoding layers (REST->RPC) can collapse duplicates differently.",
+              "notes": "Transcoding layers (REST->RPC) can collapse duplicates differently.",
+              "blurb": "Transcoding layers (REST->RPC) can collapse duplicates differently.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ndb1ae7f80afa216",
+              "title": "Signature/verification middleware may hash one representation while app executes another",
+              "markdown": "- Signature/verification middleware may hash one representation while app executes another",
+              "notes": "Signature/verification middleware may hash one representation while app executes another",
+              "blurb": "Signature/verification middleware may hash one representation while app...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Duplicate semantics are not limited to query strings:",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes L2 \u2014 Illustrative requests (authorized testing)"
+    },
+    {
+      "id": "nb5c28e8ba5f2409",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n53f64e2a628c760",
+          "title": "Core idea",
+          "markdown": "**Duplicate** keys -> **split** **parser** **behavior** -> **filter** **bypass** / **logic** **bugs**",
+          "notes": "Duplicate keys -> split parser behavior -> filter bypass / logic bugs",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Duplicate keys -> split parser behavior -> filter bypass / logic bugs",
+          "expanded": false
+        },
+        {
+          "id": "n36f82d0546b2f6e",
+          "title": "Common behaviors",
+          "markdown": "First wins \u00b7 last wins \u00b7 concat \u00b7 array - **check** **your** **stack**",
+          "notes": "First wins \u00b7 last wins \u00b7 concat \u00b7 array - check your stack",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "First wins \u00b7 last wins \u00b7 concat \u00b7 array - check your stack",
+          "expanded": false
+        },
+        {
+          "id": "nfe48f36645bdd28",
+          "title": "Fix",
+          "markdown": "**One** choke-point **normalization** \u00b7 **reject** dupes on **sensitive** params \u00b7 **OpenAPI** **strict**",
+          "notes": "One choke-point normalization \u00b7 reject dupes on sensitive params \u00b7 OpenAPI strict",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "One choke-point normalization \u00b7 reject dupes on sensitive params \u00b7 OpenAPI...",
+          "expanded": false
+        },
+        {
+          "id": "n509ead9e278cc9f",
+          "title": "Test",
+          "markdown": "Burp **repeat** dupes \u00b7 **curl** `-d` twice \u00b7 **assert** **400** on **`return_url`**",
+          "notes": "Burp repeat dupes \u00b7 curl -d twice \u00b7 assert 400 on returnurl",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Burp repeat dupes \u00b7 curl -d twice \u00b7 assert 400 on returnurl",
+          "expanded": false
+        },
+        {
+          "id": "n4f1d5157e6fcc8e",
+          "title": "Cross-read",
+          "markdown": "`WAF Bypass` \u00b7 `HTTP Request Smuggling` \u00b7 `Open Redirect`",
+          "notes": "WAF Bypass \u00b7 HTTP Request Smuggling \u00b7 Open Redirect",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "WAF Bypass \u00b7 HTTP Request Smuggling \u00b7 Open Redirect",
+          "expanded": false
+        },
+        {
+          "id": "n074cd0fbf47a656",
+          "title": "One-liner",
+          "markdown": "\"**Same** name, **many** values-**pick** **one** **policy** **everywhere** **or** **reject**.\"",
+          "notes": "\"Same name, many values-pick one policy everywhere or reject.\"",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "\"Same name, many values-pick one policy everywhere or reject.\"",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Core idea"
+    },
+    {
+      "id": "nbf632ec37d66dfb",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "na95849b7f06ad2a",
+          "title": "\u201cHTTP defines duplicate parameter behavior.\u201d",
+          "markdown": "**Reality:** **Practical** behavior is **framework** and **server** **specific**-**verify**, don't assume.",
+          "notes": "Reality: Practical behavior is framework and server specific-verify, don't assume.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Practical behavior is framework and server specific-verify, don't...",
+          "expanded": false
+        },
+        {
+          "id": "n61ea22ecae78389",
+          "title": "\u201cHPP is only a WAF problem.\u201d",
+          "markdown": "**Reality:** **Application** **logic** and **caches** also **split** **views**.",
+          "notes": "Reality: Application logic and caches also split views.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Application logic and caches also split views.",
+          "expanded": false
+        },
+        {
+          "id": "nd9b1decba854374",
+          "title": "\u201cJSON can\u2019t have duplicate keys.\u201d",
+          "markdown": "**Reality:** **Many** **parsers** **accept** **dupes** with **last-wins**-still **dangerous** if **inconsistent** across services.",
+          "notes": "Reality: Many parsers accept dupes with last-wins-still dangerous if inconsistent across services.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Many parsers accept dupes with last-wins-still dangerous if...",
+          "expanded": false
+        },
+        {
+          "id": "n97f0c1c92bd9791",
+          "title": "\u201cURL encoding fixes HPP.\u201d",
+          "markdown": "**Reality:** **Encoding** affects **tokenization**, not the **need** for a **single** **policy**.",
+          "notes": "Reality: Encoding affects tokenization, not the need for a single policy.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Encoding affects tokenization, not the need for a single policy.",
+          "expanded": false
+        },
+        {
+          "id": "n1e80af5ca424a1a",
+          "title": "\u201cBrowsers normalize duplicates away.\u201d",
+          "markdown": "**Reality:** **XHR/fetch** can send **crafted** **bodies**; **server** must be **robust**.",
+          "notes": "Reality: XHR/fetch can send crafted bodies; server must be robust.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: XHR/fetch can send crafted bodies; server must be robust.",
+          "expanded": false
+        },
+        {
+          "id": "ndb38d8feb91dc74",
+          "title": "\u201cHPP equals HTTP smuggling.\u201d",
+          "markdown": "**Reality:** **Different** mechanisms-**smuggling** is **message** **framing**; HPP is **duplicate** **key** **merging**.",
+          "notes": "Reality: Different mechanisms-smuggling is message framing; HPP is duplicate key merging.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Different mechanisms-smuggling is message framing; HPP is duplicate...",
+          "expanded": false
+        },
+        {
+          "id": "nb4f91c63cb2a5bc",
+          "title": "\u201cRejecting all duplicates is always safe.\u201d",
+          "markdown": "**Reality:** Some **legacy** clients **legitimately** repeat keys-**scope** **strictness** to **sensitive** **operations**.",
+          "notes": "Reality: Some legacy clients legitimately repeat keys-scope strictness to sensitive operations.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Some legacy clients legitimately repeat keys-scope strictness to...",
+          "expanded": false
+        },
+        {
+          "id": "nc4c95e912eb2748",
+          "title": "\u201cCloud WAF solves HPP automatically.\u201d",
+          "markdown": "**Reality:** **App** **must** **still** **canonicalize**; **WAF** **rules** **rot** and **miss** **variants**.",
+          "notes": "Reality: App must still canonicalize; WAF rules rot and miss variants.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: App must still canonicalize; WAF rules rot and miss variants.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \u201cHTTP defines duplicate parameter behavior.\u201d"
+    },
+    {
+      "id": "ncee4f35edd8fe2f",
+      "title": "How to test",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "ne614aaf54eebc65",
+          "title": "Objective",
+          "markdown": "Create a repeatable assessment workflow for `HTTP Parameter Pollution (HPP)` that produces reproducible evidence and actionable remediation guidance.",
+          "notes": "Create a repeatable assessment workflow for HTTP Parameter Pollution (HPP) that produces reproducible evidence and actionable remediation guidance.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Create a repeatable assessment workflow for HTTP Parameter Pollution (HPP)...",
+          "expanded": false
+        },
+        {
+          "id": "n7d4649f0e5898c8",
+          "title": "Phase 1 - Scope and preparation",
+          "markdown": "Confirm in-scope assets, test windows, and prohibited actions.",
+          "notes": "Confirm in-scope assets, test windows, and prohibited actions.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nc04e3520e671d9c",
+              "title": "Confirm in-scope assets, test windows, and prohibited actions.",
+              "markdown": "- Confirm in-scope assets, test windows, and prohibited actions.",
+              "notes": "Confirm in-scope assets, test windows, and prohibited actions.",
+              "blurb": "Confirm in-scope assets, test windows, and prohibited actions.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n66274e41a87b763",
+              "title": "Identify critical user journeys and trust boundaries.",
+              "markdown": "- Identify critical user journeys and trust boundaries.",
+              "notes": "Identify critical user journeys and trust boundaries.",
+              "blurb": "Identify critical user journeys and trust boundaries.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nfc29b230003b0ec",
+              "title": "Define severity rubric and evidence requirements before testing.",
+              "markdown": "- Define severity rubric and evidence requirements before testing.",
+              "notes": "Define severity rubric and evidence requirements before testing.",
+              "blurb": "Define severity rubric and evidence requirements before testing.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Confirm in-scope assets, test windows, and prohibited actions.",
+          "expanded": false
+        },
+        {
+          "id": "n6463abe5d68454e",
+          "title": "Phase 2 - Recon and attack-surface mapping",
+          "markdown": "Enumerate relevant endpoints, flows, and data paths.",
+          "notes": "Enumerate relevant endpoints, flows, and data paths.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n9c340266e8daf5e",
+              "title": "Enumerate relevant endpoints, flows, and data paths.",
+              "markdown": "- Enumerate relevant endpoints, flows, and data paths.",
+              "notes": "Enumerate relevant endpoints, flows, and data paths.",
+              "blurb": "Enumerate relevant endpoints, flows, and data paths.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n2de1ef4520497f2",
+              "title": "Document where security checks are expected to happen.",
+              "markdown": "- Document where security checks are expected to happen.",
+              "notes": "Document where security checks are expected to happen.",
+              "blurb": "Document where security checks are expected to happen.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n80a0754a0e35a65",
+              "title": "Mark high-value assets and high-impact paths.",
+              "markdown": "- Mark high-value assets and high-impact paths.",
+              "notes": "Mark high-value assets and high-impact paths.",
+              "blurb": "Mark high-value assets and high-impact paths.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Enumerate relevant endpoints, flows, and data paths.",
+          "expanded": false
+        },
+        {
+          "id": "nd32b568336abe13",
+          "title": "Phase 3 - Hypothesis-driven testing",
+          "markdown": "Start with low-risk probes and baseline behavior.",
+          "notes": "Start with low-risk probes and baseline behavior.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n0fd45baa6a0944f",
+              "title": "Start with low-risk probes and baseline behavior.",
+              "markdown": "- Start with low-risk probes and baseline behavior.",
+              "notes": "Start with low-risk probes and baseline behavior.",
+              "blurb": "Start with low-risk probes and baseline behavior.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3f15d1d5dc25164",
+              "title": "Test failure hypotheses systematically (one variable at a time).",
+              "markdown": "- Test failure hypotheses systematically (one variable at a time).",
+              "notes": "Test failure hypotheses systematically (one variable at a time).",
+              "blurb": "Test failure hypotheses systematically (one variable at a time).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nfcea4382c7fe7e6",
+              "title": "Capture request/response artifacts for each finding candidate.",
+              "markdown": "- Capture request/response artifacts for each finding candidate.",
+              "notes": "Capture request/response artifacts for each finding candidate.",
+              "blurb": "Capture request/response artifacts for each finding candidate.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Start with low-risk probes and baseline behavior.",
+          "expanded": false
+        },
+        {
+          "id": "n626fe0cee1b4391",
+          "title": "Phase 4 - Validation and impact proof",
+          "markdown": "Reproduce findings with clean-state retests.",
+          "notes": "Reproduce findings with clean-state retests.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n0a473ee85ffb209",
+              "title": "Reproduce findings with clean-state retests.",
+              "markdown": "- Reproduce findings with clean-state retests.",
+              "notes": "Reproduce findings with clean-state retests.",
+              "blurb": "Reproduce findings with clean-state retests.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0c2139efa846e76",
+              "title": "Confirm exploitability and practical impact.",
+              "markdown": "- Confirm exploitability and practical impact.",
+              "notes": "Confirm exploitability and practical impact.",
+              "blurb": "Confirm exploitability and practical impact.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6841766d699e4d7",
+              "title": "Eliminate false positives; record confidence level.",
+              "markdown": "- Eliminate false positives; record confidence level.",
+              "notes": "Eliminate false positives; record confidence level.",
+              "blurb": "Eliminate false positives; record confidence level.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Reproduce findings with clean-state retests.",
+          "expanded": false
+        },
+        {
+          "id": "n6c4202f56c1df61",
+          "title": "Phase 5 - Remediation and verification",
+          "markdown": "Provide immediate containment + structural fix recommendations.",
+          "notes": "Provide immediate containment + structural fix recommendations.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n1c84ce0f907e30c",
+              "title": "Provide immediate containment + structural fix recommendations.",
+              "markdown": "- Provide immediate containment + structural fix recommendations.",
+              "notes": "Provide immediate containment + structural fix recommendations.",
+              "blurb": "Provide immediate containment + structural fix recommendations.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0564d10e5ef9e80",
+              "title": "Define post-fix verification tests and telemetry checks.",
+              "markdown": "- Define post-fix verification tests and telemetry checks.",
+              "notes": "Define post-fix verification tests and telemetry checks.",
+              "blurb": "Define post-fix verification tests and telemetry checks.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ndeffa39014c5850",
+              "title": "Re-test after remediation and close with evidence.",
+              "markdown": "- Re-test after remediation and close with evidence.",
+              "notes": "Re-test after remediation and close with evidence.",
+              "blurb": "Re-test after remediation and close with evidence.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Provide immediate containment + structural fix recommendations.",
+          "expanded": false
+        },
+        {
+          "id": "n7d11499202d2818",
+          "title": "Evidence template",
+          "markdown": "Asset / endpoint: - Preconditions: - Reproduction steps: - Observed behavior: - Security impact: - Business impact: - Recommended fix: - Verification result:",
+          "notes": "Asset / endpoint: - Preconditions: - Reproduction steps: - Observed behavior: - Security impact: - Business impact: - Recommended fix: - Verification result:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nd1390175dba1135",
+              "title": "Asset / endpoint",
+              "markdown": "- Asset / endpoint",
+              "notes": "Asset / endpoint",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n95465e84ba6c1bf",
+              "title": "Preconditions",
+              "markdown": "- Preconditions",
+              "notes": "Preconditions",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n736acae2f5a9151",
+              "title": "Reproduction steps",
+              "markdown": "- Reproduction steps",
+              "notes": "Reproduction steps",
+              "blurb": "Reproduction steps",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf0da58dfa0204af",
+              "title": "Observed behavior",
+              "markdown": "- Observed behavior",
+              "notes": "Observed behavior",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ne42da0fd6c57396",
+              "title": "Security impact",
+              "markdown": "- Security impact",
+              "notes": "Security impact",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3b09ecd2a740c39",
+              "title": "Business impact",
+              "markdown": "- Business impact",
+              "notes": "Business impact",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n64c52a35103f03f",
+              "title": "Recommended fix",
+              "markdown": "- Recommended fix",
+              "notes": "Recommended fix",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6fde61bbad70f7d",
+              "title": "Verification result",
+              "markdown": "- Verification result",
+              "notes": "Verification result",
+              "blurb": "Verification result",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Asset / endpoint: - Preconditions: - Reproduction steps: - Observed...",
+          "expanded": false
+        },
+        {
+          "id": "n1486af3f51432cb",
+          "title": "Interview drill",
+          "markdown": "In 3 minutes, explain how you would run this VAPT workflow for one production-like service and what evidence you need before escalating severity.",
+          "notes": "In 3 minutes, explain how you would run this VAPT workflow for one production-like service and what evidence you need before escalating severity.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "In 3 minutes, explain how you would run this VAPT workflow for one...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Objective"
+    },
+    {
+      "id": "n6b9f07cf3fdde0f",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n19e7678823c4101",
+          "title": "60-second answer",
+          "markdown": "**Q: What is HTTP parameter pollution?**\n\n**A:** It's when a client sends **multiple** values for the **same** parameter name and **different** parts of the stack pick **first**, **last**, **concatenate**, or **array** forms **inconsistently**. That lets attackers **bypass** **WAFs** or **alter** **server** logic. Fix by **canonicalizing** at **one** layer-often **reject** duplicates on **security-sensitive** fields-and **schema-validate** APIs.",
+          "notes": "Q: What is HTTP parameter pollution?\n\nA: It's when a client sends multiple values for the same parameter name and different parts of the stack pick first, last, concatenate, or array forms inconsistently. That lets attackers bypass WAFs or alter server logic. Fix by canonicalizing at one layer-often reject duplicates on security-sensitive fields-and schema-validate APIs.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Q: What is HTTP parameter pollution?",
+          "expanded": false
+        },
+        {
+          "id": "na7964d063d9df26",
+          "title": "Mechanics",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nc9efb4c60fb2c9a",
+              "title": "Q: GET vs POST for HPP?",
+              "markdown": "**A:** Both can carry duplicates; **bodies** (`x-www-form-urlencoded`, **multipart**) are **common** in **app** **logic** bugs.",
+              "notes": "A: Both can carry duplicates; bodies (x-www-form-urlencoded, multipart) are common in app logic bugs.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Both can carry duplicates; bodies (x-www-form-urlencoded, multipart) are...",
+              "expanded": false
+            },
+            {
+              "id": "n5cc6ebe2087773b",
+              "title": "Q: Does HTTP/2 change this?",
+              "markdown": "**A:** **H2** **multiplexing** doesn't remove **duplicate** **pseudo-header** vs **header** issues at **translation** layers-**normalization** still matters at **gateways**.",
+              "notes": "A: H2 multiplexing doesn't remove duplicate pseudo-header vs header issues at translation layers-normalization still matters at gateways.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: H2 multiplexing doesn't remove duplicate pseudo-header vs header issues...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: GET vs POST for HPP?",
+          "expanded": false
+        },
+        {
+          "id": "nc51bbbb78321823",
+          "title": "Defense",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n203d884e2d023d3",
+              "title": "Q: Quick policy for return_url?",
+              "markdown": "**A:** **Exactly** **one** parameter; **400** on duplicates; **server-side** **allow-list** hosts.",
+              "notes": "A: Exactly one parameter; 400 on duplicates; server-side allow-list hosts.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Exactly one parameter; 400 on duplicates; server-side allow-list hosts.",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: Quick policy for return_url?",
+          "expanded": false
+        },
+        {
+          "id": "n92393f699df5e12",
+          "title": "Mock ladder",
+          "markdown": "| Level | Question |\n|-------|----------|\n| Junior | Define HPP |\n| Mid | First vs last |\n| Senior | Middleware design |\n| Staff | OpenAPI enforcement |",
+          "notes": "| Level | Question |\n|-------|----------|\n| Junior | Define HPP |\n| Mid | First vs last |\n| Senior | Middleware design |\n| Staff | OpenAPI enforcement |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Level | Question | |-------|----------| | Junior | Define HPP | | Mid |...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 60-second answer"
+    }
+  ],
+  "topicId": "http-parameter-pollution-hpp",
+  "name": "HTTP Parameter Pollution (HPP)",
+  "structure": "logic-right",
+  "blurb": "HTTP Parameter Pollution arises when the same parameter name appears..."
+}

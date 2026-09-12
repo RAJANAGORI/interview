@@ -7,3 +7,5 @@
 [**Critical Clarification: SAML and Enterprise Federation Misconceptions**](Critical%20Clarification%20SAML%20and%20Enterprise%20Federation%20Misconceptions.md)
 
 [**SAML and Enterprise Federation - Quick Reference**](SAML%20and%20Enterprise%20Federation%20-%20Quick%20Reference.md)
+
+[**SAML and Enterprise Federation - Mind Map**](SAML%20and%20Enterprise%20Federation%20-%20Mind%20Map.md)

@@ -1,0 +1,1028 @@
+{
+  "id": "n0889dddd324dff3",
+  "title": "WAF Bypass and Defense Evaluation",
+  "markdown": "A **Web Application Firewall (WAF)** inspects HTTP(S) requests (and sometimes responses) against **signatures**, **heuristics**, and **ML models** before traffic reaches the application. **Bypass** techniques exploit **parser differentials**, **encoding** tricks, **semantic equivalence** in the application, and **context loss** (body vs JSON vs multipart). **Defense evaluation** measures whether the WAF **actually reduces exploit probability** for *your* apps-not whether it blocks toy payloads in a vendor datasheet.\n\nAligned with the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+  "notes": "A Web Application Firewall (WAF) inspects HTTP(S) requests (and sometimes responses) against signatures, heuristics, and ML models before traffic reaches the application. Bypass techniques exploit parser differentials, encoding tricks, semantic equivalence in the application, and context loss (body vs JSON vs multipart). Defense evaluation measures whether the WAF actually reduces exploit probability for your apps-not whether it blocks toy payloads in a vendor datasheet.\n\nAligned with the Content Mastery Framework.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "nb87896419f54922",
+      "title": "At a glance",
+      "markdown": "A **Web Application Firewall (WAF)** inspects HTTP(S) requests (and sometimes responses) against **signatures**, **heuristics**, and **ML models** before traffic reaches the application. **Bypass** techniques exploit **parser differentials**, **encoding** tricks, **semantic equivalence** in the application, and **context loss** (body vs JSON vs multipart). **Defense evaluation** measures whether the WAF **actually reduces exploit probability** for *your* apps-not whether it blocks toy payloads in a vendor datasheet.\n\nAligned with the **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)**.",
+      "notes": "A Web Application Firewall (WAF) inspects HTTP(S) requests (and sometimes responses) against signatures, heuristics, and ML models before traffic reaches the application. Bypass techniques exploit parser differentials, encoding tricks, semantic equivalence in the application, and context loss (body vs JSON vs multipart). Defense evaluation measures whether the WAF actually reduces exploit probability for your apps-not whether it blocks toy payloads in a vendor datasheet.\n\nAligned with the Content Mastery Framework.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "A Web Application Firewall (WAF) inspects HTTP(S) requests (and sometimes...",
+      "expanded": false
+    },
+    {
+      "id": "nec40bd6723fec70",
+      "title": "L2 \u2014 Bypass variant map",
+      "markdown": "| Class | Discriminator | Example intuition |\n|-------|---------------|-------------------|\n| **Encoding nesting** | `%`, `%u`, UTF-7/16, overlong UTF-8, Unicode homoglyphs | WAF decodes once; app decodes again |\n| **Parser differential** | JSON key duplication, `\\u0065` escapes, **comments** in parsers | Different stacks parse \"same\" payload differently |\n| **HTTP semantics** | Alternate verbs, path normalization, **case** folding | Signature keyed on literal string |\n| **HPP / duplication** | `id=1&id=select` split across parsers | WAF sees first; app concatenates |\n| **Multipart / boundary** | Filename tricks, **mixed** encodings | Body inspection gaps |\n| **Chunked / size** | Rare combinations with **CL** (see smuggling) | Edge normalizes; origin confused |\n| **Protocol downgrade** | HTTP/2 pseudo-headers -> H1 translation | Header injection or smuggling chains |\n\nMany real chains combine **multiple** trivial transforms-**defense** must assume **composable** evasions.",
+      "notes": "| Class | Discriminator | Example intuition |\n|-------|---------------|-------------------|\n| Encoding nesting | %, %u, UTF-7/16, overlong UTF-8, Unicode homoglyphs | WAF decodes once; app decodes again |\n| Parser differential | JSON key duplication, \\u0065 escapes, comments in parsers | Different stacks parse \"same\" payload differently |\n| HTTP semantics | Alternate verbs, path normalization, case folding | Signature keyed on literal string |\n| HPP / duplication | id=1&id=select split across parsers | WAF sees first; app concatenates |\n| Multipart / boundary | Filename tricks, mixed encodings | Body inspection gaps |\n| Chunked / size | Rare combinations with CL (see smuggling) | Edge normalizes; origin confused |\n| Protocol downgrade | HTTP/2 pseudo-headers -> H1 translation | Header injection or smuggling chains |\n\nMany real chains combine multiple trivial transforms-defense must assume composable evasions.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Class | Discriminator | Example intuition |...",
+      "expanded": false
+    },
+    {
+      "id": "nf8b74f4536be52a",
+      "title": "Bypass of mitigations",
+      "markdown": "Over-tuned WAF -> fail-open under load or operator disables noisy rules.",
+      "notes": "Over-tuned WAF -> fail-open under load or operator disables noisy rules.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nd995bd3ddfb06cb",
+          "title": "Over-tuned WAF -> fail-open under load or operator disables noisy rules.",
+          "markdown": "- Over-tuned WAF -> fail-open under load or operator disables noisy rules.",
+          "notes": "Over-tuned WAF -> fail-open under load or operator disables noisy rules.",
+          "blurb": "Over-tuned WAF -> fail-open under load or operator disables noisy rules.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ned81a414a8ef130",
+          "title": "API gateways and microservices skip legacy WAF paths.",
+          "markdown": "- API gateways and microservices skip legacy WAF paths.",
+          "notes": "API gateways and microservices skip legacy WAF paths.",
+          "blurb": "API gateways and microservices skip legacy WAF paths.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n17eee173daa0928",
+          "title": "Zero-day payloads never hit signatures.",
+          "markdown": "- Zero-day payloads never hit signatures.",
+          "notes": "Zero-day payloads never hit signatures.",
+          "blurb": "Zero-day payloads never hit signatures.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Over-tuned WAF -> fail-open under load or operator disables noisy rules.",
+      "expanded": true
+    },
+    {
+      "id": "n847316bafc039ff",
+      "title": "Mitigations (tier order)",
+      "markdown": "Fix the vulnerability in code (parameterization, authZ, SSRF allow-lists).",
+      "notes": "Fix the vulnerability in code (parameterization, authZ, SSRF allow-lists).",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nba3dbeac03bcd30",
+          "title": "Fix the vulnerability in code (parameterization, authZ, SSRF allow-lists).",
+          "markdown": "- Fix the vulnerability in code (parameterization, authZ, SSRF allow-lists).",
+          "notes": "Fix the vulnerability in code (parameterization, authZ, SSRF allow-lists).",
+          "blurb": "Fix the vulnerability in code (parameterization, authZ, SSRF allow-lists).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n55d8e37f898fdf8",
+          "title": "Normalize once at the edge with strict RFC behavior; reject ambiguous messages.",
+          "markdown": "- Normalize once at the edge with strict RFC behavior; reject ambiguous messages.",
+          "notes": "Normalize once at the edge with strict RFC behavior; reject ambiguous messages.",
+          "blurb": "Normalize once at the edge with strict RFC behavior; reject ambiguous...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n558105258b2f857",
+          "title": "WAF rules as virtual patch with tuned false positive budget.",
+          "markdown": "- WAF rules as virtual patch with tuned false positive budget.",
+          "notes": "WAF rules as virtual patch with tuned false positive budget.",
+          "blurb": "WAF rules as virtual patch with tuned false positive budget.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n5932c237aec2fef",
+          "title": "Positive security models for APIs (schema validation, mTLS, OAuth scopes).",
+          "markdown": "- Positive security models for APIs (schema validation, mTLS, OAuth scopes).",
+          "notes": "Positive security models for APIs (schema validation, mTLS, OAuth scopes).",
+          "blurb": "Positive security models for APIs (schema validation, mTLS, OAuth scopes).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n0c25d52b3a314fb",
+          "title": "Monitoring: canary tests for known exploit primitives after rule changes.",
+          "markdown": "- Monitoring: canary tests for known exploit primitives after rule changes.",
+          "notes": "Monitoring: canary tests for known exploit primitives after rule changes.",
+          "blurb": "Monitoring: canary tests for known exploit primitives after rule changes.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Fix the vulnerability in code (parameterization, authZ, SSRF allow-lists).",
+      "expanded": true
+    },
+    {
+      "id": "n14853b661276275",
+      "title": "Detection & ops",
+      "markdown": "",
+      "notes": "",
+      "expanded": true,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nd995b7280395011",
+          "title": "L2 \u2014 Named incidents / research patterns",
+          "markdown": "ModSecurity and commercial WAF bypass write-ups historically showed encoding and comment tricks against regex rules-pattern: signature vs parser mismatch.",
+          "notes": "ModSecurity and commercial WAF bypass write-ups historically showed encoding and comment tricks against regex rules-pattern: signature vs parser mismatch.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "na01a075f4efa3c3",
+              "title": "ModSecurity and commercial WAF bypass write-ups historically showed encoding and comment",
+              "markdown": "- ModSecurity and commercial WAF bypass write-ups historically showed encoding and comment",
+              "notes": "ModSecurity and commercial WAF bypass write-ups historically showed encoding and comment",
+              "blurb": "ModSecurity and commercial WAF bypass write-ups historically showed encoding...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nae5e3beb359cd82",
+              "title": "Request smuggling (Kettle) often bypasses WAF visibility when front and back disagree-ci",
+              "markdown": "- Request smuggling (Kettle) often bypasses WAF visibility when front and back disagree-ci",
+              "notes": "Request smuggling (Kettle) often bypasses WAF visibility when front and back disagree-ci",
+              "blurb": "Request smuggling (Kettle) often bypasses WAF visibility when front and back...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd7e43ef497216ee",
+              "title": "Log4Shell (CVE-2021-44228): many WAFs added JNDI string rules; bypass chatter included n",
+              "markdown": "- Log4Shell (CVE-2021-44228): many WAFs added JNDI string rules; bypass chatter included n",
+              "notes": "Log4Shell (CVE-2021-44228): many WAFs added JNDI string rules; bypass chatter included n",
+              "blurb": "Log4Shell (CVE-2021-44228): many WAFs added JNDI string rules; bypass...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "ModSecurity and commercial WAF bypass write-ups historically showed encoding...",
+          "expanded": false
+        },
+        {
+          "id": "ne8be1d49556db32",
+          "title": "Detection",
+          "markdown": "WAF block / challenge logs with rule IDs and matched fragments.",
+          "notes": "WAF block / challenge logs with rule IDs and matched fragments.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n06a6b72d2988350",
+              "title": "WAF block / challenge logs with rule IDs and matched fragments.",
+              "markdown": "- WAF block / challenge logs with rule IDs and matched fragments.",
+              "notes": "WAF block / challenge logs with rule IDs and matched fragments.",
+              "blurb": "WAF block / challenge logs with rule IDs and matched fragments.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n870e3d8472e5f59",
+              "title": "Origin logs showing 200 on payloads the WAF \"should\" block -> bypass or alternate path (",
+              "markdown": "- Origin logs showing 200 on payloads the WAF \"should\" block -> bypass or alternate path (",
+              "notes": "Origin logs showing 200 on payloads the WAF \"should\" block -> bypass or alternate path (",
+              "blurb": "Origin logs showing 200 on payloads the WAF \"should\" block -> bypass or...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8380082fcf85561",
+              "title": "Latency and anomaly spikes on encoding-heavy requests.",
+              "markdown": "- Latency and anomaly spikes on encoding-heavy requests.",
+              "notes": "Latency and anomaly spikes on encoding-heavy requests.",
+              "blurb": "Latency and anomaly spikes on encoding-heavy requests.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "WAF block / challenge logs with rule IDs and matched fragments.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes L2 \u2014 Named incidents / research patterns"
+    },
+    {
+      "id": "ne3e823cbe47fba0",
+      "title": "Labs",
+      "markdown": "- **PortSwigger** WAF-related labs (encoding, request smuggling context).\n- **ModSecurity** **CRS** in a lab VM-tune **paranoia** level and observe **FP/FN**.",
+      "notes": "- PortSwigger WAF-related labs (encoding, request smuggling context).\n- ModSecurity CRS in a lab VM-tune paranoia level and observe FP/FN.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "PortSwigger WAF-related labs (encoding, request smuggling context).",
+      "expanded": false
+    },
+    {
+      "id": "n652cd7239b1e3fa",
+      "title": "Practice & references",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n9ba2bb74030c7aa",
+          "title": "Toolchain",
+          "markdown": "**Burp Suite** (Repeater, Intruder), **wapiti**, **nuclei** templates, cloud WAF logs (**AWS WAF**, **Cloudflare** analytics), **modsecurity** audit logs.",
+          "notes": "Burp Suite (Repeater, Intruder), wapiti, nuclei templates, cloud WAF logs (AWS WAF, Cloudflare analytics), modsecurity audit logs.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Burp Suite (Repeater, Intruder), wapiti, nuclei templates, cloud WAF logs...",
+          "expanded": false
+        },
+        {
+          "id": "nc94bf8b9d47de30",
+          "title": "Authoritative references",
+          "markdown": "OWASP WAF evaluation guidance and CRS documentation.",
+          "notes": "OWASP WAF evaluation guidance and CRS documentation.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n608eae53301d9ec",
+              "title": "OWASP WAF evaluation guidance and CRS documentation.",
+              "markdown": "- OWASP WAF evaluation guidance and CRS documentation.",
+              "notes": "OWASP WAF evaluation guidance and CRS documentation.",
+              "blurb": "OWASP WAF evaluation guidance and CRS documentation.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n650c8999385fe24",
+              "title": "RFC 9110/9112 - HTTP semantics relevant to normalization.",
+              "markdown": "- RFC 9110/9112 - HTTP semantics relevant to normalization.",
+              "notes": "RFC 9110/9112 - HTTP semantics relevant to normalization.",
+              "blurb": "RFC 9110/9112 - HTTP semantics relevant to normalization.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf6ad5c7c5c839b4",
+              "title": "CWE-693 (Protection Mechanism Failure) - umbrella for brittle WAF reliance.",
+              "markdown": "- CWE-693 (Protection Mechanism Failure) - umbrella for brittle WAF reliance.",
+              "notes": "CWE-693 (Protection Mechanism Failure) - umbrella for brittle WAF reliance.",
+              "blurb": "CWE-693 (Protection Mechanism Failure) - umbrella for brittle WAF reliance.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "OWASP WAF evaluation guidance and CRS documentation.",
+          "expanded": false
+        },
+        {
+          "id": "nb0396e23a2adb85",
+          "title": "Verification checklist",
+          "markdown": "- [ ] Write a **10-case** WAF eval plan for one API.\n- [ ] List **two** logging fields you need to prove a bypass attempt.",
+          "notes": "- [ ] Write a 10-case WAF eval plan for one API.\n- [ ] List two logging fields you need to prove a bypass attempt.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "[ ] Write a 10-case WAF eval plan for one API.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Toolchain"
+    },
+    {
+      "id": "nb1f2d01289ad2f3",
+      "title": "L2 \u2014 Code-level lesson (app still vulnerable)",
+      "markdown": "**Vulnerable app (conceptual SQL):** string concat with user input.\n\n```python\n# Anti-pattern: WAF \"SQLi rule\" is the only control\nquery = \"SELECT * FROM users WHERE id = \" + request.args.get(\"id\")\n```\n\n**Fixed:** parameterized query + type validation.\n\n```python\nuser_id = int(request.args.get(\"id\"))\ncursor.execute(\"SELECT * FROM users WHERE id = ?\", (user_id,))\n```\n\nNo WAF rule replaces **parameterization**.",
+      "notes": "Vulnerable app (conceptual SQL): string concat with user input.\n\nAnti-pattern: WAF \"SQLi rule\" is the only control\nquery = \"SELECT  FROM users WHERE id = \" + request.args.get(\"id\")\n\nFixed: parameterized query + type validation.\n\nuserid = int(request.args.get(\"id\"))\ncursor.execute(\"SELECT  FROM users WHERE id = ?\", (userid,))\n\nNo WAF rule replaces parameterization.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Vulnerable app (conceptual SQL): string concat with user input.",
+      "expanded": false
+    },
+    {
+      "id": "ne082b097aace2fd",
+      "title": "L1 \u2014 Architecture and trust boundary",
+      "markdown": "```\nClient \u2500\u2500\u25ba [ CDN/WAF ] \u2500\u2500\u25ba [ Origin app ]\n           inspection        final authority\n```\n\n- The **origin** must still be **safe if the WAF is wrong** (false negative) or **absent** (misconfig, fail-open).\n- **TLS**: WAF may terminate TLS (**MITM at the edge**) or use **transparent** bridging-logging and **header** trust differ.\n\n**Interview line:** \"WAF is **defense in depth**, not the **primary** control.\"",
+      "notes": "Client \u2500\u2500\u25ba [ CDN/WAF ] \u2500\u2500\u25ba [ Origin app ]\n           inspection        final authority\n- The origin must still be safe if the WAF is wrong (false negative) or absent (misconfig, fail-open).\n- TLS: WAF may terminate TLS (MITM at the edge) or use transparent bridging-logging and header trust differ.\n\nInterview line: \"WAF is defense in depth, not the primary control.\"",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Client \u2500\u2500\u25ba [ CDN/WAF ] \u2500\u2500\u25ba [ Origin app ] inspection final authority - The...",
+      "expanded": false
+    },
+    {
+      "id": "ndf4a0d6bd26d929",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nf30e93ad150ae41",
+          "title": "Model",
+          "markdown": "Edge **inspection** -> (optional TLS terminate) -> **origin** (**authoritative** security)",
+          "notes": "Edge inspection -> (optional TLS terminate) -> origin (authoritative security)",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Edge inspection -> (optional TLS terminate) -> origin (authoritative security)",
+          "expanded": false
+        },
+        {
+          "id": "na0d7986e292103f",
+          "title": "Bypass classes",
+          "markdown": "Encoding nest \u00b7 parser diff (JSON/XML) \u00b7 **HPP** \u00b7 multipart tricks \u00b7 **smuggling-adjacent** normalization \u00b7 **path** variants",
+          "notes": "Encoding nest \u00b7 parser diff (JSON/XML) \u00b7 HPP \u00b7 multipart tricks \u00b7 smuggling-adjacent normalization \u00b7 path variants",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Encoding nest \u00b7 parser diff (JSON/XML) \u00b7 HPP \u00b7 multipart tricks \u00b7...",
+          "expanded": false
+        },
+        {
+          "id": "ne9f4df7cc57749b",
+          "title": "Eval recipe",
+          "markdown": "Baseline attacks \u00b7 **mutation** matrix \u00b7 **FP** on prod-like traffic \u00b7 **log** proof \u00b7 **latency** / **error** budget",
+          "notes": "Baseline attacks \u00b7 mutation matrix \u00b7 FP on prod-like traffic \u00b7 log proof \u00b7 latency / error budget",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Baseline attacks \u00b7 mutation matrix \u00b7 FP on prod-like traffic \u00b7 log proof \u00b7...",
+          "expanded": false
+        },
+        {
+          "id": "n8a4211441ef14ad",
+          "title": "Mitigation stack",
+          "markdown": "**Fix app** -> strict edge **normalization** -> tuned **virtual patch** -> **schema**/mTLS for APIs -> **monitor** canaries",
+          "notes": "Fix app -> strict edge normalization -> tuned virtual patch -> schema/mTLS for APIs -> monitor canaries",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Fix app -> strict edge normalization -> tuned virtual patch -> schema/mTLS...",
+          "expanded": false
+        },
+        {
+          "id": "n01c51f45be977e5",
+          "title": "Tools",
+          "markdown": "Burp \u00b7 nuclei \u00b7 ModSecurity/CRS \u00b7 cloud WAF logs (AWS/CF/Akamai patterns)",
+          "notes": "Burp \u00b7 nuclei \u00b7 ModSecurity/CRS \u00b7 cloud WAF logs (AWS/CF/Akamai patterns)",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Burp \u00b7 nuclei \u00b7 ModSecurity/CRS \u00b7 cloud WAF logs (AWS/CF/Akamai patterns)",
+          "expanded": false
+        },
+        {
+          "id": "n1461a424eb2527f",
+          "title": "Cross-read",
+          "markdown": "`HTTP Request Smuggling` \u00b7 `HTTP Parameter Pollution` \u00b7 `SSRF`",
+          "notes": "HTTP Request Smuggling \u00b7 HTTP Parameter Pollution \u00b7 SSRF",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "HTTP Request Smuggling \u00b7 HTTP Parameter Pollution \u00b7 SSRF",
+          "expanded": false
+        },
+        {
+          "id": "n590b47dfba777a1",
+          "title": "One-liner",
+          "markdown": "\"Treat WAF as **parser differential** territory: **measure** FN/FP on **your** routes, **fix** the **app**, use WAF as **depth**.\"",
+          "notes": "\"Treat WAF as parser differential territory: measure FN/FP on your routes, fix the app, use WAF as depth.\"",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "\"Treat WAF as parser differential territory: measure FN/FP on your routes,...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Model"
+    },
+    {
+      "id": "n90e9251fa12095b",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n04a2095658f3dbc",
+          "title": "\u201cWAF = secure application.\u201d",
+          "markdown": "**Reality:** WAF is **auxiliary**. **Parameterized** queries, **authZ**, and **safe** **parsing** remain mandatory.",
+          "notes": "Reality: WAF is auxiliary. Parameterized queries, authZ, and safe parsing remain mandatory.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: WAF is auxiliary.",
+          "expanded": false
+        },
+        {
+          "id": "n71fcd8aa859e7a4",
+          "title": "\u201cIf the WAF blocks sqlmap, we\u2019re safe.\u201d",
+          "markdown": "**Reality:** **Custom** encodings, **nested** parsers, and **alternate** **API** paths often **evade** **signature** sets.",
+          "notes": "Reality: Custom encodings, nested parsers, and alternate API paths often evade signature sets.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Custom encodings, nested parsers, and alternate API paths often...",
+          "expanded": false
+        },
+        {
+          "id": "n09425e648ddb74a",
+          "title": "\u201cML WAFs can\u2019t be bypassed.\u201d",
+          "markdown": "**Reality:** **Adaptive** attackers **probe** **blind spots**; **ML** also **drifts** with **traffic** **shifts**.",
+          "notes": "Reality: Adaptive attackers probe blind spots; ML also drifts with traffic shifts.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Adaptive attackers probe blind spots; ML also drifts with traffic...",
+          "expanded": false
+        },
+        {
+          "id": "n2213ca32c895149",
+          "title": "\u201cWe can skip code fixes because virtual patch exists.\u201d",
+          "markdown": "**Reality:** **Virtual** patches **rot**, **fail-open**, or get **disabled** when **noisy**. **Root-cause** fix is **durable**.",
+          "notes": "Reality: Virtual patches rot, fail-open, or get disabled when noisy. Root-cause fix is durable.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Virtual patches rot, fail-open, or get disabled when noisy.",
+          "expanded": false
+        },
+        {
+          "id": "ne702d175720d0c2",
+          "title": "\u201cAll traffic hits the WAF.\u201d",
+          "markdown": "**Reality:** **Partner** links, **legacy** hostnames, **internal** meshes, and **mis-DNS** **bypass** **intended** **paths**.",
+          "notes": "Reality: Partner links, legacy hostnames, internal meshes, and mis-DNS bypass intended paths.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Partner links, legacy hostnames, internal meshes, and mis-DNS...",
+          "expanded": false
+        },
+        {
+          "id": "n4483725b9d87a2e",
+          "title": "\u201cBlocking is always better than logging.\u201d",
+          "markdown": "**Reality:** **Aggressive** block can **DoS** **legitimate** clients; **tuning** needs **FP** **budget** and **observability**.",
+          "notes": "Reality: Aggressive block can DoS legitimate clients; tuning needs FP budget and observability.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Aggressive block can DoS legitimate clients; tuning needs FP budget...",
+          "expanded": false
+        },
+        {
+          "id": "n1258bae3bffebf8",
+          "title": "\u201cWAF eval = running a vendor scanner once.\u201d",
+          "markdown": "**Reality:** **Real** eval needs **app-specific** **mutations**, **continuous** **regression** after **rule** **changes**, and **business** **traffic** **sampling**.",
+          "notes": "Reality: Real eval needs app-specific mutations, continuous regression after rule changes, and business traffic sampling.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Real eval needs app-specific mutations, continuous regression after...",
+          "expanded": false
+        },
+        {
+          "id": "nd0e57406a6f689c",
+          "title": "\u201cHTTPS means the WAF can\u2019t see payloads.\u201d",
+          "markdown": "**Reality:** **Edge-terminated TLS** is common; **visibility** depends on **architecture**, not the **lock icon** alone.",
+          "notes": "Reality: Edge-terminated TLS is common; visibility depends on architecture, not the lock icon alone.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Edge-terminated TLS is common; visibility depends on architecture,...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \u201cWAF = secure application.\u201d"
+    },
+    {
+      "id": "n44dbe1cbb46635f",
+      "title": "How to test",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n47e05a8aa76e6da",
+          "title": "Objective",
+          "markdown": "Create a repeatable assessment workflow for `WAF Bypass and Defense Evaluation` that produces reproducible evidence and actionable remediation guidance.",
+          "notes": "Create a repeatable assessment workflow for WAF Bypass and Defense Evaluation that produces reproducible evidence and actionable remediation guidance.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Create a repeatable assessment workflow for WAF Bypass and Defense...",
+          "expanded": false
+        },
+        {
+          "id": "nd8d0b28b6a87a0e",
+          "title": "Phase 1 - Scope and preparation",
+          "markdown": "Confirm in-scope assets, test windows, and prohibited actions.",
+          "notes": "Confirm in-scope assets, test windows, and prohibited actions.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ncea0afb229e1bbd",
+              "title": "Confirm in-scope assets, test windows, and prohibited actions.",
+              "markdown": "- Confirm in-scope assets, test windows, and prohibited actions.",
+              "notes": "Confirm in-scope assets, test windows, and prohibited actions.",
+              "blurb": "Confirm in-scope assets, test windows, and prohibited actions.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5a55502f8009ca3",
+              "title": "Identify critical user journeys and trust boundaries.",
+              "markdown": "- Identify critical user journeys and trust boundaries.",
+              "notes": "Identify critical user journeys and trust boundaries.",
+              "blurb": "Identify critical user journeys and trust boundaries.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n862a70a6cf1744c",
+              "title": "Define severity rubric and evidence requirements before testing.",
+              "markdown": "- Define severity rubric and evidence requirements before testing.",
+              "notes": "Define severity rubric and evidence requirements before testing.",
+              "blurb": "Define severity rubric and evidence requirements before testing.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Confirm in-scope assets, test windows, and prohibited actions.",
+          "expanded": false
+        },
+        {
+          "id": "n3256a16a89cd291",
+          "title": "Phase 2 - Recon and attack-surface mapping",
+          "markdown": "Enumerate relevant endpoints, flows, and data paths.",
+          "notes": "Enumerate relevant endpoints, flows, and data paths.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nd792b6a966ae74d",
+              "title": "Enumerate relevant endpoints, flows, and data paths.",
+              "markdown": "- Enumerate relevant endpoints, flows, and data paths.",
+              "notes": "Enumerate relevant endpoints, flows, and data paths.",
+              "blurb": "Enumerate relevant endpoints, flows, and data paths.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n929bab76a2409eb",
+              "title": "Document where security checks are expected to happen.",
+              "markdown": "- Document where security checks are expected to happen.",
+              "notes": "Document where security checks are expected to happen.",
+              "blurb": "Document where security checks are expected to happen.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n64f43594b2354b5",
+              "title": "Mark high-value assets and high-impact paths.",
+              "markdown": "- Mark high-value assets and high-impact paths.",
+              "notes": "Mark high-value assets and high-impact paths.",
+              "blurb": "Mark high-value assets and high-impact paths.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Enumerate relevant endpoints, flows, and data paths.",
+          "expanded": false
+        },
+        {
+          "id": "nc2346c647ca4e40",
+          "title": "Phase 3 - Hypothesis-driven testing",
+          "markdown": "Start with low-risk probes and baseline behavior.",
+          "notes": "Start with low-risk probes and baseline behavior.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "na8b63a3886ad7b7",
+              "title": "Start with low-risk probes and baseline behavior.",
+              "markdown": "- Start with low-risk probes and baseline behavior.",
+              "notes": "Start with low-risk probes and baseline behavior.",
+              "blurb": "Start with low-risk probes and baseline behavior.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n214f05319e0e7c7",
+              "title": "Test failure hypotheses systematically (one variable at a time).",
+              "markdown": "- Test failure hypotheses systematically (one variable at a time).",
+              "notes": "Test failure hypotheses systematically (one variable at a time).",
+              "blurb": "Test failure hypotheses systematically (one variable at a time).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc3799d8bc4b12a1",
+              "title": "Capture request/response artifacts for each finding candidate.",
+              "markdown": "- Capture request/response artifacts for each finding candidate.",
+              "notes": "Capture request/response artifacts for each finding candidate.",
+              "blurb": "Capture request/response artifacts for each finding candidate.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Start with low-risk probes and baseline behavior.",
+          "expanded": false
+        },
+        {
+          "id": "nf4854551f80e005",
+          "title": "Phase 4 - Validation and impact proof",
+          "markdown": "Reproduce findings with clean-state retests.",
+          "notes": "Reproduce findings with clean-state retests.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nc7b3746f8023b86",
+              "title": "Reproduce findings with clean-state retests.",
+              "markdown": "- Reproduce findings with clean-state retests.",
+              "notes": "Reproduce findings with clean-state retests.",
+              "blurb": "Reproduce findings with clean-state retests.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf864cf8da91ff43",
+              "title": "Confirm exploitability and practical impact.",
+              "markdown": "- Confirm exploitability and practical impact.",
+              "notes": "Confirm exploitability and practical impact.",
+              "blurb": "Confirm exploitability and practical impact.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nef2d8918162028a",
+              "title": "Eliminate false positives; record confidence level.",
+              "markdown": "- Eliminate false positives; record confidence level.",
+              "notes": "Eliminate false positives; record confidence level.",
+              "blurb": "Eliminate false positives; record confidence level.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Reproduce findings with clean-state retests.",
+          "expanded": false
+        },
+        {
+          "id": "n85de1ac61aff3a7",
+          "title": "Phase 5 - Remediation and verification",
+          "markdown": "Provide immediate containment + structural fix recommendations.",
+          "notes": "Provide immediate containment + structural fix recommendations.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nfc475aecc60aff2",
+              "title": "Provide immediate containment + structural fix recommendations.",
+              "markdown": "- Provide immediate containment + structural fix recommendations.",
+              "notes": "Provide immediate containment + structural fix recommendations.",
+              "blurb": "Provide immediate containment + structural fix recommendations.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd82639854cfb8e2",
+              "title": "Define post-fix verification tests and telemetry checks.",
+              "markdown": "- Define post-fix verification tests and telemetry checks.",
+              "notes": "Define post-fix verification tests and telemetry checks.",
+              "blurb": "Define post-fix verification tests and telemetry checks.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n27093885e3f9145",
+              "title": "Re-test after remediation and close with evidence.",
+              "markdown": "- Re-test after remediation and close with evidence.",
+              "notes": "Re-test after remediation and close with evidence.",
+              "blurb": "Re-test after remediation and close with evidence.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Provide immediate containment + structural fix recommendations.",
+          "expanded": false
+        },
+        {
+          "id": "nf9c47ebaef1925b",
+          "title": "Evidence template",
+          "markdown": "Asset / endpoint: - Preconditions: - Reproduction steps: - Observed behavior: - Security impact: - Business impact: - Recommended fix: - Verification result:",
+          "notes": "Asset / endpoint: - Preconditions: - Reproduction steps: - Observed behavior: - Security impact: - Business impact: - Recommended fix: - Verification result:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n507103dc4e85c3d",
+              "title": "Asset / endpoint",
+              "markdown": "- Asset / endpoint",
+              "notes": "Asset / endpoint",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n717c786b5c14f3b",
+              "title": "Preconditions",
+              "markdown": "- Preconditions",
+              "notes": "Preconditions",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n7bde073aa3458ee",
+              "title": "Reproduction steps",
+              "markdown": "- Reproduction steps",
+              "notes": "Reproduction steps",
+              "blurb": "Reproduction steps",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf525484238fbd11",
+              "title": "Observed behavior",
+              "markdown": "- Observed behavior",
+              "notes": "Observed behavior",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n2565f4b8fc71d7f",
+              "title": "Security impact",
+              "markdown": "- Security impact",
+              "notes": "Security impact",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n1d3a0bb989b4295",
+              "title": "Business impact",
+              "markdown": "- Business impact",
+              "notes": "Business impact",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n12470fd9d401303",
+              "title": "Recommended fix",
+              "markdown": "- Recommended fix",
+              "notes": "Recommended fix",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n2acd3ecf7c208f8",
+              "title": "Verification result",
+              "markdown": "- Verification result",
+              "notes": "Verification result",
+              "blurb": "Verification result",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Asset / endpoint: - Preconditions: - Reproduction steps: - Observed...",
+          "expanded": false
+        },
+        {
+          "id": "n0e6d1c9e0998ab1",
+          "title": "Interview drill",
+          "markdown": "In 3 minutes, explain how you would run this VAPT workflow for one production-like service and what evidence you need before escalating severity.",
+          "notes": "In 3 minutes, explain how you would run this VAPT workflow for one production-like service and what evidence you need before escalating severity.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "In 3 minutes, explain how you would run this VAPT workflow for one...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Objective"
+    },
+    {
+      "id": "nf68dd1fc7b7d7b7",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n14752d5785b5c4e",
+          "title": "60-second answer",
+          "markdown": "**Q: How do attackers bypass WAFs, and how do you evaluate whether yours works?**\n\n**A:** Bypasses usually exploit **parser or encoding differentials**-the WAF normalizes or matches literals differently than the application. I evaluate with **baseline** attacks on **staging** that mirror prod routes, then **systematic mutations** (encoding layers, JSON tricks, duplicated parameters, alternate content types). I measure **false positives** on real traffic samples and review **logs** for **silent** misses. The **primary** fix stays in the **application**; the WAF is **temporary** containment or **additional** friction.",
+          "notes": "Q: How do attackers bypass WAFs, and how do you evaluate whether yours works?\n\nA: Bypasses usually exploit parser or encoding differentials-the WAF normalizes or matches literals differently than the application. I evaluate with baseline attacks on staging that mirror prod routes, then systematic mutations (encoding layers, JSON tricks, duplicated parameters, alternate content types). I measure false positives on real traffic samples and review logs for silent misses. The primary fix stays in the application; the WAF is temporary containment or additional friction.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Q: How do attackers bypass WAFs, and how do you evaluate whether yours works?",
+          "expanded": false
+        },
+        {
+          "id": "nacf1afb893a1b5a",
+          "title": "Mechanics",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ne3af4251174e7f4",
+              "title": "Q: WAF inline vs reverse proxy\u2014what changes for bypass?",
+              "markdown": "**A:** **TLS termination** point changes what you can inspect and **which headers** you trust. **Path** and **host** routing may differ between **CDN** and **origin**, creating **alternate** entry paths that **skip** intended rules.",
+              "notes": "A: TLS termination point changes what you can inspect and which headers you trust. Path and host routing may differ between CDN and origin, creating alternate entry paths that skip intended rules.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: TLS termination point changes what you can inspect and which headers you...",
+              "expanded": false
+            },
+            {
+              "id": "nabb82b64491d59e",
+              "title": "Q: Give three bypass classes without naming vendor bugs.",
+              "markdown": "**A:** **Double encoding**, **JSON Unicode escapes / duplicate keys**, **HTTP parameter pollution** where WAF and app disagree on concatenation order.",
+              "notes": "A: Double encoding, JSON Unicode escapes / duplicate keys, HTTP parameter pollution where WAF and app disagree on concatenation order.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Double encoding, JSON Unicode escapes / duplicate keys, HTTP parameter...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: WAF inline vs reverse proxy\u2014what changes for bypass?",
+          "expanded": false
+        },
+        {
+          "id": "n1a4bbf6cbffd115",
+          "title": "Evaluation",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n032cefc9d0d1259",
+              "title": "Q: What\u2019s in your pre-production WAF test plan?",
+              "markdown": "**A:** **Coverage** of all **external** routes, **positive** traffic **FP** sampling, **blocked** vs **logged** policy checks, **latency** budget, and **rollback** if **error rate** spikes.",
+              "notes": "A: Coverage of all external routes, positive traffic FP sampling, blocked vs logged policy checks, latency budget, and rollback if error rate spikes.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Coverage of all external routes, positive traffic FP sampling, blocked vs...",
+              "expanded": false
+            },
+            {
+              "id": "nd314f63a3e79210",
+              "title": "Q: How do you handle APIs that break under aggressive WAF rules?",
+              "markdown": "**A:** **Tune** per-route; prefer **schema validation** and **authN/Z** at the gateway; use **positive** **allow-lists** for machine clients instead of **generic** **L7** **regex** storms.",
+              "notes": "A: Tune per-route; prefer schema validation and authN/Z at the gateway; use positive allow-lists for machine clients instead of generic L7 regex storms.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Tune per-route; prefer schema validation and authN/Z at the gateway; use...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: What\u2019s in your pre-production WAF test plan?",
+          "expanded": false
+        },
+        {
+          "id": "n28719aed899a1b2",
+          "title": "Senior / staff",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nfabf8fb345ff787",
+              "title": "Q: When would you recommend removing WAF reliance?",
+              "markdown": "**A:** When **mTLS + strict schema + narrow** **surface** provide **stronger** guarantees with **lower** **operational** **toil**, or when WAF **FP** **destabilizes** revenue paths and teams **chronically** **disable** rules.",
+              "notes": "A: When mTLS + strict schema + narrow surface provide stronger guarantees with lower operational toil, or when WAF FP destabilizes revenue paths and teams chronically disable rules.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: When mTLS + strict schema + narrow surface provide stronger guarantees...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: When would you recommend removing WAF reliance?",
+          "expanded": false
+        },
+        {
+          "id": "nf3e3667782dc528",
+          "title": "Mock ladder",
+          "markdown": "| Level | Question |\n|-------|----------|\n| Junior | WAF vs firewall |\n| Mid | Encoding bypass example |\n| Senior | Evaluation methodology |\n| Staff | Strategic reliance vs elimination |",
+          "notes": "| Level | Question |\n|-------|----------|\n| Junior | WAF vs firewall |\n| Mid | Encoding bypass example |\n| Senior | Evaluation methodology |\n| Staff | Strategic reliance vs elimination |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Level | Question | |-------|----------| | Junior | WAF vs firewall | | Mid...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 60-second answer"
+    }
+  ],
+  "topicId": "waf-bypass-and-defense-evaluation",
+  "name": "WAF Bypass and Defense Evaluation",
+  "structure": "logic-right",
+  "blurb": "A Web Application Firewall (WAF) inspects HTTP(S) requests (and sometimes..."
+}

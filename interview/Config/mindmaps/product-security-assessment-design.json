@@ -1,0 +1,2455 @@
+{
+  "id": "n8c62a03f4de86ce",
+  "title": "Product Security Assessment Design",
+  "markdown": "Product security assessments evaluate **how a feature or product behaves under realistic abuse**, not only whether a scanner found a CVE. This guide is written for security engineers who must **scope work**, **model threats at feature granularity**, **collect defensible evidence**, **communicate to engineering and product**, and **close the loop** with severity and follow-up discipline.",
+  "notes": "Product security assessments evaluate how a feature or product behaves under realistic abuse, not only whether a scanner found a CVE. This guide is written for security engineers who must scope work, model threats at feature granularity, collect defensible evidence, communicate to engineering and product, and close the loop with severity and follow-up discipline.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "n12890caf80c27d7",
+      "title": "What \u201cproduct security assessment\u201d means here",
+      "markdown": "A product assessment answers: **Who can do what, with what data, through which interfaces, and what breaks if they try?** It blends design review, targeted testing, and judgment about **business impact** and **ship risk**.\n\nIt is distinct from a broad penetration test in three ways:",
+      "notes": "A product assessment answers: Who can do what, with what data, through which interfaces, and what breaks if they try? It blends design review, targeted testing, and judgment about business impact and ship risk.\n\nIt is distinct from a broad penetration test in three ways:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n6ea393925d343dc",
+          "title": "Object: a bounded change (feature, API surface, integration) rather than \"the whole esta",
+          "markdown": "- Object: a bounded change (feature, API surface, integration) rather than \"the whole esta",
+          "notes": "Object: a bounded change (feature, API surface, integration) rather than \"the whole esta",
+          "blurb": "Object: a bounded change (feature, API surface, integration) rather than...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n3103ea52bab23a4",
+          "title": "Method: threat-led depth on high-risk flows, not uniform crawl coverage everywhere.",
+          "markdown": "- Method: threat-led depth on high-risk flows, not uniform crawl coverage everywhere.",
+          "notes": "Method: threat-led depth on high-risk flows, not uniform crawl coverage everywhere.",
+          "blurb": "Method: threat-led depth on high-risk flows, not uniform crawl coverage...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n22071ef6101f591",
+          "title": "Outcome: decisions that unblock or constrain shipping, with owners and timelines-not onl",
+          "markdown": "- Outcome: decisions that unblock or constrain shipping, with owners and timelines-not onl",
+          "notes": "Outcome: decisions that unblock or constrain shipping, with owners and timelines-not onl",
+          "blurb": "Outcome: decisions that unblock or constrain shipping, with owners and...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "A product assessment answers: Who can do what, with what data, through which...",
+      "expanded": true
+    },
+    {
+      "id": "n943305383b6a028",
+      "title": "Scoping assessments",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n4f76dd6287bf325",
+          "title": "1 Scoping is a risk contract",
+          "markdown": "Scope defines **what you promise to evaluate**, **what you explicitly do not**, and **what assumptions** stakeholders must accept. A weak scope produces false confidence or endless churn.\n\nCapture scope in writing (short is fine) under these headings:\n\n| Element | What to nail down |\n|--------|-------------------|\n| **Feature boundary** | User journeys, APIs, admin tools, batch jobs, mobile surfaces |\n| **Data classes** | Credentials, PII, payment artifacts, secrets, customer content, audit logs |\n| **Trust zones** | Internet, partner VPC, employee SSO, service-to-service mesh |\n| **Environments** | Staging fidelity, synthetic data, feature flags, canary |\n| **Time and depth** | Person-days, synchronous vs async review, retest window |",
+          "notes": "Scope defines what you promise to evaluate, what you explicitly do not, and what assumptions stakeholders must accept. A weak scope produces false confidence or endless churn.\n\nCapture scope in writing (short is fine) under these headings:\n\n| Element | What to nail down |\n|--------|-------------------|\n| Feature boundary | User journeys, APIs, admin tools, batch jobs, mobile surfaces |\n| Data classes | Credentials, PII, payment artifacts, secrets, customer content, audit logs |\n| Trust zones | Internet, partner VPC, employee SSO, service-to-service mesh |\n| Environments | Staging fidelity, synthetic data, feature flags, canary |\n| Time and depth | Person-days, synchronous vs async review, retest window |",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Scope defines what you promise to evaluate, what you explicitly do not, and...",
+          "expanded": false
+        },
+        {
+          "id": "n536299d73cce9bb",
+          "title": "2 Intake questions that prevent scope drift",
+          "markdown": "Ask product and engineering the same questions early; misalignment here becomes \"you should have tested X\" later.",
+          "notes": "Ask product and engineering the same questions early; misalignment here becomes \"you should have tested X\" later.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n935a22c2c7ef2c8",
+              "title": "What user problem does this solve, and who is allowed to use it? (roles, tenants, geogra",
+              "markdown": "- What user problem does this solve, and who is allowed to use it? (roles, tenants, geogra",
+              "notes": "What user problem does this solve, and who is allowed to use it? (roles, tenants, geogra",
+              "blurb": "What user problem does this solve, and who is allowed to use it?",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n404d414151b1e14",
+              "title": "What data enters, is stored, and leaves? (including derived data and logs)",
+              "markdown": "- What data enters, is stored, and leaves? (including derived data and logs)",
+              "notes": "What data enters, is stored, and leaves? (including derived data and logs)",
+              "blurb": "What data enters, is stored, and leaves?",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n317c2ea0762375c",
+              "title": "What is new vs reused? (new endpoints, new storage, new third parties)",
+              "markdown": "- What is new vs reused? (new endpoints, new storage, new third parties)",
+              "notes": "What is new vs reused? (new endpoints, new storage, new third parties)",
+              "blurb": "What is new vs reused?",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc2a34b94102f121",
+              "title": "What must not happen if this ships wrong? (fraud, privacy breach, account takeover, comp",
+              "markdown": "- What must not happen if this ships wrong? (fraud, privacy breach, account takeover, comp",
+              "notes": "What must not happen if this ships wrong? (fraud, privacy breach, account takeover, comp",
+              "blurb": "What must not happen if this ships wrong?",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n4f3a93f3e604276",
+              "title": "What are the release gates? (launch date, beta cohort, regulatory deadline)",
+              "markdown": "- What are the release gates? (launch date, beta cohort, regulatory deadline)",
+              "notes": "What are the release gates? (launch date, beta cohort, regulatory deadline)",
+              "blurb": "What are the release gates?",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n99296fb990a0bfe",
+              "title": "What can we touch? (production read-only, staging only, synthetic accounts)",
+              "markdown": "- What can we touch? (production read-only, staging only, synthetic accounts)",
+              "notes": "What can we touch? (production read-only, staging only, synthetic accounts)",
+              "blurb": "What can we touch?",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Ask product and engineering the same questions early; misalignment here...",
+          "expanded": false
+        },
+        {
+          "id": "n0b7f2c658e55d68",
+          "title": "3 In-scope / out-of-scope discipline",
+          "markdown": "**In scope** should name **interfaces and assets**, not vague areas like \"security.\" Example: \"REST endpoints under `/api/v2/billing/*`, webhook handler `invoice.paid`, Stripe Connect OAuth callback, Postgres tables `invoices` and `payment_methods`, and the admin refund tool.\"\n\n**Out of scope** should name **exclusions with rationale**, for example:",
+          "notes": "In scope should name interfaces and assets, not vague areas like \"security.\" Example: \"REST endpoints under /api/v2/billing/, webhook handler invoice.paid, Stripe Connect OAuth callback, Postgres tables invoices and paymentmethods, and the admin refund tool.\"\n\nOut of scope should name exclusions with rationale, for example:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "needa9810921ccb4",
+              "title": "Third-party SaaS beyond configuration review (no source)",
+              "markdown": "- Third-party SaaS beyond configuration review (no source)",
+              "notes": "Third-party SaaS beyond configuration review (no source)",
+              "blurb": "Third-party SaaS beyond configuration review (no source)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf2ada2657d1d861",
+              "title": "Unrelated legacy modules unless called by in-scope code paths",
+              "markdown": "- Unrelated legacy modules unless called by in-scope code paths",
+              "notes": "Unrelated legacy modules unless called by in-scope code paths",
+              "blurb": "Unrelated legacy modules unless called by in-scope code paths",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nccd09f82af84adc",
+              "title": "Social engineering or physical access",
+              "markdown": "- Social engineering or physical access",
+              "notes": "Social engineering or physical access",
+              "blurb": "Social engineering or physical access",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "naa41b3768973acf",
+              "title": "Denial-of-service stress beyond agreed rate limits",
+              "markdown": "- Denial-of-service stress beyond agreed rate limits",
+              "notes": "Denial-of-service stress beyond agreed rate limits",
+              "blurb": "Denial-of-service stress beyond agreed rate limits",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "In scope should name interfaces and assets, not vague areas like \"security.\"...",
+          "expanded": false
+        },
+        {
+          "id": "n6a7551980fa8718",
+          "title": "4 Assessment tiers (light, standard, deep)",
+          "markdown": "Not every feature deserves a full design review plus manual exploit chain development. Tie tier to **data sensitivity \u00d7 external exposure \u00d7 novelty**.\n\n| Tier | Typical trigger | Activities |\n|------|-----------------|------------|\n| **Light** | Low sensitivity, internal-only, small change | STRIDE-lite pass on design doc, checklist against ASVS-style controls for the change type, spot-check configs |\n| **Standard** | Customer-facing or handles auth/session context | Above + data-flow diagram + targeted manual/API tests on trust boundaries |\n| **Deep** | High-value data, payments, identity, cross-tenant risk | Above + abuse-case workshop, deeper code paths, integration edge cases, formal evidence bundle |\n\nDocument tier and rationale in the kickoff note so PM and eng know **what depth was purchased**.",
+          "notes": "Not every feature deserves a full design review plus manual exploit chain development. Tie tier to data sensitivity \u00d7 external exposure \u00d7 novelty.\n\n| Tier | Typical trigger | Activities |\n|------|-----------------|------------|\n| Light | Low sensitivity, internal-only, small change | STRIDE-lite pass on design doc, checklist against ASVS-style controls for the change type, spot-check configs |\n| Standard | Customer-facing or handles auth/session context | Above + data-flow diagram + targeted manual/API tests on trust boundaries |\n| Deep | High-value data, payments, identity, cross-tenant risk | Above + abuse-case workshop, deeper code paths, integration edge cases, formal evidence bundle |\n\nDocument tier and rationale in the kickoff note so PM and eng know what depth was purchased.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Not every feature deserves a full design review plus manual exploit chain...",
+          "expanded": false
+        },
+        {
+          "id": "na6aac9907d9266c",
+          "title": "5 Rules of engagement (minimum viable)",
+          "markdown": "Even for internal assessments, write down:",
+          "notes": "Even for internal assessments, write down:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n2438afd809f8230",
+              "title": "Authorized testers and systems they may exercise",
+              "markdown": "- Authorized testers and systems they may exercise",
+              "notes": "Authorized testers and systems they may exercise",
+              "blurb": "Authorized testers and systems they may exercise",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n579c316c28b2564",
+              "title": "No-production policy or constrained prod testing (read-only, synthetic users)",
+              "markdown": "- No-production policy or constrained prod testing (read-only, synthetic users)",
+              "notes": "No-production policy or constrained prod testing (read-only, synthetic users)",
+              "blurb": "No-production policy or constrained prod testing (read-only, synthetic users)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n1b7ca9a4835dde2",
+              "title": "Stop conditions (credential exposure, customer impact, suspected live abuse)",
+              "markdown": "- Stop conditions (credential exposure, customer impact, suspected live abuse)",
+              "notes": "Stop conditions (credential exposure, customer impact, suspected live abuse)",
+              "blurb": "Stop conditions (credential exposure, customer impact, suspected live abuse)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n2aea3509f055779",
+              "title": "Escalation (on-call security, service owner, incident channel)",
+              "markdown": "- Escalation (on-call security, service owner, incident channel)",
+              "notes": "Escalation (on-call security, service owner, incident channel)",
+              "blurb": "Escalation (on-call security, service owner, incident channel)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Even for internal assessments, write down:",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 1 Scoping is a risk contract",
+      "expanded": true
+    },
+    {
+      "id": "n503dbdd96feba90",
+      "title": "Threat modeling for features",
+      "markdown": "Feature-level threat modeling is **fast, concrete, and tied to ship decisions**. It is not a wall-sized architecture poster unless the change warrants one.",
+      "notes": "Feature-level threat modeling is fast, concrete, and tied to ship decisions. It is not a wall-sized architecture poster unless the change warrants one.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "neeff102293ed036",
+          "title": "1 Inputs you should demand",
+          "markdown": "One-pager or PRD: actors, success metrics, rollout plan - Design doc or RFC: components, protocols, storage, failure modes - API spec or OpenAPI: methods, parameters, auth schemes - Migration or rollout plan: flags,...",
+          "notes": "One-pager or PRD: actors, success metrics, rollout plan - Design doc or RFC: components, protocols, storage, failure modes - API spec or OpenAPI: methods, parameters, auth schemes - Migration or rollout plan: flags,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n4582067ebafe68f",
+              "title": "One-pager or PRD: actors, success metrics, rollout plan",
+              "markdown": "- One-pager or PRD: actors, success metrics, rollout plan",
+              "notes": "One-pager or PRD: actors, success metrics, rollout plan",
+              "blurb": "One-pager or PRD: actors, success metrics, rollout plan",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n51d3c5151c2c64f",
+              "title": "Design doc or RFC: components, protocols, storage, failure modes",
+              "markdown": "- Design doc or RFC: components, protocols, storage, failure modes",
+              "notes": "Design doc or RFC: components, protocols, storage, failure modes",
+              "blurb": "Design doc or RFC: components, protocols, storage, failure modes",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n88b005ef4c7e226",
+              "title": "API spec or OpenAPI: methods, parameters, auth schemes",
+              "markdown": "- API spec or OpenAPI: methods, parameters, auth schemes",
+              "notes": "API spec or OpenAPI: methods, parameters, auth schemes",
+              "blurb": "API spec or OpenAPI: methods, parameters, auth schemes",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8ea5aa1083d564c",
+              "title": "Migration or rollout plan: flags, backfills, dual-write periods",
+              "markdown": "- Migration or rollout plan: flags, backfills, dual-write periods",
+              "notes": "Migration or rollout plan: flags, backfills, dual-write periods",
+              "blurb": "Migration or rollout plan: flags, backfills, dual-write periods",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "One-pager or PRD: actors, success metrics, rollout plan - Design doc or RFC:...",
+          "expanded": false
+        },
+        {
+          "id": "n47503ab1491afbd",
+          "title": "2 Build the smallest useful model",
+          "markdown": "For most features, you need:",
+          "notes": "For most features, you need:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n976d3ffb03cea11",
+              "title": "Actors: anonymous user, customer, admin, partner, internal job, attacker with stolen ses",
+              "markdown": "- Actors: anonymous user, customer, admin, partner, internal job, attacker with stolen ses",
+              "notes": "Actors: anonymous user, customer, admin, partner, internal job, attacker with stolen ses",
+              "blurb": "Actors: anonymous user, customer, admin, partner, internal job, attacker...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc5101f5bbcdd67f",
+              "title": "Assets: objects the business cares about (orders, documents, API keys)",
+              "markdown": "- Assets: objects the business cares about (orders, documents, API keys)",
+              "notes": "Assets: objects the business cares about (orders, documents, API keys)",
+              "blurb": "Assets: objects the business cares about (orders, documents, API keys)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n2115628b406f79a",
+              "title": "Trust boundaries: where authentication is established, where data crosses zones",
+              "markdown": "- Trust boundaries: where authentication is established, where data crosses zones",
+              "notes": "Trust boundaries: where authentication is established, where data crosses zones",
+              "blurb": "Trust boundaries: where authentication is established, where data crosses...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0b5a65410d0f672",
+              "title": "Data flows: request path, async workers, webhooks, caches, analytics pipelines",
+              "markdown": "- Data flows: request path, async workers, webhooks, caches, analytics pipelines",
+              "notes": "Data flows: request path, async workers, webhooks, caches, analytics pipelines",
+              "blurb": "Data flows: request path, async workers, webhooks, caches, analytics pipelines",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "For most features, you need:",
+          "expanded": false
+        },
+        {
+          "id": "nfc0a88d2ce29b6c",
+          "title": "3 Abuse cases, not only \u201cthreats\u201d",
+          "markdown": "Pair each primary user story with **abuse cases**:",
+          "notes": "Pair each primary user story with abuse cases:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "naf05168a065ce57",
+              "title": "*Legitimate*: user exports their own data.",
+              "markdown": "- *Legitimate*: user exports their own data.",
+              "notes": "*Legitimate*: user exports their own data.",
+              "blurb": "Legitimate: user exports their own data.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n141225db4e50969",
+              "title": "*Abuse*: user exports another tenant's data by swapping identifiers.",
+              "markdown": "- *Abuse*: user exports another tenant's data by swapping identifiers.",
+              "notes": "*Abuse*: user exports another tenant's data by swapping identifiers.",
+              "blurb": "Abuse: user exports another tenant's data by swapping identifiers.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n148c2312126ac5b",
+              "title": "*Abuse*: user replays an export job with a tampered cursor token.",
+              "markdown": "- *Abuse*: user replays an export job with a tampered cursor token.",
+              "notes": "*Abuse*: user replays an export job with a tampered cursor token.",
+              "blurb": "Abuse: user replays an export job with a tampered cursor token.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Pair each primary user story with abuse cases:",
+          "expanded": false
+        },
+        {
+          "id": "n444fc79547bdfe2",
+          "title": "4 When to stop modeling",
+          "markdown": "Stop when you can list **the top five ways this feature could hurt customers or the company** and each maps to **a control location** (code path, config, policy) or an explicit acceptance of residual risk.",
+          "notes": "Stop when you can list the top five ways this feature could hurt customers or the company and each maps to a control location (code path, config, policy) or an explicit acceptance of residual risk.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Stop when you can list the top five ways this feature could hurt customers...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Feature-level threat modeling is fast, concrete, and tied to ship decisions.",
+      "expanded": true
+    },
+    {
+      "id": "neac71f2cbe28d75",
+      "title": "STRIDE-lite (practical use)",
+      "markdown": "STRIDE is a **prompt list**, not a scorecard. \"STRIDE-lite\" means you touch each category **only long enough** to produce actionable questions and tests.",
+      "notes": "STRIDE is a prompt list, not a scorecard. \"STRIDE-lite\" means you touch each category only long enough to produce actionable questions and tests.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nd45d528f5446378",
+          "title": "1 Spoofing",
+          "markdown": "**Question**: Can a caller pretend to be another principal?\n\nTests and review targets: session binding, JWT `aud`/`iss`, mTLS identity, webhook signatures, OAuth `state`, service-to-service tokens, header trust at proxies.",
+          "notes": "Question: Can a caller pretend to be another principal?\n\nTests and review targets: session binding, JWT aud/iss, mTLS identity, webhook signatures, OAuth state, service-to-service tokens, header trust at proxies.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Question: Can a caller pretend to be another principal?",
+          "expanded": false
+        },
+        {
+          "id": "n5196a20924c76a3",
+          "title": "2 Tampering",
+          "markdown": "**Question**: Can data be altered in transit, at rest, or across trust boundaries?\n\nTargets: parameter pollution, unsigned webhooks, client-supplied metadata trusted server-side, optimistic locking on writes, cache poisoning via keys.",
+          "notes": "Question: Can data be altered in transit, at rest, or across trust boundaries?\n\nTargets: parameter pollution, unsigned webhooks, client-supplied metadata trusted server-side, optimistic locking on writes, cache poisoning via keys.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Question: Can data be altered in transit, at rest, or across trust boundaries?",
+          "expanded": false
+        },
+        {
+          "id": "n2d672516d8cbd8b",
+          "title": "3 Repudiation",
+          "markdown": "**Question**: If something bad happens, can we reconstruct who did what?\n\nTargets: structured audit logs (actor, tenant, object, before/after hashes where appropriate), admin actions, async job attribution, clock skew.",
+          "notes": "Question: If something bad happens, can we reconstruct who did what?\n\nTargets: structured audit logs (actor, tenant, object, before/after hashes where appropriate), admin actions, async job attribution, clock skew.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Question: If something bad happens, can we reconstruct who did what?",
+          "expanded": false
+        },
+        {
+          "id": "naa0d17eb950fbc6",
+          "title": "4 Information disclosure",
+          "markdown": "**Question**: What leaks to unauthorized users through responses, errors, logs, or side channels?\n\nTargets: verbose errors, enumeration via timing or ORM lazy loads, excess fields in APIs, log redaction, debug endpoints, shared caches.",
+          "notes": "Question: What leaks to unauthorized users through responses, errors, logs, or side channels?\n\nTargets: verbose errors, enumeration via timing or ORM lazy loads, excess fields in APIs, log redaction, debug endpoints, shared caches.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Question: What leaks to unauthorized users through responses, errors, logs,...",
+          "expanded": false
+        },
+        {
+          "id": "n68f2e82425a5188",
+          "title": "5 Denial of service",
+          "markdown": "**Question**: Can a user or partner exhaust capacity or cost?\n\nTargets: unbounded queries, fan-out webhooks, expensive regex, file uploads, unauthenticated endpoints that trigger heavy work, retry storms.",
+          "notes": "Question: Can a user or partner exhaust capacity or cost?\n\nTargets: unbounded queries, fan-out webhooks, expensive regex, file uploads, unauthenticated endpoints that trigger heavy work, retry storms.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Question: Can a user or partner exhaust capacity or cost?",
+          "expanded": false
+        },
+        {
+          "id": "n48efde4bc8fc69f",
+          "title": "6 Elevation of privilege",
+          "markdown": "**Question**: Can someone obtain capabilities they should not have?\n\nTargets: IDOR on object APIs, role hints in tokens, admin-only mutations reachable from lower roles, confused deputy in integrations, unsafe internal endpoints.\n\n**Output of STRIDE-lite**: a table of **questions -> suspected weak points -> planned tests/evidence**. Anything without a next step is modeling theater.",
+          "notes": "Question: Can someone obtain capabilities they should not have?\n\nTargets: IDOR on object APIs, role hints in tokens, admin-only mutations reachable from lower roles, confused deputy in integrations, unsafe internal endpoints.\n\nOutput of STRIDE-lite: a table of questions -> suspected weak points -> planned tests/evidence. Anything without a next step is modeling theater.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Question: Can someone obtain capabilities they should not have?",
+          "expanded": false
+        }
+      ],
+      "blurb": "STRIDE is a prompt list, not a scorecard.",
+      "expanded": false
+    },
+    {
+      "id": "nbffebbe678ca79c",
+      "title": "Evidence collection",
+      "markdown": "Findings without evidence become opinions. Evidence without context becomes noise.",
+      "notes": "Findings without evidence become opinions. Evidence without context becomes noise.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n719302c955f6dee",
+          "title": "1 What counts as evidence",
+          "markdown": "Strong evidence typically includes:",
+          "notes": "Strong evidence typically includes:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n29bc310e3144116",
+              "title": "Reproduction: numbered steps or a scripted sequence (curl, Postman collection, minimal c",
+              "markdown": "- Reproduction: numbered steps or a scripted sequence (curl, Postman collection, minimal c",
+              "notes": "Reproduction: numbered steps or a scripted sequence (curl, Postman collection, minimal c",
+              "blurb": "Reproduction: numbered steps or a scripted sequence (curl, Postman...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n7452485845fe419",
+              "title": "Request/response artifacts: redacted headers and bodies showing the vulnerability",
+              "markdown": "- Request/response artifacts: redacted headers and bodies showing the vulnerability",
+              "notes": "Request/response artifacts: redacted headers and bodies showing the vulnerability",
+              "blurb": "Request/response artifacts: redacted headers and bodies showing the...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n06bc9ec9263f76e",
+              "title": "Scope proof: which account/tenant/role was used",
+              "markdown": "- Scope proof: which account/tenant/role was used",
+              "notes": "Scope proof: which account/tenant/role was used",
+              "blurb": "Scope proof: which account/tenant/role was used",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n646750763dc92c8",
+              "title": "Version context: commit SHA, build ID, environment name",
+              "markdown": "- Version context: commit SHA, build ID, environment name",
+              "notes": "Version context: commit SHA, build ID, environment name",
+              "blurb": "Version context: commit SHA, build ID, environment name",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n18057188496487f",
+              "title": "Impact narrative: what an attacker gains in this product (not generic CVSS prose)",
+              "markdown": "- Impact narrative: what an attacker gains in this product (not generic CVSS prose)",
+              "notes": "Impact narrative: what an attacker gains in this product (not generic CVSS prose)",
+              "blurb": "Impact narrative: what an attacker gains in this product (not generic CVSS...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Strong evidence typically includes:",
+          "expanded": false
+        },
+        {
+          "id": "n307c36b5e82317c",
+          "title": "2 Redaction and handling",
+          "markdown": "Treat captured traffic like production data: **redact** tokens, cookies, PII, and secrets. Prefer **synthetic identifiers**. If you must use real data, follow company policy for storage and sharing (ticket attachments vs secure vault links).",
+          "notes": "Treat captured traffic like production data: redact tokens, cookies, PII, and secrets. Prefer synthetic identifiers. If you must use real data, follow company policy for storage and sharing (ticket attachments vs secure vault links).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Treat captured traffic like production data: redact tokens, cookies, PII,...",
+          "expanded": false
+        },
+        {
+          "id": "nbd8d76bbae53fb2",
+          "title": "3 Integrity and reproducibility",
+          "markdown": "For critical issues, record **time window** and **whether the behavior is flaky** (race conditions). Note **preconditions** (feature flag on, specific plan tier). Future-you or another engineer must be able to **re-run** the proof after a fix.",
+          "notes": "For critical issues, record time window and whether the behavior is flaky (race conditions). Note preconditions (feature flag on, specific plan tier). Future-you or another engineer must be able to re-run the proof after a fix.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "For critical issues, record time window and whether the behavior is flaky...",
+          "expanded": false
+        },
+        {
+          "id": "ncf2c7096e684517",
+          "title": "4 Negative results matter",
+          "markdown": "Document **high-risk areas examined** where you did not find issues. That protects the team from \"you never looked\" and guides **sampling disclosure** in the report.",
+          "notes": "Document high-risk areas examined where you did not find issues. That protects the team from \"you never looked\" and guides sampling disclosure in the report.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Document high-risk areas examined where you did not find issues.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Findings without evidence become opinions.",
+      "expanded": false
+    },
+    {
+      "id": "nb2684ad18672947",
+      "title": "Reporting to engineering and product",
+      "markdown": "One report rarely fits all readers. Structure content so it can be **split by audience** without duplicating fiction.",
+      "notes": "One report rarely fits all readers. Structure content so it can be split by audience without duplicating fiction.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n75ec2dad25866e3",
+          "title": "1 Engineering-facing content",
+          "markdown": "Per finding, lead with:",
+          "notes": "Per finding, lead with:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nc7b937272888b0a",
+              "title": "Title that states the failure mode, not the tool name",
+              "markdown": "- Title that states the failure mode, not the tool name",
+              "notes": "Title that states the failure mode, not the tool name",
+              "blurb": "Title that states the failure mode, not the tool name",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n887dc53390cd353",
+              "title": "Affected component (service, route, job name)",
+              "markdown": "- Affected component (service, route, job name)",
+              "notes": "Affected component (service, route, job name)",
+              "blurb": "Affected component (service, route, job name)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n4b778e2fac96fab",
+              "title": "Description in terms of broken invariant (\"any authenticated user can read invoice id\")",
+              "markdown": "- Description in terms of broken invariant (\"any authenticated user can read invoice id\")",
+              "notes": "Description in terms of broken invariant (\"any authenticated user can read invoice id\")",
+              "blurb": "Description in terms of broken invariant (\"any authenticated user can read...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "neb34e0220173113",
+              "title": "Reproduction and evidence",
+              "markdown": "- Reproduction and evidence",
+              "notes": "Reproduction and evidence",
+              "blurb": "Reproduction and evidence",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd5b3e5a2ff32d5a",
+              "title": "Fix guidance at the right level: pseudo-patch, config change, library upgrade, pattern (",
+              "markdown": "- Fix guidance at the right level: pseudo-patch, config change, library upgrade, pattern (",
+              "notes": "Fix guidance at the right level: pseudo-patch, config change, library upgrade, pattern (",
+              "blurb": "Fix guidance at the right level: pseudo-patch, config change, library...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nddc0cfecf191fa2",
+              "title": "Suggested tests (unit, contract, integration) to prevent regression",
+              "markdown": "- Suggested tests (unit, contract, integration) to prevent regression",
+              "notes": "Suggested tests (unit, contract, integration) to prevent regression",
+              "blurb": "Suggested tests (unit, contract, integration) to prevent regression",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Per finding, lead with:",
+          "expanded": false
+        },
+        {
+          "id": "nb2f1109c79c4111",
+          "title": "2 PM-facing content",
+          "markdown": "Product managers need **ship risk in plain language**:",
+          "notes": "Product managers need ship risk in plain language:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n3a1fc96bcac171a",
+              "title": "Customer impact (privacy, money, availability, trust)",
+              "markdown": "- Customer impact (privacy, money, availability, trust)",
+              "notes": "Customer impact (privacy, money, availability, trust)",
+              "blurb": "Customer impact (privacy, money, availability, trust)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n2c36a98dcfdb5f6",
+              "title": "Likelihood in product terms (internet-exposed, authenticated-only, admin-only)",
+              "markdown": "- Likelihood in product terms (internet-exposed, authenticated-only, admin-only)",
+              "notes": "Likelihood in product terms (internet-exposed, authenticated-only, admin-only)",
+              "blurb": "Likelihood in product terms (internet-exposed, authenticated-only, admin-only)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8abc019f2f0fa9e",
+              "title": "Mitigation options with rough cost (flag off, delay launch, partial rollout, hotfix)",
+              "markdown": "- Mitigation options with rough cost (flag off, delay launch, partial rollout, hotfix)",
+              "notes": "Mitigation options with rough cost (flag off, delay launch, partial rollout, hotfix)",
+              "blurb": "Mitigation options with rough cost (flag off, delay launch, partial rollout,...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ne32766400417caf",
+              "title": "Compliance or contractual triggers if applicable",
+              "markdown": "- Compliance or contractual triggers if applicable",
+              "notes": "Compliance or contractual triggers if applicable",
+              "blurb": "Compliance or contractual triggers if applicable",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Product managers need ship risk in plain language:",
+          "expanded": false
+        },
+        {
+          "id": "n7c5826cba23bf15",
+          "title": "3 Executive summary discipline",
+          "markdown": "Three to five bullets:",
+          "notes": "Three to five bullets:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "ne62d6c797496186",
+              "title": "What was assessed and tier",
+              "markdown": "- What was assessed and tier",
+              "notes": "What was assessed and tier",
+              "blurb": "What was assessed and tier",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n14a561d9817f7ef",
+              "title": "Top risks and whether they block launch",
+              "markdown": "- Top risks and whether they block launch",
+              "notes": "Top risks and whether they block launch",
+              "blurb": "Top risks and whether they block launch",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nce8b0d537343ed7",
+              "title": "What was not covered (explicit scope limits)",
+              "markdown": "- What was not covered (explicit scope limits)",
+              "notes": "What was not covered (explicit scope limits)",
+              "blurb": "What was not covered (explicit scope limits)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ne7e35199cf9449a",
+              "title": "Next milestones (fixes due, retest date)",
+              "markdown": "- Next milestones (fixes due, retest date)",
+              "notes": "Next milestones (fixes due, retest date)",
+              "blurb": "Next milestones (fixes due, retest date)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Three to five bullets:",
+          "expanded": false
+        },
+        {
+          "id": "n0f6c49870788dcb",
+          "title": "4 Tracking format",
+          "markdown": "Prefer **one ticket per finding** (or per cluster) with stable IDs referenced in the report. That enables metrics: age, reopen rate, SLA breaches.",
+          "notes": "Prefer one ticket per finding (or per cluster) with stable IDs referenced in the report. That enables metrics: age, reopen rate, SLA breaches.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Prefer one ticket per finding (or per cluster) with stable IDs referenced in...",
+          "expanded": false
+        }
+      ],
+      "blurb": "One report rarely fits all readers.",
+      "expanded": false
+    },
+    {
+      "id": "n8e27bda144c09f2",
+      "title": "Severity and prioritization",
+      "markdown": "Severity answers: **How urgent is this for this product, now?**",
+      "notes": "Severity answers: How urgent is this for this product, now?",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n140438655215aff",
+          "title": "1 Combine technical and business factors",
+          "markdown": "Start from **exploitability** and **impact**, then adjust for **exposure** and **detectability**:",
+          "notes": "Start from exploitability and impact, then adjust for exposure and detectability:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n855e24d28060dcf",
+              "title": "Exploitability: authentication required? network position? user interaction?",
+              "markdown": "- Exploitability: authentication required? network position? user interaction?",
+              "notes": "Exploitability: authentication required? network position? user interaction?",
+              "blurb": "Exploitability: authentication required?",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5d4742e6199bd08",
+              "title": "Impact: confidentiality/integrity/availability for which data class?",
+              "markdown": "- Impact: confidentiality/integrity/availability for which data class?",
+              "notes": "Impact: confidentiality/integrity/availability for which data class?",
+              "blurb": "Impact: confidentiality/integrity/availability for which data class?",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf04c25cb3328256",
+              "title": "Exposure: unauthenticated internet vs admin tool behind SSO",
+              "markdown": "- Exposure: unauthenticated internet vs admin tool behind SSO",
+              "notes": "Exposure: unauthenticated internet vs admin tool behind SSO",
+              "blurb": "Exposure: unauthenticated internet vs admin tool behind SSO",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd7955e9f6f161a5",
+              "title": "Detectability: would logs show abuse? is there a compensating control?",
+              "markdown": "- Detectability: would logs show abuse? is there a compensating control?",
+              "notes": "Detectability: would logs show abuse? is there a compensating control?",
+              "blurb": "Detectability: would logs show abuse?",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Start from exploitability and impact, then adjust for exposure and...",
+          "expanded": false
+        },
+        {
+          "id": "ne13e95c34e079f9",
+          "title": "2 A pragmatic rating scale",
+          "markdown": "Define severities with **launch semantics** your org can enforce:\n\n| Severity | Typical meaning |\n|----------|-----------------|\n| **Critical** | Active exploitation plausible; widespread data exposure; authentication bypass |\n| **High** | Significant impact for many users; clear exploit path for authenticated attackers |\n| **Medium** | Limited impact or harder prerequisites; defense-in-depth failures |\n| **Low** | Minor leak, hard to exploit, or strong compensating controls |\n| **Informational** | Hardening, future risk, or positive control gaps to track |\n\nAlways document **assumptions** (\"attacker has valid session for tenant A\") so severity debates stay factual.",
+          "notes": "Define severities with launch semantics your org can enforce:\n\n| Severity | Typical meaning |\n|----------|-----------------|\n| Critical | Active exploitation plausible; widespread data exposure; authentication bypass |\n| High | Significant impact for many users; clear exploit path for authenticated attackers |\n| Medium | Limited impact or harder prerequisites; defense-in-depth failures |\n| Low | Minor leak, hard to exploit, or strong compensating controls |\n| Informational | Hardening, future risk, or positive control gaps to track |\n\nAlways document assumptions (\"attacker has valid session for tenant A\") so severity debates stay factual.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Define severities with launch semantics your org can enforce: | Severity |...",
+          "expanded": false
+        },
+        {
+          "id": "n3ddd45c8b2bff99",
+          "title": "3 Dealing with disagreement",
+          "markdown": "When eng disputes severity, pivot to **agreed tests**: add monitoring, tighten scope of the fix, or time-box acceptance of residual risk with **named owner** and **review date**.",
+          "notes": "When eng disputes severity, pivot to agreed tests: add monitoring, tighten scope of the fix, or time-box acceptance of residual risk with named owner and review date.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "When eng disputes severity, pivot to agreed tests: add monitoring, tighten...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Severity answers: How urgent is this for this product, now?",
+      "expanded": false
+    },
+    {
+      "id": "n9f9608ead4391ab",
+      "title": "Follow-ups: remediation, retest, and learning",
+      "markdown": "An assessment ends when **risk is owned**, not when the PDF is sent.",
+      "notes": "An assessment ends when risk is owned, not when the PDF is sent.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n42af933ca3f77bb",
+          "title": "1 Remediation expectations",
+          "markdown": "For each finding, capture:",
+          "notes": "For each finding, capture:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nfbcec0be36d7b44",
+              "title": "Owner (team or individual)",
+              "markdown": "- Owner (team or individual)",
+              "notes": "Owner (team or individual)",
+              "blurb": "Owner (team or individual)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6d88ab74f534afc",
+              "title": "Target date aligned to severity",
+              "markdown": "- Target date aligned to severity",
+              "notes": "Target date aligned to severity",
+              "blurb": "Target date aligned to severity",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na086fdc3accec64",
+              "title": "Fix type (code, config, dependency, process)",
+              "markdown": "- Fix type (code, config, dependency, process)",
+              "notes": "Fix type (code, config, dependency, process)",
+              "blurb": "Fix type (code, config, dependency, process)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n4ae3a72f6f0fbec",
+              "title": "Verification method (retest steps, new test name, dashboard check)",
+              "markdown": "- Verification method (retest steps, new test name, dashboard check)",
+              "notes": "Verification method (retest steps, new test name, dashboard check)",
+              "blurb": "Verification method (retest steps, new test name, dashboard check)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "For each finding, capture:",
+          "expanded": false
+        },
+        {
+          "id": "n0883a3b7ce32a6a",
+          "title": "2 Retest SLA",
+          "markdown": "Define how quickly security will **verify fixes** after notification. Critical issues often warrant **same-day spot checks**; medium may wait until the next release train. Publish the SLA so teams do not guess.",
+          "notes": "Define how quickly security will verify fixes after notification. Critical issues often warrant same-day spot checks; medium may wait until the next release train. Publish the SLA so teams do not guess.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Define how quickly security will verify fixes after notification.",
+          "expanded": false
+        },
+        {
+          "id": "na57aa7eb35fb7f0",
+          "title": "3 Closure criteria",
+          "markdown": "Close a finding when:",
+          "notes": "Close a finding when:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nab02df7932bb76b",
+              "title": "The invariant holds under the original abuse case",
+              "markdown": "- The invariant holds under the original abuse case",
+              "notes": "The invariant holds under the original abuse case",
+              "blurb": "The invariant holds under the original abuse case",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8bd5589a09874d8",
+              "title": "Regression coverage exists or is scheduled",
+              "markdown": "- Regression coverage exists or is scheduled",
+              "notes": "Regression coverage exists or is scheduled",
+              "blurb": "Regression coverage exists or is scheduled",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8c0da217d123bb9",
+              "title": "Monitoring exists where abuse would be visible (if relevant)",
+              "markdown": "- Monitoring exists where abuse would be visible (if relevant)",
+              "notes": "Monitoring exists where abuse would be visible (if relevant)",
+              "blurb": "Monitoring exists where abuse would be visible (if relevant)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Close a finding when:",
+          "expanded": false
+        },
+        {
+          "id": "n06ec3ac04464a5b",
+          "title": "4 Program-level follow-ups",
+          "markdown": "Track meta-metrics:",
+          "notes": "Track meta-metrics:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "ne9729cd889ec3f7",
+              "title": "Repeat findings (same bug class in new features)",
+              "markdown": "- Repeat findings (same bug class in new features)",
+              "notes": "Repeat findings (same bug class in new features)",
+              "blurb": "Repeat findings (same bug class in new features)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0434f5f1c615a78",
+              "title": "Time-to-fix by severity",
+              "markdown": "- Time-to-fix by severity",
+              "notes": "Time-to-fix by severity",
+              "blurb": "Time-to-fix by severity",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n73a4a5d9ac13090",
+              "title": "Assessment coverage (% of launches that received appropriate tier)",
+              "markdown": "- Assessment coverage (% of launches that received appropriate tier)",
+              "notes": "Assessment coverage (% of launches that received appropriate tier)",
+              "blurb": "Assessment coverage (% of launches that received appropriate tier)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb8c95b6727c5614",
+              "title": "Defects escaped to production post-assessment",
+              "markdown": "- Defects escaped to production post-assessment",
+              "notes": "Defects escaped to production post-assessment",
+              "blurb": "Defects escaped to production post-assessment",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Track meta-metrics:",
+          "expanded": false
+        },
+        {
+          "id": "n886507038814302",
+          "title": "5 Handoff conversation",
+          "markdown": "Close with a short meeting or written note to eng and PM: **what shipped risk remains**, **what was out of scope**, and **what to watch in production** for the first weeks. That converts the assessment from an event into **durable resilience**.",
+          "notes": "Close with a short meeting or written note to eng and PM: what shipped risk remains, what was out of scope, and what to watch in production for the first weeks. That converts the assessment from an event into durable resilience.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Close with a short meeting or written note to eng and PM: what shipped risk...",
+          "expanded": false
+        }
+      ],
+      "blurb": "An assessment ends when risk is owned, not when the PDF is sent.",
+      "expanded": false
+    },
+    {
+      "id": "nc052eb1b4eb3caa",
+      "title": "Example artifacts (patterns you can reuse)",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n77f8410b5a8cead",
+          "title": "1 One-page scope sheet (illustrative)",
+          "markdown": "**Assessment**: Export API for workspace reports (Q3 launch)\n**Tier**: Standard (customer data, authenticated API, new async job)\n**In scope**: `POST /v1/workspaces/{ws}/exports`, job status polling, S3 presigned URL issuance worker, related IAM role, audit log entries for export events.\n**Out of scope**: Generic S3 bucket policy for unrelated assets; penetration of corporate VPN; load testing above 100 RPS without SRE approval.\n**Environments**: Staging `stg-export` with synthetic workspaces A/B; production read-only verification of logging format only.\n**Assumptions**: Workspace membership is the sole authorization primitive unless design doc shows object-level ACLs (then scope widens).\n**Deliverables**: Written report + filed tickets + 30-minute readout with eng lead and PM.\n**Retest**: Within five business days of \"ready for verification\" per ticket.\n\nThis pattern fits in an email or wiki page and prevents retroactive expansion.",
+          "notes": "Assessment: Export API for workspace reports (Q3 launch)\nTier: Standard (customer data, authenticated API, new async job)\nIn scope: POST /v1/workspaces/{ws}/exports, job status polling, S3 presigned URL issuance worker, related IAM role, audit log entries for export events.\nOut of scope: Generic S3 bucket policy for unrelated assets; penetration of corporate VPN; load testing above 100 RPS without SRE approval.\nEnvironments: Staging stg-export with synthetic workspaces A/B; production read-only verification of logging format only.\nAssumptions: Workspace membership is the sole authorization primitive unless design doc shows object-level ACLs (then scope widens).\nDeliverables: Written report + filed tickets + 30-minute readout with eng lead and PM.\nRetest: Within five business days of \"ready for verification\" per ticket.\n\nThis pattern fits in an email or wiki page and prevents retroactive expansion.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Assessment: Export API for workspace reports (Q3 launch) Tier: Standard...",
+          "expanded": false
+        },
+        {
+          "id": "n30cc9f4fcb870a0",
+          "title": "2 Finding template \u2014 engineering block",
+          "markdown": "Use a consistent skeleton so reviewers skim efficiently:\n\n**ID**: PSA-2026-014\n**Title**: Cross-workspace export job status disclosure\n**Component**: `export-service` - `GET /v1/exports/{jobId}`\n**Severity**: High (authenticated, cross-tenant data exposure)\n**Description**: The status endpoint returns presigned URL metadata for any `jobId` without verifying workspace membership of the caller. An attacker with a valid session in workspace A can poll job IDs from workspace B if identifiers are predictable or leaked via client logs.\n**Steps to reproduce**:",
+          "notes": "Use a consistent skeleton so reviewers skim efficiently:\n\nID: PSA-2026-014\nTitle: Cross-workspace export job status disclosure\nComponent: export-service - GET /v1/exports/{jobId}\nSeverity: High (authenticated, cross-tenant data exposure)\nDescription: The status endpoint returns presigned URL metadata for any jobId without verifying workspace membership of the caller. An attacker with a valid session in workspace A can poll job IDs from workspace B if identifiers are predictable or leaked via client logs.\nSteps to reproduce:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n80c3a54549d4a5f",
+              "title": "Create export in workspace A as user U1; capture jobId.",
+              "markdown": "- Create export in workspace A as user U1; capture jobId.",
+              "notes": "Create export in workspace A as user U1; capture jobId.",
+              "blurb": "Create export in workspace A as user U1; capture jobId.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd1328e3ccb9597e",
+              "title": "As user U2 in workspace B, call GET /v1/exports/{jobId} with U2's bearer token.",
+              "markdown": "- As user U2 in workspace B, call GET /v1/exports/{jobId} with U2's bearer token.",
+              "notes": "As user U2 in workspace B, call GET /v1/exports/{jobId} with U2's bearer token.",
+              "blurb": "As user U2 in workspace B, call GET /v1/exports/{jobId} with U2's bearer...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9a33494945f1472",
+              "title": "Observe 200 with foreign workspace artifact metadata.",
+              "markdown": "- Observe 200 with foreign workspace artifact metadata.",
+              "notes": "Observe 200 with foreign workspace artifact metadata.",
+              "blurb": "Observe 200 with foreign workspace artifact metadata.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Use a consistent skeleton so reviewers skim efficiently: ID: PSA-2026-014...",
+          "expanded": false
+        },
+        {
+          "id": "n2684689c132efc7",
+          "title": "3 Finding template \u2014 PM summary line",
+          "markdown": "**Plain language**: Under some conditions, a customer who can guess another customer's export identifier might see metadata about that export. **Launch risk**: High until fixed; no acceptable workaround except disabling the feature flag for external tenants. **Customer communication**: Not required if fixed pre-GA; if shipped, consider targeted notice if logs show probing.",
+          "notes": "Plain language: Under some conditions, a customer who can guess another customer's export identifier might see metadata about that export. Launch risk: High until fixed; no acceptable workaround except disabling the feature flag for external tenants. Customer communication: Not required if fixed pre-GA; if shipped, consider targeted notice if logs show probing.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Plain language: Under some conditions, a customer who can guess another...",
+          "expanded": false
+        },
+        {
+          "id": "n7def9ba52df739f",
+          "title": "4 STRIDE-lite worksheet fragment",
+          "markdown": "| STRIDE | Question we asked | Weak point | Test / evidence |\n|--------|-------------------|------------|-----------------|\n| S | Can a webhook be replayed from another endpoint? | Shared secret only in env; no timestamp tolerance | Resend payload with old `event_id`; capture 200 |\n| T | Can job parameters be altered after creation? | Client sends destination bucket name | Mutate JSON in replay |\n| I | Do error pages include internal queue names? | Stack trace in 500 JSON | Capture response body |\n| E | Can a member promote themselves via hidden field? | Role in PATCH body not stripped | API fuzz |\n\nThe worksheet is disposable; **tickets and the report** are the durable output.",
+          "notes": "| STRIDE | Question we asked | Weak point | Test / evidence |\n|--------|-------------------|------------|-----------------|\n| S | Can a webhook be replayed from another endpoint? | Shared secret only in env; no timestamp tolerance | Resend payload with old eventid; capture 200 |\n| T | Can job parameters be altered after creation? | Client sends destination bucket name | Mutate JSON in replay |\n| I | Do error pages include internal queue names? | Stack trace in 500 JSON | Capture response body |\n| E | Can a member promote themselves via hidden field? | Role in PATCH body not stripped | API fuzz |\n\nThe worksheet is disposable; tickets and the report are the durable output.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "| STRIDE | Question we asked | Weak point | Test / evidence |...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 1 One-page scope sheet (illustrative)",
+      "expanded": false
+    },
+    {
+      "id": "nd679330917a59d3",
+      "title": "Facilitating feature threat reviews without slowing shipping",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n12dd0ee9d21efe7",
+          "title": "1 Timeboxed sessions",
+          "markdown": "Schedule **45-60 minutes** with **engineering lead, one implementer, PM or PM delegate**. Pre-read is 10 minutes: your diagram + three abuse cases. In session:",
+          "notes": "Schedule 45-60 minutes with engineering lead, one implementer, PM or PM delegate. Pre-read is 10 minutes: your diagram + three abuse cases. In session:",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n251dd718e860a0c",
+              "title": "Confirm actors and trust boundaries (10 min)",
+              "markdown": "- Confirm actors and trust boundaries (10 min)",
+              "notes": "Confirm actors and trust boundaries (10 min)",
+              "blurb": "Confirm actors and trust boundaries (10 min)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd7d2414dd3e120c",
+              "title": "Walk the happiest path data flow (15 min)",
+              "markdown": "- Walk the happiest path data flow (15 min)",
+              "notes": "Walk the happiest path data flow (15 min)",
+              "blurb": "Walk the happiest path data flow (15 min)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na2f29358fd25800",
+              "title": "Brainstorm abuse cases starting from STRIDE-lite prompts (20 min)",
+              "markdown": "- Brainstorm abuse cases starting from STRIDE-lite prompts (20 min)",
+              "notes": "Brainstorm abuse cases starting from STRIDE-lite prompts (20 min)",
+              "blurb": "Brainstorm abuse cases starting from STRIDE-lite prompts (20 min)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3afba38375b2568",
+              "title": "Agree on three must-test scenarios before merge (10 min)",
+              "markdown": "- Agree on three must-test scenarios before merge (10 min)",
+              "notes": "Agree on three must-test scenarios before merge (10 min)",
+              "blurb": "Agree on three must-test scenarios before merge (10 min)",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Schedule 45-60 minutes with engineering lead, one implementer, PM or PM...",
+          "expanded": false
+        },
+        {
+          "id": "n40448654684abd5",
+          "title": "2 When to insist on design changes vs testing",
+          "markdown": "**Design change** when invariants are undefined (no owner for authz, unclear tenant key). **Testing** when invariants are clear but implementation may violate them. Document the decision so PM understands **why** you blocked or did not block.",
+          "notes": "Design change when invariants are undefined (no owner for authz, unclear tenant key). Testing when invariants are clear but implementation may violate them. Document the decision so PM understands why you blocked or did not block.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Design change when invariants are undefined (no owner for authz, unclear...",
+          "expanded": false
+        },
+        {
+          "id": "na0d1a1f51ae4bb6",
+          "title": "3 Handling \u201cwe will fix fast after launch\u201d",
+          "markdown": "Ask for a written **risk acceptance** with: affected population, compensating controls (monitoring, rate limits), **rollback plan**, and **time-bound** hardening milestone. Escalate if the issue is **silent cross-customer data access** or **authentication bypass**-those rarely age well in production.",
+          "notes": "Ask for a written risk acceptance with: affected population, compensating controls (monitoring, rate limits), rollback plan, and time-bound hardening milestone. Escalate if the issue is silent cross-customer data access or authentication bypass-those rarely age well in production.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Ask for a written risk acceptance with: affected population, compensating...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 1 Timeboxed sessions",
+      "expanded": false
+    },
+    {
+      "id": "n319f2e611d34a82",
+      "title": "Aligning assessments with compliance and customer expectations",
+      "markdown": "Security assessments are not the same as a formal audit, but they should **produce evidence artifacts** auditors and customers increasingly request.",
+      "notes": "Security assessments are not the same as a formal audit, but they should produce evidence artifacts auditors and customers increasingly request.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "ne3dda127d9aa5a1",
+          "title": "Control mapping: For each major finding category (authn, authz, crypto, logging), note w",
+          "markdown": "- Control mapping: For each major finding category (authn, authz, crypto, logging), note w",
+          "notes": "Control mapping: For each major finding category (authn, authz, crypto, logging), note w",
+          "blurb": "Control mapping: For each major finding category (authn, authz, crypto,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n78775373687b738",
+          "title": "Data processing narratives: When features move PII across regions or subprocessors, your",
+          "markdown": "- Data processing narratives: When features move PII across regions or subprocessors, your",
+          "notes": "Data processing narratives: When features move PII across regions or subprocessors, your",
+          "blurb": "Data processing narratives: When features move PII across regions or...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n542461c53f4917d",
+          "title": "Customer security questionnaires: Maintain a factual appendix (how keys are stored, how",
+          "markdown": "- Customer security questionnaires: Maintain a factual appendix (how keys are stored, how",
+          "notes": "Customer security questionnaires: Maintain a factual appendix (how keys are stored, how",
+          "blurb": "Customer security questionnaires: Maintain a factual appendix (how keys are...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Security assessments are not the same as a formal audit, but they should...",
+      "expanded": false
+    },
+    {
+      "id": "n20b3862d9efd45d",
+      "title": "Quick reference checklist",
+      "markdown": "**Before testing**",
+      "notes": "Before testing",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n2a9c01735b28650",
+          "title": "[ ] Scope, tier, and RoE documented",
+          "markdown": "- [ ] Scope, tier, and RoE documented",
+          "notes": "[ ] Scope, tier, and RoE documented",
+          "blurb": "[ ] Scope, tier, and RoE documented",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ncd38a3c1ca1522e",
+          "title": "[ ] Actors, assets, trust boundaries sketched",
+          "markdown": "- [ ] Actors, assets, trust boundaries sketched",
+          "notes": "[ ] Actors, assets, trust boundaries sketched",
+          "blurb": "[ ] Actors, assets, trust boundaries sketched",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n10f7b88f6eda734",
+          "title": "[ ] STRIDE-lite question table drafted",
+          "markdown": "- [ ] STRIDE-lite question table drafted",
+          "notes": "[ ] STRIDE-lite question table drafted",
+          "blurb": "[ ] STRIDE-lite question table drafted",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n06c8442031b8359",
+          "title": "[ ] Abuse cases for top user journeys listed",
+          "markdown": "- [ ] Abuse cases for top user journeys listed",
+          "notes": "[ ] Abuse cases for top user journeys listed",
+          "blurb": "[ ] Abuse cases for top user journeys listed",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n707566889f5dca0",
+          "title": "[ ] Evidence captured with redaction",
+          "markdown": "- [ ] Evidence captured with redaction",
+          "notes": "[ ] Evidence captured with redaction",
+          "blurb": "[ ] Evidence captured with redaction",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n92b87b9195f9eb8",
+          "title": "[ ] Negative results noted for hot paths",
+          "markdown": "- [ ] Negative results noted for hot paths",
+          "notes": "[ ] Negative results noted for hot paths",
+          "blurb": "[ ] Negative results noted for hot paths",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n5821fc5507e0b4f",
+          "title": "[ ] Findings ticketed with severity rationale",
+          "markdown": "- [ ] Findings ticketed with severity rationale",
+          "notes": "[ ] Findings ticketed with severity rationale",
+          "blurb": "[ ] Findings ticketed with severity rationale",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n953d199418e881a",
+          "title": "[ ] PM summary and eng details aligned",
+          "markdown": "- [ ] PM summary and eng details aligned",
+          "notes": "[ ] PM summary and eng details aligned",
+          "blurb": "[ ] PM summary and eng details aligned",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n223d26fccaf35d5",
+          "title": "[ ] Retest SLA and owners set",
+          "markdown": "- [ ] Retest SLA and owners set",
+          "notes": "[ ] Retest SLA and owners set",
+          "blurb": "[ ] Retest SLA and owners set",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n0ab2285e546da64",
+          "title": "[ ] Repeat-risk follow-ups assigned to guardrails or training",
+          "markdown": "- [ ] Repeat-risk follow-ups assigned to guardrails or training",
+          "notes": "[ ] Repeat-risk follow-ups assigned to guardrails or training",
+          "blurb": "[ ] Repeat-risk follow-ups assigned to guardrails or training",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes [ ] Scope, tier, and RoE documented",
+      "expanded": false
+    },
+    {
+      "id": "nb4d710948b27f3c",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n8028a03c241cb4c",
+          "title": "Assessment Types",
+          "markdown": "| Type | Description | When to Use |\n| --- | --- | --- |\n| **Penetration Testing** | Simulated attack | Identify exploitable vulnerabilities |\n| **Code Review** | Source code analysis | Find code-level vulnerabilities |\n| **Architecture Review** | Design assessment | Identify design flaws |\n| **Compliance Review** | Policy/procedure review | Meet compliance requirements |",
+          "notes": "| Type | Description | When to Use |\n| --- | --- | --- |\n| Penetration Testing | Simulated attack | Identify exploitable vulnerabilities |\n| Code Review | Source code analysis | Find code-level vulnerabilities |\n| Architecture Review | Design assessment | Identify design flaws |\n| Compliance Review | Policy/procedure review | Meet compliance requirements |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Type | Description | When to Use | | --- | --- | --- | | Penetration...",
+          "expanded": false
+        },
+        {
+          "id": "n19947ed689a8906",
+          "title": "Assessment Planning Checklist",
+          "markdown": "\u2705 Define objectives and scope - \u2705 Threat modeling - \u2705 Select assessment types - \u2705 Choose methodology (OWASP, PTES, NIST) - \u2705 Define rules of engagement - \u2705 Risk-based prioritization - \u2705 Tool selection - \u2705 Reporting...",
+          "notes": "\u2705 Define objectives and scope - \u2705 Threat modeling - \u2705 Select assessment types - \u2705 Choose methodology (OWASP, PTES, NIST) - \u2705 Define rules of engagement - \u2705 Risk-based prioritization - \u2705 Tool selection - \u2705 Reporting...",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nd0a5e4f76e32cf8",
+              "title": "Define objectives and scope",
+              "markdown": "- Define objectives and scope",
+              "notes": "Define objectives and scope",
+              "blurb": "Define objectives and scope",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n26465e40dbf7d8f",
+              "title": "Threat modeling",
+              "markdown": "- Threat modeling",
+              "notes": "Threat modeling",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n392cc7332f5a47c",
+              "title": "Select assessment types",
+              "markdown": "- Select assessment types",
+              "notes": "Select assessment types",
+              "blurb": "Select assessment types",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n29e273a6c41668b",
+              "title": "Choose methodology (OWASP, PTES, NIST)",
+              "markdown": "- Choose methodology (OWASP, PTES, NIST)",
+              "notes": "Choose methodology (OWASP, PTES, NIST)",
+              "blurb": "Choose methodology (OWASP, PTES, NIST)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n949f8bf4db8a45f",
+              "title": "Define rules of engagement",
+              "markdown": "- Define rules of engagement",
+              "notes": "Define rules of engagement",
+              "blurb": "Define rules of engagement",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n883c0c3e8ccdc69",
+              "title": "Risk-based prioritization",
+              "markdown": "- Risk-based prioritization",
+              "notes": "Risk-based prioritization",
+              "blurb": "Risk-based prioritization",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc6ecc8c3bce4a41",
+              "title": "Tool selection",
+              "markdown": "- Tool selection",
+              "notes": "Tool selection",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n98f8f6ba5a3ee88",
+              "title": "Reporting framework",
+              "markdown": "- Reporting framework",
+              "notes": "Reporting framework",
+              "blurb": "Reporting framework",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "\u2705 Define objectives and scope - \u2705 Threat modeling - \u2705 Select assessment...",
+          "expanded": false
+        },
+        {
+          "id": "n9431e6bed2da4cc",
+          "title": "Testing Methodologies",
+          "markdown": "| Methodology | Focus | Use Case |\n| --- | --- | --- |\n| **OWASP Testing Guide** | Web applications | Comprehensive web app testing |\n| **PTES** | Penetration testing | Structured penetration testing |\n| **NIST** | Risk-based | Risk assessment approach |",
+          "notes": "| Methodology | Focus | Use Case |\n| --- | --- | --- |\n| OWASP Testing Guide | Web applications | Comprehensive web app testing |\n| PTES | Penetration testing | Structured penetration testing |\n| NIST | Risk-based | Risk assessment approach |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Methodology | Focus | Use Case | | --- | --- | --- | | OWASP Testing Guide...",
+          "expanded": false
+        },
+        {
+          "id": "n2f3e552a8fa0a37",
+          "title": "Risk Prioritization",
+          "markdown": "| Priority | Description | Fix Timeline |\n| --- | --- | --- |\n| **Critical** | Active exploitation possible | Immediate |\n| **High** | Significant impact | Current sprint |\n| **Medium** | Moderate impact | Next sprint |\n| **Low** | Low impact | Backlog |",
+          "notes": "| Priority | Description | Fix Timeline |\n| --- | --- | --- |\n| Critical | Active exploitation possible | Immediate |\n| High | Significant impact | Current sprint |\n| Medium | Moderate impact | Next sprint |\n| Low | Low impact | Backlog |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Priority | Description | Fix Timeline | | --- | --- | --- | | Critical |...",
+          "expanded": false
+        },
+        {
+          "id": "n0222731b28e709b",
+          "title": "Testing Focus Areas (OWASP Top 10)",
+          "markdown": "Broken Access Control",
+          "notes": "Broken Access Control",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "na17c0a2fc0caeaa",
+              "title": "Broken Access Control",
+              "markdown": "- Broken Access Control",
+              "notes": "Broken Access Control",
+              "blurb": "Broken Access Control",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n88848d19fcbbadd",
+              "title": "Cryptographic Failures",
+              "markdown": "- Cryptographic Failures",
+              "notes": "Cryptographic Failures",
+              "blurb": "Cryptographic Failures",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n7b74f35a7ac32e1",
+              "title": "Insecure Design",
+              "markdown": "- Insecure Design",
+              "notes": "Insecure Design",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8669c9caaddafaf",
+              "title": "Security Misconfiguration",
+              "markdown": "- Security Misconfiguration",
+              "notes": "Security Misconfiguration",
+              "blurb": "Security Misconfiguration",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n40837ce2b45aa7a",
+              "title": "Vulnerable Components",
+              "markdown": "- Vulnerable Components",
+              "notes": "Vulnerable Components",
+              "blurb": "Vulnerable Components",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc43be3dd7c0fd5c",
+              "title": "Authentication Failures",
+              "markdown": "- Authentication Failures",
+              "notes": "Authentication Failures",
+              "blurb": "Authentication Failures",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n83218bebc19e75b",
+              "title": "Software/Data Integrity Failures",
+              "markdown": "- Software/Data Integrity Failures",
+              "notes": "Software/Data Integrity Failures",
+              "blurb": "Software/Data Integrity Failures",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n56c6f266ffef18f",
+              "title": "Security Logging Failures",
+              "markdown": "- Security Logging Failures",
+              "notes": "Security Logging Failures",
+              "blurb": "Security Logging Failures",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Broken Access Control",
+          "expanded": false
+        },
+        {
+          "id": "nbc46b225777951d",
+          "title": "Key Principles",
+          "markdown": "Risk-based approach - Combine automated and manual testing - Continuous assessments (not one-time) - Holistic evaluation (people, process, technology) - Actionable reporting",
+          "notes": "Risk-based approach - Combine automated and manual testing - Continuous assessments (not one-time) - Holistic evaluation (people, process, technology) - Actionable reporting",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n0df468f94605ba9",
+              "title": "Risk-based approach",
+              "markdown": "- Risk-based approach",
+              "notes": "Risk-based approach",
+              "blurb": "Risk-based approach",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf7c1ab9454bf4c6",
+              "title": "Combine automated and manual testing",
+              "markdown": "- Combine automated and manual testing",
+              "notes": "Combine automated and manual testing",
+              "blurb": "Combine automated and manual testing",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nbdf1173fc9f2603",
+              "title": "Continuous assessments (not one-time)",
+              "markdown": "- Continuous assessments (not one-time)",
+              "notes": "Continuous assessments (not one-time)",
+              "blurb": "Continuous assessments (not one-time)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5ec1ba3e3ad70ba",
+              "title": "Holistic evaluation (people, process, technology)",
+              "markdown": "- Holistic evaluation (people, process, technology)",
+              "notes": "Holistic evaluation (people, process, technology)",
+              "blurb": "Holistic evaluation (people, process, technology)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nea5114ca8e331cc",
+              "title": "Actionable reporting",
+              "markdown": "- Actionable reporting",
+              "notes": "Actionable reporting",
+              "blurb": "Actionable reporting",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Risk-based approach - Combine automated and manual testing - Continuous...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Assessment Types"
+    },
+    {
+      "id": "n2c2c886136af417",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n1a2c46ef200779e",
+          "title": "Common Misconceptions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nb0d38dc4851f6ac",
+              "title": "\"Security assessments should test everything equally\"",
+              "markdown": "**Truth:** Security assessments should be **risk-based**, focusing on high-risk areas first.\n\n**Risk-Based Approach:**",
+              "notes": "Truth: Security assessments should be risk-based, focusing on high-risk areas first.\n\nRisk-Based Approach:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n966e130cce4e6a5",
+                  "title": "Identify critical assets and data",
+                  "markdown": "- Identify critical assets and data",
+                  "notes": "Identify critical assets and data",
+                  "blurb": "Identify critical assets and data",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n28ee4a2356a2637",
+                  "title": "Prioritize high-risk attack vectors",
+                  "markdown": "- Prioritize high-risk attack vectors",
+                  "notes": "Prioritize high-risk attack vectors",
+                  "blurb": "Prioritize high-risk attack vectors",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n3c15eca934a9e0b",
+                  "title": "Focus on most likely threats",
+                  "markdown": "- Focus on most likely threats",
+                  "notes": "Focus on most likely threats",
+                  "blurb": "Focus on most likely threats",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n219a29c343c4c51",
+                  "title": "Balance coverage with time/resources",
+                  "markdown": "- Balance coverage with time/resources",
+                  "notes": "Balance coverage with time/resources",
+                  "blurb": "Balance coverage with time/resources",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: Security assessments should be risk-based, focusing on high-risk...",
+              "expanded": false
+            },
+            {
+              "id": "n2c01bdad06cdc9c",
+              "title": "\"Automated tools are sufficient for security assessments\"",
+              "markdown": "**Truth:** Automated tools are **valuable but insufficient** - manual testing and expert analysis are essential.\n\n**Tool Limitations:**",
+              "notes": "Truth: Automated tools are valuable but insufficient - manual testing and expert analysis are essential.\n\nTool Limitations:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n952162a89ccb025",
+                  "title": "May miss business logic flaws",
+                  "markdown": "- May miss business logic flaws",
+                  "notes": "May miss business logic flaws",
+                  "blurb": "May miss business logic flaws",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n9e4002eb8801585",
+                  "title": "Limited context understanding",
+                  "markdown": "- Limited context understanding",
+                  "notes": "Limited context understanding",
+                  "blurb": "Limited context understanding",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nbcb5e11b7d0220a",
+                  "title": "False positives require manual review",
+                  "markdown": "- False positives require manual review",
+                  "notes": "False positives require manual review",
+                  "blurb": "False positives require manual review",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd065afc87a12dba",
+                  "title": "Can't replicate human attacker creativity",
+                  "markdown": "- Can't replicate human attacker creativity",
+                  "notes": "Can't replicate human attacker creativity",
+                  "blurb": "Can't replicate human attacker creativity",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: Automated tools are valuable but insufficient - manual testing and...",
+              "expanded": false
+            },
+            {
+              "id": "n442b4e2e0d88a8f",
+              "title": "\"Security assessments are one-time activities\"",
+              "markdown": "**Truth:** Security assessments should be **continuous and iterative**, not one-time checkboxes.\n\n**Continuous Assessment:**",
+              "notes": "Truth: Security assessments should be continuous and iterative, not one-time checkboxes.\n\nContinuous Assessment:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n1e35fbb76edeb95",
+                  "title": "Ongoing automated scanning",
+                  "markdown": "- Ongoing automated scanning",
+                  "notes": "Ongoing automated scanning",
+                  "blurb": "Ongoing automated scanning",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n909dfa032eac043",
+                  "title": "Periodic deep-dive assessments",
+                  "markdown": "- Periodic deep-dive assessments",
+                  "notes": "Periodic deep-dive assessments",
+                  "blurb": "Periodic deep-dive assessments",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ncc47a27ee2d919e",
+                  "title": "Assessments after major changes",
+                  "markdown": "- Assessments after major changes",
+                  "notes": "Assessments after major changes",
+                  "blurb": "Assessments after major changes",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd4ebd1c60e964e4",
+                  "title": "Regular threat model updates",
+                  "markdown": "- Regular threat model updates",
+                  "notes": "Regular threat model updates",
+                  "blurb": "Regular threat model updates",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: Security assessments should be continuous and iterative, not one-time...",
+              "expanded": false
+            },
+            {
+              "id": "n76c3cf765cfc9e6",
+              "title": "\"Finding all vulnerabilities is the goal of security assessments\"",
+              "markdown": "**Truth:** The goal is **risk reduction**, not finding every possible vulnerability.\n\n**Risk-Based Goals:**",
+              "notes": "Truth: The goal is risk reduction, not finding every possible vulnerability.\n\nRisk-Based Goals:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n8ba709d2e97cc08",
+                  "title": "Identify critical and high-severity issues",
+                  "markdown": "- Identify critical and high-severity issues",
+                  "notes": "Identify critical and high-severity issues",
+                  "blurb": "Identify critical and high-severity issues",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "na782cdd3c410c65",
+                  "title": "Understand overall security posture",
+                  "markdown": "- Understand overall security posture",
+                  "notes": "Understand overall security posture",
+                  "blurb": "Understand overall security posture",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nc9b36f77cd16231",
+                  "title": "Provide actionable remediation guidance",
+                  "markdown": "- Provide actionable remediation guidance",
+                  "notes": "Provide actionable remediation guidance",
+                  "blurb": "Provide actionable remediation guidance",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n1f0a83b141fd7ec",
+                  "title": "Support risk-based decision making",
+                  "markdown": "- Support risk-based decision making",
+                  "notes": "Support risk-based decision making",
+                  "blurb": "Support risk-based decision making",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: The goal is risk reduction, not finding every possible vulnerability.",
+              "expanded": false
+            },
+            {
+              "id": "n206c2f9acf37df5",
+              "title": "\"Security assessments are only technical evaluations\"",
+              "markdown": "**Truth:** Security assessments should evaluate **people, processes, and technology**, not just code.\n\n**Holistic Assessment:**",
+              "notes": "Truth: Security assessments should evaluate people, processes, and technology, not just code.\n\nHolistic Assessment:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "na37729561275b3f",
+                  "title": "People: Security awareness, training, culture",
+                  "markdown": "- People: Security awareness, training, culture",
+                  "notes": "People: Security awareness, training, culture",
+                  "blurb": "People: Security awareness, training, culture",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n5bc90fad78739a3",
+                  "title": "Process: Security policies, procedures, SDLC integration",
+                  "markdown": "- Process: Security policies, procedures, SDLC integration",
+                  "notes": "Process: Security policies, procedures, SDLC integration",
+                  "blurb": "Process: Security policies, procedures, SDLC integration",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n313de0f1f0afca6",
+                  "title": "Technology: Code, infrastructure, configurations",
+                  "markdown": "- Technology: Code, infrastructure, configurations",
+                  "notes": "Technology: Code, infrastructure, configurations",
+                  "blurb": "Technology: Code, infrastructure, configurations",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: Security assessments should evaluate people, processes, and...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes \"Security assessments should test everything equally\"",
+          "expanded": false
+        },
+        {
+          "id": "nb3df9520b8994c1",
+          "title": "Key Takeaways",
+          "markdown": "Risk-Based: Focus assessments on high-risk areas",
+          "notes": "Risk-Based: Focus assessments on high-risk areas",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "na0a642054511645",
+              "title": "Risk-Based: Focus assessments on high-risk areas",
+              "markdown": "- Risk-Based: Focus assessments on high-risk areas",
+              "notes": "Risk-Based: Focus assessments on high-risk areas",
+              "blurb": "Risk-Based: Focus assessments on high-risk areas",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5396a9064a80f6c",
+              "title": "Automated + Manual: Combine tools with expert analysis",
+              "markdown": "- Automated + Manual: Combine tools with expert analysis",
+              "notes": "Automated + Manual: Combine tools with expert analysis",
+              "blurb": "Automated + Manual: Combine tools with expert analysis",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6c6b2e1644a549e",
+              "title": "Continuous: Ongoing assessments, not one-time activities",
+              "markdown": "- Continuous: Ongoing assessments, not one-time activities",
+              "notes": "Continuous: Ongoing assessments, not one-time activities",
+              "blurb": "Continuous: Ongoing assessments, not one-time activities",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n7798f5fafae29ad",
+              "title": "Risk Reduction: Goal is risk reduction, not finding everything",
+              "markdown": "- Risk Reduction: Goal is risk reduction, not finding everything",
+              "notes": "Risk Reduction: Goal is risk reduction, not finding everything",
+              "blurb": "Risk Reduction: Goal is risk reduction, not finding everything",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ncf2c2b9e320d6dd",
+              "title": "Holistic: Assess people, processes, and technology",
+              "markdown": "- Holistic: Assess people, processes, and technology",
+              "notes": "Holistic: Assess people, processes, and technology",
+              "blurb": "Holistic: Assess people, processes, and technology",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Risk-Based: Focus assessments on high-risk areas",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Common Misconceptions"
+    },
+    {
+      "id": "nc0a5c7d2692f0a0",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n11062c42cf9ede7",
+          "title": "Fundamentals",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n26bbcfa34dc906d",
+              "title": "How do you design a product security assessment end to end?",
+              "markdown": "**Answer:** Start with **outcomes** (ship decision, risk reduction, compliance evidence), not with tools. Write a **scope contract**: feature boundaries, data classes, trust zones, environments, tier (light, standard, deep), and explicit exclusions. Run **feature-level threat modeling**: actors, assets, trust boundaries, abuse cases tied to user stories. Derive a **test and review plan** that spends depth on high-risk flows (authz across tenants, webhooks, async jobs, admin paths). Capture **evidence standards** up front (redaction, repro steps, build IDs). Close with **audience-specific reporting** (engineering detail vs PM risk language), **severity with launch semantics**, ticketed findings, **retest SLA**, and a **handoff** on residual risk and monitoring. The design is done when every high-risk abuse case maps to either a planned test or an accepted gap with an owner.",
+              "notes": "Answer: Start with outcomes (ship decision, risk reduction, compliance evidence), not with tools. Write a scope contract: feature boundaries, data classes, trust zones, environments, tier (light, standard, deep), and explicit exclusions. Run feature-level threat modeling: actors, assets, trust boundaries, abuse cases tied to user stories. Derive a test and review plan that spends depth on high-risk flows (authz across tenants, webhooks, async jobs, admin paths). Capture evidence standards up front (redaction, repro steps, build IDs). Close with audience-specific reporting (engineering detail vs PM risk language), severity with launch semantics, ticketed findings, retest SLA, and a handoff on residual risk and monitoring. The design is done when every high-risk abuse case maps to either a planned test or an accepted gap with an owner.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Start with outcomes (ship decision, risk reduction, compliance...",
+              "expanded": false
+            },
+            {
+              "id": "n138dcde06010988",
+              "title": "How is a product security assessment different from a broad...",
+              "markdown": "**Answer:** A product assessment is **bounded to a change or surface**, uses **threat-led depth** on the flows that matter for that product, and optimizes for **shipping decisions** and **durable fixes**. A broad pentest often emphasizes **coverage across assets** and may be less coupled to a specific feature's data model and abuse cases. Product work needs **tighter alignment with PM and eng** (tier, scope, what \"done\" means) and usually produces **ticket-per-finding** tracking rather than only a narrative report.",
+              "notes": "Answer: A product assessment is bounded to a change or surface, uses threat-led depth on the flows that matter for that product, and optimizes for shipping decisions and durable fixes. A broad pentest often emphasizes coverage across assets and may be less coupled to a specific feature's data model and abuse cases. Product work needs tighter alignment with PM and eng (tier, scope, what \"done\" means) and usually produces ticket-per-finding tracking rather than only a narrative report.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: A product assessment is bounded to a change or surface, uses...",
+              "expanded": false
+            },
+            {
+              "id": "n5e47cb593ec6626",
+              "title": "What do you put in scope versus out of scope, and why does precision...",
+              "markdown": "**Answer:** **In scope** names **interfaces and assets** (routes, jobs, tables, integrations), not vague areas like \"the app.\" **Out of scope** names **exclusions with rationale** (third-party code you cannot test, unrelated subsystems, disallowed techniques). **Dependencies** are listed even if you only review configuration. Precision matters because it prevents **false confidence** (\"we assessed billing\") when only one endpoint was examined, and it reduces **retroactive scope expansion** after an incident. It also sets **legal and policy** expectations for production touch, DoS limits, and escalation.",
+              "notes": "Answer: In scope names interfaces and assets (routes, jobs, tables, integrations), not vague areas like \"the app.\" Out of scope names exclusions with rationale (third-party code you cannot test, unrelated subsystems, disallowed techniques). Dependencies are listed even if you only review configuration. Precision matters because it prevents false confidence (\"we assessed billing\") when only one endpoint was examined, and it reduces retroactive scope expansion after an incident. It also sets legal and policy expectations for production touch, DoS limits, and escalation.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: In scope names interfaces and assets (routes, jobs, tables,...",
+              "expanded": false
+            },
+            {
+              "id": "n53bb59b43ec65e6",
+              "title": "How do you choose light, standard, or deep assessment tiers?",
+              "markdown": "**Answer:** Tie tier to **data sensitivity**, **exposure** (internet, partner, internal), and **novelty** (new authz model, new vendor, cross-tenant pattern). **Light** might be STRIDE-lite on a design doc plus control checklist for a small internal change. **Standard** adds data-flow validation and targeted manual or API testing at trust boundaries for typical customer features. **Deep** adds abuse-case workshops, deeper code review, and formal evidence bundles for payments, identity, or high blast-radius designs. Document the tier in the kickoff so stakeholders know **the depth they are getting**.",
+              "notes": "Answer: Tie tier to data sensitivity, exposure (internet, partner, internal), and novelty (new authz model, new vendor, cross-tenant pattern). Light might be STRIDE-lite on a design doc plus control checklist for a small internal change. Standard adds data-flow validation and targeted manual or API testing at trust boundaries for typical customer features. Deep adds abuse-case workshops, deeper code review, and formal evidence bundles for payments, identity, or high blast-radius designs. Document the tier in the kickoff so stakeholders know the depth they are getting.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Tie tier to data sensitivity, exposure (internet, partner,...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes How do you design a product security assessment end to end?",
+          "expanded": false
+        },
+        {
+          "id": "nd2f91a59da71c72",
+          "title": "Threat modeling and STRIDE-lite",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nac5d201c38afa58",
+              "title": "How do you threat-model a single feature without boiling the ocean?",
+              "markdown": "**Answer:** Require or produce a **minimal model**: actors, assets, trust boundaries, and the **happy-path data flow** including async paths (queues, webhooks, cron). Add **abuse cases** per primary user story (what if IDs are swapped, replayed, or guessed?). Use **STRIDE-lite** as a prompt list to generate **questions and tests**, not as a scoring exercise. Stop when the top handful of realistic harms each map to a **control location** or an explicit residual risk decision. Timebox review meetings and assign spikes when the authorization model itself is undefined.",
+              "notes": "Answer: Require or produce a minimal model: actors, assets, trust boundaries, and the happy-path data flow including async paths (queues, webhooks, cron). Add abuse cases per primary user story (what if IDs are swapped, replayed, or guessed?). Use STRIDE-lite as a prompt list to generate questions and tests, not as a scoring exercise. Stop when the top handful of realistic harms each map to a control location or an explicit residual risk decision. Timebox review meetings and assign spikes when the authorization model itself is undefined.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Require or produce a minimal model: actors, assets, trust...",
+              "expanded": false
+            },
+            {
+              "id": "nbd235faa49e6464",
+              "title": "What is STRIDE-lite in practice?",
+              "markdown": "**Answer:** **STRIDE-lite** means walking **Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, and Elevation of privilege** only long enough to produce **actionable** questions. For example: spoofing prompts webhook signature and session binding checks; tampering prompts parameter pollution and trust in client metadata; repudiation prompts structured audit logs for admin actions; information disclosure prompts error verbosity and log redaction; denial of service prompts unbounded queries and expensive endpoints; elevation prompts IDOR and role handling on every mutating route. Output is a **table**: question -> weak point -> planned test or code reference.",
+              "notes": "Answer: STRIDE-lite means walking Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, and Elevation of privilege only long enough to produce actionable questions. For example: spoofing prompts webhook signature and session binding checks; tampering prompts parameter pollution and trust in client metadata; repudiation prompts structured audit logs for admin actions; information disclosure prompts error verbosity and log redaction; denial of service prompts unbounded queries and expensive endpoints; elevation prompts IDOR and role handling on every mutating route. Output is a table: question -> weak point -> planned test or code reference.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: STRIDE-lite means walking Spoofing, Tampering, Repudiation,...",
+              "expanded": false
+            },
+            {
+              "id": "n7d744775b50df04",
+              "title": "Give an example of turning a user story into an abuse case.",
+              "markdown": "**Answer:** Story: \"Users can share a document link with their team.\" Abuse cases: **token is guessable** or leaked in referrer logs; **scope of the link** includes wrong tenant because the resolver ignores workspace; **revocation is missing** so ex-employees retain access; **preview endpoints** bypass the same checks as download. Each abuse case becomes a **test** (or a design fix if the invariant was never defined).",
+              "notes": "Answer: Story: \"Users can share a document link with their team.\" Abuse cases: token is guessable or leaked in referrer logs; scope of the link includes wrong tenant because the resolver ignores workspace; revocation is missing so ex-employees retain access; preview endpoints bypass the same checks as download. Each abuse case becomes a test (or a design fix if the invariant was never defined).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Story: \"Users can share a document link with their team.\" Abuse...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes How do you threat-model a single feature without boiling the ocean?",
+          "expanded": false
+        },
+        {
+          "id": "n4f6490da342cb9e",
+          "title": "Evidence and methodology",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n4c73053331d2aad",
+              "title": "What does strong evidence look like for a product finding?",
+              "markdown": "**Answer:** Strong evidence includes **numbered reproduction steps** or a minimal script, **redacted** request/response pairs or screenshots, **scope context** (role, tenant, environment), **version identifiers** (commit, build), and an **impact explanation in product terms** (what an attacker gains here, not generic CVSS prose). For design flaws, pair a **diagram snippet** with a **code or config reference** showing missing enforcement. Note **flaky preconditions** (race, feature flag) so verification after fixes is fair.",
+              "notes": "Answer: Strong evidence includes numbered reproduction steps or a minimal script, redacted request/response pairs or screenshots, scope context (role, tenant, environment), version identifiers (commit, build), and an impact explanation in product terms (what an attacker gains here, not generic CVSS prose). For design flaws, pair a diagram snippet with a code or config reference showing missing enforcement. Note flaky preconditions (race, feature flag) so verification after fixes is fair.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Strong evidence includes numbered reproduction steps or a minimal...",
+              "expanded": false
+            },
+            {
+              "id": "n78d97f11d978e5b",
+              "title": "How do you document negative results responsibly?",
+              "markdown": "**Answer:** Record **high-risk areas examined** where no issue was found, with **method** (manual tests run, code paths read). That supports **sampling disclosure** in the report (\"we focused on X and Y; Z was out of scope\") and protects against the myth that silence means comprehensive coverage. Negative results are especially useful for **hot paths** like authentication, authorization, and payment webhooks.",
+              "notes": "Answer: Record high-risk areas examined where no issue was found, with method (manual tests run, code paths read). That supports sampling disclosure in the report (\"we focused on X and Y; Z was out of scope\") and protects against the myth that silence means comprehensive coverage. Negative results are especially useful for hot paths like authentication, authorization, and payment webhooks.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Record high-risk areas examined where no issue was found, with...",
+              "expanded": false
+            },
+            {
+              "id": "ned205628e9d9be0",
+              "title": "How do you balance depth with time and staffing constraints?",
+              "markdown": "**Answer:** Use **risk-based sampling**: deep manual work on externals and cross-tenant flows, lighter automation or checklists elsewhere. **Automate breadth** (SAST, dependency scan) but **do not confuse it with authz correctness**. **Iterate**: first pass on launch blockers, second pass on medium-risk debt if schedule allows. **Document limitations** explicitly rather than implying completeness. The guiding principle is **defensible prioritization**, not pretending every line was audited.",
+              "notes": "Answer: Use risk-based sampling: deep manual work on externals and cross-tenant flows, lighter automation or checklists elsewhere. Automate breadth (SAST, dependency scan) but do not confuse it with authz correctness. Iterate: first pass on launch blockers, second pass on medium-risk debt if schedule allows. Document limitations explicitly rather than implying completeness. The guiding principle is defensible prioritization, not pretending every line was audited.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Use risk-based sampling: deep manual work on externals and...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes What does strong evidence look like for a product finding?",
+          "expanded": false
+        },
+        {
+          "id": "nb24f8de1a70140b",
+          "title": "Reporting: engineering, PM, and leadership",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n09dbbd74e83135e",
+              "title": "How do you write findings engineers can act on quickly?",
+              "markdown": "**Answer:** Use a **stable template**: short title stating the failure mode, affected **service and route or job**, description as a **broken invariant**, reproduction, redacted evidence, **root cause hypothesis** when known, concrete **fix guidance** (pattern or pseudo-patch), and **suggested regression tests**. Link to **modules or files** when possible. Avoid tool-brand noise in the title. Engineers want **pointers and invariants**, not essays.",
+              "notes": "Answer: Use a stable template: short title stating the failure mode, affected service and route or job, description as a broken invariant, reproduction, redacted evidence, root cause hypothesis when known, concrete fix guidance (pattern or pseudo-patch), and suggested regression tests. Link to modules or files when possible. Avoid tool-brand noise in the title. Engineers want pointers and invariants, not essays.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Use a stable template: short title stating the failure mode,...",
+              "expanded": false
+            },
+            {
+              "id": "n4dcef98422a802f",
+              "title": "How do you communicate the same issue to a PM without jargon?",
+              "markdown": "**Answer:** Translate to **customer impact** and **launch risk**: who could be harmed, how likely the prerequisites are, whether the issue is **silent** or **noisy**, and what **mitigations** exist (flag off, partial rollout, monitoring). Example: instead of \"IDOR on UUID,\" say \"If someone obtains another customer's export identifier, they might retrieve that export's metadata.\" Pair with **options**: fix now, delay feature for a subset, or accept residual risk with **named owner** and **expiry date** for hardening.",
+              "notes": "Answer: Translate to customer impact and launch risk: who could be harmed, how likely the prerequisites are, whether the issue is silent or noisy, and what mitigations exist (flag off, partial rollout, monitoring). Example: instead of \"IDOR on UUID,\" say \"If someone obtains another customer's export identifier, they might retrieve that export's metadata.\" Pair with options: fix now, delay feature for a subset, or accept residual risk with named owner and expiry date for hardening.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Translate to customer impact and launch risk: who could be harmed,...",
+              "expanded": false
+            },
+            {
+              "id": "n601a15e1ae54c7c",
+              "title": "What belongs in an executive summary of an assessment?",
+              "markdown": "**Answer:** Three to five bullets: **what** was assessed and at **which tier**, **top risks** and whether they **block release**, **explicit scope limits**, and **next steps** (owners, target dates, retest window). Executives need **decisions and residual risk**, not reproduction steps. If nothing blocks launch, say so clearly and still mention **meaningful non-blockers** you want tracked.",
+              "notes": "Answer: Three to five bullets: what was assessed and at which tier, top risks and whether they block release, explicit scope limits, and next steps (owners, target dates, retest window). Executives need decisions and residual risk, not reproduction steps. If nothing blocks launch, say so clearly and still mention meaningful non-blockers you want tracked.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Three to five bullets: what was assessed and at which tier, top...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes How do you write findings engineers can act on quickly?",
+          "expanded": false
+        },
+        {
+          "id": "n6abf344e6d42324",
+          "title": "Severity, prioritization, and disagreement",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n5d4a922998d7e30",
+              "title": "How do you assign severity for product issues when CVSS disagrees with...",
+              "markdown": "**Answer:** Treat severity as **product risk**, informed by CVSS, not dictated by it. Consider **exploitability** (auth required? network position?), **blast radius** (one user vs many tenants), **data class**, **exposure**, and **detectability**. A medium CVSS **cross-tenant read** is often **launch-blocking**; a high CVSS issue on **unreachable code** may not be. Document **assumptions** (\"attacker has a valid session\") so debates stay factual. When eng disagrees, align on **a test that proves or disproves** impact rather than arguing labels in a vacuum.",
+              "notes": "Answer: Treat severity as product risk, informed by CVSS, not dictated by it. Consider exploitability (auth required? network position?), blast radius (one user vs many tenants), data class, exposure, and detectability. A medium CVSS cross-tenant read is often launch-blocking; a high CVSS issue on unreachable code may not be. Document assumptions (\"attacker has a valid session\") so debates stay factual. When eng disagrees, align on a test that proves or disproves impact rather than arguing labels in a vacuum.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Treat severity as product risk, informed by CVSS, not dictated by it.",
+              "expanded": false
+            },
+            {
+              "id": "n5e87f08e38fec6f",
+              "title": "How do you prioritize which findings get fixed first?",
+              "markdown": "**Answer:** First sort by **customer harm and exploitability**, then by **ease of fix** when harm is similar. **Silent** data integrity issues often outrank **noisy** information leaks. Factor in **compensating controls** (WAF rules are weak for authz bugs). Ensure **critical** items have **direct owners** and dates; cluster related issues to avoid **whack-a-mole** fixes. Use ticketing data later to spot **repeat classes** (authz omissions in new APIs) and feed **guardrails**.",
+              "notes": "Answer: First sort by customer harm and exploitability, then by ease of fix when harm is similar. Silent data integrity issues often outrank noisy information leaks. Factor in compensating controls (WAF rules are weak for authz bugs). Ensure critical items have direct owners and dates; cluster related issues to avoid whack-a-mole fixes. Use ticketing data later to spot repeat classes (authz omissions in new APIs) and feed guardrails.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: First sort by customer harm and exploitability, then by ease of fix...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes How do you assign severity for product issues when CVSS disagrees wit",
+          "expanded": false
+        },
+        {
+          "id": "n283174df5251f9a",
+          "title": "Follow-up, retest, and program learning",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n69b715904859f53",
+              "title": "What does a good remediation and retest loop look like?",
+              "markdown": "**Answer:** Each finding gets an **owner**, **fix type** (code, config, dependency), **target date** by severity, and a **verification plan**. Publish a **retest SLA** (for example, critical reviewed within one business day of \"ready to verify\"). Close only when the **abuse case fails** under the original conditions and **regression coverage** is in place or scheduled. Reopen if the fix **introduces a new bypass**; track **reopen rate** as a quality signal.",
+              "notes": "Answer: Each finding gets an owner, fix type (code, config, dependency), target date by severity, and a verification plan. Publish a retest SLA (for example, critical reviewed within one business day of \"ready to verify\"). Close only when the abuse case fails under the original conditions and regression coverage is in place or scheduled. Reopen if the fix introduces a new bypass; track reopen rate as a quality signal.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Each finding gets an owner, fix type (code, config, dependency),...",
+              "expanded": false
+            },
+            {
+              "id": "n150246757cccc2f",
+              "title": "What metrics help mature product security assessments over time?",
+              "markdown": "**Answer:** Track **time-to-fix** by severity, **repeat finding rate** by category, **percentage of launches** that received the right tier, **defects escaped** to production post-assessment, and **retest SLA adherence**. Qualitative signals include **engineering satisfaction** (clarity of reports) and **PM trust** (risk summaries match reality). Use metrics to justify **guardrails** (scaffolding, linters, contract tests) rather than only hiring more manual reviewers.",
+              "notes": "Answer: Track time-to-fix by severity, repeat finding rate by category, percentage of launches that received the right tier, defects escaped to production post-assessment, and retest SLA adherence. Qualitative signals include engineering satisfaction (clarity of reports) and PM trust (risk summaries match reality). Use metrics to justify guardrails (scaffolding, linters, contract tests) rather than only hiring more manual reviewers.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Track time-to-fix by severity, repeat finding rate by category,...",
+              "expanded": false
+            },
+            {
+              "id": "n9dfaff395890a82",
+              "title": "How do you close an assessment so learning persists beyond the PDF?",
+              "markdown": "**Answer:** Run a **short handoff**: restate **residual risk**, **out-of-scope areas**, and **production watch items** (metrics, alerts) for the first weeks after launch. Feed **repeat mistakes** into templates, training, or automation. Archive **evidence** according to policy. Ensure **tickets** reflect the report IDs for traceability. The goal is that the next feature inherits **better defaults**, not that the team memorizes one engagement.",
+              "notes": "Answer: Run a short handoff: restate residual risk, out-of-scope areas, and production watch items (metrics, alerts) for the first weeks after launch. Feed repeat mistakes into templates, training, or automation. Archive evidence according to policy. Ensure tickets reflect the report IDs for traceability. The goal is that the next feature inherits better defaults, not that the team memorizes one engagement.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Run a short handoff: restate residual risk, out-of-scope areas, and...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes What does a good remediation and retest loop look like?",
+          "expanded": false
+        },
+        {
+          "id": "n2b511d0c56feae7",
+          "title": "Depth: Interview follow-ups \u2014 Product Security Assessment Design",
+          "markdown": "**Authoritative references:** [OWASP ASVS](https://owasp.org/www-project-application-security-verification-standard/) for control vocabulary; [OWASP SAMM](https://owaspsamm.org/) for program maturity framing when discussing scaling assessments.\n\n**Follow-ups interviewers like:** choosing **tier** under schedule pressure; what **artifact** proves a control; how you **escalate** a silent cross-tenant bug on launch week; how you **verify** fixes without production risk; how you **scale** with champions and guardrails instead of gatekeeping every pull request.\n\n**Production verification:** SLAs for critical retest; coverage of assessed launches; repeat finding rate by component.\n\n**Cross-read:** Proactive Security Assessment, Security Metrics and OKRs, Agile Security Compliance.",
+          "notes": "Authoritative references: OWASP ASVS for control vocabulary; OWASP SAMM for program maturity framing when discussing scaling assessments.\n\nFollow-ups interviewers like: choosing tier under schedule pressure; what artifact proves a control; how you escalate a silent cross-tenant bug on launch week; how you verify fixes without production risk; how you scale with champions and guardrails instead of gatekeeping every pull request.\n\nProduction verification: SLAs for critical retest; coverage of assessed launches; repeat finding rate by component.\n\nCross-read: Proactive Security Assessment, Security Metrics and OKRs, Agile Security Compliance.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Authoritative references: OWASP ASVS for control vocabulary; OWASP SAMM for...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Fundamentals"
+    }
+  ],
+  "topicId": "product-security-assessment-design",
+  "name": "Product Security Assessment Design",
+  "structure": "logic-right",
+  "blurb": "Product security assessments evaluate how a feature or product behaves under..."
+}

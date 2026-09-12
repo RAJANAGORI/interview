@@ -1,0 +1,147 @@
+{
+  "topicId": "genai-llm-product-security",
+  "name": "GenAI LLM Product Security",
+  "source": "GenAI LLM Product Security/GenAI LLM Product Security - Interview Questions & Answers.md",
+  "prompts": [
+    {
+      "id": "p4c8c47d04b24f1",
+      "cluster": "General",
+      "title": "Why is an LLM feature a different kind of product security problem than a typical REST API?",
+      "seconds": 90,
+      "answerMarkdown": "A REST API has **structured inputs**, predictable parsing, and clear **authZ** hooks. An LLM path accepts **free text and documents** that become **one narrative context** for the model. Attackers (or innocently poisoned content) can blend **instructions and data**, so you cannot rely on the model to honor a \"system prompt\" as a security boundary. Security has to live in **tool authorization**, **retrieval entitlements**, **output validation**, and **UX** that limits irreversible actions-mapped to OWASP items such as **LLM01**, **LLM05**, **LLM06**, and **LLM08**.\n\n---"
+    },
+    {
+      "id": "pce23ddba7dd5ce",
+      "cluster": "General",
+      "title": "What is prompt injection, and how does indirect injection differ from direct injection?",
+      "seconds": 120,
+      "answerMarkdown": "**Direct injection** is the user typing attempts to override developer intent (\"disregard prior rules\"). **Indirect injection** is when **untrusted content** enters context-malicious text in a PDF, a web page fetched by an agent, a support ticket, or a retrieved chunk-and steers the model or tool chain without the end user typing an attack string. The same retrieved paragraph can simultaneously be **data the user asked about** and **instructions the model obeys**, which is why delimiter tricks alone fail at scale. Mitigations are **not** limited to better prompts: you need **least-privilege tools**, **server-side authZ**, **safe retrieval**, and **validation** of anything the model outputs to other systems (**LLM01** plus **LLM05**/**LLM06**).\n\n---"
+    },
+    {
+      "id": "pfb063201f445a4",
+      "cluster": "General",
+      "title": "Can we eliminate prompt injection entirely?",
+      "seconds": 90,
+      "answerMarkdown": "**No** for general-purpose assistants that accept arbitrary text. You **manage** risk: narrow **tool** surfaces, **confirm** high-impact actions, **validate** machine-consumed outputs, **monitor** abuse, and **assume** context can be hostile. The goal is **contained impact**, not perfect separation of instructions and data inside the model (**LLM01**, **LLM06**).\n\n---"
+    },
+    {
+      "id": "p581fb68ce70c06",
+      "cluster": "General",
+      "title": "What data leakage risks are most common in shipped LLM products?",
+      "seconds": 120,
+      "answerMarkdown": "**Leaking secrets or PII** in completions after they appeared in context; **logging** full prompts and responses into SIEM or support tools; **cross-tenant RAG** returning another customer's chunks; **over-retention** of chat in analytics; **client-side** thread storage without encryption; and **vendor** subprocessors or regions that do not match customer contracts. **Export**, **share link**, and **copilot-in-email** features often widen blast radius because users treat the assistant as a **notepad**. Controls: **minimize** fields in prompts, **redact**, **query-time ACLs** on retrieval, **short retention** and **access-controlled** logs, **review** sharing UX, and **contract** alignment (**LLM02**, **LLM03**, **LLM08**).\n\n---"
+    },
+    {
+      "id": "pad0deb2162099c",
+      "cluster": "General",
+      "title": "How should we handle PII in prompts and logs?",
+      "seconds": 90,
+      "answerMarkdown": "**Minimize** before model calls: drop or mask columns, aggregate where possible, and block categories that violate policy. Use **deterministic redaction** plus classifiers where needed. For **logs**, prefer **structured** events (which tool, which tenant, outcome) over **verbatim** prompts; if full prompts are stored for debugging, enforce **strict** RBAC, **encryption**, and **retention** limits. Tell users not to paste **regulated** data when the product cannot guarantee handling (**LLM02**).\n\n---"
+    },
+    {
+      "id": "p7dfa877d5e8f19",
+      "cluster": "General",
+      "title": "What risks are specific to RAG, beyond \u201cthe model hallucinates\u201d?",
+      "seconds": 90,
+      "answerMarkdown": "**Authorization failures** on chunks (wrong tenant or overshared workspace). **Poisoning** of the corpus or crawled web content so malicious passages rank highly. **Stale or wrong** documents producing **confident** wrong answers (**LLM09**). **Embedding** or **chunk-boundary** tricks that hide hostile instructions. Mitigations: **query-time filters** tied to source-system ACLs, **ingestion** integrity and **ACL reconciliation**, **citations**, **golden** regression tests after corpus changes, and **monitoring** of retrieval health (**LLM04**, **LLM08**).\n\n---"
+    },
+    {
+      "id": "p8bbb76daedf07b",
+      "cluster": "General",
+      "title": "How do you enforce tenant isolation in a vector database?",
+      "seconds": 90,
+      "answerMarkdown": "Treat vectors like **any other datastore**: every upsert carries **stable metadata** (tenant ID, resource ID, labels) from the **authoritative** identity and document store. At query time, the application **must** apply **mandatory** filters; **fail closed** if metadata is missing. **Reindex** or **patch** when source ACLs change. **Test** negative cases in CI: two tenants, overlapping vocabulary, prove **no** cross-leak. **Audit** admin APIs that can search across tenants (**LLM08**, **LLM02**).\n\n---"
+    },
+    {
+      "id": "p3afa22c4588e06",
+      "cluster": "General",
+      "title": "What does \u201cexcessive agency\u201d mean, and how do you design against it?",
+      "seconds": 90,
+      "answerMarkdown": "**Excessive agency** is when the assistant can **act** (API calls, writes, integrations) with **too much** power or **too few** checks relative to the risk (**LLM06**). Design **narrow** tools (specific operations, not \"run arbitrary SQL\"), **per-user** delegated credentials, **allowlists** for destinations, **rate limits**, **idempotency** for writes, and **human confirmation** for irreversible actions. **Never** substitute a clever prompt for **OAuth scopes** and **server-side** policy checks.\n\n---"
+    },
+    {
+      "id": "p289fbd684db733",
+      "cluster": "General",
+      "title": "How do you secure function calling or plugins end to end?",
+      "seconds": 90,
+      "answerMarkdown": "Assume **hostile** arguments and **hostile** sequencing. The **runtime**, not the model, enforces **who** is calling (identity, tenant), **what** tool is allowed for that persona, and **whether** parameters are valid. Use **schemas**, **type checks**, **reference** lookups (\"does this ID belong to this user?\"), **idempotency** keys, and **audit** trails. Block **open** URL fetchers or **generic** code execution unless heavily sandboxed and justified (**LLM05**, **LLM06**, **LLM10**).\n\n---"
+    },
+    {
+      "id": "p35bf47536d7536",
+      "cluster": "General",
+      "title": "What is improper output handling in LLM systems?",
+      "seconds": 90,
+      "answerMarkdown": "Treating model output as **safe** for **HTML**, **SQL**, **shell**, or **downstream** JSON without the same defenses you use for untrusted user input-leading to **XSS**, **injection**, or **unsafe** tool payloads (**LLM05**). **Mitigate** with encoding, **CSP**, **parameterized** queries, **schema validation** for structured outputs, and **no** \"paste assistant output into admin console\" shortcuts.\n\n---"
+    },
+    {
+      "id": "pec3513a8fc2260",
+      "cluster": "General",
+      "title": "How do you test LLM features for security before and after launch?",
+      "seconds": 90,
+      "answerMarkdown": "Combine **offline** suites (injection strings, indirect injection fixtures, privilege escalation attempts), **RAG** regression tests after **corpus** or **embedder** changes, **red-team** exercises with documented scope, and **production** signals (tool **denials**, policy blocks, anomaly detection on **tokens** and **cost**). **Canary** new models or prompts and compare **security** metrics, not only **quality** scores (**LLM04**, **LLM10**).\n\n---"
+    },
+    {
+      "id": "pbc52cd82a8cf8a",
+      "cluster": "General",
+      "title": "What belongs in a red-team engagement against an agent?",
+      "seconds": 90,
+      "answerMarkdown": "Realistic **goals** (exfiltrate another tenant's doc, send email externally, escalate IAM, burn budget). **Indirect** vectors (poisoned attachment, malicious page). **Tool-chaining** abuse and **retry** loops. **Safe** execution rules (no production customer data without approval). Deliver **severity-rated** findings tied to **controls** (authZ gap vs model weakness) and **retest** criteria.\n\n---"
+    },
+    {
+      "id": "p55821f073eac5d",
+      "cluster": "General",
+      "title": "What is the \u201cLLM supply chain,\u201d and what do you actually review?",
+      "seconds": 90,
+      "answerMarkdown": "Models, **fine-tunes**, **datasets**, **evaluation** harnesses, inference **libraries**, **containers**, **GPU** stacks, and third-party **APIs**-plus the **CI** that builds and deploys them (**LLM03**). Review **version pinning**, **artifact integrity**, **licenses**, **subprocessors** and **regions**, **secret** scanning in repos, and **change control** when swapping weights or default **temperature** and **policy** prompts.\n\n---"
+    },
+    {
+      "id": "p567baea5b14448",
+      "cluster": "General",
+      "title": "How does governance differ for GenAI versus traditional features?",
+      "seconds": 90,
+      "answerMarkdown": "Same **ownership** lines in principle-AppSec for **threat models** and **patterns**, ML for **data and evals**, platform for **infra and quotas**, legal/privacy for **commitments**-but GenAI adds **non-determinism**, **vendor** dependence, and **data paths** that are easy to **misconfigure** (RAG ACLs, logging). You need **DPIAs**, **model/corpus** inventory, **incident** runbooks for **data spill** and **model degradation**, and **launch** reviews that include **offline** security evals.\n\n---"
+    },
+    {
+      "id": "pc5a7099926c796",
+      "cluster": "General",
+      "title": "What are safe UX patterns for high-risk answers and actions?",
+      "seconds": 90,
+      "answerMarkdown": "Show **citations** and **sources** for grounded answers; surface **uncertainty** instead of false precision. Use **explicit confirmations** with an **immutable** summary for email, payments, deletes, and IAM changes. **Progressive** permission: default **narrow** tools, **step-up** for broader scope. Render assistant output as **untrusted** HTML with **sanitization** and **CSP**. Provide a clear **human escalation** path and **feedback** tied to **trace IDs** (**LLM05**, **LLM06**, **LLM09**).\n\n---"
+    },
+    {
+      "id": "p3b8064af124277",
+      "cluster": "General",
+      "title": "What is system prompt leakage, and how do you reduce it?",
+      "seconds": 90,
+      "answerMarkdown": "**System prompt leakage** is when **developer** or **system** instructions are exposed through model replies, verbose errors, **debug** endpoints, or **logs** (**LLM07**). Reduce by **minimizing** secret sauce in prompts (policy belongs in **code** where possible), **rate limiting** probing, **safe error** messages, and **log** redaction. Treat leaked instructions as a **defense-in-depth** issue: impact should stay low if **tools** are properly **authorized**.\n\n---"
+    },
+    {
+      "id": "p5ec84e4c9b9cbc",
+      "cluster": "General",
+      "title": "What is unbounded consumption, and what mitigations matter at scale?",
+      "seconds": 90,
+      "answerMarkdown": "**Unbounded consumption** is runaway **tokens**, **tool loops**, parallel **sessions**, or abuse that drives **cost** and **availability** harm (**LLM10**). Mitigate with **per-user** and **per-tenant** budgets, **concurrency** caps, **timeouts**, **circuit breakers**, **detection** of anomalous **spend**, and **backpressure** on queues. Product and **finance** should align on **alerts** and **throttling** behavior.\n\n---"
+    },
+    {
+      "id": "p54089363b80888",
+      "cluster": "General",
+      "title": "Are content safety filters enough for \u201cLLM security\u201d?",
+      "seconds": 90,
+      "answerMarkdown": "**No.** Filters address **abuse** and some **safety** categories but do not replace **authorization**, **tenant isolation**, **output validation**, or **safe tool** design. A polite model can still **call** a tool if the **backend** allows it; a filtered answer can still be **wrong** or **grounded** on **poisoned** docs. Interview answer: **layer** policy-filters plus **authZ** plus **architecture** (**LLM05**, **LLM06**).\n\n---"
+    },
+    {
+      "id": "p635953ebc2506d",
+      "cluster": "General",
+      "title": "A customer asks whether their prompts are used to train your foundation model. What do you verify before answering?",
+      "seconds": 120,
+      "answerMarkdown": "Confirm the **exact SKU** or contract line: **enterprise** vs **consumer**, **zero-retention** claims, **fine-tuning** that uses customer data, and **evaluation** or **human review** programs that might copy transcripts. Read **DPA**, **AI addendum**, **subprocessor** list, and **region** commitments. If marketing says \"we don't train,\" ensure that covers **your** integration path (batch vs streaming, attachments, **logging** to third-party observability). Answer customers with **precise** scope: what is **excluded**, what is **logged**, retention, and **who** can access logs (**LLM02**, **LLM03**).\n\n---"
+    },
+    {
+      "id": "p8ed497edf7a0cd",
+      "cluster": "General",
+      "title": "After a red-team, how do you decide whether to fix the model, the prompt, or the application?",
+      "seconds": 120,
+      "answerMarkdown": "**Default bias toward application and tool fixes** when the issue is **privilege**, **data access**, or **unsafe execution**-those should not depend on model niceness. **Prompt and model** changes help with **behavioral** refusals and **quality** but are **brittle** under attack. Prioritize **deterministic** controls: **authZ** bugs first, then **retrieval** ACLs, then **output** validation, then **prompt** hardening, then **model** swaps or **fine-tunes**. Track **regression tests** so \"fixes\" do not reopen prior **injection** or **leakage** paths (**LLM01**, **LLM06**).\n\n---\n\n<!-- verified-depth-merged:v1 ids=genai-llm-product-security -->"
+    }
+  ]
+}

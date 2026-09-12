@@ -7,3 +7,5 @@
 [**Critical Clarification: Security Metrics and OKRs Misconceptions**](Critical%20Clarification%20Security%20Metrics%20and%20OKRs%20Misconceptions.md)
 
 [**Security Metrics and OKRs - Quick Reference**](Security%20Metrics%20and%20OKRs%20-%20Quick%20Reference.md)
+
+[**Security Metrics and OKRs - Mind Map**](Security%20Metrics%20and%20OKRs%20-%20Mind%20Map.md)

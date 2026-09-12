@@ -1,0 +1,2023 @@
+{
+  "id": "na358da567875d74",
+  "title": "Authorization and Authentication",
+  "markdown": "**Authentication (AuthN)** answers *who* is calling: it binds a request to a principal (user, device, workload). **Authorization (AuthZ)** answers *what* that principal may do on *which* resources. In almost every system, you establish identity first, then enforce policy-but **AuthZ must be evaluated on every protected action**, while **AuthN may be amortized** (session cookie, short-lived access token, mTLS identity).\n\nGetting this split wrong is how teams ship \"we use JWTs, so we're secure\" apps that still suffer **IDOR**, **broken object-level checks**, or **confused-deputy** OAuth bugs. This guide focuses on the distinctions that show up in architecture reviews and interviews: AuthN vs AuthZ, **sessions vs tokens**, **OAuth/OIDC roles**, **RBAC vs ABAC**, frequent misconceptions, and **API patterns**.",
+  "notes": "Authentication (AuthN) answers who is calling: it binds a request to a principal (user, device, workload). Authorization (AuthZ) answers what that principal may do on which resources. In almost every system, you establish identity first, then enforce policy-but AuthZ must be evaluated on every protected action, while AuthN may be amortized (session cookie, short-lived access token, mTLS identity).\n\nGetting this split wrong is how teams ship \"we use JWTs, so we're secure\" apps that still suffer IDOR, broken object-level checks, or confused-deputy OAuth bugs. This guide focuses on the distinctions that show up in architecture reviews and interviews: AuthN vs AuthZ, sessions vs tokens, OAuth/OIDC roles, RBAC vs ABAC, frequent misconceptions, and API patterns.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "n9a516b364ea9dca",
+      "title": "Concept",
+      "markdown": "**Authentication (AuthN)** answers *who* is calling: it binds a request to a principal (user, device, workload). **Authorization (AuthZ)** answers *what* that principal may do on *which* resources. In almost every system, you establish identity first, then enforce policy-but **AuthZ must be evaluated on every protected action**, while **AuthN may be amortized** (session cookie, short-lived access token, mTLS identity).\n\nGetting this split wrong is how teams ship \"we use JWTs, so we're secure\" apps that still suffer **IDOR**, **broken object-level checks**, or **confused-deputy** OAuth bugs. This guide focuses on the distinctions that show up in architecture reviews and interviews: AuthN vs AuthZ, **sessions vs tokens**, **OAuth/OIDC roles**, **RBAC vs ABAC**, frequent misconceptions, and **API patterns**.",
+      "notes": "Authentication (AuthN) answers who is calling: it binds a request to a principal (user, device, workload). Authorization (AuthZ) answers what that principal may do on which resources. In almost every system, you establish identity first, then enforce policy-but AuthZ must be evaluated on every protected action, while AuthN may be amortized (session cookie, short-lived access token, mTLS identity).\n\nGetting this split wrong is how teams ship \"we use JWTs, so we're secure\" apps that still suffer IDOR, broken object-level checks, or confused-deputy OAuth bugs. This guide focuses on the distinctions that show up in architecture reviews and interviews: AuthN vs AuthZ, sessions vs tokens, OAuth/OIDC roles, RBAC vs ABAC, frequent misconceptions, and API patterns.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Authentication (AuthN) answers who is calling: it binds a request to a...",
+      "expanded": false
+    },
+    {
+      "id": "n312e184cbaf0654",
+      "title": "Authentication vs authorization",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nd60ed5fca2ddb67",
+          "title": "Definitions",
+          "markdown": "| Concern | Question it answers | Typical artifacts | Typical failures |\n|--------|----------------------|-------------------|------------------|\n| **AuthN** | Is this caller who they claim? | Password + MFA, WebAuthn, client cert, signed token from IdP | Weak credentials, session fixation, token theft, replay |\n| **AuthZ** | Is this caller allowed to do *this* on *that*? | RBAC roles, ABAC policies, row-level rules, consent scopes | Missing checks, IDOR, over-broad roles, policy drift |",
+          "notes": "| Concern | Question it answers | Typical artifacts | Typical failures |\n|--------|----------------------|-------------------|------------------|\n| AuthN | Is this caller who they claim? | Password + MFA, WebAuthn, client cert, signed token from IdP | Weak credentials, session fixation, token theft, replay |\n| AuthZ | Is this caller allowed to do this on that? | RBAC roles, ABAC policies, row-level rules, consent scopes | Missing checks, IDOR, over-broad roles, policy drift |",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "| Concern | Question it answers | Typical artifacts | Typical failures |...",
+          "expanded": false
+        },
+        {
+          "id": "n5dd1e66a348459f",
+          "title": "Order and coupling",
+          "markdown": "- **Logical order:** authenticate (or identify the workload), then authorize.\n- **Practical decoupling:** identity may be established at an **edge** (API gateway, load balancer, service mesh) while **fine-grained AuthZ** often belongs next to the **domain** (service or data layer), because only the domain knows object ownership and business rules.",
+          "notes": "- Logical order: authenticate (or identify the workload), then authorize.\n- Practical decoupling: identity may be established at an edge (API gateway, load balancer, service mesh) while fine-grained AuthZ often belongs next to the domain (service or data layer), because only the domain knows object ownership and business rules.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Logical order: authenticate (or identify the workload), then authorize.",
+          "expanded": false
+        },
+        {
+          "id": "n032cababf9661aa",
+          "title": "\u201cAuthenticated\u201d does not mean \u201cauthorized\u201d",
+          "markdown": "A valid session or access token proves *identity* (and sometimes **coarse** entitlements), but **object-level authorization** is separate: \"User A is logged in\" does not imply \"User A may read document `D`.\" Interviews reward stating this explicitly and naming **CWE-285** (improper authorization) as the class behind many IDOR bugs.",
+          "notes": "A valid session or access token proves identity (and sometimes coarse entitlements), but object-level authorization is separate: \"User A is logged in\" does not imply \"User A may read document D.\" Interviews reward stating this explicitly and naming CWE-285 (improper authorization) as the class behind many IDOR bugs.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "A valid session or access token proves identity (and sometimes coarse...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Definitions",
+      "expanded": true
+    },
+    {
+      "id": "n90b1b12b812a114",
+      "title": "Sessions vs tokens",
+      "markdown": "Both are **vehicles for continuity** after initial AuthN. The security trade-offs differ in **where state lives**, **how revocation works**, and **what attackers can steal**.",
+      "notes": "Both are vehicles for continuity after initial AuthN. The security trade-offs differ in where state lives, how revocation works, and what attackers can steal.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nbeb62eea798880c",
+          "title": "Server-side sessions (session IDs)",
+          "markdown": "**How it works:** After AuthN, the server creates a **random session identifier** and stores session state server-side (memory, Redis, DB). The client holds only the opaque ID-classically in an **HttpOnly, Secure, SameSite** cookie.\n\n**Strengths**",
+          "notes": "How it works: After AuthN, the server creates a random session identifier and stores session state server-side (memory, Redis, DB). The client holds only the opaque ID-classically in an HttpOnly, Secure, SameSite cookie.\n\nStrengths",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n604584ca86e6355",
+              "title": "Instant server-side revocation (delete or blacklist session record).",
+              "markdown": "- Instant server-side revocation (delete or blacklist session record).",
+              "notes": "Instant server-side revocation (delete or blacklist session record).",
+              "blurb": "Instant server-side revocation (delete or blacklist session record).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n2c466bfb5c66ac0",
+              "title": "Opaque to the client-no self-describing claims for users to tamper with.",
+              "markdown": "- Opaque to the client-no self-describing claims for users to tamper with.",
+              "notes": "Opaque to the client-no self-describing claims for users to tamper with.",
+              "blurb": "Opaque to the client-no self-describing claims for users to tamper with.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n92eb5adb10e19d9",
+              "title": "Easy to rotate session ID on privilege change.",
+              "markdown": "- Easy to rotate session ID on privilege change.",
+              "notes": "Easy to rotate session ID on privilege change.",
+              "blurb": "Easy to rotate session ID on privilege change.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ne60ca4183d8c1e8",
+              "title": "Session fixation: always issue a new session ID after successful login.",
+              "markdown": "- Session fixation: always issue a new session ID after successful login.",
+              "notes": "Session fixation: always issue a new session ID after successful login.",
+              "blurb": "Session fixation: always issue a new session ID after successful login.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n850ad91a57cb556",
+              "title": "Theft: if the session cookie leaks (XSS without HttpOnly, malware, physical access), the",
+              "markdown": "- Theft: if the session cookie leaks (XSS without HttpOnly, malware, physical access), the",
+              "notes": "Theft: if the session cookie leaks (XSS without HttpOnly, malware, physical access), the",
+              "blurb": "Theft: if the session cookie leaks (XSS without HttpOnly, malware, physical...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n7b346e79eeea9fa",
+              "title": "Scale: session store must be highly available; sticky sessions alone are a fragile subst",
+              "markdown": "- Scale: session store must be highly available; sticky sessions alone are a fragile subst",
+              "notes": "Scale: session store must be highly available; sticky sessions alone are a fragile subst",
+              "blurb": "Scale: session store must be highly available; sticky sessions alone are a...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "How it works: After AuthN, the server creates a random session identifier...",
+          "expanded": false
+        },
+        {
+          "id": "n99bc9a81d09eaa7",
+          "title": "Client-held tokens (e.g., JWT access tokens)",
+          "markdown": "**How it works:** The server (or IdP) issues a **signed** (and often encrypted) token carrying **claims** (subject, audience, expiry, scopes). The resource server can validate **cryptographically** without a synchronous session lookup-though **revocation and freshness** become harder.\n\n**Strengths**",
+          "notes": "How it works: The server (or IdP) issues a signed (and often encrypted) token carrying claims (subject, audience, expiry, scopes). The resource server can validate cryptographically without a synchronous session lookup-though revocation and freshness become harder.\n\nStrengths",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n78be351f51edd25",
+              "title": "Horizontal scalability and microservice-friendly validation (signature + issuer metadata",
+              "markdown": "- Horizontal scalability and microservice-friendly validation (signature + issuer metadata",
+              "notes": "Horizontal scalability and microservice-friendly validation (signature + issuer metadata",
+              "blurb": "Horizontal scalability and microservice-friendly validation (signature +...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf120eaff919d76e",
+              "title": "Useful for machine-to-machine flows with OAuth client credentials.",
+              "markdown": "- Useful for machine-to-machine flows with OAuth client credentials.",
+              "notes": "Useful for machine-to-machine flows with OAuth client credentials.",
+              "blurb": "Useful for machine-to-machine flows with OAuth client credentials.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb41e590c5280fc0",
+              "title": "XSS + localStorage is a common anti-pattern; prefer HttpOnly cookies for browser-held to",
+              "markdown": "- XSS + localStorage is a common anti-pattern; prefer HttpOnly cookies for browser-held to",
+              "notes": "XSS + localStorage is a common anti-pattern; prefer HttpOnly cookies for browser-held to",
+              "blurb": "XSS + localStorage is a common anti-pattern; prefer HttpOnly cookies for...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n78657ecbce311e6",
+              "title": "Algorithm/key confusion and weak signing are classic JWT pitfalls-pin algorithms, use mo",
+              "markdown": "- Algorithm/key confusion and weak signing are classic JWT pitfalls-pin algorithms, use mo",
+              "notes": "Algorithm/key confusion and weak signing are classic JWT pitfalls-pin algorithms, use mo",
+              "blurb": "Algorithm/key confusion and weak signing are classic JWT pitfalls-pin...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ncb88b4a09cb92b8",
+              "title": "Revocation: short TTL, refresh tokens with rotation, denylists for compromise, or accept",
+              "markdown": "- Revocation: short TTL, refresh tokens with rotation, denylists for compromise, or accept",
+              "notes": "Revocation: short TTL, refresh tokens with rotation, denylists for compromise, or accept",
+              "blurb": "Revocation: short TTL, refresh tokens with rotation, denylists for...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "How it works: The server (or IdP) issues a signed (and often encrypted)...",
+          "expanded": false
+        },
+        {
+          "id": "nd3032616c198479",
+          "title": "Choosing between them",
+          "markdown": "- **Web apps with a first-party backend:** server sessions or **opaque** tokens backed by server store are often simpler to revoke.\n- **SPAs calling multiple APIs, mobile apps, microservices:** signed **access tokens** + centralized **token introspection** or JWKS validation patterns are common-pair with **short lifetimes** and explicit **AuthZ** at services.",
+          "notes": "- Web apps with a first-party backend: server sessions or opaque tokens backed by server store are often simpler to revoke.\n- SPAs calling multiple APIs, mobile apps, microservices: signed access tokens + centralized token introspection or JWKS validation patterns are common-pair with short lifetimes and explicit AuthZ at services.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Web apps with a first-party backend: server sessions or opaque tokens backed...",
+          "expanded": false
+        },
+        {
+          "id": "n98d2feb4e33cd06",
+          "title": "Refresh tokens",
+          "markdown": "Refresh tokens are **high-value secrets**: they mint new access tokens. Store and transmit them like credentials-**rotation**, **reuse detection**, **binding** to client (PKCE for public clients), and **strict audience** controls reduce account takeover impact.",
+          "notes": "Refresh tokens are high-value secrets: they mint new access tokens. Store and transmit them like credentials-rotation, reuse detection, binding to client (PKCE for public clients), and strict audience controls reduce account takeover impact.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Refresh tokens are high-value secrets: they mint new access tokens.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Both are vehicles for continuity after initial AuthN.",
+      "expanded": true
+    },
+    {
+      "id": "n405ffec47668d2b",
+      "title": "OAuth 2.0 and OpenID Connect: roles and trust boundaries",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "neee3892be474862",
+          "title": "OAuth 2.0 roles (authorization framework)",
+          "markdown": "Resource owner: the user (or entity) who can grant access to protected resources.",
+          "notes": "Resource owner: the user (or entity) who can grant access to protected resources.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n0534d8205950aa4",
+              "title": "Resource owner: the user (or entity) who can grant access to protected resources.",
+              "markdown": "- Resource owner: the user (or entity) who can grant access to protected resources.",
+              "notes": "Resource owner: the user (or entity) who can grant access to protected resources.",
+              "blurb": "Resource owner: the user (or entity) who can grant access to protected...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc57fd0597ca4318",
+              "title": "Client: the application requesting access (web app, SPA, mobile app, backend service). S",
+              "markdown": "- Client: the application requesting access (web app, SPA, mobile app, backend service). S",
+              "notes": "Client: the application requesting access (web app, SPA, mobile app, backend service). S",
+              "blurb": "Client: the application requesting access (web app, SPA, mobile app, backend...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n10df3491af94df0",
+              "title": "Authorization server (AS): issues tokens after authenticating the resource owner and obt",
+              "markdown": "- Authorization server (AS): issues tokens after authenticating the resource owner and obt",
+              "notes": "Authorization server (AS): issues tokens after authenticating the resource owner and obt",
+              "blurb": "Authorization server (AS): issues tokens after authenticating the resource...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd5061acb5978370",
+              "title": "Resource server (RS): hosts protected APIs; validates tokens and enforces access policie",
+              "markdown": "- Resource server (RS): hosts protected APIs; validates tokens and enforces access policie",
+              "notes": "Resource server (RS): hosts protected APIs; validates tokens and enforces access policie",
+              "blurb": "Resource server (RS): hosts protected APIs; validates tokens and enforces...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Resource owner: the user (or entity) who can grant access to protected...",
+          "expanded": false
+        },
+        {
+          "id": "n83ea52164bdea83",
+          "title": "OpenID Connect (OIDC) adds identity",
+          "markdown": "OIDC layers **identity tokens (`id_token`)** and a **UserInfo** endpoint on top of OAuth. Actors:\n\n- **Identity Provider (IdP):** issues `id_token` and tokens; authenticates users.\n- **Relying Party (RP):** your application that consumes identity assertions.\n\n**`id_token` vs `access_token`:** the **`id_token`** is for the **client** to learn who the user is. The **`access_token`** is for calling **protected APIs** (resource servers). Mixing them-e.g., sending an `id_token` to your API as if it were an API credential-is a common integration mistake.",
+          "notes": "OIDC layers identity tokens (idtoken) and a UserInfo endpoint on top of OAuth. Actors:\n- Identity Provider (IdP): issues idtoken and tokens; authenticates users.\n- Relying Party (RP): your application that consumes identity assertions.\n\nidtoken vs accesstoken: the idtoken is for the client to learn who the user is. The accesstoken is for calling protected APIs (resource servers). Mixing them-e.g., sending an idtoken to your API as if it were an API credential-is a common integration mistake.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "OIDC layers identity tokens (idtoken) and a UserInfo endpoint on top of OAuth.",
+          "expanded": false
+        },
+        {
+          "id": "n1f5a9957e6dad8f",
+          "title": "Scopes vs fine-grained AuthZ",
+          "markdown": "- **Scopes/consent** express **coarse delegation** (\"can read calendar\") between user, client, and AS.\n- **Application AuthZ** (\"may edit *this* record\") still belongs in your services, often via **RBAC/ABAC** and **object-level checks**.",
+          "notes": "- Scopes/consent express coarse delegation (\"can read calendar\") between user, client, and AS.\n- Application AuthZ (\"may edit this record\") still belongs in your services, often via RBAC/ABAC and object-level checks.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Scopes/consent express coarse delegation (\"can read calendar\") between user,...",
+          "expanded": false
+        },
+        {
+          "id": "n84f90711ae3e85f",
+          "title": "Patterns that often appear in reviews",
+          "markdown": "Authorization Code + PKCE for public clients; avoid legacy implicit flow for new browser apps.",
+          "notes": "Authorization Code + PKCE for public clients; avoid legacy implicit flow for new browser apps.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n6d989a87844ae49",
+              "title": "Authorization Code + PKCE for public clients; avoid legacy implicit flow for new browser",
+              "markdown": "- Authorization Code + PKCE for public clients; avoid legacy implicit flow for new browser",
+              "notes": "Authorization Code + PKCE for public clients; avoid legacy implicit flow for new browser",
+              "blurb": "Authorization Code + PKCE for public clients; avoid legacy implicit flow for...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n172b5317deabbcb",
+              "title": "Audience (aud) and issuer (iss) validation on access tokens at every resource server.",
+              "markdown": "- Audience (aud) and issuer (iss) validation on access tokens at every resource server.",
+              "notes": "Audience (aud) and issuer (iss) validation on access tokens at every resource server.",
+              "blurb": "Audience (aud) and issuer (iss) validation on access tokens at every...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n307fc7cf6436f38",
+              "title": "Redirect URI exactness and state parameter for CSRF protection in the OAuth front channe",
+              "markdown": "- Redirect URI exactness and state parameter for CSRF protection in the OAuth front channe",
+              "notes": "Redirect URI exactness and state parameter for CSRF protection in the OAuth front channe",
+              "blurb": "Redirect URI exactness and state parameter for CSRF protection in the OAuth...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n21ad3483edc2808",
+              "title": "Confused deputy: ensure tokens minted for client A are not accepted by API B unless that",
+              "markdown": "- Confused deputy: ensure tokens minted for client A are not accepted by API B unless that",
+              "notes": "Confused deputy: ensure tokens minted for client A are not accepted by API B unless that",
+              "blurb": "Confused deputy: ensure tokens minted for client A are not accepted by API B...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Authorization Code + PKCE for public clients; avoid legacy implicit flow for...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes OAuth 2.0 roles (authorization framework)",
+      "expanded": true
+    },
+    {
+      "id": "nfd618e6dda24c98",
+      "title": "Authorization models: RBAC and ABAC",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nf742b22996f2866",
+          "title": "Role-based access control (RBAC)",
+          "markdown": "Users receive **roles**; roles map to **permissions** on resource types.\n\n- **Pros:** simple to explain, works well for **admin consoles** and stable job functions.\n- **Cons:** **role explosion** (combinations of duties), weak **context** (\"same role, different data\"), tempting **overly broad** roles like `admin`.\n\n**Interview tip:** mention **separation of duties** and **least privilege** as operational requirements, not one-time design.",
+          "notes": "Users receive roles; roles map to permissions on resource types.\n- Pros: simple to explain, works well for admin consoles and stable job functions.\n- Cons: role explosion (combinations of duties), weak context (\"same role, different data\"), tempting overly broad roles like admin.\n\nInterview tip: mention separation of duties and least privilege as operational requirements, not one-time design.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Users receive roles; roles map to permissions on resource types.",
+          "expanded": false
+        },
+        {
+          "id": "n9c0bf555f1e6178",
+          "title": "Attribute-based access control (ABAC)",
+          "markdown": "Decisions use **attributes** of subject, resource, action, and environment (department, data classification, ownership, IP, time, device posture).\n\n- **Pros:** expressive policies, strong **data-centric** and **contextual** control.\n- **Cons:** harder to reason about, needs **policy testing**, observability, and governance.\n\nTreat ABAC policies like code: **version control**, **code review**, **unit tests** for allow/deny matrices, and **canary** rollouts. Without tests, a small attribute typo can **deny service** or **open access** widely before anyone notices.\n\n**Hybrid reality:** many products expose **RBAC to admins** (\"assign roles\") while enforcing **ABAC-like** rules internally (owner-only rows, tenant isolation).\n\n**Hierarchical roles** (inheritance) reduce duplication-e.g., `editor` inherits `viewer`-but can accidentally grant **implied** permissions if the hierarchy is deep and poorly documented. **Dynamic roles** tied to HR systems need **timely revocation** when employment status changes; stale role assignments are a frequent source of **over-privileged** dormant accounts.",
+          "notes": "Decisions use attributes of subject, resource, action, and environment (department, data classification, ownership, IP, time, device posture).\n- Pros: expressive policies, strong data-centric and contextual control.\n- Cons: harder to reason about, needs policy testing, observability, and governance.\n\nTreat ABAC policies like code: version control, code review, unit tests for allow/deny matrices, and canary rollouts. Without tests, a small attribute typo can deny service or open access widely before anyone notices.\n\nHybrid reality: many products expose RBAC to admins (\"assign roles\") while enforcing ABAC-like rules internally (owner-only rows, tenant isolation).\n\nHierarchical roles (inheritance) reduce duplication-e.g., editor inherits viewer-but can accidentally grant implied permissions if the hierarchy is deep and poorly documented. Dynamic roles tied to HR systems need timely revocation when employment status changes; stale role assignments are a frequent source of over-privileged dormant accounts.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Decisions use attributes of subject, resource, action, and environment...",
+          "expanded": false
+        },
+        {
+          "id": "n959a59e3245eb91",
+          "title": "DAC and MAC (brief)",
+          "markdown": "- **DAC:** resource owners grant access (shared drives, mailbox delegation)-flexible, risky if owners misunderstand sensitivity.\n- **MAC:** labels and lattice policies (common in government/high assurance)-users cannot override policy.",
+          "notes": "- DAC: resource owners grant access (shared drives, mailbox delegation)-flexible, risky if owners misunderstand sensitivity.\n- MAC: labels and lattice policies (common in government/high assurance)-users cannot override policy.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "DAC: resource owners grant access (shared drives, mailbox...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Role-based access control (RBAC)",
+      "expanded": false
+    },
+    {
+      "id": "n2efa15b89b3c9f9",
+      "title": "Common confusions (interview landmines)",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n8e5ab5954b66931",
+          "title": "401 Unauthorized vs 403 Forbidden",
+          "markdown": "**Practical API semantics:**\n\n- **401:** *not authenticated* or authentication is invalid/expired-`WWW-Authenticate` may apply.\n- **403:** *authenticated* but **not permitted**-do not leak whether a resource exists; still avoid verbose errors.\n\nTeams disagree on edge cases; interviews care that you **pick a consistent policy** and document it.",
+          "notes": "Practical API semantics:\n- 401: not authenticated or authentication is invalid/expired-WWW-Authenticate may apply.\n- 403: authenticated but not permitted-do not leak whether a resource exists; still avoid verbose errors.\n\nTeams disagree on edge cases; interviews care that you pick a consistent policy and document it.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Practical API semantics: - 401: not authenticated or authentication is...",
+          "expanded": false
+        },
+        {
+          "id": "nfbdc2554a7e1d0a",
+          "title": "\u201cWe use OAuth, so AuthZ is solved\u201d",
+          "markdown": "OAuth solves **delegation and token issuance**, not **your** object-level rules.",
+          "notes": "OAuth solves delegation and token issuance, not your object-level rules.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "OAuth solves delegation and token issuance, not your object-level rules.",
+          "expanded": false
+        },
+        {
+          "id": "nedb9897fdd09770",
+          "title": "JWT as authorization",
+          "markdown": "A JWT may carry **claims** (roles, scopes), but **trust the signature, not the client**-and still implement **server-side checks** against fresh data where needed (subscription status, suspension, tenant membership).",
+          "notes": "A JWT may carry claims (roles, scopes), but trust the signature, not the client-and still implement server-side checks against fresh data where needed (subscription status, suspension, tenant membership).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "A JWT may carry claims (roles, scopes), but trust the signature, not the...",
+          "expanded": false
+        },
+        {
+          "id": "n76323811071702a",
+          "title": "API keys as identity",
+          "markdown": "API keys usually identify a **project or integration**. Treat them as **secrets** with **scopes**, **rotation**, and **rate limits**-they are weak user AuthN on their own.",
+          "notes": "API keys usually identify a project or integration. Treat them as secrets with scopes, rotation, and rate limits-they are weak user AuthN on their own.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "API keys usually identify a project or integration.",
+          "expanded": false
+        },
+        {
+          "id": "n8996790b56c55dc",
+          "title": "SSO login vs API access",
+          "markdown": "Logging users in via SAML/OIDC is **AuthN at the edge**. Your services still need **token validation**, **audience checks**, and **AuthZ**.",
+          "notes": "Logging users in via SAML/OIDC is AuthN at the edge. Your services still need token validation, audience checks, and AuthZ.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Logging users in via SAML/OIDC is AuthN at the edge.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 401 Unauthorized vs 403 Forbidden",
+      "expanded": false
+    },
+    {
+      "id": "nb2d54a540c7657c",
+      "title": "API authentication and authorization patterns",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "neb4a5ad5facca41",
+          "title": "Edge vs service enforcement",
+          "markdown": "- **Gateway:** TLS termination, coarse AuthN (JWT validation, API key), **rate limiting**, **WAF**, sometimes **scope** checks.\n- **Service:** **domain AuthZ** (ownership, state transitions), **policy engines**, **database predicates** (tenant filters).",
+          "notes": "- Gateway: TLS termination, coarse AuthN (JWT validation, API key), rate limiting, WAF, sometimes scope checks.\n- Service: domain AuthZ (ownership, state transitions), policy engines, database predicates (tenant filters).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Gateway: TLS termination, coarse AuthN (JWT validation, API key), rate...",
+          "expanded": false
+        },
+        {
+          "id": "n4c06a4f9d297730",
+          "title": "Bearer access tokens",
+          "markdown": "`Authorization: Bearer <token>`. Validate **issuer, audience, signature, `exp`, `nbf`**, and **intended use** (access vs ID). Prefer **short TTL** and **scoped** claims.",
+          "notes": "Authorization: Bearer <token>. Validate issuer, audience, signature, exp, nbf, and intended use (access vs ID). Prefer short TTL and scoped claims.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Authorization: Bearer <token>.",
+          "expanded": false
+        },
+        {
+          "id": "n0db4f9b159240d3",
+          "title": "mTLS (mutual TLS)",
+          "markdown": "Strong **workload identity** between services. Combine with **SPIFFE/SPIRE**-style identities in cloud-native systems. Still requires **application-level AuthZ**-mTLS says *which service connected*, not *which rows it may read*.",
+          "notes": "Strong workload identity between services. Combine with SPIFFE/SPIRE-style identities in cloud-native systems. Still requires application-level AuthZ-mTLS says which service connected, not which rows it may read.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Strong workload identity between services.",
+          "expanded": false
+        },
+        {
+          "id": "n54cb42cb9a33e81",
+          "title": "Introspection vs local JWT validation",
+          "markdown": "- **Local JWKS validation:** fast, offline-capable; watch **key rotation**.\n- **Introspection endpoint:** authoritative for **revocation**; adds latency and coupling-sometimes used at the edge only.",
+          "notes": "- Local JWKS validation: fast, offline-capable; watch key rotation.\n- Introspection endpoint: authoritative for revocation; adds latency and coupling-sometimes used at the edge only.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Local JWKS validation: fast, offline-capable; watch key rotation.",
+          "expanded": false
+        },
+        {
+          "id": "n21ec51ea173ba6d",
+          "title": "First-party vs third-party",
+          "markdown": "- **First-party:** you own client and APIs-simpler cookie strategies and token binding.\n- **Third-party:** **consent**, **scoped tokens**, **per-client rate limits**, and **B2B tenant isolation** dominate threat modeling.",
+          "notes": "- First-party: you own client and APIs-simpler cookie strategies and token binding.\n- Third-party: consent, scoped tokens, per-client rate limits, and B2B tenant isolation dominate threat modeling.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "First-party: you own client and APIs-simpler cookie strategies and token...",
+          "expanded": false
+        },
+        {
+          "id": "nd5f9773acceeaa2",
+          "title": "Browser SPAs and the backend-for-frontend (BFF)",
+          "markdown": "Single-page applications struggle to keep tokens out of JavaScript. Common mitigations:\n\n- **BFF or dedicated API layer** holds **HttpOnly** cookies and exchanges them for upstream access tokens **server-side**, so the browser never stores bearer tokens in `localStorage`.\n- **Strict CSP**, **Subresource Integrity**, and **minimal third-party scripts** reduce XSS blast radius-XSS against a cookie-based session is still catastrophic, but **JS-readable tokens** make exfiltration trivial.",
+          "notes": "Single-page applications struggle to keep tokens out of JavaScript. Common mitigations:\n- BFF or dedicated API layer holds HttpOnly cookies and exchanges them for upstream access tokens server-side, so the browser never stores bearer tokens in localStorage.\n- Strict CSP, Subresource Integrity, and minimal third-party scripts reduce XSS blast radius-XSS against a cookie-based session is still catastrophic, but JS-readable tokens make exfiltration trivial.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Single-page applications struggle to keep tokens out of JavaScript.",
+          "expanded": false
+        },
+        {
+          "id": "n8ea12b5db5e3b8a",
+          "title": "Service-to-service: workload identity beyond API keys",
+          "markdown": "**API keys** are appropriate for **integrations** when paired with **scopes**, **rotation**, **per-key quotas**, and **break-glass revocation**. For internal east-west traffic, prefer **mTLS with short-lived certs**, **signed service JWTs**, or mesh identities-then map the **caller service identity** to **AuthZ** (which downstream methods and tenants it may touch).",
+          "notes": "API keys are appropriate for integrations when paired with scopes, rotation, per-key quotas, and break-glass revocation. For internal east-west traffic, prefer mTLS with short-lived certs, signed service JWTs, or mesh identities-then map the caller service identity to AuthZ (which downstream methods and tenants it may touch).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "API keys are appropriate for integrations when paired with scopes, rotation,...",
+          "expanded": false
+        },
+        {
+          "id": "n2314552c8c1d3b6",
+          "title": "Introspection, token exchange, and delegation depth",
+          "markdown": "Large platforms sometimes use **token exchange** (RFC 8693) to swap a subject token for a **downstream-scoped** token with a tighter **audience**. This limits **confused deputy** paths: an edge token should not automatically work against every internal microservice. Whether you exchange tokens or mint **internal JWTs** at the gateway, preserve a clear **chain of trust**: who signed the token, who it was minted for, and what **evidence** (MFA step-up, device posture) was satisfied at issuance.",
+          "notes": "Large platforms sometimes use token exchange (RFC 8693) to swap a subject token for a downstream-scoped token with a tighter audience. This limits confused deputy paths: an edge token should not automatically work against every internal microservice. Whether you exchange tokens or mint internal JWTs at the gateway, preserve a clear chain of trust: who signed the token, who it was minted for, and what evidence (MFA step-up, device posture) was satisfied at issuance.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Large platforms sometimes use token exchange (RFC 8693) to swap a subject...",
+          "expanded": false
+        },
+        {
+          "id": "n96e57070f3289f4",
+          "title": "SAML, OIDC, and enterprise federation (orientation)",
+          "markdown": "**SAML 2.0** remains common for **browser SSO** into enterprise apps (XML assertions, redirect/bindings). **OIDC** is prevalent for **modern APIs and mobile** (JSON, JWT-shaped ID tokens, simpler client integration). From a security standpoint, both require disciplined **metadata trust**, **clock skew** handling, **replay** controls, and **single logout** trade-offs. Your application still performs **session establishment** and **authorization** after federation-federated AuthN is not a substitute for **object-level AuthZ**.",
+          "notes": "SAML 2.0 remains common for browser SSO into enterprise apps (XML assertions, redirect/bindings). OIDC is prevalent for modern APIs and mobile (JSON, JWT-shaped ID tokens, simpler client integration). From a security standpoint, both require disciplined metadata trust, clock skew handling, replay controls, and single logout trade-offs. Your application still performs session establishment and authorization after federation-federated AuthN is not a substitute for object-level AuthZ.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "SAML 2.0 remains common for browser SSO into enterprise apps (XML...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Edge vs service enforcement",
+      "expanded": false
+    },
+    {
+      "id": "n601eef56dad611f",
+      "title": "MFA, step-up, and phishing resistance",
+      "markdown": "Passwords alone rarely meet organizational risk appetite. **MFA** combines categories (know/have/are). Interview-ready points:",
+      "notes": "Passwords alone rarely meet organizational risk appetite. MFA combines categories (know/have/are). Interview-ready points:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n37cd2292acdeeeb",
+          "title": "TOTP apps and push approvals improve baseline posture but can be phished with real-time",
+          "markdown": "- TOTP apps and push approvals improve baseline posture but can be phished with real-time",
+          "notes": "TOTP apps and push approvals improve baseline posture but can be phished with real-time",
+          "blurb": "TOTP apps and push approvals improve baseline posture but can be phished...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n9c4d3792c1d0e68",
+          "title": "WebAuthn / FIDO2 security keys provide phishing-resistant possession factors because cre",
+          "markdown": "- WebAuthn / FIDO2 security keys provide phishing-resistant possession factors because cre",
+          "notes": "WebAuthn / FIDO2 security keys provide phishing-resistant possession factors because cre",
+          "blurb": "WebAuthn / FIDO2 security keys provide phishing-resistant possession factors...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nca66c4e89d60c27",
+          "title": "Step-up authentication: re-verify with a stronger factor before high-impact actions (cha",
+          "markdown": "- Step-up authentication: re-verify with a stronger factor before high-impact actions (cha",
+          "notes": "Step-up authentication: re-verify with a stronger factor before high-impact actions (cha",
+          "blurb": "Step-up authentication: re-verify with a stronger factor before high-impact...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Passwords alone rarely meet organizational risk appetite.",
+      "expanded": false
+    },
+    {
+      "id": "n514f604d741809d",
+      "title": "Authorization failures you should name in interviews",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nb0a536309cfabbe",
+          "title": "IDOR and broken object-level AuthZ",
+          "markdown": "When identifiers are predictable or exposed, clients attempt **horizontal** access (another user's object) or **vertical** access (admin-only operations). Prevention combines **opaque IDs** (defense in depth, not primary control), **server-side lookups keyed by tenant**, and **policy checks** that bind `(subject, action, resource)` **after** loading the resource context.",
+          "notes": "When identifiers are predictable or exposed, clients attempt horizontal access (another user's object) or vertical access (admin-only operations). Prevention combines opaque IDs (defense in depth, not primary control), server-side lookups keyed by tenant, and policy checks that bind (subject, action, resource) after loading the resource context.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "When identifiers are predictable or exposed, clients attempt horizontal...",
+          "expanded": false
+        },
+        {
+          "id": "n3b2d3aa2476b7a6",
+          "title": "Inconsistent enforcement in microservices",
+          "markdown": "If only some services validate **audience** or **scopes**, attackers route through the weak hop. **Contract tests**, **shared middleware**, and **policy-as-code** reviews reduce drift.",
+          "notes": "If only some services validate audience or scopes, attackers route through the weak hop. Contract tests, shared middleware, and policy-as-code reviews reduce drift.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "If only some services validate audience or scopes, attackers route through...",
+          "expanded": false
+        },
+        {
+          "id": "n5da54b5f44c4a99",
+          "title": "Over-reliance on front-end checks",
+          "markdown": "UI hiding of buttons is **not** authorization. Every **mutating** and **data** endpoint must enforce policy **server-side**.",
+          "notes": "UI hiding of buttons is not authorization. Every mutating and data endpoint must enforce policy server-side.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "UI hiding of buttons is not authorization.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes IDOR and broken object-level AuthZ",
+      "expanded": false
+    },
+    {
+      "id": "n3db38eb5def7182",
+      "title": "Zero Trust and continuous assurance (how it maps to AuthN/AuthZ)",
+      "markdown": "**Zero Trust** is not a single product; it is an architecture stance: **do not trust the network; verify explicitly; assume breach**. Operationally it reinforces patterns you already want:",
+      "notes": "Zero Trust is not a single product; it is an architecture stance: do not trust the network; verify explicitly; assume breach. Operationally it reinforces patterns you already want:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nb36570cfc29b077",
+          "title": "Strong identity for users (MFA, device signals) and workloads (certs, SPIFFE IDs).",
+          "markdown": "- Strong identity for users (MFA, device signals) and workloads (certs, SPIFFE IDs).",
+          "notes": "Strong identity for users (MFA, device signals) and workloads (certs, SPIFFE IDs).",
+          "blurb": "Strong identity for users (MFA, device signals) and workloads (certs, SPIFFE...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nf16d6110c7da313",
+          "title": "Least privilege and just-in-time elevation for admin paths.",
+          "markdown": "- Least privilege and just-in-time elevation for admin paths.",
+          "notes": "Least privilege and just-in-time elevation for admin paths.",
+          "blurb": "Least privilege and just-in-time elevation for admin paths.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n716962b054b825e",
+          "title": "Segmentation so a compromised laptop cannot freely reach production data planes.",
+          "markdown": "- Segmentation so a compromised laptop cannot freely reach production data planes.",
+          "notes": "Segmentation so a compromised laptop cannot freely reach production data planes.",
+          "blurb": "Segmentation so a compromised laptop cannot freely reach production data...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n6cafbca7b08e0b2",
+          "title": "Continuous evaluation where risk scores or policy can shorten sessions or force step-up",
+          "markdown": "- Continuous evaluation where risk scores or policy can shorten sessions or force step-up",
+          "notes": "Continuous evaluation where risk scores or policy can shorten sessions or force step-up",
+          "blurb": "Continuous evaluation where risk scores or policy can shorten sessions or...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Zero Trust is not a single product; it is an architecture stance: do not...",
+      "expanded": false
+    },
+    {
+      "id": "n2fc8a84f7bb003d",
+      "title": "Logging, auditing, and accountability",
+      "markdown": "Security and compliance teams depend on **tamper-evident** logs of **authentication events** (success/failure, MFA challenges) and **authorization decisions** for sensitive actions. Effective practice:",
+      "notes": "Security and compliance teams depend on tamper-evident logs of authentication events (success/failure, MFA challenges) and authorization decisions for sensitive actions. Effective practice:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n786ea6f7323556b",
+          "title": "Use stable identifiers (user id, tenant id, API client id) rather than only email addres",
+          "markdown": "- Use stable identifiers (user id, tenant id, API client id) rather than only email addres",
+          "notes": "Use stable identifiers (user id, tenant id, API client id) rather than only email addres",
+          "blurb": "Use stable identifiers (user id, tenant id, API client id) rather than only...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n1a8d5082b8be30d",
+          "title": "Log denials at sensible volume-throttled and sampled for noisy endpoints-to detect probi",
+          "markdown": "- Log denials at sensible volume-throttled and sampled for noisy endpoints-to detect probi",
+          "notes": "Log denials at sensible volume-throttled and sampled for noisy endpoints-to detect probi",
+          "blurb": "Log denials at sensible volume-throttled and sampled for noisy endpoints-to...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n4fcc22bc1f305aa",
+          "title": "Correlate gateway decisions with service-level outcomes to catch policy drift.",
+          "markdown": "- Correlate gateway decisions with service-level outcomes to catch policy drift.",
+          "notes": "Correlate gateway decisions with service-level outcomes to catch policy drift.",
+          "blurb": "Correlate gateway decisions with service-level outcomes to catch policy drift.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Security and compliance teams depend on tamper-evident logs of...",
+      "expanded": false
+    },
+    {
+      "id": "ne06178488e56a75",
+      "title": "Optional hardening: proof-of-possession and binding",
+      "markdown": "Bearer tokens are **bearer**-whoever holds them wins. Emerging patterns reduce theft impact:\n\n- **DPoP (Demonstrating Proof-of-Possession):** sender proves control of a key bound to the token, limiting replay from passive eavesdropping scenarios where TLS is terminated early.\n- **Token binding** strategies (cookies with **SameSite**, **TLS client constraints**, **mTLS** for services) narrow the environments where a stolen secret is usable.\n\nThese are not replacements for **XSS prevention** or **endpoint security**, but they change attacker economics.",
+      "notes": "Bearer tokens are bearer-whoever holds them wins. Emerging patterns reduce theft impact:\n- DPoP (Demonstrating Proof-of-Possession): sender proves control of a key bound to the token, limiting replay from passive eavesdropping scenarios where TLS is terminated early.\n- Token binding strategies (cookies with SameSite, TLS client constraints, mTLS for services) narrow the environments where a stolen secret is usable.\n\nThese are not replacements for XSS prevention or endpoint security, but they change attacker economics.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Bearer tokens are bearer-whoever holds them wins.",
+      "expanded": false
+    },
+    {
+      "id": "neb7f92c02b5975d",
+      "title": "Threat-aware checklist (condensed)",
+      "markdown": "**AuthN**",
+      "notes": "AuthN",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n5d6c8fc7f0dc0fc",
+          "title": "MFA for humans on sensitive accounts; phishing-resistant factors where stakes are high.",
+          "markdown": "- MFA for humans on sensitive accounts; phishing-resistant factors where stakes are high.",
+          "notes": "MFA for humans on sensitive accounts; phishing-resistant factors where stakes are high.",
+          "blurb": "MFA for humans on sensitive accounts; phishing-resistant factors where...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n39eec8b3228c17d",
+          "title": "Credential storage: modern password hashing (Argon2 family) where passwords exist; breac",
+          "markdown": "- Credential storage: modern password hashing (Argon2 family) where passwords exist; breac",
+          "notes": "Credential storage: modern password hashing (Argon2 family) where passwords exist; breac",
+          "blurb": "Credential storage: modern password hashing (Argon2 family) where passwords...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nd490bb060c6d040",
+          "title": "Session hygiene: regenerate IDs on login, idle + absolute timeouts, secure cookie attrib",
+          "markdown": "- Session hygiene: regenerate IDs on login, idle + absolute timeouts, secure cookie attrib",
+          "notes": "Session hygiene: regenerate IDs on login, idle + absolute timeouts, secure cookie attrib",
+          "blurb": "Session hygiene: regenerate IDs on login, idle + absolute timeouts, secure...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ne310bd2174d750f",
+          "title": "Deny by default; centralize policy where possible, test negative cases.",
+          "markdown": "- Deny by default; centralize policy where possible, test negative cases.",
+          "notes": "Deny by default; centralize policy where possible, test negative cases.",
+          "blurb": "Deny by default; centralize policy where possible, test negative cases.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nb4f0083afee8d68",
+          "title": "Object-level checks: every ID from the client is suspect-verify tenant and ownership.",
+          "markdown": "- Object-level checks: every ID from the client is suspect-verify tenant and ownership.",
+          "notes": "Object-level checks: every ID from the client is suspect-verify tenant and ownership.",
+          "blurb": "Object-level checks: every ID from the client is suspect-verify tenant and...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n5cfdad7c566b6c3",
+          "title": "Audit sensitive decisions with correlation IDs.",
+          "markdown": "- Audit sensitive decisions with correlation IDs.",
+          "notes": "Audit sensitive decisions with correlation IDs.",
+          "blurb": "Audit sensitive decisions with correlation IDs.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ne197651aa696d17",
+          "title": "PKCE for public clients; tight redirect URI lists; validate aud/iss; rotate refresh toke",
+          "markdown": "- PKCE for public clients; tight redirect URI lists; validate aud/iss; rotate refresh toke",
+          "notes": "PKCE for public clients; tight redirect URI lists; validate aud/iss; rotate refresh toke",
+          "blurb": "PKCE for public clients; tight redirect URI lists; validate aud/iss; rotate...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n555d91e6a363c99",
+          "title": "Never treat id_token as an API access token.",
+          "markdown": "- Never treat id_token as an API access token.",
+          "notes": "Never treat id_token as an API access token.",
+          "blurb": "Never treat idtoken as an API access token.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes MFA for humans on sensitive accounts; phishing-resistant factors wher",
+      "expanded": false
+    },
+    {
+      "id": "n6fe442ae6aabd5e",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "na01a081ea7dd2cd",
+          "title": "Key Concepts",
+          "markdown": "| Concept | Definition |\n| --- | --- |\n| **Authentication** | Verifies \"who you are\" - identity verification |\n| **Authorization** | Determines \"what you can do\" - access control |\n| **Session Management** | Maintaining authenticated state securely |\n| **MFA** | Multi-Factor Authentication - multiple authentication factors |",
+          "notes": "| Concept | Definition |\n| --- | --- |\n| Authentication | Verifies \"who you are\" - identity verification |\n| Authorization | Determines \"what you can do\" - access control |\n| Session Management | Maintaining authenticated state securely |\n| MFA | Multi-Factor Authentication - multiple authentication factors |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Concept | Definition | | --- | --- | | Authentication | Verifies \"who you...",
+          "expanded": false
+        },
+        {
+          "id": "n87419e917382557",
+          "title": "Authentication vs Authorization",
+          "markdown": "| Aspect | Authentication | Authorization |\n| --- | --- | --- |\n| **Question** | Who are you? | What can you do? |\n| **Purpose** | Verify identity | Control access |\n| **Order** | First | After authentication |\n| **Examples** | Password, tokens, biometrics | RBAC, permissions, ACLs |",
+          "notes": "| Aspect | Authentication | Authorization |\n| --- | --- | --- |\n| Question | Who are you? | What can you do? |\n| Purpose | Verify identity | Control access |\n| Order | First | After authentication |\n| Examples | Password, tokens, biometrics | RBAC, permissions, ACLs |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Aspect | Authentication | Authorization | | --- | --- | --- | | Question |...",
+          "expanded": false
+        },
+        {
+          "id": "n3dbba84472d8e44",
+          "title": "Authentication Factors",
+          "markdown": "| Factor | Type | Examples |\n| --- | --- | --- |\n| **Something You Know** | Knowledge | Password, PIN, security question |\n| **Something You Have** | Possession | Hardware token, mobile device, smart card |\n| **Something You Are** | Inherence | Fingerprint, face, voice recognition |",
+          "notes": "| Factor | Type | Examples |\n| --- | --- | --- |\n| Something You Know | Knowledge | Password, PIN, security question |\n| Something You Have | Possession | Hardware token, mobile device, smart card |\n| Something You Are | Inherence | Fingerprint, face, voice recognition |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Factor | Type | Examples | | --- | --- | --- | | Something You Know |...",
+          "expanded": false
+        },
+        {
+          "id": "nf7998539b964a5b",
+          "title": "Authorization Models",
+          "markdown": "| Model | Description | Use Case |\n| --- | --- | --- |\n| **RBAC** | Role-Based Access Control | Common, simple permissions |\n| **ABAC** | Attribute-Based Access Control | Complex, context-aware permissions |\n| **DAC** | Discretionary Access Control | User-controlled access |\n| **MAC** | Mandatory Access Control | High-security environments |",
+          "notes": "| Model | Description | Use Case |\n| --- | --- | --- |\n| RBAC | Role-Based Access Control | Common, simple permissions |\n| ABAC | Attribute-Based Access Control | Complex, context-aware permissions |\n| DAC | Discretionary Access Control | User-controlled access |\n| MAC | Mandatory Access Control | High-security environments |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Model | Description | Use Case | | --- | --- | --- | | RBAC | Role-Based...",
+          "expanded": false
+        },
+        {
+          "id": "nf9b4f160fdf9814",
+          "title": "Security Checklist",
+          "markdown": "\u2705 Strong password policies and hashing (bcrypt, Argon2) - \u2705 Multi-factor authentication (MFA) for sensitive accounts - \u2705 Secure session management (cryptographically random tokens) - \u2705 Session timeout (absolute and...",
+          "notes": "\u2705 Strong password policies and hashing (bcrypt, Argon2) - \u2705 Multi-factor authentication (MFA) for sensitive accounts - \u2705 Secure session management (cryptographically random tokens) - \u2705 Session timeout (absolute and...",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n19dc472f0ac6e17",
+              "title": "Strong password policies and hashing (bcrypt, Argon2)",
+              "markdown": "- Strong password policies and hashing (bcrypt, Argon2)",
+              "notes": "Strong password policies and hashing (bcrypt, Argon2)",
+              "blurb": "Strong password policies and hashing (bcrypt, Argon2)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n67dda9b1b97487e",
+              "title": "Multi-factor authentication (MFA) for sensitive accounts",
+              "markdown": "- Multi-factor authentication (MFA) for sensitive accounts",
+              "notes": "Multi-factor authentication (MFA) for sensitive accounts",
+              "blurb": "Multi-factor authentication (MFA) for sensitive accounts",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd93824a95fbba9c",
+              "title": "Secure session management (cryptographically random tokens)",
+              "markdown": "- Secure session management (cryptographically random tokens)",
+              "notes": "Secure session management (cryptographically random tokens)",
+              "blurb": "Secure session management (cryptographically random tokens)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n525e3bcfba7f532",
+              "title": "Session timeout (absolute and idle)",
+              "markdown": "- Session timeout (absolute and idle)",
+              "notes": "Session timeout (absolute and idle)",
+              "blurb": "Session timeout (absolute and idle)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na1887a8c2ce546f",
+              "title": "Secure session storage (server-side or secure client-side)",
+              "markdown": "- Secure session storage (server-side or secure client-side)",
+              "notes": "Secure session storage (server-side or secure client-side)",
+              "blurb": "Secure session storage (server-side or secure client-side)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na392133b76684a3",
+              "title": "HTTPS only for authentication",
+              "markdown": "- HTTPS only for authentication",
+              "notes": "HTTPS only for authentication",
+              "blurb": "HTTPS only for authentication",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n502d5b8aee013db",
+              "title": "HttpOnly and Secure cookies",
+              "markdown": "- HttpOnly and Secure cookies",
+              "notes": "HttpOnly and Secure cookies",
+              "blurb": "HttpOnly and Secure cookies",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd697c1bc1fb381e",
+              "title": "Principle of least privilege for authorization",
+              "markdown": "- Principle of least privilege for authorization",
+              "notes": "Principle of least privilege for authorization",
+              "blurb": "Principle of least privilege for authorization",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ne92a6a454460f39",
+              "title": "Regular permission audits",
+              "markdown": "- Regular permission audits",
+              "notes": "Regular permission audits",
+              "blurb": "Regular permission audits",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na1c412981afdbd8",
+              "title": "Account lockout after failed attempts",
+              "markdown": "- Account lockout after failed attempts",
+              "notes": "Account lockout after failed attempts",
+              "blurb": "Account lockout after failed attempts",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "\u2705 Strong password policies and hashing (bcrypt, Argon2) - \u2705 Multi-factor...",
+          "expanded": false
+        },
+        {
+          "id": "nf0c6bfb6edb4bae",
+          "title": "Common Vulnerabilities",
+          "markdown": "| Vulnerability | Prevention |\n| --- | --- |\n| Weak passwords | Strong policies, password managers |\n| Credential stuffing | Rate limiting, CAPTCHA, MFA |\n| Session hijacking | Secure tokens, HTTPS, HttpOnly cookies |\n| Session fixation | Regenerate session ID after login |\n| Broken authorization | Authorization checks on every request |",
+          "notes": "| Vulnerability | Prevention |\n| --- | --- |\n| Weak passwords | Strong policies, password managers |\n| Credential stuffing | Rate limiting, CAPTCHA, MFA |\n| Session hijacking | Secure tokens, HTTPS, HttpOnly cookies |\n| Session fixation | Regenerate session ID after login |\n| Broken authorization | Authorization checks on every request |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Vulnerability | Prevention | | --- | --- | | Weak passwords | Strong...",
+          "expanded": false
+        },
+        {
+          "id": "n71823a98cc5c694",
+          "title": "Best Practices",
+          "markdown": "Authentication before authorization - Use MFA for sensitive operations - Principle of least privilege - Secure session management - Regular security audits",
+          "notes": "Authentication before authorization - Use MFA for sensitive operations - Principle of least privilege - Secure session management - Regular security audits",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n47b7de035f3914d",
+              "title": "Authentication before authorization",
+              "markdown": "- Authentication before authorization",
+              "notes": "Authentication before authorization",
+              "blurb": "Authentication before authorization",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n153b22f550b625a",
+              "title": "Use MFA for sensitive operations",
+              "markdown": "- Use MFA for sensitive operations",
+              "notes": "Use MFA for sensitive operations",
+              "blurb": "Use MFA for sensitive operations",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na9e135fc6ec6779",
+              "title": "Principle of least privilege",
+              "markdown": "- Principle of least privilege",
+              "notes": "Principle of least privilege",
+              "blurb": "Principle of least privilege",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n669632b9d59c629",
+              "title": "Secure session management",
+              "markdown": "- Secure session management",
+              "notes": "Secure session management",
+              "blurb": "Secure session management",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na09806d4c8ac892",
+              "title": "Regular security audits",
+              "markdown": "- Regular security audits",
+              "notes": "Regular security audits",
+              "blurb": "Regular security audits",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Authentication before authorization - Use MFA for sensitive operations -...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Key Concepts"
+    },
+    {
+      "id": "n2757ce81f6de73d",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n2b136e5dc5b4803",
+          "title": "Common Misconceptions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n3b5cf51acaceda8",
+              "title": "\"Authentication and Authorization are the same thing\"",
+              "markdown": "**Truth:** Authentication and authorization are **completely different** concepts, though they work together.\n\n**Authentication:**",
+              "notes": "Truth: Authentication and authorization are completely different concepts, though they work together.\n\nAuthentication:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "nfcc4fb72864b9cc",
+                  "title": "Verifies \"Who you are\" - identity verification",
+                  "markdown": "- Verifies \"Who you are\" - identity verification",
+                  "notes": "Verifies \"Who you are\" - identity verification",
+                  "blurb": "Verifies \"Who you are\" - identity verification",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n6a8b07607f85297",
+                  "title": "Answers: \"Are you who you claim to be?\"",
+                  "markdown": "- Answers: \"Are you who you claim to be?\"",
+                  "notes": "Answers: \"Are you who you claim to be?\"",
+                  "blurb": "Answers: \"Are you who you claim to be?\"",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n154bcf9e222e87b",
+                  "title": "Examples: Username/password, biometrics, tokens",
+                  "markdown": "- Examples: Username/password, biometrics, tokens",
+                  "notes": "Examples: Username/password, biometrics, tokens",
+                  "blurb": "Examples: Username/password, biometrics, tokens",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n8593b05babf74cb",
+                  "title": "Happens before authorization",
+                  "markdown": "- Happens before authorization",
+                  "notes": "Happens before authorization",
+                  "blurb": "Happens before authorization",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nba8bb3d34255fbf",
+                  "title": "Determines \"What you can do\" - permission/access control",
+                  "markdown": "- Determines \"What you can do\" - permission/access control",
+                  "notes": "Determines \"What you can do\" - permission/access control",
+                  "blurb": "Determines \"What you can do\" - permission/access control",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n5e2486fcafe79f7",
+                  "title": "Answers: \"What resources and actions are you allowed to access?\"",
+                  "markdown": "- Answers: \"What resources and actions are you allowed to access?\"",
+                  "notes": "Answers: \"What resources and actions are you allowed to access?\"",
+                  "blurb": "Answers: \"What resources and actions are you allowed to access?\"",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n3f9fc5b034cc635",
+                  "title": "Examples: Role-based access control (RBAC), permissions",
+                  "markdown": "- Examples: Role-based access control (RBAC), permissions",
+                  "notes": "Examples: Role-based access control (RBAC), permissions",
+                  "blurb": "Examples: Role-based access control (RBAC), permissions",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n0074ef2602db92e",
+                  "title": "Happens after authentication",
+                  "markdown": "- Happens after authentication",
+                  "notes": "Happens after authentication",
+                  "blurb": "Happens after authentication",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n6de6792a296d433",
+                  "title": "Authentication: Identity verification",
+                  "markdown": "- Authentication: Identity verification",
+                  "notes": "Authentication: Identity verification",
+                  "blurb": "Authentication: Identity verification",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n0d15c942f816d72",
+                  "title": "Authorization: Permission/access control",
+                  "markdown": "- Authorization: Permission/access control",
+                  "notes": "Authorization: Permission/access control",
+                  "blurb": "Authorization: Permission/access control",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: Authentication and authorization are completely different concepts,...",
+              "expanded": false
+            },
+            {
+              "id": "n72968490819803f",
+              "title": "\"Strong passwords are sufficient for authentication\"",
+              "markdown": "**Truth:** While strong passwords are important, they alone are **not sufficient** for secure authentication in modern applications.\n\n**Why Passwords Alone Aren't Enough:**",
+              "notes": "Truth: While strong passwords are important, they alone are not sufficient for secure authentication in modern applications.\n\nWhy Passwords Alone Aren't Enough:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n739c48ce6eda186",
+                  "title": "Vulnerable to phishing attacks",
+                  "markdown": "- Vulnerable to phishing attacks",
+                  "notes": "Vulnerable to phishing attacks",
+                  "blurb": "Vulnerable to phishing attacks",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n97bd902abf40007",
+                  "title": "Subject to credential stuffing",
+                  "markdown": "- Subject to credential stuffing",
+                  "notes": "Subject to credential stuffing",
+                  "blurb": "Subject to credential stuffing",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n5ef3732d4fc9e23",
+                  "title": "Can be stolen or leaked",
+                  "markdown": "- Can be stolen or leaked",
+                  "notes": "Can be stolen or leaked",
+                  "blurb": "Can be stolen or leaked",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nbf208224cbea3c4",
+                  "title": "Users often reuse passwords",
+                  "markdown": "- Users often reuse passwords",
+                  "notes": "Users often reuse passwords",
+                  "blurb": "Users often reuse passwords",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n5093ed61bda0e50",
+                  "title": "Multi-factor authentication (MFA)",
+                  "markdown": "- Multi-factor authentication (MFA)",
+                  "notes": "Multi-factor authentication (MFA)",
+                  "blurb": "Multi-factor authentication (MFA)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nb4d752e4fb51e20",
+                  "title": "Passwordless authentication (biometrics, hardware keys)",
+                  "markdown": "- Passwordless authentication (biometrics, hardware keys)",
+                  "notes": "Passwordless authentication (biometrics, hardware keys)",
+                  "blurb": "Passwordless authentication (biometrics, hardware keys)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n04af8b8ccb8f6aa",
+                  "title": "Adaptive authentication based on risk",
+                  "markdown": "- Adaptive authentication based on risk",
+                  "notes": "Adaptive authentication based on risk",
+                  "blurb": "Adaptive authentication based on risk",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nb950a1389f7e417",
+                  "title": "Password managers for strong, unique passwords",
+                  "markdown": "- Password managers for strong, unique passwords",
+                  "notes": "Password managers for strong, unique passwords",
+                  "blurb": "Password managers for strong, unique passwords",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: While strong passwords are important, they alone are not sufficient...",
+              "expanded": false
+            },
+            {
+              "id": "n5a30958b034d671",
+              "title": "\"Authorization is only about user roles\"",
+              "markdown": "**Truth:** Authorization is **much more complex** than simple role-based access.\n\n**Authorization Models:**",
+              "notes": "Truth: Authorization is much more complex than simple role-based access.\n\nAuthorization Models:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "nbfff685f25a99a7",
+                  "title": "RBAC (Role-Based Access Control): Permissions based on roles",
+                  "markdown": "- RBAC (Role-Based Access Control): Permissions based on roles",
+                  "notes": "RBAC (Role-Based Access Control): Permissions based on roles",
+                  "blurb": "RBAC (Role-Based Access Control): Permissions based on roles",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n4f5874b3a9f84e4",
+                  "title": "ABAC (Attribute-Based Access Control): Permissions based on attributes",
+                  "markdown": "- ABAC (Attribute-Based Access Control): Permissions based on attributes",
+                  "notes": "ABAC (Attribute-Based Access Control): Permissions based on attributes",
+                  "blurb": "ABAC (Attribute-Based Access Control): Permissions based on attributes",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n87ee7d2e4cde400",
+                  "title": "DAC (Discretionary Access Control): Resource owners control access",
+                  "markdown": "- DAC (Discretionary Access Control): Resource owners control access",
+                  "notes": "DAC (Discretionary Access Control): Resource owners control access",
+                  "blurb": "DAC (Discretionary Access Control): Resource owners control access",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nf6160bad3e144a1",
+                  "title": "MAC (Mandatory Access Control): System-enforced access policies",
+                  "markdown": "- MAC (Mandatory Access Control): System-enforced access policies",
+                  "notes": "MAC (Mandatory Access Control): System-enforced access policies",
+                  "blurb": "MAC (Mandatory Access Control): System-enforced access policies",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: Authorization is much more complex than simple role-based access.",
+              "expanded": false
+            },
+            {
+              "id": "n68be59cf40180c6",
+              "title": "\"Session management is separate from authentication\"",
+              "markdown": "**Truth:** Session management is **closely integrated** with authentication and is critical for security.\n\n**Relationship:**",
+              "notes": "Truth: Session management is closely integrated with authentication and is critical for security.\n\nRelationship:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n43e1ab3e461e7f0",
+                  "title": "Authentication creates a session",
+                  "markdown": "- Authentication creates a session",
+                  "notes": "Authentication creates a session",
+                  "blurb": "Authentication creates a session",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nae19bd5c9db7d0e",
+                  "title": "Session management maintains authenticated state",
+                  "markdown": "- Session management maintains authenticated state",
+                  "notes": "Session management maintains authenticated state",
+                  "blurb": "Session management maintains authenticated state",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nc50fd34fd135eb3",
+                  "title": "Session security directly impacts authentication security",
+                  "markdown": "- Session security directly impacts authentication security",
+                  "notes": "Session security directly impacts authentication security",
+                  "blurb": "Session security directly impacts authentication security",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n1e764b2bf47a1e8",
+                  "title": "Secure session token generation",
+                  "markdown": "- Secure session token generation",
+                  "notes": "Secure session token generation",
+                  "blurb": "Secure session token generation",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd999a07602d49de",
+                  "title": "Session timeout and expiration",
+                  "markdown": "- Session timeout and expiration",
+                  "notes": "Session timeout and expiration",
+                  "blurb": "Session timeout and expiration",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nf76ccb592572bc7",
+                  "title": "Session fixation prevention",
+                  "markdown": "- Session fixation prevention",
+                  "notes": "Session fixation prevention",
+                  "blurb": "Session fixation prevention",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nc023213f21b07a5",
+                  "title": "Secure session storage (server-side vs. client-side tokens)",
+                  "markdown": "- Secure session storage (server-side vs. client-side tokens)",
+                  "notes": "Secure session storage (server-side vs. client-side tokens)",
+                  "blurb": "Secure session storage (server-side vs.",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: Session management is closely integrated with authentication and is...",
+              "expanded": false
+            },
+            {
+              "id": "n3ac1d70e4c7eb11",
+              "title": "\"API keys are the same as authentication tokens\"",
+              "markdown": "**Truth:** API keys and authentication tokens serve **different purposes** and have different security properties.\n\n**API Keys:**",
+              "notes": "Truth: API keys and authentication tokens serve different purposes and have different security properties.\n\nAPI Keys:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "nf6f0203fbd24249",
+                  "title": "Typically static, long-lived",
+                  "markdown": "- Typically static, long-lived",
+                  "notes": "Typically static, long-lived",
+                  "blurb": "Typically static, long-lived",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ndf3f531da221cf2",
+                  "title": "Often used for service-to-service authentication",
+                  "markdown": "- Often used for service-to-service authentication",
+                  "notes": "Often used for service-to-service authentication",
+                  "blurb": "Often used for service-to-service authentication",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n3b66d72c83a5d96",
+                  "title": "Higher risk if compromised (longer exposure window)",
+                  "markdown": "- Higher risk if compromised (longer exposure window)",
+                  "notes": "Higher risk if compromised (longer exposure window)",
+                  "blurb": "Higher risk if compromised (longer exposure window)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n66379d1a2339890",
+                  "title": "Often time-limited (access tokens, refresh tokens)",
+                  "markdown": "- Often time-limited (access tokens, refresh tokens)",
+                  "notes": "Often time-limited (access tokens, refresh tokens)",
+                  "blurb": "Often time-limited (access tokens, refresh tokens)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nff0cb2fe34dd405",
+                  "title": "Used for user authentication",
+                  "markdown": "- Used for user authentication",
+                  "notes": "Used for user authentication",
+                  "blurb": "Used for user authentication",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n825621cf6979cb5",
+                  "title": "Can be scoped to specific permissions",
+                  "markdown": "- Can be scoped to specific permissions",
+                  "notes": "Can be scoped to specific permissions",
+                  "blurb": "Can be scoped to specific permissions",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nfe974c121a0a177",
+                  "title": "Typically shorter-lived with refresh mechanisms",
+                  "markdown": "- Typically shorter-lived with refresh mechanisms",
+                  "notes": "Typically shorter-lived with refresh mechanisms",
+                  "blurb": "Typically shorter-lived with refresh mechanisms",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: API keys and authentication tokens serve different purposes and have...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes \"Authentication and Authorization are the same thing\"",
+          "expanded": false
+        },
+        {
+          "id": "n6a20245a27c5d29",
+          "title": "Key Takeaways",
+          "markdown": "Authentication \u2260 Authorization: Authentication verifies identity, authorization controls",
+          "notes": "Authentication \u2260 Authorization: Authentication verifies identity, authorization controls",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ndaa872808d021c9",
+              "title": "Authentication \u2260 Authorization: Authentication verifies identity, authorization controls",
+              "markdown": "- Authentication \u2260 Authorization: Authentication verifies identity, authorization controls",
+              "notes": "Authentication \u2260 Authorization: Authentication verifies identity, authorization controls",
+              "blurb": "Authentication \u2260 Authorization: Authentication verifies identity,...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf79cfe78fcebc1d",
+              "title": "Multi-Factor Authentication: Passwords alone are insufficient; use MFA",
+              "markdown": "- Multi-Factor Authentication: Passwords alone are insufficient; use MFA",
+              "notes": "Multi-Factor Authentication: Passwords alone are insufficient; use MFA",
+              "blurb": "Multi-Factor Authentication: Passwords alone are insufficient; use MFA",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3685c7ea3bcd8ae",
+              "title": "Multiple Authorization Models: Choose the right model (RBAC, ABAC, etc.) for your use ca",
+              "markdown": "- Multiple Authorization Models: Choose the right model (RBAC, ABAC, etc.) for your use ca",
+              "notes": "Multiple Authorization Models: Choose the right model (RBAC, ABAC, etc.) for your use ca",
+              "blurb": "Multiple Authorization Models: Choose the right model (RBAC, ABAC, etc.) for...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n4b75da3f2b0a26e",
+              "title": "Session Management Matters: Proper session management is critical for authentication sec",
+              "markdown": "- Session Management Matters: Proper session management is critical for authentication sec",
+              "notes": "Session Management Matters: Proper session management is critical for authentication sec",
+              "blurb": "Session Management Matters: Proper session management is critical for...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9083e0272c48d28",
+              "title": "Right Tool for Right Job: Use appropriate authentication mechanisms (tokens vs. API keys",
+              "markdown": "- Right Tool for Right Job: Use appropriate authentication mechanisms (tokens vs. API keys",
+              "notes": "Right Tool for Right Job: Use appropriate authentication mechanisms (tokens vs. API keys",
+              "blurb": "Right Tool for Right Job: Use appropriate authentication mechanisms (tokens...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Authentication \u2260 Authorization: Authentication verifies identity,...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Common Misconceptions"
+    },
+    {
+      "id": "n931ab40598139d5",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nbd5ca53caf67a32",
+          "title": "Fundamental concepts",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n69d8ac05e9b34ba",
+              "title": "What is the difference between authentication and authorization?",
+              "markdown": "**Answer:** **Authentication (AuthN)** proves *who* the caller is-password plus MFA, WebAuthn, client certificate, or a signed token from a trusted issuer. **Authorization (AuthZ)** decides *whether that principal may perform this action on this resource*-RBAC roles, ABAC policies, ownership checks, tenant isolation. AuthN usually happens once per session or token lifetime; **AuthZ should be evaluated on every protected request** because permissions and object state change. A system can return **401** when identity is missing or invalid, and **403** when identity is known but policy denies the action.",
+              "notes": "Answer: Authentication (AuthN) proves who the caller is-password plus MFA, WebAuthn, client certificate, or a signed token from a trusted issuer. Authorization (AuthZ) decides whether that principal may perform this action on this resource-RBAC roles, ABAC policies, ownership checks, tenant isolation. AuthN usually happens once per session or token lifetime; AuthZ should be evaluated on every protected request because permissions and object state change. A system can return 401 when identity is missing or invalid, and 403 when identity is known but policy denies the action.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Authentication (AuthN) proves who the caller is-password plus MFA,...",
+              "expanded": false
+            },
+            {
+              "id": "n4c3cd8db8836e62",
+              "title": "Why is \u201cthe user is logged in\u201d not enough for security?",
+              "markdown": "**Answer:** Login establishes **identity**, not **entitlement to a specific object**. Classic failure modes are **IDOR** (changing an ID in a URL or API call) and **missing function-level checks** (calling an admin endpoint with a normal session). Secure designs load the resource in the right **tenant context**, then evaluate **object-level** policy: owner, sharing rules, workflow state, and regulatory constraints. **CWE-285** (improper authorization) captures this class of bugs.",
+              "notes": "Answer: Login establishes identity, not entitlement to a specific object. Classic failure modes are IDOR (changing an ID in a URL or API call) and missing function-level checks (calling an admin endpoint with a normal session). Secure designs load the resource in the right tenant context, then evaluate object-level policy: owner, sharing rules, workflow state, and regulatory constraints. CWE-285 (improper authorization) captures this class of bugs.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Login establishes identity, not entitlement to a specific object.",
+              "expanded": false
+            },
+            {
+              "id": "nf64cf60de61ff34",
+              "title": "Explain authentication factors and when to combine them.",
+              "markdown": "**Answer:** Factors fall into **knowledge** (password, PIN), **possession** (OTP app, security key, phone), and **inherence** (biometric). **MFA** combines categories so stolen passwords are insufficient. Interviewers often expect you to note **phishing**: push/TOTP can be relayed; **WebAuthn/FIDO2** security keys are **phishing-resistant** because credentials are **origin-bound**. Risk-based policies use MFA for **step-up** on sensitive actions (changing MFA methods, large transfers, production deletes).",
+              "notes": "Answer: Factors fall into knowledge (password, PIN), possession (OTP app, security key, phone), and inherence (biometric). MFA combines categories so stolen passwords are insufficient. Interviewers often expect you to note phishing: push/TOTP can be relayed; WebAuthn/FIDO2 security keys are phishing-resistant because credentials are origin-bound. Risk-based policies use MFA for step-up on sensitive actions (changing MFA methods, large transfers, production deletes).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Factors fall into knowledge (password, PIN), possession (OTP app,...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes What is the difference between authentication and authorization?",
+          "expanded": false
+        },
+        {
+          "id": "n4814856150f433f",
+          "title": "Sessions, tokens, and browser apps",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nb4e5d5d8f6319a5",
+              "title": "Compare server-side sessions with signed tokens such as JWTs.",
+              "markdown": "**Answer:** **Server-side sessions** store state in a server or Redis; the client holds an **opaque** session ID, often in an **HttpOnly, Secure, SameSite** cookie. Revocation is immediate by deleting session state. **JWT access tokens** carry **signed claims** so resource servers can validate offline using **issuer keys (JWKS)**-good for microservices-but **revocation is harder**; mitigate with **short TTL**, **refresh token rotation**, and occasional **denylists** after compromise. Neither replaces **application-level AuthZ**; they are **continuity mechanisms** after AuthN.",
+              "notes": "Answer: Server-side sessions store state in a server or Redis; the client holds an opaque session ID, often in an HttpOnly, Secure, SameSite cookie. Revocation is immediate by deleting session state. JWT access tokens carry signed claims so resource servers can validate offline using issuer keys (JWKS)-good for microservices-but revocation is harder; mitigate with short TTL, refresh token rotation, and occasional denylists after compromise. Neither replaces application-level AuthZ; they are continuity mechanisms after AuthN.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Server-side sessions store state in a server or Redis; the client...",
+              "expanded": false
+            },
+            {
+              "id": "n758b1ce43ea4313",
+              "title": "How do you implement secure session management for a web application?",
+              "markdown": "**Answer:** Issue **high-entropy** session IDs from a CSPRNG; **regenerate** the session ID after successful login to prevent **session fixation**. Set cookies **Secure**, **HttpOnly**, and a sensible **SameSite** policy; serve everything sensitive over **HTTPS**. Apply **idle** and **absolute** timeouts; require **re-auth** for high-risk actions. Invalidate sessions server-side on **logout**, **password change**, and **reported compromise**. Monitor for **credential stuffing** and **impossible travel**. For SPAs, prefer patterns that avoid storing bearer tokens in **localStorage** (e.g., **BFF** with HttpOnly cookies) because XSS becomes instant account takeover.",
+              "notes": "Answer: Issue high-entropy session IDs from a CSPRNG; regenerate the session ID after successful login to prevent session fixation. Set cookies Secure, HttpOnly, and a sensible SameSite policy; serve everything sensitive over HTTPS. Apply idle and absolute timeouts; require re-auth for high-risk actions. Invalidate sessions server-side on logout, password change, and reported compromise. Monitor for credential stuffing and impossible travel. For SPAs, prefer patterns that avoid storing bearer tokens in localStorage (e.g., BFF with HttpOnly cookies) because XSS becomes instant account takeover.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Issue high-entropy session IDs from a CSPRNG; regenerate the session...",
+              "expanded": false
+            },
+            {
+              "id": "nfb843a1c11770a9",
+              "title": "What mistakes do teams make with JWTs?",
+              "markdown": "**Answer:** Common issues: trusting tokens without strict **`aud` (audience)** and **`iss` (issuer)** validation; weak algorithms or **alg confusion** attacks; **long-lived** access tokens without rotation; storing JWTs in **JS-accessible storage**; treating **JWT claims** as authoritative for **fine-grained** permissions that actually belong in the database; and skipping **key rotation** discipline. JWTs are **bearer** credentials-whoever steals them wins until expiry unless you add **binding** (mTLS, DPoP) or very short lifetimes.",
+              "notes": "Answer: Common issues: trusting tokens without strict aud (audience) and iss (issuer) validation; weak algorithms or alg confusion attacks; long-lived access tokens without rotation; storing JWTs in JS-accessible storage; treating JWT claims as authoritative for fine-grained permissions that actually belong in the database; and skipping key rotation discipline. JWTs are bearer credentials-whoever steals them wins until expiry unless you add binding (mTLS, DPoP) or very short lifetimes.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Common issues: trusting tokens without strict aud (audience) and iss...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Compare server-side sessions with signed tokens such as JWTs.",
+          "expanded": false
+        },
+        {
+          "id": "n940691b97a9fbe5",
+          "title": "OAuth 2.0 and OpenID Connect",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nd6cc976650aa458",
+              "title": "Name the OAuth 2.0 roles and what each is responsible for.",
+              "markdown": "**Answer:** **Resource owner** (typically the user) grants access. **Client** is the application requesting access-distinguish **confidential** servers from **public** clients that must use **PKCE**. **Authorization server** authenticates the user, obtains **consent**, and **issues tokens**. **Resource server** hosts APIs, **validates** tokens, and enforces **access policy** (often starting with **scopes**). The interview point: OAuth is primarily **delegation**; it standardizes how apps obtain **limited** authority to act on behalf of a user, not your full domain authorization model.",
+              "notes": "Answer: Resource owner (typically the user) grants access. Client is the application requesting access-distinguish confidential servers from public clients that must use PKCE. Authorization server authenticates the user, obtains consent, and issues tokens. Resource server hosts APIs, validates tokens, and enforces access policy (often starting with scopes). The interview point: OAuth is primarily delegation; it standardizes how apps obtain limited authority to act on behalf of a user, not your full domain authorization model.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Resource owner (typically the user) grants access.",
+              "expanded": false
+            },
+            {
+              "id": "n9639bcc0f72e4af",
+              "title": "What is OpenID Connect, and how does it relate to OAuth 2.0?",
+              "markdown": "**Answer:** **OIDC** adds an **identity layer** on OAuth: an **`id_token`** (JWT) and **UserInfo** convey **who** the user is to the **relying party** (your app). **OAuth** alone issues **access tokens** for **APIs**. A frequent bug is sending an **`id_token`** to your backend API as if it were an **access token**-IDs are for the client to consume identity; APIs should require **access tokens** with correct **audience** and **scopes** intended for those resources.",
+              "notes": "Answer: OIDC adds an identity layer on OAuth: an idtoken (JWT) and UserInfo convey who the user is to the relying party (your app). OAuth alone issues access tokens for APIs. A frequent bug is sending an idtoken to your backend API as if it were an access token-IDs are for the client to consume identity; APIs should require access tokens with correct audience and scopes intended for those resources.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: OIDC adds an identity layer on OAuth: an idtoken (JWT) and UserInfo...",
+              "expanded": false
+            },
+            {
+              "id": "ne5470ca34a36e00",
+              "title": "What is PKCE, and why does it matter?",
+              "markdown": "**Answer:** **Proof Key for Code Exchange** binds the **authorization code** request to a **verifier** secret so an intercepted code cannot be exchanged by another party-critical for **public clients** (mobile, SPA) that cannot hold a client secret safely. Modern guidance treats PKCE as **best practice even for confidential clients** as defense in depth. Pair PKCE with **exact redirect URI matching** and a **state** parameter for **CSRF** protection on the OAuth front channel.",
+              "notes": "Answer: Proof Key for Code Exchange binds the authorization code request to a verifier secret so an intercepted code cannot be exchanged by another party-critical for public clients (mobile, SPA) that cannot hold a client secret safely. Modern guidance treats PKCE as best practice even for confidential clients as defense in depth. Pair PKCE with exact redirect URI matching and a state parameter for CSRF protection on the OAuth front channel.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Proof Key for Code Exchange binds the authorization code request to...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Name the OAuth 2.0 roles and what each is responsible for.",
+          "expanded": false
+        },
+        {
+          "id": "nf15eea44499865c",
+          "title": "Authorization models and design",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n685613577fdbde6",
+              "title": "Explain RBAC and its operational downsides.",
+              "markdown": "**Answer:** **RBAC** assigns **permissions** via **roles** (e.g., `viewer`, `editor`, `admin`). It is easy to administer and explain. Downsides include **role explosion** when real duties are combinatorial, **stale assignments** after org changes, and **over-broad** roles created for expediency. Mitigations: **role hierarchies** with clear docs, **periodic access reviews**, **separation of duties** for sensitive pairs of permissions, and **temporary elevation** with approval for break-glass paths.",
+              "notes": "Answer: RBAC assigns permissions via roles (e.g., viewer, editor, admin). It is easy to administer and explain. Downsides include role explosion when real duties are combinatorial, stale assignments after org changes, and over-broad roles created for expediency. Mitigations: role hierarchies with clear docs, periodic access reviews, separation of duties for sensitive pairs of permissions, and temporary elevation with approval for break-glass paths.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: RBAC assigns permissions via roles (e.g., viewer, editor, admin).",
+              "expanded": false
+            },
+            {
+              "id": "n88cebff2fd1e3ef",
+              "title": "When would you choose ABAC over RBAC?",
+              "markdown": "**Answer:** Choose **ABAC** when decisions depend on **context**: data classification, resource owner, geography, time window, device posture, or transaction attributes. ABAC expresses policies like \"managers may approve invoices up to $10k during business hours from a managed device.\" The cost is **complexity**-policies need **testing**, **observability**, and **governance**. Many systems expose **RBAC to admins** but implement **ABAC-like** rules in code for **multi-tenant** row access.",
+              "notes": "Answer: Choose ABAC when decisions depend on context: data classification, resource owner, geography, time window, device posture, or transaction attributes. ABAC expresses policies like \"managers may approve invoices up to $10k during business hours from a managed device.\" The cost is complexity-policies need testing, observability, and governance. Many systems expose RBAC to admins but implement ABAC-like rules in code for multi-tenant row access.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Choose ABAC when decisions depend on context: data classification,...",
+              "expanded": false
+            },
+            {
+              "id": "n97f001f28167068",
+              "title": "What is least privilege, and how do you apply it in practice?",
+              "markdown": "**Answer:** **Least privilege** grants the **minimum** rights needed for a task, for the **shortest** time, on the **smallest** set of objects. In practice: default **deny**, **scope** API keys and tokens narrowly, use **just-in-time** admin roles, **automate** offboarding hooks to revoke access, and measure **unused permissions** in audits. Least privilege limits **blast radius** when credentials leak or insiders go rogue.",
+              "notes": "Answer: Least privilege grants the minimum rights needed for a task, for the shortest time, on the smallest set of objects. In practice: default deny, scope API keys and tokens narrowly, use just-in-time admin roles, automate offboarding hooks to revoke access, and measure unused permissions in audits. Least privilege limits blast radius when credentials leak or insiders go rogue.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Least privilege grants the minimum rights needed for a task, for the...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Explain RBAC and its operational downsides.",
+          "expanded": false
+        },
+        {
+          "id": "n6b087f2cad1a889",
+          "title": "APIs, HTTP semantics, and enforcement",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n8e2fce05b644091",
+              "title": "How do you use 401 and 403 in APIs?",
+              "markdown": "**Answer:** Use **401 Unauthorized** when the caller is **not authenticated** or credentials are **invalid/expired**-optionally with `WWW-Authenticate`. Use **403 Forbidden** when the caller **is authenticated** but **policy forbids** the action. Be careful with information leakage on **403** vs **404** for object existence; pick a **consistent** product-wide rule and document it. Interview credit goes to **consistent semantics** more than arguing universal absolutes.",
+              "notes": "Answer: Use 401 Unauthorized when the caller is not authenticated or credentials are invalid/expired-optionally with WWW-Authenticate. Use 403 Forbidden when the caller is authenticated but policy forbids the action. Be careful with information leakage on 403 vs 404 for object existence; pick a consistent product-wide rule and document it. Interview credit goes to consistent semantics more than arguing universal absolutes.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Use 401 Unauthorized when the caller is not authenticated or...",
+              "expanded": false
+            },
+            {
+              "id": "n158f416efd9948b",
+              "title": "How would you secure authentication for public APIs?",
+              "markdown": "**Answer:** Layer controls: **TLS** everywhere; **OAuth client credentials** or **scoped API keys** for integrations; **short-lived access tokens** with **refresh rotation** for user delegation; **mTLS** or **workload identities** for internal services. Add **rate limiting**, **anomaly detection**, and **auditing**. At the gateway, validate **issuer, audience, signature, expiry**. Inside services, enforce **tenant** and **object-level** rules-**scopes** are coarse gates, not the whole AuthZ story.",
+              "notes": "Answer: Layer controls: TLS everywhere; OAuth client credentials or scoped API keys for integrations; short-lived access tokens with refresh rotation for user delegation; mTLS or workload identities for internal services. Add rate limiting, anomaly detection, and auditing. At the gateway, validate issuer, audience, signature, expiry. Inside services, enforce tenant and object-level rules-scopes are coarse gates, not the whole AuthZ story.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Layer controls: TLS everywhere; OAuth client credentials or scoped...",
+              "expanded": false
+            },
+            {
+              "id": "n2b9a681d471ebe1",
+              "title": "Where should authorization be enforced in a microservice architecture?",
+              "markdown": "**Answer:** **Coarse** checks (JWT validation, required scopes, tenant routing) fit well at an **API gateway** or **service mesh** edge. **Fine-grained** rules belong **in the domain service** that understands **ownership**, **state machines**, and **business invariants**-because only that service knows whether \"approve refund\" is legal for *this* order. **Policy-as-code** and **shared middleware** help avoid **drift**, but the domain must still perform **object-level** checks. Log both **allow** and **deny** (with sampling/throttling) for sensitive routes.",
+              "notes": "Answer: Coarse checks (JWT validation, required scopes, tenant routing) fit well at an API gateway or service mesh edge. Fine-grained rules belong in the domain service that understands ownership, state machines, and business invariants-because only that service knows whether \"approve refund\" is legal for this order. Policy-as-code and shared middleware help avoid drift, but the domain must still perform object-level checks. Log both allow and deny (with sampling/throttling) for sensitive routes.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Coarse checks (JWT validation, required scopes, tenant routing) fit...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes How do you use 401 and 403 in APIs?",
+          "expanded": false
+        },
+        {
+          "id": "nbf7d0f789e788a8",
+          "title": "Threats, testing, and behaviorals",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nb97622dba45a28d",
+              "title": "Name common authentication attacks and mitigations.",
+              "markdown": "**Answer:** **Credential stuffing** and **password spraying**: rate limits, **MFA**, **breach password detection**, **CAPTCHA** where appropriate. **Phishing**: phishing-resistant MFA, security education. **Session hijacking/fixation**: **HttpOnly** cookies, **Secure** flag, **regenerate** session on login, short TTLs. **Password reset** abuse: single-use tokens, short expiry, **no account enumeration** via response differences where feasible. **Brute force**: throttling, **progressive backoff**, alerting.",
+              "notes": "Answer: Credential stuffing and password spraying: rate limits, MFA, breach password detection, CAPTCHA where appropriate. Phishing: phishing-resistant MFA, security education. Session hijacking/fixation: HttpOnly cookies, Secure flag, regenerate session on login, short TTLs. Password reset abuse: single-use tokens, short expiry, no account enumeration via response differences where feasible. Brute force: throttling, progressive backoff, alerting.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Credential stuffing and password spraying: rate limits, MFA, breach...",
+              "expanded": false
+            },
+            {
+              "id": "nbe2be58da27b8af",
+              "title": "How do you test authorization beyond \u201chappy path\u201d?",
+              "markdown": "**Answer:** Build **negative tests** per role: attempt **cross-tenant** IDs, **horizontal** access to peers' resources, and **vertical** escalation to admin operations. Automate checks for **every new endpoint** that accepts identifiers. Use **pairwise** tests when combining roles and **object states**. In reviews, trace the **data path** from identifier to **policy decision**-if you cannot point to the line of code that enforces ownership, you likely have **CWE-285** risk.",
+              "notes": "Answer: Build negative tests per role: attempt cross-tenant IDs, horizontal access to peers' resources, and vertical escalation to admin operations. Automate checks for every new endpoint that accepts identifiers. Use pairwise tests when combining roles and object states. In reviews, trace the data path from identifier to policy decision-if you cannot point to the line of code that enforces ownership, you likely have CWE-285 risk.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Build negative tests per role: attempt cross-tenant IDs, horizontal...",
+              "expanded": false
+            },
+            {
+              "id": "n94fe7ab0d098b06",
+              "title": "Describe balancing stronger authentication with usability.",
+              "markdown": "**Answer:** Use **risk-based** MFA: step-up only for **high-value** actions or **anomalous** context (new device, new geography). Offer **multiple factors** (security keys, TOTP, passkeys) so users can recover. **Remember trusted devices** with clear revocation UX. Communicate **why** prompts appear to reduce abandonment. Measure **support tickets** and **conversion** after changes; security wins that nobody can use rarely stick. Tie decisions to **threat modeling**-protect assets proportional to impact.",
+              "notes": "Answer: Use risk-based MFA: step-up only for high-value actions or anomalous context (new device, new geography). Offer multiple factors (security keys, TOTP, passkeys) so users can recover. Remember trusted devices with clear revocation UX. Communicate why prompts appear to reduce abandonment. Measure support tickets and conversion after changes; security wins that nobody can use rarely stick. Tie decisions to threat modeling-protect assets proportional to impact.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Use risk-based MFA: step-up only for high-value actions or anomalous...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Name common authentication attacks and mitigations.",
+          "expanded": false
+        },
+        {
+          "id": "n7847f75f32b49ac",
+          "title": "Depth: Interview follow-ups \u2014 Authorization and Authentication",
+          "markdown": "**Authoritative references:** [OWASP Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html); [OWASP Authorization Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html); [CWE-285](https://cwe.mitre.org/data/definitions/285.html) (Improper Authorization).\n\n**Follow-ups:** AuthN once vs AuthZ every request in microservices; **IDOR** as failed object-level AuthZ; **policy engines** and when ABAC pays off; **audience** validation on tokens across services.\n\n**Production verification:** consistent middleware or gateway checks; audit logs for sensitive actions; monitored break-glass paths.\n\n**Cross-read:** JWT, OAuth, IDOR, IAM at Scale, Zero Trust.",
+          "notes": "Authoritative references: OWASP Authentication Cheat Sheet; OWASP Authorization Cheat Sheet; CWE-285 (Improper Authorization).\n\nFollow-ups: AuthN once vs AuthZ every request in microservices; IDOR as failed object-level AuthZ; policy engines and when ABAC pays off; audience validation on tokens across services.\n\nProduction verification: consistent middleware or gateway checks; audit logs for sensitive actions; monitored break-glass paths.\n\nCross-read: JWT, OAuth, IDOR, IAM at Scale, Zero Trust.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Authoritative references: OWASP Authentication Cheat Sheet; OWASP...",
+          "expanded": false
+        },
+        {
+          "id": "n465974d4aceae5b",
+          "title": "Depth: Interview follow-ups \u2014 AuthN vs AuthZ (Critical Clarifications)",
+          "markdown": "**Authoritative references:** [OWASP Authentication CS](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html); [OWASP Authorization CS](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html).\n\n**Follow-ups:** session vs token-where identity is proved vs where permissions are enforced; **401 vs 403** semantics in APIs you have shipped; **federated identity** trust boundaries between IdP and apps.\n\n**Production verification:** consistent enforcement middleware; audit logs on sensitive actions.\n\n**Cross-read:** Authorization and Authentication, JWT, OAuth, IDOR.",
+          "notes": "Authoritative references: OWASP Authentication CS; OWASP Authorization CS.\n\nFollow-ups: session vs token-where identity is proved vs where permissions are enforced; 401 vs 403 semantics in APIs you have shipped; federated identity trust boundaries between IdP and apps.\n\nProduction verification: consistent enforcement middleware; audit logs on sensitive actions.\n\nCross-read: Authorization and Authentication, JWT, OAuth, IDOR.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Authoritative references: OWASP Authentication CS; OWASP Authorization CS.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Fundamental concepts"
+    }
+  ],
+  "topicId": "authorization-and-authentication",
+  "name": "Authorization and Authentication",
+  "structure": "logic-right",
+  "blurb": "Authentication (AuthN) answers who is calling: it binds a request to a..."
+}

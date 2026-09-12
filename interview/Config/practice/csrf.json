@@ -1,0 +1,119 @@
+{
+  "topicId": "csrf",
+  "name": "CSRF",
+  "source": "CSRF/CSRF - Interview Questions & Answers.md",
+  "prompts": [
+    {
+      "id": "p971f4a101c1586",
+      "cluster": "Fundamental Questions",
+      "title": "What is CSRF and how does it work?",
+      "seconds": 120,
+      "answerMarkdown": "CSRF (Cross-Site Request Forgery) is an attack that tricks a user's browser into making requests to a web application where the user is authenticated, causing the application to perform actions the user didn't intend.\n\n**How it works:**\n\n1. **User is authenticated**\u00a0on target application (e.g., bank.com)\n2. **User visits attacker's site**\u00a0(e.g., evil.com) while still logged in\n3. **Attacker's page**\u00a0contains form/script that submits to bank.com\n4. **Browser automatically includes**\u00a0session cookie with request\n5. **Application processes request**\u00a0as legitimate user action\n6. **Unintended action is performed**\u00a0(transfer funds, change email, etc.)\n\n**Example:**\n\n```html\n<!-- Attacker's malicious page -->\n<form id=\"transfer\" action=\"https://bank.com/transfer\" method=\"POST\">\n  <input type=\"hidden\" name=\"to\" value=\"attacker_account\" />\n  <input type=\"hidden\" name=\"amount\" value=\"10000\" />\n</form>\n<script>document.getElementById('transfer').submit();</script>\n\n```\n\n**Key Point:**\u00a0CSRF exploits the trust that a server has in a user's browser by tricking the browser into making requests with valid session cookies.\n\n---"
+    },
+    {
+      "id": "p1fac020221d6cd",
+      "cluster": "Fundamental Questions",
+      "title": "What is the difference between CSRF and XSS?",
+      "seconds": 120,
+      "answerMarkdown": "**CSRF (Cross-Site Request Forgery):**\n\n- Exploits trust that\u00a0**server**\u00a0has in\u00a0**user's browser**\n- Tricks user into\u00a0**submitting requests**\n- Requires user to be\u00a0**authenticated**\n- Targets\u00a0**actions**\u00a0(state-changing operations)\n- User doesn't know attack is happening\n- Mitigation: CSRF tokens, SameSite cookies, Origin validation\n\n**XSS (Cross-Site Scripting):**\n\n- Exploits trust that\u00a0**application**\u00a0has in\u00a0**user input**\n- Injects malicious\u00a0**scripts**\u00a0into pages\n- May not require authentication\n- Targets\u00a0**users**\u00a0(stealing data, session hijacking)\n- User may see script execution\n- Mitigation: Output encoding, input validation, CSP\n\n**Key Difference:**\n\n- CSRF: Server trusts browser \u2192 attacker tricks browser to make requests\n- XSS: Application trusts input \u2192 attacker injects scripts\n\n---"
+    },
+    {
+      "id": "p004375b456d2a5",
+      "cluster": "Fundamental Questions",
+      "title": "Why doesn't HTTPS prevent CSRF?",
+      "seconds": 120,
+      "answerMarkdown": "HTTPS\u00a0**encrypts**\u00a0the connection but doesn't\u00a0**verify request origin**. CSRF attacks work because:\n\n1. **Browser automatically includes cookies**\u00a0- Even with HTTPS, browsers automatically send session cookies with cross-site requests\n2. **HTTPS only protects data in transit**\u00a0- Doesn't verify that request came from legitimate application\n3. **Attacker's site can be HTTPS**\u00a0- Attack works even if attacker's site uses HTTPS\n\n**Example:**\n\n```html\n<!-- Attacker's HTTPS site (evil.com) -->\n<form action=\"https://bank.com/transfer\" method=\"POST\">\n  <!-- Browser still sends session cookie with HTTPS connection -->\n</form>\n\n```\n\n**Key Point:**\u00a0HTTPS prevents interception but doesn't verify request origin. CSRF protection requires verifying that requests come from legitimate application.\n\n---"
+    },
+    {
+      "id": "pd09855347ef547",
+      "cluster": "Attack Mechanisms",
+      "title": "Explain how a CSRF attack is performed step-by-step.",
+      "seconds": 120,
+      "answerMarkdown": "**Step 1: User Authentication**\n\n- User logs into target application (bank.com)\n- Application sets session cookie (sessionId=abc123)\n- Cookie stored in browser\n\n**Step 2: User Visits Attacker's Site**\n\n- User navigates to attacker's malicious site (evil.com)\n- User is still logged into bank.com (cookie still valid)\n\n**Step 3: Malicious Request Triggered**\n\n- Attacker's page contains form/script that targets bank.com\n- Form automatically submits (via JavaScript or user interaction)\n- Request includes session cookie automatically\n\n**Step 4: Application Processes Request**\n\n- Application receives request with valid session cookie\n- Application treats request as legitimate user action\n- Action is performed (transfer, delete, modify, etc.)\n\n**Step 5: Attack Successful**\n\n- Unintended action completed\n- User may not realize attack occurred\n- Attacker achieves goal (funds transferred, account compromised, etc.)\n\n---"
+    },
+    {
+      "id": "p547ae6a359c9fd",
+      "cluster": "Attack Mechanisms",
+      "title": "Can CSRF work with GET requests?",
+      "seconds": 120,
+      "answerMarkdown": "**Yes, but it's dangerous design.**\u00a0GET requests can be vulnerable to CSRF, which is why you should\u00a0**never use GET for state-changing operations**.\n\n**Vulnerable GET Example:**\n\n```html\n<!-- Dangerous: State-changing GET -->\n<img src=\"https://bank.com/delete?id=123\" />\n<!-- Request sent automatically when page loads! -->\n\n<!-- Or link -->\n<a href=\"https://bank.com/transfer?to=attacker&amount=1000\">Click here</a>\n\n```\n\n**Why GET CSRF is Dangerous:**\n\n- Triggers automatically (images, links)\n- No user interaction needed\n- SameSite=Lax allows GET requests from links\n- Harder to protect\n\n**Best Practice:**\n\n- Never use GET for state-changing operations\n- Follow REST principles: GET should be safe and idempotent\n- Use POST/PUT/DELETE for modifications\n- Protect all state-changing operations with CSRF tokens\n\n---"
+    },
+    {
+      "id": "pdbefbc9770bb93",
+      "cluster": "Mitigation Questions",
+      "title": "How do CSRF tokens prevent CSRF attacks?",
+      "seconds": 120,
+      "answerMarkdown": "CSRF tokens work by\u00a0**verifying that requests originate from the legitimate application**.\n\n**How CSRF Tokens Work:**\n\n1. **Server generates unique token**\u00a0per session:\n\n```python\ncsrf_token = secrets.token_urlsafe(32)\nsession['csrf_token'] = csrf_token\n\n```\n\n1. **Token included in forms:**\n\n```html\n<form action=\"/transfer\" method=\"POST\">\n  <input type=\"hidden\" name=\"csrf_token\" value=\"&#123;&#123; csrf_token &#125;&#125;\" />\n  <!-- ... -->\n</form>\n\n```\n\n1. **Server validates token:**\n\n```python\nif request.form['csrf_token'] != session['csrf_token']:\n    return \"Invalid CSRF token\", 403\n\n```\n\n**Why It Works:**\n\n- Attacker cannot read token (Same-Origin Policy)\n- Attacker cannot predict token (cryptographically random)\n- Server validates token before processing request\n- Invalid/missing token = request rejected\n\n**Key Point:**\u00a0CSRF tokens verify request origin by requiring attacker to know a secret value they can't access.\n\n---"
+    },
+    {
+      "id": "pfbb7d75a7949fb",
+      "cluster": "Mitigation Questions",
+      "title": "Explain SameSite cookie attribute and how it prevents CSRF.",
+      "seconds": 120,
+      "answerMarkdown": "SameSite cookie attribute controls when cookies are sent with cross-site requests.\n\n**SameSite Values:**\n\n**1. SameSite=Strict:**\n\n- Cookie\u00a0**never**\u00a0sent with cross-site requests\n- Only sent with same-site requests\n- Maximum CSRF protection\n- May break legitimate cross-site flows (OAuth redirects)\n\n**2. SameSite=Lax:**\n\n- Cookie sent with\u00a0**top-level navigation**\u00a0(link clicks)\n- Cookie\u00a0**not sent**\u00a0with cross-site POST requests\n- Balanced protection\n- Allows GET requests from links\n\n**3. SameSite=None:**\n\n- Cookie sent with all requests (including cross-site)\n- Requires\u00a0**Secure**\u00a0flag\n- No CSRF protection\n- Legacy behavior\n\n**Implementation:**\n\n```python\n\n# SameSite=Strict (maximum protection)\n\nresponse.set_cookie(\n    'sessionId',\n    value=session_id,\n    samesite='Strict',\n    secure=True,\n    httponly=True\n)\n\n# SameSite=Lax (balanced)\n\nresponse.set_cookie(\n    'sessionId',\n    value=session_id,\n    samesite='Lax',  # Allows GET from links\n    secure=True,\n    httponly=True\n)\n\n```\n\n**Limitations:**\n\n- Not supported by all browsers\n- May break legitimate cross-site flows\n- Use with CSRF tokens for maximum protection\n\n---"
+    },
+    {
+      "id": "p940951fe1cf549",
+      "cluster": "Mitigation Questions",
+      "title": "What is the difference between Origin and Referer headers in CSRF protection?",
+      "seconds": 120,
+      "answerMarkdown": "**Origin Header:**\n\n- Contains\u00a0**scheme, host, and port**\u00a0of request origin\n- Example:\u00a0`Origin: https://bank.com`\n- **Always present**\u00a0in CORS requests\n- **May be absent**\u00a0in same-origin requests\n- Cannot be spoofed (browser-controlled)\n\n**Referer Header:**\n\n- Contains\u00a0**full URL**\u00a0of referring page\n- Example:\u00a0`Referer: https://bank.com/transfer`\n- **May be absent**\u00a0(privacy tools, redirects)\n- **Can be stripped**\u00a0by proxies/firewalls\n- More information but less reliable\n\n**Validation:**\n\n```python\ndef validate_request_origin(request):\n    origin = request.headers.get('Origin')\n    referer = request.headers.get('Referer')\n\n    expected_origin = 'https://bank.com'\n\n# Prefer Origin (more reliable)\n\n    if origin:\n        if origin != expected_origin:\n            return False\n\n# Fallback to Referer\n\n    elif referer:\n        if not referer.startswith(expected_origin):\n            return False\n\n    return True\n\n```\n\n**Best Practice:**\n\n- Use Origin header (more reliable)\n- Fallback to Referer if Origin absent\n- Use as additional layer, not primary defense\n- Combine with CSRF tokens\n\n---"
+    },
+    {
+      "id": "pa8371e3e2328ef",
+      "cluster": "Security Questions",
+      "title": "What is the impact of CSRF vulnerabilities?",
+      "seconds": 90,
+      "answerMarkdown": "**1. Account Takeover:**\n\n- Change email address\n- Change password\n- Modify security settings\n- Update recovery information\n\n**2. Financial Fraud:**\n\n- Transfer funds\n- Make purchases\n- Change payment methods\n- Modify billing information\n\n**3. Data Manipulation:**\n\n- Delete data\n- Modify records\n- Change permissions\n- Update configurations\n\n**4. Privilege Escalation:**\n\n- Grant admin permissions\n- Add to admin groups\n- Enable dangerous features\n- Change user roles\n\n**5. Business Impact:**\n\n- Financial losses\n- Reputation damage\n- Legal/regulatory violations\n- Customer trust loss\n\n---"
+    },
+    {
+      "id": "p99495aca3b3a65",
+      "cluster": "Security Questions",
+      "title": "Why doesn't HttpOnly prevent CSRF?",
+      "seconds": 120,
+      "answerMarkdown": "HttpOnly\u00a0**only prevents JavaScript from accessing cookies**\u00a0(protects against XSS). It\u00a0**does NOT prevent CSRF**\u00a0because:\n\n1. **Browsers automatically send cookies**\u00a0- HttpOnly cookies are still automatically included in HTTP requests\n2. **CSRF doesn't need JavaScript**\u00a0- CSRF works via form submissions, image tags, links (no JavaScript needed)\n3. **HttpOnly is for XSS protection**\u00a0- Prevents\u00a0`document.cookie`\u00a0access, not request sending\n\n**Example:**\n\n```jsx\n// Cookie with HttpOnly\nSet-Cookie: sessionId=abc123; HttpOnly; Secure\n\n// CSRF attack still works:\n// Browser automatically sends cookie\nPOST https://bank.com/transfer HTTP/1.1\nCookie: sessionId=abc123  // Browser sends it automatically!\n\n// JavaScript cannot access it, but browser still sends it\nconsole.log(document.cookie); // Does not include sessionId\n// But request still includes cookie!\n\n```\n\n**Key Point:**\u00a0HttpOnly prevents JavaScript access (XSS protection), but browsers still automatically send HttpOnly cookies with requests (CSRF vulnerability remains).\n\n---"
+    },
+    {
+      "id": "pfce2df02105e04",
+      "cluster": "Scenario-Based Questions",
+      "title": "You discover a form without CSRF protection. How would you exploit it?",
+      "seconds": 120,
+      "answerMarkdown": "**Step 1: Analyze Form**\n\n```html\n<!-- Vulnerable form -->\n<form action=\"https://target.com/change-email\" method=\"POST\">\n  <input type=\"text\" name=\"email\" />\n  <input type=\"submit\" value=\"Change Email\" />\n  <!-- No CSRF token! -->\n</form>\n\n```\n\n**Step 2: Create Malicious HTML Page**\n\n```html\n<!-- Attacker's page (evil.com) -->\n<html>\n<body>\n  <form id=\"csrf\" action=\"https://target.com/change-email\" method=\"POST\">\n    <input type=\"hidden\" name=\"email\" value=\"attacker@evil.com\" />\n  </form>\n  <script>\n    // Auto-submit form\n    document.getElementById('csrf').submit();\n</script>\n</body>\n</html>\n\n```\n\n**Step 3: Lure Victim**\n\n- Send phishing email with link to evil.com\n- Or embed in legitimate-looking page\n- User visits while logged into target.com\n\n**Step 4: Attack Executes**\n\n- Form submits automatically\n- Browser includes session cookie\n- Target.com processes request\n- Email changed to attacker's email\n\n**Step 5: Verify Success**\n\n- Check if email changed\n- Use password reset with new email\n- Gain account access\n\n---"
+    },
+    {
+      "id": "pab340667693910",
+      "cluster": "Scenario-Based Questions",
+      "title": "How would you test for CSRF vulnerabilities during a penetration test?",
+      "seconds": 120,
+      "answerMarkdown": "**1. Identify State-Changing Operations:**\n\n- Look for POST/PUT/DELETE endpoints\n- Analyze forms and API endpoints\n- Identify sensitive operations (transfer, delete, modify)\n\n**2. Check for CSRF Protection:**\n\n- Look for CSRF tokens in forms\n- Check SameSite cookie attribute\n- Verify Origin/Referer validation\n- Test custom headers requirement\n\n**3. Create CSRF PoC:**\n\n```html\n<!-- Create malicious HTML page -->\n<form id=\"csrf\" action=\"https://target.com/vulnerable-endpoint\" method=\"POST\">\n  <input type=\"hidden\" name=\"param\" value=\"malicious_value\" />\n</form>\n<script>document.getElementById('csrf').submit();</script>\n\n```\n\n**4. Test Exploitation:**\n\n- Host PoC page\n- Access while logged into target\n- Verify if request succeeds\n- Check if action was performed\n\n**5. Document Findings:**\n\n- Vulnerable endpoint\n- Missing protection mechanisms\n- Proof of concept\n- Potential impact\n\n---"
+    },
+    {
+      "id": "p34ccdc90d00977",
+      "cluster": "Advanced Questions",
+      "title": "How can you bypass CSRF protection?",
+      "seconds": 120,
+      "answerMarkdown": "**1. Weak Token Implementation:**\n\n```python\n\n# Predictable token\n\ncsrf_token = str(int(time.time()))  # Predictable!\n\n# Bypass: Predict token based on time\n\n```\n\n**2. Token in Cookie (Double Submit) Bypass:**\n\n```jsx\n// If token validated from cookie\n// Attacker can set cookie via subdomain\ndocument.cookie = \"csrf_token=attacker_value; domain=.example.com\";\n\n```\n\n**3. SameSite=Lax Bypass:**\n\n```html\n<!-- GET requests from links allowed -->\n<a href=\"https://bank.com/transfer?to=attacker&amount=1000\">Click here</a>\n\n```\n\n**4. JSON CSRF Bypass:**\n\n```jsx\n// If server doesn't validate Content-Type\nfetch('https://api.example.com/transfer', {\n  method: 'POST',\n  credentials: 'include',\n  body: JSON.stringify({to: 'attacker', amount: 1000})\n});\n\n```\n\n**5. Flash-Based CSRF:**\n\n```\n// Flash can send custom headers\nvar request:URLRequest = new URLRequest(\"https://bank.com/transfer\");\nrequest.requestHeaders.push(new URLRequestHeader(\"X-Requested-With\", \"XMLHttpRequest\"));\n\n```\n\n**Key Point:**\u00a0Most bypasses are due to weak implementations. Use strong token generation, proper validation, and defense in depth.\n\n---"
+    },
+    {
+      "id": "p0db92e4a7c136c",
+      "cluster": "Advanced Questions",
+      "title": "What is the Double Submit Cookie pattern?",
+      "seconds": 120,
+      "answerMarkdown": "Double Submit Cookie pattern uses the\u00a0**same token in both cookie and form field**.\n\n**How It Works:**\n\n1. **Server sets cookie with token:**\n\n```python\ntoken = secrets.token_urlsafe(32)\nresponse.set_cookie('csrf_token', token)\n\n```\n\n1. **Same token included in form:**\n\n```html\n<form>\n  <input type=\"hidden\" name=\"csrf_token\" value=\"&#123;&#123; csrf_token &#125;&#125;\" />\n</form>\n\n```\n\n1. **Server validates match:**\n\n```python\ncookie_token = request.cookies.get('csrf_token')\nform_token = request.form.get('csrf_token')\n\nif cookie_token != form_token:\n    return \"Invalid CSRF token\", 403\n\n```\n\n**Why It Works:**\n\n- Same-Origin Policy prevents attacker from reading cookie\n- Attacker cannot set cookie for target domain\n- Server compares cookie value with form value\n- Must match for request to be valid\n\n**Limitations:**\n\n- Vulnerable to subdomain cookie attacks\n- Less secure than server-side token storage\n- Use with additional protections\n\n---"
+    },
+    {
+      "id": "p6d191a2de14b9b",
+      "cluster": "Penetration Testing Questions",
+      "title": "What tools would you use to test for CSRF?",
+      "seconds": 120,
+      "answerMarkdown": "**1. Burp Suite:**\n\n- Generate CSRF PoC automatically\n- Test for CSRF protection\n- Validate token implementation\n- Manual testing and validation\n\n**2. OWASP ZAP:**\n\n- Automated CSRF detection\n- CSRF token analysis\n- Origin/Referer validation testing\n- Reporting capabilities\n\n**3. Custom Scripts:**\n\n```python\nimport requests\n\ndef test_csrf(target_url, session_cookie):\n    payload = {'email': 'attacker@evil.com'}\n    headers = {\n        'Cookie': session_cookie,\n        'Referer': 'https://evil.com'\n    }\n    response = requests.post(target_url, data=payload, headers=headers)\n    return response.status_code == 200\n\n```\n\n**4. Browser Developer Tools:**\n\n- Inspect forms for CSRF tokens\n- Check cookie attributes (SameSite)\n- Analyze request headers\n- Test request submission\n\n---"
+    },
+    {
+      "id": "pd64a52af904e9b",
+      "cluster": "Penetration Testing Questions",
+      "title": "How would you report a CSRF vulnerability?",
+      "seconds": 120,
+      "answerMarkdown": "**Report Structure:**\n\n**1. Executive Summary:**\n\n- Vulnerability type (CSRF)\n- Severity (Critical/High/Medium/Low)\n- Affected component\n- Business impact\n\n**2. Technical Details:**\n\n- Vulnerable endpoint\n- Missing protection mechanisms\n- Attack vector\n- Proof of concept\n\n**3. Impact Assessment:**\n\n- Potential actions attacker can perform\n- Confidentiality impact\n- Integrity impact\n- Availability impact\n- Business impact\n\n**4. Steps to Reproduce:**\n\n```\n1. Log into target application\n2. Visit attacker's malicious page\n3. Form submits automatically\n4. Verify action was performed\n\n```\n\n**5. Remediation:**\n\n- Implement CSRF tokens\n- Set SameSite cookie attribute\n- Validate Origin/Referer headers\n- Use custom headers for AJAX\n\n**6. Evidence:**\n\n- Screenshots\n- Request/response logs\n- HTML PoC file\n- Video demonstration\n\n---"
+    }
+  ]
+}

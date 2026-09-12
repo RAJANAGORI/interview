@@ -1,0 +1,1945 @@
+{
+  "id": "n977ada46eec96df",
+  "title": "System vs Personal API Tokens",
+  "markdown": "Programmatic access to APIs is almost always authenticated with **bearer credentials**: opaque tokens, JWTs, API keys, or OAuth access tokens. In product security interviews, \"system vs personal\" is shorthand for **who the credential represents** (a machine identity vs a human) and **what breaks** when that identity rotates, is compromised, or leaves the organization. This guide ties that distinction to **service accounts**, **OAuth client credentials**, **personal access tokens (PATs)**, **rotation**, **audit**, **least privilege**, and **GitHub-style** patterns you can cite concretely.",
+  "notes": "Programmatic access to APIs is almost always authenticated with bearer credentials: opaque tokens, JWTs, API keys, or OAuth access tokens. In product security interviews, \"system vs personal\" is shorthand for who the credential represents (a machine identity vs a human) and what breaks when that identity rotates, is compromised, or leaves the organization. This guide ties that distinction to service accounts, OAuth client credentials, personal access tokens (PATs), rotation, audit, least privilege, and GitHub-style patterns you can cite concretely.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "nbe9ab5be31bc896",
+      "title": "Framing: machine identity vs human delegation",
+      "markdown": "**System-oriented credentials** authenticate automation: workloads, CI jobs, daemons, integrations owned by a team or product. The security goal is **stable service identity**, **narrow blast radius**, and **operations you can run without a specific employee**.\n\n**Personal credentials** authenticate as **a user**. They inherit that user's entitlements (subject to whatever scoping the platform allows). The security goal is **attribution to a person**, **short lifetimes where possible**, and **clean offboarding** when employment ends.\n\nNeither label is a guarantee of safety. A \"system\" token with admin scopes in one vault secret is worse than a tightly scoped personal token stored only on a hardened runner. The interview answer is always: **bind identity to the right principal, scope minimally, store in the right place, and prove it in logs**.",
+      "notes": "System-oriented credentials authenticate automation: workloads, CI jobs, daemons, integrations owned by a team or product. The security goal is stable service identity, narrow blast radius, and operations you can run without a specific employee.\n\nPersonal credentials authenticate as a user. They inherit that user's entitlements (subject to whatever scoping the platform allows). The security goal is attribution to a person, short lifetimes where possible, and clean offboarding when employment ends.\n\nNeither label is a guarantee of safety. A \"system\" token with admin scopes in one vault secret is worse than a tightly scoped personal token stored only on a hardened runner. The interview answer is always: bind identity to the right principal, scope minimally, store in the right place, and prove it in logs.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "System-oriented credentials authenticate automation: workloads, CI jobs,...",
+      "expanded": false
+    },
+    {
+      "id": "n4ebba4d9f5752fd",
+      "title": "Service accounts and workload identity",
+      "markdown": "A **service account** is a non-human principal used by software. Implementations differ (GCP service accounts, AWS IAM roles for workloads, Azure managed identities, Kubernetes service accounts, custom \"bot users\"), but the security properties you should articulate are:",
+      "notes": "A service account is a non-human principal used by software. Implementations differ (GCP service accounts, AWS IAM roles for workloads, Azure managed identities, Kubernetes service accounts, custom \"bot users\"), but the security properties you should articulate are:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n5ee0f7826ec05e3",
+          "title": "Ownership: A team or service owns the account; access is granted through IAM, not throug",
+          "markdown": "- Ownership: A team or service owns the account; access is granted through IAM, not throug",
+          "notes": "Ownership: A team or service owns the account; access is granted through IAM, not throug",
+          "blurb": "Ownership: A team or service owns the account; access is granted through...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nd431e27865515be",
+          "title": "Credential shape: Prefer short-lived credentials obtained at runtime (OIDC federation fr",
+          "markdown": "- Credential shape: Prefer short-lived credentials obtained at runtime (OIDC federation fr",
+          "notes": "Credential shape: Prefer short-lived credentials obtained at runtime (OIDC federation fr",
+          "blurb": "Credential shape: Prefer short-lived credentials obtained at runtime (OIDC...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nc6fb1743c57b5dc",
+          "title": "Blast radius: One compromised workload should not imply org-wide keys. Separate accounts",
+          "markdown": "- Blast radius: One compromised workload should not imply org-wide keys. Separate accounts",
+          "notes": "Blast radius: One compromised workload should not imply org-wide keys. Separate accounts",
+          "blurb": "Blast radius: One compromised workload should not imply org-wide keys.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n5f4b05d560c8630",
+          "title": "Rotation story: Static keys need calendar rotation and break-glass revocation. Ephemeral",
+          "markdown": "- Rotation story: Static keys need calendar rotation and break-glass revocation. Ephemeral",
+          "notes": "Rotation story: Static keys need calendar rotation and break-glass revocation. Ephemeral",
+          "blurb": "Rotation story: Static keys need calendar rotation and break-glass revocation.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "A service account is a non-human principal used by software.",
+      "expanded": true
+    },
+    {
+      "id": "n3f8a19d1a34ba70",
+      "title": "OAuth 2.0: when \u201cpersonal\u201d is really delegation",
+      "markdown": "OAuth is often described as \"user authorization,\" but it matters which **grant** you mean:",
+      "notes": "OAuth is often described as \"user authorization,\" but it matters which grant you mean:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nafa5c8aa15372fc",
+          "title": "Authorization code with PKCE (user present): A user signs in; the client receives tokens",
+          "markdown": "- Authorization code with PKCE (user present): A user signs in; the client receives tokens",
+          "notes": "Authorization code with PKCE (user present): A user signs in; the client receives tokens",
+          "blurb": "Authorization code with PKCE (user present): A user signs in; the client...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nf4a857542e9e43b",
+          "title": "Client credentials grant: The client authenticates as itself (client ID + secret, JWT as",
+          "markdown": "- Client credentials grant: The client authenticates as itself (client ID + secret, JWT as",
+          "notes": "Client credentials grant: The client authenticates as itself (client ID + secret, JWT as",
+          "blurb": "Client credentials grant: The client authenticates as itself (client ID +...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n629b9990f222ba5",
+          "title": "Device code, refresh tokens, and downstream API calls: Long-lived refresh tokens behave",
+          "markdown": "- Device code, refresh tokens, and downstream API calls: Long-lived refresh tokens behave",
+          "notes": "Device code, refresh tokens, and downstream API calls: Long-lived refresh tokens behave",
+          "blurb": "Device code, refresh tokens, and downstream API calls: Long-lived refresh...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "OAuth is often described as \"user authorization,\" but it matters which grant...",
+      "expanded": true
+    },
+    {
+      "id": "nf53a9af86ae5e25",
+      "title": "Personal access tokens (PATs): power and peril",
+      "markdown": "A **personal access token** is typically minted in a user's settings and used like a password for APIs. Risks interviewers expect you to name:",
+      "notes": "A personal access token is typically minted in a user's settings and used like a password for APIs. Risks interviewers expect you to name:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n224f9049625d1fa",
+          "title": "Permission inheritance: The token may carry everything the user can do, unless the platf",
+          "markdown": "- Permission inheritance: The token may carry everything the user can do, unless the platf",
+          "notes": "Permission inheritance: The token may carry everything the user can do, unless the platf",
+          "blurb": "Permission inheritance: The token may carry everything the user can do,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n738d4a4c59a3a95",
+          "title": "Offboarding: If engineers use PATs in cron jobs or shared jump boxes, disabling the user",
+          "markdown": "- Offboarding: If engineers use PATs in cron jobs or shared jump boxes, disabling the user",
+          "notes": "Offboarding: If engineers use PATs in cron jobs or shared jump boxes, disabling the user",
+          "blurb": "Offboarding: If engineers use PATs in cron jobs or shared jump boxes,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nbc5ea88ba3b3642",
+          "title": "Attribution ambiguity in shared systems: The same PAT used from a shared runner makes au",
+          "markdown": "- Attribution ambiguity in shared systems: The same PAT used from a shared runner makes au",
+          "notes": "Attribution ambiguity in shared systems: The same PAT used from a shared runner makes au",
+          "blurb": "Attribution ambiguity in shared systems: The same PAT used from a shared...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n2ab96fc3bc83704",
+          "title": "Phishing and exfiltration: PATs are high-value static strings; they appear in tickets, c",
+          "markdown": "- Phishing and exfiltration: PATs are high-value static strings; they appear in tickets, c",
+          "notes": "Phishing and exfiltration: PATs are high-value static strings; they appear in tickets, c",
+          "blurb": "Phishing and exfiltration: PATs are high-value static strings; they appear...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n01d50759889b5d6",
+          "title": "Supply chain: CI that echoes masked secrets, flaky redaction in logs, or \"temporary\" PAT",
+          "markdown": "- Supply chain: CI that echoes masked secrets, flaky redaction in logs, or \"temporary\" PAT",
+          "notes": "Supply chain: CI that echoes masked secrets, flaky redaction in logs, or \"temporary\" PAT",
+          "blurb": "Supply chain: CI that echoes masked secrets, flaky redaction in logs, or...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "A personal access token is typically minted in a user's settings and used...",
+      "expanded": true
+    },
+    {
+      "id": "n093ad2deeeff7e1",
+      "title": "GitHub-style token models (concrete pattern language)",
+      "markdown": "GitHub is a common interview example because it exposes multiple credential types side by side:",
+      "notes": "GitHub is a common interview example because it exposes multiple credential types side by side:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nb9f0e4fd927dec7",
+          "title": "Fine-grained personal access tokens: Tied to a user, but limited to specific repositorie",
+          "markdown": "- Fine-grained personal access tokens: Tied to a user, but limited to specific repositorie",
+          "notes": "Fine-grained personal access tokens: Tied to a user, but limited to specific repositorie",
+          "blurb": "Fine-grained personal access tokens: Tied to a user, but limited to specific...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n1bb06691c09dd3b",
+          "title": "Classic PATs: Often broad; orgs frequently restrict or ban them for members via policy.",
+          "markdown": "- Classic PATs: Often broad; orgs frequently restrict or ban them for members via policy.",
+          "notes": "Classic PATs: Often broad; orgs frequently restrict or ban them for members via policy.",
+          "blurb": "Classic PATs: Often broad; orgs frequently restrict or ban them for members...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "neffd381a62c8c94",
+          "title": "GitHub Apps: Act as an installation with installation access tokens that are short-lived",
+          "markdown": "- GitHub Apps: Act as an installation with installation access tokens that are short-lived",
+          "notes": "GitHub Apps: Act as an installation with installation access tokens that are short-lived",
+          "blurb": "GitHub Apps: Act as an installation with installation access tokens that are...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n21e6135d6afdf77",
+          "title": "OAuth Apps: Used for user delegation flows; access tokens represent user-granted scopes.",
+          "markdown": "- OAuth Apps: Used for user delegation flows; access tokens represent user-granted scopes.",
+          "notes": "OAuth Apps: Used for user delegation flows; access tokens represent user-granted scopes.",
+          "blurb": "OAuth Apps: Used for user delegation flows; access tokens represent...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "GitHub is a common interview example because it exposes multiple credential...",
+      "expanded": false
+    },
+    {
+      "id": "n24d62020f8ad2fa",
+      "title": "Least privilege and scope design",
+      "markdown": "Least privilege for tokens is not \"read-only everywhere.\" It is **the smallest set of operations on the smallest set of resources** that still lets the job complete.\n\nPractical patterns:",
+      "notes": "Least privilege for tokens is not \"read-only everywhere.\" It is the smallest set of operations on the smallest set of resources that still lets the job complete.\n\nPractical patterns:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n9f2e5b617a10452",
+          "title": "Split tokens by function: A deploy token should not also administer billing or user mana",
+          "markdown": "- Split tokens by function: A deploy token should not also administer billing or user mana",
+          "notes": "Split tokens by function: A deploy token should not also administer billing or user mana",
+          "blurb": "Split tokens by function: A deploy token should not also administer billing...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n41ad9aca1e3aecd",
+          "title": "Environment separation: Staging credentials must not work against production APIs.",
+          "markdown": "- Environment separation: Staging credentials must not work against production APIs.",
+          "notes": "Environment separation: Staging credentials must not work against production APIs.",
+          "blurb": "Environment separation: Staging credentials must not work against production...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n658ce8d991865a4",
+          "title": "Just-in-time elevation: Where platforms support it, obtain elevated scopes for a single",
+          "markdown": "- Just-in-time elevation: Where platforms support it, obtain elevated scopes for a single",
+          "notes": "Just-in-time elevation: Where platforms support it, obtain elevated scopes for a single",
+          "blurb": "Just-in-time elevation: Where platforms support it, obtain elevated scopes...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n538003cfe9d34b7",
+          "title": "ABAC/RBAC at the API: Even a perfect token fails safely if the API enforces resource-lev",
+          "markdown": "- ABAC/RBAC at the API: Even a perfect token fails safely if the API enforces resource-lev",
+          "notes": "ABAC/RBAC at the API: Even a perfect token fails safely if the API enforces resource-lev",
+          "blurb": "ABAC/RBAC at the API: Even a perfect token fails safely if the API enforces...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Least privilege for tokens is not \"read-only everywhere.\" It is the smallest...",
+      "expanded": false
+    },
+    {
+      "id": "nc90b082013cb646",
+      "title": "Rotation, expiry, and break-glass",
+      "markdown": "**Rotation** reduces how long a stolen token remains useful. For static secrets:",
+      "notes": "Rotation reduces how long a stolen token remains useful. For static secrets:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n388a3d4c9af8ae6",
+          "title": "Automate dual-write or grace periods where old and new tokens both work briefly during c",
+          "markdown": "- Automate dual-write or grace periods where old and new tokens both work briefly during c",
+          "notes": "Automate dual-write or grace periods where old and new tokens both work briefly during c",
+          "blurb": "Automate dual-write or grace periods where old and new tokens both work...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nb85ebb62f53c309",
+          "title": "Track consumers in a registry so you know which pipeline to update.",
+          "markdown": "- Track consumers in a registry so you know which pipeline to update.",
+          "notes": "Track consumers in a registry so you know which pipeline to update.",
+          "blurb": "Track consumers in a registry so you know which pipeline to update.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n4bc1287adb1c87c",
+          "title": "Prefer cryptographic key IDs or token prefixes in logs so you can identify which secret",
+          "markdown": "- Prefer cryptographic key IDs or token prefixes in logs so you can identify which secret",
+          "notes": "Prefer cryptographic key IDs or token prefixes in logs so you can identify which secret",
+          "blurb": "Prefer cryptographic key IDs or token prefixes in logs so you can identify...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Rotation reduces how long a stolen token remains useful.",
+      "expanded": false
+    },
+    {
+      "id": "n33a30b03caa9f27",
+      "title": "Audit, logging, and non-repudiation",
+      "markdown": "Audit answers should connect **token type** to **what you can prove afterward**:",
+      "notes": "Audit answers should connect token type to what you can prove afterward:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n9b1fbe0864864bb",
+          "title": "Personal tokens often map cleanly to a user ID in access logs-useful until the token is",
+          "markdown": "- Personal tokens often map cleanly to a user ID in access logs-useful until the token is",
+          "notes": "Personal tokens often map cleanly to a user ID in access logs-useful until the token is",
+          "blurb": "Personal tokens often map cleanly to a user ID in access logs-useful until...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n8c1eacec191a17e",
+          "title": "Service tokens should map to a service principal ID, client ID, or installation ID, not",
+          "markdown": "- Service tokens should map to a service principal ID, client ID, or installation ID, not",
+          "notes": "Service tokens should map to a service principal ID, client ID, or installation ID, not",
+          "blurb": "Service tokens should map to a service principal ID, client ID, or...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n7a4303a0dee5276",
+          "title": "Log authentication method, token fingerprint or key id (not the secret), scopes used, re",
+          "markdown": "- Log authentication method, token fingerprint or key id (not the secret), scopes used, re",
+          "notes": "Log authentication method, token fingerprint or key id (not the secret), scopes used, re",
+          "blurb": "Log authentication method, token fingerprint or key id (not the secret),...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Audit answers should connect token type to what you can prove afterward:",
+      "expanded": false
+    },
+    {
+      "id": "nfec8a11c16772e9",
+      "title": "Storage and lifecycle integration",
+      "markdown": "**System secrets** belong in **secret managers** (Vault, cloud secret stores) with:",
+      "notes": "System secrets belong in secret managers (Vault, cloud secret stores) with:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n688576e488279a6",
+          "title": "Access policies tied to workload identity, not individual developers' laptops.",
+          "markdown": "- Access policies tied to workload identity, not individual developers' laptops.",
+          "notes": "Access policies tied to workload identity, not individual developers' laptops.",
+          "blurb": "Access policies tied to workload identity, not individual developers' laptops.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n23aed7845847ff4",
+          "title": "Versioning and automatic rotation hooks where supported.",
+          "markdown": "- Versioning and automatic rotation hooks where supported.",
+          "notes": "Versioning and automatic rotation hooks where supported.",
+          "blurb": "Versioning and automatic rotation hooks where supported.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nc8acfa615db9f77",
+          "title": "Encryption with customer-managed keys when required.",
+          "markdown": "- Encryption with customer-managed keys when required.",
+          "notes": "Encryption with customer-managed keys when required.",
+          "blurb": "Encryption with customer-managed keys when required.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "System secrets belong in secret managers (Vault, cloud secret stores) with:",
+      "expanded": false
+    },
+    {
+      "id": "naa107e901a2fd20",
+      "title": "Decision guide: which credential type?",
+      "markdown": "| Scenario | Prefer | Why |\n|----------|--------|-----|\n| Headless automation owned by a service | Service principal, workload identity, or app installation tokens | Stable ownership, short-lived creds, no human offboarding coupling |\n| User-facing \"connect your account\" integration | OAuth authorization code (+ PKCE for public clients) | User consent, revocable grants, clearer audit story |\n| Scripting by a developer on their laptop | Fine-grained PAT or short-lived CLI login | Acceptable if scoped, expiring, and not shared |\n| Org-wide CI/CD publishing packages | Machine identity per pipeline + scoped deploy role | Avoids shared human PATs on runners |\n| Emergency admin access | Break-glass account with MFA, time-bound, logged | Contain blast radius vs daily-use tokens |",
+      "notes": "| Scenario | Prefer | Why |\n|----------|--------|-----|\n| Headless automation owned by a service | Service principal, workload identity, or app installation tokens | Stable ownership, short-lived creds, no human offboarding coupling |\n| User-facing \"connect your account\" integration | OAuth authorization code (+ PKCE for public clients) | User consent, revocable grants, clearer audit story |\n| Scripting by a developer on their laptop | Fine-grained PAT or short-lived CLI login | Acceptable if scoped, expiring, and not shared |\n| Org-wide CI/CD publishing packages | Machine identity per pipeline + scoped deploy role | Avoids shared human PATs on runners |\n| Emergency admin access | Break-glass account with MFA, time-bound, logged | Contain blast radius vs daily-use tokens |",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Scenario | Prefer | Why | |----------|--------|-----| | Headless...",
+      "expanded": false
+    },
+    {
+      "id": "n00630132154e67f",
+      "title": "Organizational policy checklist",
+      "markdown": "Inventory: Automated discovery of known secret patterns in repos; token metadata tables in the identity provider.",
+      "notes": "Inventory: Automated discovery of known secret patterns in repos; token metadata tables in the identity provider.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n9657a039cd8f5cf",
+          "title": "Inventory: Automated discovery of known secret patterns in repos; token metadata tables",
+          "markdown": "- Inventory: Automated discovery of known secret patterns in repos; token metadata tables",
+          "notes": "Inventory: Automated discovery of known secret patterns in repos; token metadata tables",
+          "blurb": "Inventory: Automated discovery of known secret patterns in repos; token...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n6d8fbf2a515c3d4",
+          "title": "Policy: Block or restrict broad PATs; require SSO or enterprise-managed integrations whe",
+          "markdown": "- Policy: Block or restrict broad PATs; require SSO or enterprise-managed integrations whe",
+          "notes": "Policy: Block or restrict broad PATs; require SSO or enterprise-managed integrations whe",
+          "blurb": "Policy: Block or restrict broad PATs; require SSO or enterprise-managed...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ne9df41c2ba6dedb",
+          "title": "Education: \"No PATs in CI\" posters are crude but reflect real incident patterns.",
+          "markdown": "- Education: \"No PATs in CI\" posters are crude but reflect real incident patterns.",
+          "notes": "Education: \"No PATs in CI\" posters are crude but reflect real incident patterns.",
+          "blurb": "Education: \"No PATs in CI\" posters are crude but reflect real incident...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n2948da6bbe1802c",
+          "title": "Offboarding: Disable user tokens on HR events; run jobs that flag API activity from depa",
+          "markdown": "- Offboarding: Disable user tokens on HR events; run jobs that flag API activity from depa",
+          "notes": "Offboarding: Disable user tokens on HR events; run jobs that flag API activity from depa",
+          "blurb": "Offboarding: Disable user tokens on HR events; run jobs that flag API...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n067609bc1e75376",
+          "title": "Incident response: Pre-stepped revocation order (user sessions, PATs, OAuth grants, serv",
+          "markdown": "- Incident response: Pre-stepped revocation order (user sessions, PATs, OAuth grants, serv",
+          "notes": "Incident response: Pre-stepped revocation order (user sessions, PATs, OAuth grants, serv",
+          "blurb": "Incident response: Pre-stepped revocation order (user sessions, PATs, OAuth...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Inventory: Automated discovery of known secret patterns in repos; token...",
+      "expanded": false
+    },
+    {
+      "id": "nb5efdfef5f70ea6",
+      "title": "Common interview traps",
+      "markdown": "\"Service tokens are safer.\" Only if scoped, stored, and rotated better than personal ones.",
+      "notes": "\"Service tokens are safer.\" Only if scoped, stored, and rotated better than personal ones.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n260cd05ce152dc0",
+          "title": "\"Service tokens are safer.\" Only if scoped, stored, and rotated better than personal one",
+          "markdown": "- \"Service tokens are safer.\" Only if scoped, stored, and rotated better than personal one",
+          "notes": "\"Service tokens are safer.\" Only if scoped, stored, and rotated better than personal one",
+          "blurb": "\"Service tokens are safer.\" Only if scoped, stored, and rotated better than...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nea75d89ace4529e",
+          "title": "\"We use JWT so we're fine.\" JWTs are bearer tokens. Theft still wins unless you add bind",
+          "markdown": "- \"We use JWT so we're fine.\" JWTs are bearer tokens. Theft still wins unless you add bind",
+          "notes": "\"We use JWT so we're fine.\" JWTs are bearer tokens. Theft still wins unless you add bind",
+          "blurb": "\"We use JWT so we're fine.\" JWTs are bearer tokens.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ne52d5aa22b5f08b",
+          "title": "\"Audit logs show the user.\" Shared PATs and forwarded requests break that story-design f",
+          "markdown": "- \"Audit logs show the user.\" Shared PATs and forwarded requests break that story-design f",
+          "notes": "\"Audit logs show the user.\" Shared PATs and forwarded requests break that story-design f",
+          "blurb": "\"Audit logs show the user.\" Shared PATs and forwarded requests break that...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "\"Service tokens are safer.\" Only if scoped, stored, and rotated better than...",
+      "expanded": false
+    },
+    {
+      "id": "n7cee761518fc9f8",
+      "title": "CI/CD: why PATs on runners fail audits",
+      "markdown": "Continuous integration is the highest-risk place for **personal** credentials because jobs are **shared infrastructure**: ephemeral VMs, reused caches, fork PR workflows, and logs that accidentally print environment variables.\n\nStrong pattern: **OpenID Connect (OIDC) federation** from the CI provider to your cloud or artifact host. The pipeline requests a **short-lived identity token** from the CI platform, presents it to your cloud IAM, and receives **temporary** cloud credentials scoped to that **repository**, **environment**, and **branch** policy. No long-lived secret sits in \"Repository secrets\" except what the platform absolutely requires.\n\nWhen OIDC is unavailable, prefer **installation-scoped** or **repository-scoped deploy credentials** over a human PAT. If you must use a static secret, **vault** it, **rotate** on a schedule, restrict which workflows can read it (protected environments, manual approvals for production), and **never** pass tokens to untrusted fork builds.\n\n**Pull request security:** Workflows triggered from forks should not receive secrets. Interviewers often probe whether you understand **workflow triggers** and **permission boundaries**-tokens are useless if the pipeline itself is attacker-controlled.",
+      "notes": "Continuous integration is the highest-risk place for personal credentials because jobs are shared infrastructure: ephemeral VMs, reused caches, fork PR workflows, and logs that accidentally print environment variables.\n\nStrong pattern: OpenID Connect (OIDC) federation from the CI provider to your cloud or artifact host. The pipeline requests a short-lived identity token from the CI platform, presents it to your cloud IAM, and receives temporary cloud credentials scoped to that repository, environment, and branch policy. No long-lived secret sits in \"Repository secrets\" except what the platform absolutely requires.\n\nWhen OIDC is unavailable, prefer installation-scoped or repository-scoped deploy credentials over a human PAT. If you must use a static secret, vault it, rotate on a schedule, restrict which workflows can read it (protected environments, manual approvals for production), and never pass tokens to untrusted fork builds.\n\nPull request security: Workflows triggered from forks should not receive secrets. Interviewers often probe whether you understand workflow triggers and permission boundaries-tokens are useless if the pipeline itself is attacker-controlled.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Continuous integration is the highest-risk place for personal credentials...",
+      "expanded": false
+    },
+    {
+      "id": "ne2d05690a2ef17d",
+      "title": "Enterprise SSO, managed users, and PAT governance",
+      "markdown": "Many SaaS platforms integrate with corporate identity providers. Security outcomes you should describe:",
+      "notes": "Many SaaS platforms integrate with corporate identity providers. Security outcomes you should describe:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n9bcf446ff320e2e",
+          "title": "SSO enforcement: Users authenticate through the IdP; the SaaS honors session policies (M",
+          "markdown": "- SSO enforcement: Users authenticate through the IdP; the SaaS honors session policies (M",
+          "notes": "SSO enforcement: Users authenticate through the IdP; the SaaS honors session policies (M",
+          "blurb": "SSO enforcement: Users authenticate through the IdP; the SaaS honors session...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n7027db5b4b7cd89",
+          "title": "Managed or enterprise accounts: The organization owns member accounts; suspension in the",
+          "markdown": "- Managed or enterprise accounts: The organization owns member accounts; suspension in the",
+          "notes": "Managed or enterprise accounts: The organization owns member accounts; suspension in the",
+          "blurb": "Managed or enterprise accounts: The organization owns member accounts;...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n22e8b10198ce471",
+          "title": "PAT restrictions: Some products allow admins to disable classic PATs, require SSO author",
+          "markdown": "- PAT restrictions: Some products allow admins to disable classic PATs, require SSO author",
+          "notes": "PAT restrictions: Some products allow admins to disable classic PATs, require SSO author",
+          "blurb": "PAT restrictions: Some products allow admins to disable classic PATs,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Many SaaS platforms integrate with corporate identity providers.",
+      "expanded": false
+    },
+    {
+      "id": "ncc0e4848b625ef6",
+      "title": "GitHub Apps vs OAuth Apps (deeper comparison)",
+      "markdown": "**GitHub App (system-friendly):**",
+      "notes": "GitHub App (system-friendly):",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nb53173e6916b7f6",
+          "title": "Installed into an org or selected repos; admins approve requested permissions.",
+          "markdown": "- Installed into an org or selected repos; admins approve requested permissions.",
+          "notes": "Installed into an org or selected repos; admins approve requested permissions.",
+          "blurb": "Installed into an org or selected repos; admins approve requested permissions.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n90a98c8c38442ca",
+          "title": "Uses installation access tokens that expire quickly (typically on the order of an hour).",
+          "markdown": "- Uses installation access tokens that expire quickly (typically on the order of an hour).",
+          "notes": "Uses installation access tokens that expire quickly (typically on the order of an hour).",
+          "blurb": "Uses installation access tokens that expire quickly (typically on the order...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nd51c695ee9640b3",
+          "title": "Can act as the app itself or impersonate a user only through explicit flows-default auto",
+          "markdown": "- Can act as the app itself or impersonate a user only through explicit flows-default auto",
+          "notes": "Can act as the app itself or impersonate a user only through explicit flows-default auto",
+          "blurb": "Can act as the app itself or impersonate a user only through explicit...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nfc7c10a0326618c",
+          "title": "Webhooks are first-class; you verify delivery with shared secrets or signatures and trea",
+          "markdown": "- Webhooks are first-class; you verify delivery with shared secrets or signatures and trea",
+          "notes": "Webhooks are first-class; you verify delivery with shared secrets or signatures and trea",
+          "blurb": "Webhooks are first-class; you verify delivery with shared secrets or...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n3b972be842c65de",
+          "title": "Drives OAuth authorization for users; access tokens represent user grants.",
+          "markdown": "- Drives OAuth authorization for users; access tokens represent user grants.",
+          "notes": "Drives OAuth authorization for users; access tokens represent user grants.",
+          "blurb": "Drives OAuth authorization for users; access tokens represent user grants.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nbf57f3080e78660",
+          "title": "Refresh tokens may be long-lived; storage and rotation are critical.",
+          "markdown": "- Refresh tokens may be long-lived; storage and rotation are critical.",
+          "notes": "Refresh tokens may be long-lived; storage and rotation are critical.",
+          "blurb": "Refresh tokens may be long-lived; storage and rotation are critical.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n51fa25c294cc0a8",
+          "title": "Good when the product experience is \"log in with GitHub and let our SaaS access your rep",
+          "markdown": "- Good when the product experience is \"log in with GitHub and let our SaaS access your rep",
+          "notes": "Good when the product experience is \"log in with GitHub and let our SaaS access your rep",
+          "blurb": "Good when the product experience is \"log in with GitHub and let our SaaS...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "GitHub App (system-friendly):",
+      "expanded": false
+    },
+    {
+      "id": "nbc57f40479a2b09",
+      "title": "API keys, JWT access tokens, and opaque bearer tokens",
+      "markdown": "Interviewers sometimes blur terminology; clarify briefly:",
+      "notes": "Interviewers sometimes blur terminology; clarify briefly:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n17b3c5a55434b7d",
+          "title": "Opaque API token / PAT: Random secret; authorization server or resource API looks it up",
+          "markdown": "- Opaque API token / PAT: Random secret; authorization server or resource API looks it up",
+          "notes": "Opaque API token / PAT: Random secret; authorization server or resource API looks it up",
+          "blurb": "Opaque API token / PAT: Random secret; authorization server or resource API...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "na25edf763737b6c",
+          "title": "JWT access token: Self-contained; resource servers validate signature and claims without",
+          "markdown": "- JWT access token: Self-contained; resource servers validate signature and claims without",
+          "notes": "JWT access token: Self-contained; resource servers validate signature and claims without",
+          "blurb": "JWT access token: Self-contained; resource servers validate signature and...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n2b3ee82fa288a61",
+          "title": "mTLS or DPoP: Ways to bind a token to a client or key, reducing bearer-token replay from",
+          "markdown": "- mTLS or DPoP: Ways to bind a token to a client or key, reducing bearer-token replay from",
+          "notes": "mTLS or DPoP: Ways to bind a token to a client or key, reducing bearer-token replay from",
+          "blurb": "mTLS or DPoP: Ways to bind a token to a client or key, reducing bearer-token...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Interviewers sometimes blur terminology; clarify briefly:",
+      "expanded": false
+    },
+    {
+      "id": "n75117d5c6355efa",
+      "title": "Secret scanning, inventory, and operational metrics",
+      "markdown": "**Prevention:** Push protection, pre-commit hooks, and CI jobs that fail builds when high-entropy strings match known patterns (provider-specific prefixes help: many platforms use recognizable token prefixes so leaked keys are easier to detect and revoke).\n\n**Detection:** Central logging of **token creation** events, **anomalous API usage** (geo, volume, new user agents), and **failed auth spikes**.\n\n**Metrics that matter for leadership:**",
+      "notes": "Prevention: Push protection, pre-commit hooks, and CI jobs that fail builds when high-entropy strings match known patterns (provider-specific prefixes help: many platforms use recognizable token prefixes so leaked keys are easier to detect and revoke).\n\nDetection: Central logging of token creation events, anomalous API usage (geo, volume, new user agents), and failed auth spikes.\n\nMetrics that matter for leadership:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n8bdc18b4ae64762",
+          "title": "Count of active long-lived tokens per org, age distribution, and percentage with expiry.",
+          "markdown": "- Count of active long-lived tokens per org, age distribution, and percentage with expiry.",
+          "notes": "Count of active long-lived tokens per org, age distribution, and percentage with expiry.",
+          "blurb": "Count of active long-lived tokens per org, age distribution, and percentage...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nd90a11516661d86",
+          "title": "Mean time to revoke after employee termination.",
+          "markdown": "- Mean time to revoke after employee termination.",
+          "notes": "Mean time to revoke after employee termination.",
+          "blurb": "Mean time to revoke after employee termination.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nc2860f1edd0be92",
+          "title": "Percentage of CI workloads using federated identity vs static secrets.",
+          "markdown": "- Percentage of CI workloads using federated identity vs static secrets.",
+          "notes": "Percentage of CI workloads using federated identity vs static secrets.",
+          "blurb": "Percentage of CI workloads using federated identity vs static secrets.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Prevention: Push protection, pre-commit hooks, and CI jobs that fail builds...",
+      "expanded": false
+    },
+    {
+      "id": "nf634b17a312b740",
+      "title": "Incident response: credential exposure",
+      "markdown": "Assume a token appears in a public repo or paste site:",
+      "notes": "Assume a token appears in a public repo or paste site:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n7c2293aa37cb3c8",
+          "title": "Revoke immediately at the issuer; rotate downstream secrets if the token could have been",
+          "markdown": "- Revoke immediately at the issuer; rotate downstream secrets if the token could have been",
+          "notes": "Revoke immediately at the issuer; rotate downstream secrets if the token could have been",
+          "blurb": "Revoke immediately at the issuer; rotate downstream secrets if the token...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nb6e441a86664fd1",
+          "title": "Pull audit logs for the token id or user principal during the exposure window.",
+          "markdown": "- Pull audit logs for the token id or user principal during the exposure window.",
+          "notes": "Pull audit logs for the token id or user principal during the exposure window.",
+          "blurb": "Pull audit logs for the token id or user principal during the exposure window.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n3319b43bf148201",
+          "title": "Hunt for similar patterns (same user, same repo, other leaked env files).",
+          "markdown": "- Hunt for similar patterns (same user, same repo, other leaked env files).",
+          "notes": "Hunt for similar patterns (same user, same repo, other leaked env files).",
+          "blurb": "Hunt for similar patterns (same user, same repo, other leaked env files).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n1250f285dc92153",
+          "title": "Root cause: Was it a fork workflow, a misconfigured logger, or a developer workaround? F",
+          "markdown": "- Root cause: Was it a fork workflow, a misconfigured logger, or a developer workaround? F",
+          "notes": "Root cause: Was it a fork workflow, a misconfigured logger, or a developer workaround? F",
+          "blurb": "Root cause: Was it a fork workflow, a misconfigured logger, or a developer...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Assume a token appears in a public repo or paste site:",
+      "expanded": false
+    },
+    {
+      "id": "nd8b67b04cd462f2",
+      "title": "Further reading (authoritative)",
+      "markdown": "- [RFC 6749 - The OAuth 2.0 Authorization Framework](https://www.rfc-editor.org/rfc/rfc6749) - grants, roles of resource owner, client, authorization server, resource server.\n- Provider documentation for **fine-grained PATs**, **GitHub Apps**, **OAuth Apps**, and **enterprise managed accounts** - patterns differ; cite the **concepts**, not only one vendor's names.\n\n---\n\n**Cross-read:** Secrets Management and Key Lifecycle, IAM and Least Privilege at Scale, OAuth and federation topics in your study set, and Third-Party Integration Security for vendor onboarding patterns.",
+      "notes": "- RFC 6749 - The OAuth 2.0 Authorization Framework - grants, roles of resource owner, client, authorization server, resource server.\n- Provider documentation for fine-grained PATs, GitHub Apps, OAuth Apps, and enterprise managed accounts - patterns differ; cite the concepts, not only one vendor's names.\n\n---\n\nCross-read: Secrets Management and Key Lifecycle, IAM and Least Privilege at Scale, OAuth and federation topics in your study set, and Third-Party Integration Security for vendor onboarding patterns.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "RFC 6749 - The OAuth 2.0 Authorization Framework - grants, roles of resource...",
+      "expanded": false
+    },
+    {
+      "id": "n8ab21c39eacd687",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "ne5da0656c3cee15",
+          "title": "Key Differences",
+          "markdown": "| Aspect | System-Level Tokens | Personal-Level Tokens |\n| --- | --- | --- |\n| **Owner** | Service/System | Individual User |\n| **Management** | Infrastructure/DevOps | User Account Settings |\n| **Lifecycle** | Long-lived, automated rotation | User-controlled or auto-expiring |\n| **Permissions** | Service permissions | User permissions |\n| **Use Case** | Service-to-service, automation | User-initiated API access |",
+          "notes": "| Aspect | System-Level Tokens | Personal-Level Tokens |\n| --- | --- | --- |\n| Owner | Service/System | Individual User |\n| Management | Infrastructure/DevOps | User Account Settings |\n| Lifecycle | Long-lived, automated rotation | User-controlled or auto-expiring |\n| Permissions | Service permissions | User permissions |\n| Use Case | Service-to-service, automation | User-initiated API access |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Aspect | System-Level Tokens | Personal-Level Tokens | | --- | --- | --- |...",
+          "expanded": false
+        },
+        {
+          "id": "n386eaeb97b7f6d2",
+          "title": "Use Cases",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "na529206865b92ed",
+              "title": "System-Level Tokens",
+              "markdown": "Service-to-service authentication - CI/CD pipelines - Scheduled jobs - Backend service communication",
+              "notes": "Service-to-service authentication - CI/CD pipelines - Scheduled jobs - Backend service communication",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n748b59b795df222",
+                  "title": "Service-to-service authentication",
+                  "markdown": "- Service-to-service authentication",
+                  "notes": "Service-to-service authentication",
+                  "blurb": "Service-to-service authentication",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n0d84e2e8532c2b9",
+                  "title": "CI/CD pipelines",
+                  "markdown": "- CI/CD pipelines",
+                  "notes": "CI/CD pipelines",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n4b89e83b77da546",
+                  "title": "Scheduled jobs",
+                  "markdown": "- Scheduled jobs",
+                  "notes": "Scheduled jobs",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n094feb878101204",
+                  "title": "Backend service communication",
+                  "markdown": "- Backend service communication",
+                  "notes": "Backend service communication",
+                  "blurb": "Backend service communication",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Service-to-service authentication - CI/CD pipelines - Scheduled jobs -...",
+              "expanded": false
+            },
+            {
+              "id": "ncbb29367167bc84",
+              "title": "Personal-Level Tokens",
+              "markdown": "User's personal scripts - Third-party app authorization - CLI tools - Local development",
+              "notes": "User's personal scripts - Third-party app authorization - CLI tools - Local development",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n7a0fc606def6cc4",
+                  "title": "User's personal scripts",
+                  "markdown": "- User's personal scripts",
+                  "notes": "User's personal scripts",
+                  "blurb": "User's personal scripts",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "na713097ae163493",
+                  "title": "Third-party app authorization",
+                  "markdown": "- Third-party app authorization",
+                  "notes": "Third-party app authorization",
+                  "blurb": "Third-party app authorization",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd0b71a338a60bc7",
+                  "title": "Local development",
+                  "markdown": "- Local development",
+                  "notes": "Local development",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "User's personal scripts - Third-party app authorization - CLI tools - Local...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes System-Level Tokens",
+          "expanded": false
+        },
+        {
+          "id": "n9bc4eb60aa9937d",
+          "title": "Security Checklist",
+          "markdown": "\u2705 Cryptographically random token generation - \u2705 Secure storage (secret management for system tokens) - \u2705 HTTPS/TLS for all API communication - \u2705 Token scoping (principle of least privilege) - \u2705 Regular token rotation -...",
+          "notes": "\u2705 Cryptographically random token generation - \u2705 Secure storage (secret management for system tokens) - \u2705 HTTPS/TLS for all API communication - \u2705 Token scoping (principle of least privilege) - \u2705 Regular token rotation -...",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n3b479f25dd535fd",
+              "title": "Cryptographically random token generation",
+              "markdown": "- Cryptographically random token generation",
+              "notes": "Cryptographically random token generation",
+              "blurb": "Cryptographically random token generation",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc6d93cfde338f96",
+              "title": "Secure storage (secret management for system tokens)",
+              "markdown": "- Secure storage (secret management for system tokens)",
+              "notes": "Secure storage (secret management for system tokens)",
+              "blurb": "Secure storage (secret management for system tokens)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nbd61f80578e10be",
+              "title": "HTTPS/TLS for all API communication",
+              "markdown": "- HTTPS/TLS for all API communication",
+              "notes": "HTTPS/TLS for all API communication",
+              "blurb": "HTTPS/TLS for all API communication",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5f393ef905fde66",
+              "title": "Token scoping (principle of least privilege)",
+              "markdown": "- Token scoping (principle of least privilege)",
+              "notes": "Token scoping (principle of least privilege)",
+              "blurb": "Token scoping (principle of least privilege)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n71b231fc56aebd1",
+              "title": "Regular token rotation",
+              "markdown": "- Regular token rotation",
+              "notes": "Regular token rotation",
+              "blurb": "Regular token rotation",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n7c9288b466b1eba",
+              "title": "Token monitoring and audit",
+              "markdown": "- Token monitoring and audit",
+              "notes": "Token monitoring and audit",
+              "blurb": "Token monitoring and audit",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nab1907a0a49ba56",
+              "title": "Immediate revocation if compromised",
+              "markdown": "- Immediate revocation if compromised",
+              "notes": "Immediate revocation if compromised",
+              "blurb": "Immediate revocation if compromised",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nebab1885b09034d",
+              "title": "Never store tokens in code or config files",
+              "markdown": "- Never store tokens in code or config files",
+              "notes": "Never store tokens in code or config files",
+              "blurb": "Never store tokens in code or config files",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "\u2705 Cryptographically random token generation - \u2705 Secure storage (secret...",
+          "expanded": false
+        },
+        {
+          "id": "n78eedc716702a3c",
+          "title": "Storage Best Practices",
+          "markdown": "| Token Type | Storage Method |\n| --- | --- |\n| **System Tokens** | Secret management (Vault, AWS Secrets Manager) |\n| **Personal Tokens** | Encrypted user account storage |\n| **Never** | Code, config files, version control, environment variables (production) |",
+          "notes": "| Token Type | Storage Method |\n| --- | --- |\n| System Tokens | Secret management (Vault, AWS Secrets Manager) |\n| Personal Tokens | Encrypted user account storage |\n| Never | Code, config files, version control, environment variables (production) |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Token Type | Storage Method | | --- | --- | | System Tokens | Secret...",
+          "expanded": false
+        },
+        {
+          "id": "n67cd059bd34a263",
+          "title": "Token Rotation",
+          "markdown": "| Token Type | Rotation Strategy |\n| --- | --- |\n| **System Tokens** | Automated rotation with versioning |\n| **Personal Tokens** | User-initiated or automatic expiration |\n| **Compromised** | Immediate rotation for both types |",
+          "notes": "| Token Type | Rotation Strategy |\n| --- | --- |\n| System Tokens | Automated rotation with versioning |\n| Personal Tokens | User-initiated or automatic expiration |\n| Compromised | Immediate rotation for both types |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Token Type | Rotation Strategy | | --- | --- | | System Tokens | Automated...",
+          "expanded": false
+        },
+        {
+          "id": "n0ef9d0d2646ec2f",
+          "title": "Best Practices",
+          "markdown": "Use appropriate token type for use case - Store tokens securely - Scope tokens to minimum necessary permissions - Rotate tokens regularly - Monitor token usage",
+          "notes": "Use appropriate token type for use case - Store tokens securely - Scope tokens to minimum necessary permissions - Rotate tokens regularly - Monitor token usage",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nea0eda05d15945b",
+              "title": "Use appropriate token type for use case",
+              "markdown": "- Use appropriate token type for use case",
+              "notes": "Use appropriate token type for use case",
+              "blurb": "Use appropriate token type for use case",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8a1b6658781f5e4",
+              "title": "Store tokens securely",
+              "markdown": "- Store tokens securely",
+              "notes": "Store tokens securely",
+              "blurb": "Store tokens securely",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n44db2f5a08a12f4",
+              "title": "Scope tokens to minimum necessary permissions",
+              "markdown": "- Scope tokens to minimum necessary permissions",
+              "notes": "Scope tokens to minimum necessary permissions",
+              "blurb": "Scope tokens to minimum necessary permissions",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n39420065ead1242",
+              "title": "Rotate tokens regularly",
+              "markdown": "- Rotate tokens regularly",
+              "notes": "Rotate tokens regularly",
+              "blurb": "Rotate tokens regularly",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n2e9eb074fdbb240",
+              "title": "Monitor token usage",
+              "markdown": "- Monitor token usage",
+              "notes": "Monitor token usage",
+              "blurb": "Monitor token usage",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Use appropriate token type for use case - Store tokens securely - Scope...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Key Differences"
+    },
+    {
+      "id": "n1e34af001efa8b2",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nf54906f97ae457d",
+          "title": "Common Misconceptions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n102202f261149c6",
+              "title": "\"System-level and personal-level API tokens work the same way\"",
+              "markdown": "**Truth:** System-level and personal-level API tokens have **fundamentally different** use cases, security models, and management requirements.\n\n**System-Level Tokens:**",
+              "notes": "Truth: System-level and personal-level API tokens have fundamentally different use cases, security models, and management requirements.\n\nSystem-Level Tokens:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "nb4eb671bedb8eba",
+                  "title": "Used by services, applications, or automated systems",
+                  "markdown": "- Used by services, applications, or automated systems",
+                  "notes": "Used by services, applications, or automated systems",
+                  "blurb": "Used by services, applications, or automated systems",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd2f05cbbdde6a42",
+                  "title": "Often long-lived or rotated programmatically",
+                  "markdown": "- Often long-lived or rotated programmatically",
+                  "notes": "Often long-lived or rotated programmatically",
+                  "blurb": "Often long-lived or rotated programmatically",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nb807ac4e589277a",
+                  "title": "Typically have broader permissions",
+                  "markdown": "- Typically have broader permissions",
+                  "notes": "Typically have broader permissions",
+                  "blurb": "Typically have broader permissions",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n5ff9fdef6f91f77",
+                  "title": "Managed at infrastructure/system level",
+                  "markdown": "- Managed at infrastructure/system level",
+                  "notes": "Managed at infrastructure/system level",
+                  "blurb": "Managed at infrastructure/system level",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nff5859db0ee8f76",
+                  "title": "Associated with individual users",
+                  "markdown": "- Associated with individual users",
+                  "notes": "Associated with individual users",
+                  "blurb": "Associated with individual users",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n56cc35091267f1d",
+                  "title": "Used for user-initiated API access",
+                  "markdown": "- Used for user-initiated API access",
+                  "notes": "Used for user-initiated API access",
+                  "blurb": "Used for user-initiated API access",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n0759cb896381c4c",
+                  "title": "Scoped to user's permissions",
+                  "markdown": "- Scoped to user's permissions",
+                  "notes": "Scoped to user's permissions",
+                  "blurb": "Scoped to user's permissions",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n79a47e9e67555af",
+                  "title": "Managed at user account level",
+                  "markdown": "- Managed at user account level",
+                  "notes": "Managed at user account level",
+                  "blurb": "Managed at user account level",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: System-level and personal-level API tokens have fundamentally...",
+              "expanded": false
+            },
+            {
+              "id": "nd33dffbc7caf9ca",
+              "title": "\"Personal tokens are less secure than system tokens\"",
+              "markdown": "**Truth:** Security depends on **how tokens are managed**, not just the type. Both can be secure or insecure depending on implementation.\n\n**Security Considerations for Both:**",
+              "notes": "Truth: Security depends on how tokens are managed, not just the type. Both can be secure or insecure depending on implementation.\n\nSecurity Considerations for Both:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n49648c2f81331ba",
+                  "title": "Token generation (cryptographically random)",
+                  "markdown": "- Token generation (cryptographically random)",
+                  "notes": "Token generation (cryptographically random)",
+                  "blurb": "Token generation (cryptographically random)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n8c61a9cb054b86f",
+                  "title": "Token storage (secure storage, never in code)",
+                  "markdown": "- Token storage (secure storage, never in code)",
+                  "notes": "Token storage (secure storage, never in code)",
+                  "blurb": "Token storage (secure storage, never in code)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n17103623aca71dd",
+                  "title": "Token scoping (principle of least privilege)",
+                  "markdown": "- Token scoping (principle of least privilege)",
+                  "notes": "Token scoping (principle of least privilege)",
+                  "blurb": "Token scoping (principle of least privilege)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ndb28d312d830c51",
+                  "title": "Token rotation (regular rotation policies)",
+                  "markdown": "- Token rotation (regular rotation policies)",
+                  "notes": "Token rotation (regular rotation policies)",
+                  "blurb": "Token rotation (regular rotation policies)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n2baa5985629462a",
+                  "title": "Token monitoring (audit and anomaly detection)",
+                  "markdown": "- Token monitoring (audit and anomaly detection)",
+                  "notes": "Token monitoring (audit and anomaly detection)",
+                  "blurb": "Token monitoring (audit and anomaly detection)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: Security depends on how tokens are managed, not just the type.",
+              "expanded": false
+            },
+            {
+              "id": "n4e29e5f78cdbe5d",
+              "title": "\"System tokens should have all permissions for convenience\"",
+              "markdown": "**Truth:** System tokens should follow the **principle of least privilege** - only grant minimum necessary permissions.\n\n**Why Limited Permissions Matter:**",
+              "notes": "Truth: System tokens should follow the principle of least privilege - only grant minimum necessary permissions.\n\nWhy Limited Permissions Matter:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "naaca3a5ca55e323",
+                  "title": "Limits blast radius if compromised",
+                  "markdown": "- Limits blast radius if compromised",
+                  "notes": "Limits blast radius if compromised",
+                  "blurb": "Limits blast radius if compromised",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n8cce4fd4747d01e",
+                  "title": "Enables better audit trails",
+                  "markdown": "- Enables better audit trails",
+                  "notes": "Enables better audit trails",
+                  "blurb": "Enables better audit trails",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n8cdbbac20f14f14",
+                  "title": "Supports security best practices",
+                  "markdown": "- Supports security best practices",
+                  "notes": "Supports security best practices",
+                  "blurb": "Supports security best practices",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nae7b89a58be564a",
+                  "title": "Makes token purpose clear",
+                  "markdown": "- Makes token purpose clear",
+                  "notes": "Makes token purpose clear",
+                  "blurb": "Makes token purpose clear",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: System tokens should follow the principle of least privilege - only...",
+              "expanded": false
+            },
+            {
+              "id": "n1225c2d3ff16758",
+              "title": "\"Token rotation is only for personal tokens\"",
+              "markdown": "**Truth:** **Both** system and personal tokens should be rotated regularly, though rotation strategies may differ.\n\n**Personal Token Rotation:**",
+              "notes": "Truth: Both system and personal tokens should be rotated regularly, though rotation strategies may differ.\n\nPersonal Token Rotation:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n1d473ac9257bdf6",
+                  "title": "User-initiated or automatic expiration",
+                  "markdown": "- User-initiated or automatic expiration",
+                  "notes": "User-initiated or automatic expiration",
+                  "blurb": "User-initiated or automatic expiration",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ne789066280abc03",
+                  "title": "Often tied to password changes",
+                  "markdown": "- Often tied to password changes",
+                  "notes": "Often tied to password changes",
+                  "blurb": "Often tied to password changes",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n68bfcefff5b6118",
+                  "title": "Shorter rotation intervals common",
+                  "markdown": "- Shorter rotation intervals common",
+                  "notes": "Shorter rotation intervals common",
+                  "blurb": "Shorter rotation intervals common",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd2160d3250be77e",
+                  "title": "Automated rotation preferred",
+                  "markdown": "- Automated rotation preferred",
+                  "notes": "Automated rotation preferred",
+                  "blurb": "Automated rotation preferred",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n8679b64cb45abf1",
+                  "title": "May use longer intervals",
+                  "markdown": "- May use longer intervals",
+                  "notes": "May use longer intervals",
+                  "blurb": "May use longer intervals",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n84643cd5c9fb818",
+                  "title": "Requires coordination with consuming systems",
+                  "markdown": "- Requires coordination with consuming systems",
+                  "notes": "Requires coordination with consuming systems",
+                  "blurb": "Requires coordination with consuming systems",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n25e2510645469c7",
+                  "title": "Often uses token versioning during transition",
+                  "markdown": "- Often uses token versioning during transition",
+                  "notes": "Often uses token versioning during transition",
+                  "blurb": "Often uses token versioning during transition",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: Both system and personal tokens should be rotated regularly, though...",
+              "expanded": false
+            },
+            {
+              "id": "n6490833f2c98b8a",
+              "title": "\"Token storage in environment variables is always secure\"",
+              "markdown": "**Truth:** Environment variables are **one option** but have limitations and aren't always the most secure approach.\n\n**Storage Options:**",
+              "notes": "Truth: Environment variables are one option but have limitations and aren't always the most secure approach.\n\nStorage Options:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n3cbb59c6f80393b",
+                  "title": "Environment variables (good for local dev, risks in production)",
+                  "markdown": "- Environment variables (good for local dev, risks in production)",
+                  "notes": "Environment variables (good for local dev, risks in production)",
+                  "blurb": "Environment variables (good for local dev, risks in production)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n3704f972e1000b2",
+                  "title": "Secret management systems (AWS Secrets Manager, HashiCorp Vault)",
+                  "markdown": "- Secret management systems (AWS Secrets Manager, HashiCorp Vault)",
+                  "notes": "Secret management systems (AWS Secrets Manager, HashiCorp Vault)",
+                  "blurb": "Secret management systems (AWS Secrets Manager, HashiCorp Vault)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd52124c3a8fad35",
+                  "title": "Hardware Security Modules (HSMs) for high-security use cases",
+                  "markdown": "- Hardware Security Modules (HSMs) for high-security use cases",
+                  "notes": "Hardware Security Modules (HSMs) for high-security use cases",
+                  "blurb": "Hardware Security Modules (HSMs) for high-security use cases",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nda1cae1b775d418",
+                  "title": "Token management services",
+                  "markdown": "- Token management services",
+                  "notes": "Token management services",
+                  "blurb": "Token management services",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ncc59a6851610650",
+                  "title": "Environment variables can leak (logs, process lists, core dumps)",
+                  "markdown": "- Environment variables can leak (logs, process lists, core dumps)",
+                  "notes": "Environment variables can leak (logs, process lists, core dumps)",
+                  "blurb": "Environment variables can leak (logs, process lists, core dumps)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n3157235d53d1f5b",
+                  "title": "Secret management systems provide encryption, rotation, audit",
+                  "markdown": "- Secret management systems provide encryption, rotation, audit",
+                  "notes": "Secret management systems provide encryption, rotation, audit",
+                  "blurb": "Secret management systems provide encryption, rotation, audit",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n74f3b333575fb7f",
+                  "title": "Different storage for different environments",
+                  "markdown": "- Different storage for different environments",
+                  "notes": "Different storage for different environments",
+                  "blurb": "Different storage for different environments",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: Environment variables are one option but have limitations and aren't...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes \"System-level and personal-level API tokens work the same way\"",
+          "expanded": false
+        },
+        {
+          "id": "n5b9e35ae6b97c6a",
+          "title": "Key Takeaways",
+          "markdown": "Different Use Cases: System tokens for services, personal tokens for users",
+          "notes": "Different Use Cases: System tokens for services, personal tokens for users",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n26e04fc34ef2684",
+              "title": "Different Use Cases: System tokens for services, personal tokens for users",
+              "markdown": "- Different Use Cases: System tokens for services, personal tokens for users",
+              "notes": "Different Use Cases: System tokens for services, personal tokens for users",
+              "blurb": "Different Use Cases: System tokens for services, personal tokens for users",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb0281803e4f472a",
+              "title": "Both Need Security: Both token types require proper security controls",
+              "markdown": "- Both Need Security: Both token types require proper security controls",
+              "notes": "Both Need Security: Both token types require proper security controls",
+              "blurb": "Both Need Security: Both token types require proper security controls",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf01795ac7006d5e",
+              "title": "Least Privilege: Limit token permissions to minimum necessary",
+              "markdown": "- Least Privilege: Limit token permissions to minimum necessary",
+              "notes": "Least Privilege: Limit token permissions to minimum necessary",
+              "blurb": "Least Privilege: Limit token permissions to minimum necessary",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n1cc67097488f9fd",
+              "title": "Regular Rotation: Both token types benefit from rotation policies",
+              "markdown": "- Regular Rotation: Both token types benefit from rotation policies",
+              "notes": "Regular Rotation: Both token types benefit from rotation policies",
+              "blurb": "Regular Rotation: Both token types benefit from rotation policies",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n36f7d6e5e0c9774",
+              "title": "Secure Storage: Use appropriate storage mechanisms (secret management systems for produc",
+              "markdown": "- Secure Storage: Use appropriate storage mechanisms (secret management systems for produc",
+              "notes": "Secure Storage: Use appropriate storage mechanisms (secret management systems for produc",
+              "blurb": "Secure Storage: Use appropriate storage mechanisms (secret management...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Different Use Cases: System tokens for services, personal tokens for users",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Common Misconceptions"
+    },
+    {
+      "id": "n0ed1d8c67f487a4",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n6bd6c2e369281f7",
+          "title": "Fundamental questions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n07ebbedcc0bef39",
+              "title": "What is the difference between a \u201csystem\u201d API token and a \u201cpersonal\u201d...",
+              "markdown": "**Answer:** A **personal** token is minted for a **human user** and, unless the platform adds fine-grained limits, generally inherits that user's permissions. Audit entries often show **the user's identity**, which is useful until the same token is pasted into a **shared** runner or server-then \"Alice\" in the log may not mean Alice's laptop. A **system** token is intended for **automation**: service accounts, GitHub App installation tokens, OAuth **client credentials**, workload IAM roles, and similar. It should be **owned by a team or workload**, stored in a **secret manager**, rotated on a **schedule or automatically** (short TTL), and scoped to **what the job needs**, not what a full engineer account can do. Neither type is automatically safer; a broad system secret in a pod spec can be worse than a narrowly scoped personal token on one machine.",
+              "notes": "Answer: A personal token is minted for a human user and, unless the platform adds fine-grained limits, generally inherits that user's permissions. Audit entries often show the user's identity, which is useful until the same token is pasted into a shared runner or server-then \"Alice\" in the log may not mean Alice's laptop. A system token is intended for automation: service accounts, GitHub App installation tokens, OAuth client credentials, workload IAM roles, and similar. It should be owned by a team or workload, stored in a secret manager, rotated on a schedule or automatically (short TTL), and scoped to what the job needs, not what a full engineer account can do. Neither type is automatically safer; a broad system secret in a pod spec can be worse than a narrowly scoped personal token on one machine.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: A personal token is minted for a human user and, unless the platform...",
+              "expanded": false
+            },
+            {
+              "id": "n30ee638669c3ad3",
+              "title": "When would you choose a service account or workload identity instead...",
+              "markdown": "**Answer:** Use **service principals** when the actor is **software** that must keep running independent of any one employee: microservices, schedulers, CI publishing artifacts, or integrations owned by a team. PATs couple automation to **HR lifecycle**-when someone leaves or their account is suspended, jobs break or, worse, teams **share** a PAT to avoid that pain. Workload identity and OIDC federation from CI to cloud replace long-lived secrets with **short-lived credentials** tied to the **repository and environment**. PATs remain reasonable for **individual** scripting on a laptop when they are **fine-grained**, **expiring**, and **not** placed in shared infrastructure.",
+              "notes": "Answer: Use service principals when the actor is software that must keep running independent of any one employee: microservices, schedulers, CI publishing artifacts, or integrations owned by a team. PATs couple automation to HR lifecycle-when someone leaves or their account is suspended, jobs break or, worse, teams share a PAT to avoid that pain. Workload identity and OIDC federation from CI to cloud replace long-lived secrets with short-lived credentials tied to the repository and environment. PATs remain reasonable for individual scripting on a laptop when they are fine-grained, expiring, and not placed in shared infrastructure.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Use service principals when the actor is software that must keep...",
+              "expanded": false
+            },
+            {
+              "id": "n8cee85ddc4a2684",
+              "title": "How does OAuth client credentials differ from an authorization code...",
+              "markdown": "**Answer:** The **authorization code** flow (ideally with **PKCE** for public clients) is for **user delegation**: the resource owner signs in and **consents**; tokens represent **limited** access on their behalf. Logs and consent records support **who approved what**. **Client credentials** is **machine-to-machine**: the client authenticates with its own secret or assertion and receives tokens **without a user in the loop**. There is **no end-user subject** unless you add custom claims or enforce policy elsewhere. Client secrets must be **confidential** (server-side only), **rotated**, and **scoped** minimally. Refresh tokens from user flows are especially sensitive-**long-lived bearer secrets** that must be **encrypted**, **revocable**, and **monitored**.",
+              "notes": "Answer: The authorization code flow (ideally with PKCE for public clients) is for user delegation: the resource owner signs in and consents; tokens represent limited access on their behalf. Logs and consent records support who approved what. Client credentials is machine-to-machine: the client authenticates with its own secret or assertion and receives tokens without a user in the loop. There is no end-user subject unless you add custom claims or enforce policy elsewhere. Client secrets must be confidential (server-side only), rotated, and scoped minimally. Refresh tokens from user flows are especially sensitive-long-lived bearer secrets that must be encrypted, revocable, and monitored.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: The authorization code flow (ideally with PKCE for public clients)...",
+              "expanded": false
+            },
+            {
+              "id": "ne630abf321a65bd",
+              "title": "What are the main risks of personal access tokens (PATs) in production...",
+              "markdown": "**Answer:** PATs often inherit **broad user power**, are **static bearer strings** easy to exfiltrate from logs or tickets, and encourage **reuse** across hosts so audit trails lie. **Offboarding** disables the user but teams may have copied the token into vaults or scripts nobody updates. In **CI**, a PAT on a shared runner is effectively a **shared root** if it can push to main or read secrets. Mitigations include **fine-grained** PATs, **mandatory expiry**, **org policies** restricting classic tokens, **SSO-backed** authorization where available, and replacing PAT-based automation with **app installations** or **OIDC**-based cloud roles.",
+              "notes": "Answer: PATs often inherit broad user power, are static bearer strings easy to exfiltrate from logs or tickets, and encourage reuse across hosts so audit trails lie. Offboarding disables the user but teams may have copied the token into vaults or scripts nobody updates. In CI, a PAT on a shared runner is effectively a shared root if it can push to main or read secrets. Mitigations include fine-grained PATs, mandatory expiry, org policies restricting classic tokens, SSO-backed authorization where available, and replacing PAT-based automation with app installations or OIDC-based cloud roles.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: PATs often inherit broad user power, are static bearer strings easy...",
+              "expanded": false
+            },
+            {
+              "id": "n62fd8d03d9b720e",
+              "title": "How would you design least privilege for API tokens at scale?",
+              "markdown": "**Answer:** Start from **API operations and resources**, not from role names. Split tokens by **function** (read metrics vs deploy vs admin) and by **environment**. Prefer **resource-scoped** credentials (single repo, single project) over org-wide access. Enforce **authorization** on every request: tenant ID, project ID, or repo slug must match the token's scope even if the token is valid. Use **time-bound** elevation for rare operations. Measure **scope creep**: periodic review of which tokens still need each permission. At the platform level, push **defaults** toward short TTL and narrow scopes so developers do not have to fight the tool to do the right thing.",
+              "notes": "Answer: Start from API operations and resources, not from role names. Split tokens by function (read metrics vs deploy vs admin) and by environment. Prefer resource-scoped credentials (single repo, single project) over org-wide access. Enforce authorization on every request: tenant ID, project ID, or repo slug must match the token's scope even if the token is valid. Use time-bound elevation for rare operations. Measure scope creep: periodic review of which tokens still need each permission. At the platform level, push defaults toward short TTL and narrow scopes so developers do not have to fight the tool to do the right thing.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Start from API operations and resources, not from role names.",
+              "expanded": false
+            },
+            {
+              "id": "n9e26e2b5eacd659",
+              "title": "What does a solid token rotation program look like for system secrets?",
+              "markdown": "**Answer:** Maintain an **inventory**: owner team, consumers, scope, creation date, and next rotation. For **opaque** secrets, support **overlap**: new token valid while old still works for a defined window, then revoke old. Automate **rotation** via the secret manager or provider API; alert **before** expiry. For **JWT-signing keys**, use **key IDs** in headers so verifiers can roll without simultaneous global downtime. Document **runbooks** for failure modes (missed rotation, partial deploy). After rotation, verify **logs** show success on all critical paths. Avoid \"one org admin PAT\" that never rotates-split and shorten instead.",
+              "notes": "Answer: Maintain an inventory: owner team, consumers, scope, creation date, and next rotation. For opaque secrets, support overlap: new token valid while old still works for a defined window, then revoke old. Automate rotation via the secret manager or provider API; alert before expiry. For JWT-signing keys, use key IDs in headers so verifiers can roll without simultaneous global downtime. Document runbooks for failure modes (missed rotation, partial deploy). After rotation, verify logs show success on all critical paths. Avoid \"one org admin PAT\" that never rotates-split and shorten instead.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Maintain an inventory: owner team, consumers, scope, creation date,...",
+              "expanded": false
+            },
+            {
+              "id": "na08609bc49dbac9",
+              "title": "What should audit logs capture for token-based API access?",
+              "markdown": "**Answer:** Log **who or what** authenticated: user id, service principal id, OAuth **client id**, or GitHub **installation id**-not only \"API key valid.\" Include **authentication method**, **token fingerprint or key id** (never the secret), **scopes or roles** used for the decision, **resource** acted on, **allow/deny**, and **correlation id** across services. For security operations, also log **token minting**, **refresh**, **failed validation**, and **revocation**. Personal tokens used from **shared IPs** should trigger **review**; purely technical fields help **incident** scoping without storing bearer material.",
+              "notes": "Answer: Log who or what authenticated: user id, service principal id, OAuth client id, or GitHub installation id-not only \"API key valid.\" Include authentication method, token fingerprint or key id (never the secret), scopes or roles used for the decision, resource acted on, allow/deny, and correlation id across services. For security operations, also log token minting, refresh, failed validation, and revocation. Personal tokens used from shared IPs should trigger review; purely technical fields help incident scoping without storing bearer material.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Log who or what authenticated: user id, service principal id, OAuth...",
+              "expanded": false
+            },
+            {
+              "id": "ne3ca331ff6a2683",
+              "title": "Compare GitHub fine-grained PATs, GitHub Apps, and OAuth Apps in an...",
+              "markdown": "**Answer:** **Fine-grained PATs** are still **user** credentials but can be limited to **specific repos** and **explicit** permissions-better blast radius than classic PATs when configured well. **GitHub Apps** are **installation-based**: admins approve permissions per org/repo; **installation access tokens** are **short-lived**, which is ideal for **automation** and reduces long-lived user-equivalent secrets. **OAuth Apps** implement **user** delegation flows; access (and sometimes refresh) tokens represent **user grants**-right for \"connect GitHub to our product,\" with emphasis on **redirect URI** validation and **secret** protection. For org automation, prefer **GitHub Apps**; for user-centric SaaS, **OAuth Apps**; for ad-hoc scripts, **fine-grained PATs** with expiry-not classic org-wide PATs in CI.",
+              "notes": "Answer: Fine-grained PATs are still user credentials but can be limited to specific repos and explicit permissions-better blast radius than classic PATs when configured well. GitHub Apps are installation-based: admins approve permissions per org/repo; installation access tokens are short-lived, which is ideal for automation and reduces long-lived user-equivalent secrets. OAuth Apps implement user delegation flows; access (and sometimes refresh) tokens represent user grants-right for \"connect GitHub to our product,\" with emphasis on redirect URI validation and secret protection. For org automation, prefer GitHub Apps; for user-centric SaaS, OAuth Apps; for ad-hoc scripts, fine-grained PATs with expiry-not classic org-wide PATs in CI.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Fine-grained PATs are still user credentials but can be limited to...",
+              "expanded": false
+            },
+            {
+              "id": "na4e9f9e0474ddab",
+              "title": "Why is storing a PAT in CI secrets considered an anti-pattern, and...",
+              "markdown": "**Answer:** CI is **multi-tenant shared compute**: logs, caches, fork workflows, and compromised dependencies can expose secrets. A PAT often equals **full user** power over repos. Prefer **OIDC** so the job proves **which repo and ref** it is, then receives **short-lived** cloud or provider credentials. On GitHub specifically, prefer **GitHub Actions** permissions with **GITHUB_TOKEN** where sufficient, or **GitHub Apps** for cross-repo operations. If a static secret is unavoidable, isolate it in **protected environments**, require **manual approval** for production, **never** expose it to **fork** PR workflows, and **rotate** aggressively.",
+              "notes": "Answer: CI is multi-tenant shared compute: logs, caches, fork workflows, and compromised dependencies can expose secrets. A PAT often equals full user power over repos. Prefer OIDC so the job proves which repo and ref it is, then receives short-lived cloud or provider credentials. On GitHub specifically, prefer GitHub Actions permissions with GITHUBTOKEN where sufficient, or GitHub Apps for cross-repo operations. If a static secret is unavoidable, isolate it in protected environments, require manual approval for production, never expose it to fork PR workflows, and rotate aggressively.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: CI is multi-tenant shared compute: logs, caches, fork workflows, and...",
+              "expanded": false
+            },
+            {
+              "id": "ndc7f666ecbe9ceb",
+              "title": "How does enterprise SSO interact with PAT and API security?",
+              "markdown": "**Answer:** **SSO** strengthens **interactive** login (MFA, conditional access, centralized session end). It does **not** automatically invalidate **PATs** or **OAuth refresh tokens** minted earlier; those remain **bearer secrets** until **revoked** or **expired**. Strong programs combine SSO with **org policies**: restrict PAT creation, require **SSO** for certain token operations, enforce **maximum lifetimes**, and hook **HR offboarding** to **bulk revocation** of grants. Educate that \"we use SAML\" is not the same as \"we have no long-lived API secrets.\"",
+              "notes": "Answer: SSO strengthens interactive login (MFA, conditional access, centralized session end). It does not automatically invalidate PATs or OAuth refresh tokens minted earlier; those remain bearer secrets until revoked or expired. Strong programs combine SSO with org policies: restrict PAT creation, require SSO for certain token operations, enforce maximum lifetimes, and hook HR offboarding to bulk revocation of grants. Educate that \"we use SAML\" is not the same as \"we have no long-lived API secrets.\"",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: SSO strengthens interactive login (MFA, conditional access,...",
+              "expanded": false
+            },
+            {
+              "id": "n9a019745de1e214",
+              "title": "What is the blast-radius difference between org-wide and...",
+              "markdown": "**Answer:** **Org-wide** (or classic broad PAT) compromise may allow access to **every** repository, package registry, or project the user or service can reach-attackers pivot fast. **Resource-scoped** tokens limit damage to **one** repo, project, or narrow permission set. In interviews, tie this to **lateral movement**: stolen CI credentials are often used to **modify** build definitions or **steal** other secrets. Smaller scopes reduce **what** can be touched and simplify **revocation** (disable one installation instead of invalidating all automation).",
+              "notes": "Answer: Org-wide (or classic broad PAT) compromise may allow access to every repository, package registry, or project the user or service can reach-attackers pivot fast. Resource-scoped tokens limit damage to one repo, project, or narrow permission set. In interviews, tie this to lateral movement: stolen CI credentials are often used to modify build definitions or steal other secrets. Smaller scopes reduce what can be touched and simplify revocation (disable one installation instead of invalidating all automation).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Org-wide (or classic broad PAT) compromise may allow access to every...",
+              "expanded": false
+            },
+            {
+              "id": "n8e6148100730cb1",
+              "title": "How do JWT access tokens change your revocation and logging story?",
+              "markdown": "**Answer:** JWTs are often validated **locally** using a **JWKS** without calling the issuer per request, so **standard revocation** before expiry may require **short TTLs**, **denylists**, or **session version** claims. Logging must record **claims** that matter (`sub`, `client_id`, `scope`, `jti` if present) and **key id** used to verify. **Rotation** of signing keys must be **backward-compatible** during rollout. Stress in interviews that **signed** does not mean **safe**-bearer theft still works until expiry unless you add **binding** (mTLS, DPoP) or **very** short lifetimes.",
+              "notes": "Answer: JWTs are often validated locally using a JWKS without calling the issuer per request, so standard revocation before expiry may require short TTLs, denylists, or session version claims. Logging must record claims that matter (sub, clientid, scope, jti if present) and key id used to verify. Rotation of signing keys must be backward-compatible during rollout. Stress in interviews that signed does not mean safe-bearer theft still works until expiry unless you add binding (mTLS, DPoP) or very short lifetimes.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: JWTs are often validated locally using a JWKS without calling the...",
+              "expanded": false
+            },
+            {
+              "id": "n65b02f7345be811",
+              "title": "What operational metrics would you use to govern API tokens?",
+              "markdown": "**Answer:** Track **count** of active long-lived tokens, **median age**, **percentage with expiry**, **tokens without owner** or last-used in 90 days, and **CI jobs** still using static PATs vs OIDC. For incidents, measure **time to revoke** after termination. Executive-facing: **trend** of reduced broad PATs and **coverage** of secret scanning on repos. Tie metrics to **remediation** workflows (auto-nag owners, auto-disable stale tokens) not only dashboards.",
+              "notes": "Answer: Track count of active long-lived tokens, median age, percentage with expiry, tokens without owner or last-used in 90 days, and CI jobs still using static PATs vs OIDC. For incidents, measure time to revoke after termination. Executive-facing: trend of reduced broad PATs and coverage of secret scanning on repos. Tie metrics to remediation workflows (auto-nag owners, auto-disable stale tokens) not only dashboards.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Track count of active long-lived tokens, median age, percentage with...",
+              "expanded": false
+            },
+            {
+              "id": "n889f745951e622a",
+              "title": "Walk through your response if a production API token is found in a...",
+              "markdown": "**Answer:** **Revoke** the credential immediately at the issuer. Pull **audit logs** for that principal from **before** publication time to estimated discovery. **Rotate** any downstream secrets the token could read (e.g., deployment keys, cloud roles). **Hunt** for the same pattern in other repos and **gists**. **Root-cause**: accidental commit, bad `.gitignore`, fork workflow leaking env, or developer using repo for config. Fix with **push protection**, **pre-commit** scanning, and **OIDC** to remove the secret class. **Communicate** per policy if customer data was accessible. Document **lessons** in the incident record.",
+              "notes": "Answer: Revoke the credential immediately at the issuer. Pull audit logs for that principal from before publication time to estimated discovery. Rotate any downstream secrets the token could read (e.g., deployment keys, cloud roles). Hunt for the same pattern in other repos and gists. Root-cause: accidental commit, bad .gitignore, fork workflow leaking env, or developer using repo for config. Fix with push protection, pre-commit scanning, and OIDC to remove the secret class. Communicate per policy if customer data was accessible. Document lessons in the incident record.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Revoke the credential immediately at the issuer.",
+              "expanded": false
+            },
+            {
+              "id": "n042f946fdbda6d6",
+              "title": "When is it acceptable for a third-party integration to use a user\u2019s...",
+              "markdown": "**Answer:** Generally **discourage** PAT handover to vendors: users cannot easily **scope** time or permission, and vendors store a **high-value** static secret. Prefer **OAuth** with **scoped** grants, **refresh** rotation, and **revocation** in the vendor dashboard. If a legacy tool only accepts PATs, require **minimum** scope, **expiry**, **contractual** data-handling terms, and **monitoring** for abuse; migrate to **OAuth** or **service** integration on a roadmap. From a product security lens, **never** ask users to paste PATs into **untrusted** surfaces without strong justification.",
+              "notes": "Answer: Generally discourage PAT handover to vendors: users cannot easily scope time or permission, and vendors store a high-value static secret. Prefer OAuth with scoped grants, refresh rotation, and revocation in the vendor dashboard. If a legacy tool only accepts PATs, require minimum scope, expiry, contractual data-handling terms, and monitoring for abuse; migrate to OAuth or service integration on a roadmap. From a product security lens, never ask users to paste PATs into untrusted surfaces without strong justification.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Generally discourage PAT handover to vendors: users cannot easily...",
+              "expanded": false
+            },
+            {
+              "id": "n6e6f28ce4ff3800",
+              "title": "How do you prevent \u201cshared bot accounts\u201d from undermining...",
+              "markdown": "**Answer:** **Shared** credentials destroy **non-repudiation** and complicate **rotation** (\"who still has the password?\"). Replace with **named service accounts** per system or **GitHub App** installations where **audit** shows the app and **actor** context. If a shared account is unavoidable temporarily, enforce **vault-only** access, **break-glass** procedures, **MFA** for human use, and **aggressive** rotation with **documented** owners. Long term, map automation to **identity providers** that support **per-pipeline** or **per-workload** principals.",
+              "notes": "Answer: Shared credentials destroy non-repudiation and complicate rotation (\"who still has the password?\"). Replace with named service accounts per system or GitHub App installations where audit shows the app and actor context. If a shared account is unavoidable temporarily, enforce vault-only access, break-glass procedures, MFA for human use, and aggressive rotation with documented owners. Long term, map automation to identity providers that support per-pipeline or per-workload principals.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Shared credentials destroy non-repudiation and complicate rotation...",
+              "expanded": false
+            },
+            {
+              "id": "n30ccb74fb425ceb",
+              "title": "What is token binding (e.g., mTLS, DPoP) and when does it matter?",
+              "markdown": "**Answer:** **Bearer** tokens mean **anyone who holds the string** can use them. **Binding** ties the token to a **client key** or **channel** (mTLS client certificate, DPoP proof key) so replay from a different TLS context fails. It matters for **high-risk** APIs, **mobile** clients where storage is weaker, or when **passive** network attackers are in threat model. Tradeoffs: **complexity**, **library** support, and **latency**. In interviews, mention it as **defense in depth** after **TLS**, **short TTL**, and **scope** minimization-not as a first-line excuse to skip those.",
+              "notes": "Answer: Bearer tokens mean anyone who holds the string can use them. Binding ties the token to a client key or channel (mTLS client certificate, DPoP proof key) so replay from a different TLS context fails. It matters for high-risk APIs, mobile clients where storage is weaker, or when passive network attackers are in threat model. Tradeoffs: complexity, library support, and latency. In interviews, mention it as defense in depth after TLS, short TTL, and scope minimization-not as a first-line excuse to skip those.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Bearer tokens mean anyone who holds the string can use them.",
+              "expanded": false
+            },
+            {
+              "id": "nfc449e1901c4145",
+              "title": "How would you explain the tradeoff between opaque API tokens and JWTs...",
+              "markdown": "**Answer:** **Opaque** tokens are simple: server looks up **state** and can **revoke** instantly by deleting the row, but **lookup** cost and **central** bottlenecks grow with scale. **JWTs** scale reads: services verify **signatures** locally and trust **claims**, enabling **federated** architectures, but **revocation** is weaker unless TTLs are **short** or you add **introspection** or **denylists**. Product security input: pick **TTL** and **key rotation** policies that match **risk**, **force** audience and issuer checks, and **never** put **sensitive** data in JWT claims without encryption-**confidentiality** is not the primary JWT property for access tokens.",
+              "notes": "Answer: Opaque tokens are simple: server looks up state and can revoke instantly by deleting the row, but lookup cost and central bottlenecks grow with scale. JWTs scale reads: services verify signatures locally and trust claims, enabling federated architectures, but revocation is weaker unless TTLs are short or you add introspection or denylists. Product security input: pick TTL and key rotation policies that match risk, force audience and issuer checks, and never put sensitive data in JWT claims without encryption-confidentiality is not the primary JWT property for access tokens.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Opaque tokens are simple: server looks up state and can revoke...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes What is the difference between a \u201csystem\u201d API token and a \u201cpersonal\u201d.",
+          "expanded": false
+        },
+        {
+          "id": "n763e98ab689e57f",
+          "title": "Depth: Interview follow-ups \u2014 System vs Personal API Tokens",
+          "markdown": "**Authoritative references:** Provider docs (GitHub, Azure DevOps, etc.) for **fine-grained PATs** vs **GitHub Apps/OAuth apps** patterns-cite generically in interview; [OAuth 2.0](https://www.rfc-editor.org/rfc/rfc6749) for delegation model.\n\n**Follow-ups:**",
+          "notes": "Authoritative references: Provider docs (GitHub, Azure DevOps, etc.) for fine-grained PATs vs GitHub Apps/OAuth apps patterns-cite generically in interview; OAuth 2.0 for delegation model.\n\nFollow-ups:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n279f89cbc03305b",
+              "title": "Non-repudiation / audit: personal tokens tie actions to humans; system tokens need servi",
+              "markdown": "- Non-repudiation / audit: personal tokens tie actions to humans; system tokens need servi",
+              "notes": "Non-repudiation / audit: personal tokens tie actions to humans; system tokens need servi",
+              "blurb": "Non-repudiation / audit: personal tokens tie actions to humans; system...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf53f166b5c18725",
+              "title": "Blast radius: org-wide PAT vs repo-scoped token.",
+              "markdown": "- Blast radius: org-wide PAT vs repo-scoped token.",
+              "notes": "Blast radius: org-wide PAT vs repo-scoped token.",
+              "blurb": "Blast radius: org-wide PAT vs repo-scoped token.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n4db1c9d1751e47d",
+              "title": "Rotation & offboarding - what breaks when someone leaves?",
+              "markdown": "- Rotation & offboarding - what breaks when someone leaves?",
+              "notes": "Rotation & offboarding - what breaks when someone leaves?",
+              "blurb": "Rotation & offboarding - what breaks when someone leaves?",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Authoritative references: Provider docs (GitHub, Azure DevOps, etc.) for...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Fundamental questions"
+    }
+  ],
+  "topicId": "system-vs-personal-api-tokens",
+  "name": "System vs Personal API Tokens",
+  "structure": "logic-right",
+  "blurb": "Programmatic access to APIs is almost always authenticated with bearer..."
+}

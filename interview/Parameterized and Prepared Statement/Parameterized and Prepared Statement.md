@@ -7,3 +7,5 @@
 [**Critical Clarification: Parameterized Queries vs Prepared Statements**](Critical%20Clarification%20Parameterized%20Queries%20vs%20Pr.md)
 
 [**Parameterized Queries and Prepared Statements - Quick Reference**](Parameterized%20Queries%20and%20Prepared%20Statements%20-%20Qu.md)
+
+[**Parameterized and Prepared Statement - Mind Map**](Parameterized%20and%20Prepared%20Statement%20-%20Mind%20Map.md)

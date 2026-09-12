@@ -7,3 +7,5 @@
 [**Critical Clarification: Encryption vs Hashing Security Misconceptions**](Critical Clarification Encryption vs Hashing Misco.md)
 
 [**Encryption vs Hashing - Quick Reference Guide**](Encryption vs Hashing - Quick Reference Guide.md)
+
+[**Encryption vs Hashing - Mind Map**](Encryption%20vs%20Hashing%20-%20Mind%20Map.md)

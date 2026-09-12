@@ -1,0 +1,2203 @@
+{
+  "id": "nc99ba8778f96ca2",
+  "title": "HTTP Request Smuggling",
+  "markdown": "**HTTP request smuggling** abuses **disagreement between HTTP parsers** (reverse proxy, CDN, load balancer, WAF vs origin application server) about **where one request ends and the next begins**. When the front-end and back-end disagree on message framing-typically **`Content-Length` (CL) vs `Transfer-Encoding: chunked` (TE)**-an attacker can **prefix a hidden request** onto a connection. That can lead to **cache poisoning**, **credential hijacking**, **ACL bypass**, and in some chains **remote code execution** on infrastructure that reuses keep-alive connections naively.\n\nThis guide follows the repo **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)** (L1 literacy -> L4 interview performance).",
+  "notes": "HTTP request smuggling abuses disagreement between HTTP parsers (reverse proxy, CDN, load balancer, WAF vs origin application server) about where one request ends and the next begins. When the front-end and back-end disagree on message framing-typically Content-Length (CL) vs Transfer-Encoding: chunked (TE)-an attacker can prefix a hidden request onto a connection. That can lead to cache poisoning, credential hijacking, ACL bypass, and in some chains remote code execution on infrastructure that reuses keep-alive connections naively.\n\nThis guide follows the repo Content Mastery Framework (L1 literacy -> L4 interview performance).",
+  "expanded": true,
+  "children": [
+    {
+      "id": "n3cfb356d9cb998d",
+      "title": "At a glance",
+      "markdown": "**HTTP request smuggling** abuses **disagreement between HTTP parsers** (reverse proxy, CDN, load balancer, WAF vs origin application server) about **where one request ends and the next begins**. When the front-end and back-end disagree on message framing-typically **`Content-Length` (CL) vs `Transfer-Encoding: chunked` (TE)**-an attacker can **prefix a hidden request** onto a connection. That can lead to **cache poisoning**, **credential hijacking**, **ACL bypass**, and in some chains **remote code execution** on infrastructure that reuses keep-alive connections naively.\n\nThis guide follows the repo **[Content Mastery Framework](../Interview%20Preparation/Content%20Mastery%20Framework.md)** (L1 literacy -> L4 interview performance).",
+      "notes": "HTTP request smuggling abuses disagreement between HTTP parsers (reverse proxy, CDN, load balancer, WAF vs origin application server) about where one request ends and the next begins. When the front-end and back-end disagree on message framing-typically Content-Length (CL) vs Transfer-Encoding: chunked (TE)-an attacker can prefix a hidden request onto a connection. That can lead to cache poisoning, credential hijacking, ACL bypass, and in some chains remote code execution on infrastructure that reuses keep-alive connections naively.\n\nThis guide follows the repo Content Mastery Framework (L1 literacy -> L4 interview performance).",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "HTTP request smuggling abuses disagreement between HTTP parsers (reverse...",
+      "expanded": false
+    },
+    {
+      "id": "n8a4ad30a5aeaaae",
+      "title": "L2 \u2014 Mechanism: CL vs TE disagreement",
+      "markdown": "HTTP/1.1 allows a body to be framed by:\n\n1. **`Content-Length`** - fixed byte count.\n2. **`Transfer-Encoding: chunked`** - chunked encoding (length prefixes + optional trailers).\n\n**RFC 7230** (superseded by **RFC 9112** for HTTP/1.1 semantics) is clear that if **both** appear, a conforming recipient should **reject** the message or handle it per updated interoperability rules-but **many implementations historically disagreed** on precedence (CL vs TE), duplicate headers, or obfuscated `Transfer-Encoding` values.",
+      "notes": "HTTP/1.1 allows a body to be framed by:\n\n1. Content-Length - fixed byte count.\n2. Transfer-Encoding: chunked - chunked encoding (length prefixes + optional trailers).\n\nRFC 7230 (superseded by RFC 9112 for HTTP/1.1 semantics) is clear that if both appear, a conforming recipient should reject the message or handle it per updated interoperability rules-but many implementations historically disagreed on precedence (CL vs TE), duplicate headers, or obfuscated Transfer-Encoding values.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nee228b6de54e608",
+          "title": "CL.TE (front uses CL, back uses TE)",
+          "markdown": "Front-end treats **`Content-Length`** as authoritative and forwards a blob. Back-end interprets **`Transfer-Encoding: chunked`** and reads **chunk boundaries**, so it **stops early** or **reads past** what the front intended-leaving **smuggled bytes** on the wire for the **next** request on the same connection.",
+          "notes": "Front-end treats Content-Length as authoritative and forwards a blob. Back-end interprets Transfer-Encoding: chunked and reads chunk boundaries, so it stops early or reads past what the front intended-leaving smuggled bytes on the wire for the next request on the same connection.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Front-end treats Content-Length as authoritative and forwards a blob.",
+          "expanded": false
+        },
+        {
+          "id": "n835b3d075c06962",
+          "title": "TE.CL (front uses TE, back uses CL)",
+          "markdown": "Front-end honors **chunked** encoding. Back-end uses **`Content-Length`** only and reads a **fixed** number of bytes-again desynchronizing.",
+          "notes": "Front-end honors chunked encoding. Back-end uses Content-Length only and reads a fixed number of bytes-again desynchronizing.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Front-end honors chunked encoding.",
+          "expanded": false
+        },
+        {
+          "id": "nd87197afb2af5c8",
+          "title": "TE.TE (both claim TE but ambiguity wins)",
+          "markdown": "Both sides \"support\" `Transfer-Encoding`, but one normalizes `chunked` (e.g. `Transfer-Encoding: chunked, identity` or `chunked` with **whitespace/obfuscation**) and the other rejects or treats it differently-collapsing to CL vs TE behavior **per implementation**.\n\n**Interview tip:** Say **\"parser disagreement on message boundaries\"** before acronym soup; then name CL.TE / TE.CL.",
+          "notes": "Both sides \"support\" Transfer-Encoding, but one normalizes chunked (e.g. Transfer-Encoding: chunked, identity or chunked with whitespace/obfuscation) and the other rejects or treats it differently-collapsing to CL vs TE behavior per implementation.\n\nInterview tip: Say \"parser disagreement on message boundaries\" before acronym soup; then name CL.TE / TE.CL.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Both sides \"support\" Transfer-Encoding, but one normalizes chunked (e.g.",
+          "expanded": false
+        }
+      ],
+      "blurb": "HTTP/1.1 allows a body to be framed by: 1.",
+      "expanded": true
+    },
+    {
+      "id": "n8f5271d75b8ea9e",
+      "title": "Variants and subclasses (know the map)",
+      "markdown": "| Class | One-line discriminator |\n|-------|------------------------|\n| **CL.TE** | Front honors CL; back decodes chunked. |\n| **TE.CL** | Front decodes chunked; back honors CL. |\n| **TE.TE** | Ambiguous / duplicated / obfuscated `Transfer-Encoding` values. |\n| **HTTP/2 -> HTTP/1 downgrade** | H2 message translated to H1 with **duplicate** or **contradictory** CL/TE; **H2 `:authority` vs Host**, **pseudo-header** handling. |\n| **H2.TE** (conceptual) | Chunked allowed where H2 disallows it; implementation bugs. |\n| **Request tunneling / browser-less** | Smuggled request **not** from browser; often **Repeater** / custom client. |\n| **WebSocket upgrade / pipeline** | Rare combinations with **connection reuse** and **pipeline** assumptions. |\n\nResearch by **James Kettle** (PortSwigger) established the modern taxonomy and tooling; always cite **parser differential**, not \"magic bytes.\"",
+      "notes": "| Class | One-line discriminator |\n|-------|------------------------|\n| CL.TE | Front honors CL; back decodes chunked. |\n| TE.CL | Front decodes chunked; back honors CL. |\n| TE.TE | Ambiguous / duplicated / obfuscated Transfer-Encoding values. |\n| HTTP/2 -> HTTP/1 downgrade | H2 message translated to H1 with duplicate or contradictory CL/TE; H2 :authority vs Host, pseudo-header handling. |\n| H2.TE (conceptual) | Chunked allowed where H2 disallows it; implementation bugs. |\n| Request tunneling / browser-less | Smuggled request not from browser; often Repeater / custom client. |\n| WebSocket upgrade / pipeline | Rare combinations with connection reuse and pipeline assumptions. |\n\nResearch by James Kettle (PortSwigger) established the modern taxonomy and tooling; always cite parser differential, not \"magic bytes.\"",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Class | One-line discriminator | |-------|------------------------| |...",
+      "expanded": false
+    },
+    {
+      "id": "n40c85d1eb940897",
+      "title": "L3 \u2014 Bypass classes (why mitigations fail)",
+      "markdown": "Header obfuscation: Transfer-Encoding : chunked, duplicate TE headers, chunk extensions ignored by one parser only.",
+      "notes": "Header obfuscation: Transfer-Encoding : chunked, duplicate TE headers, chunk extensions ignored by one parser only.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "ne4243e3930dd5c3",
+          "title": "Header obfuscation: Transfer-Encoding : chunked, duplicate TE headers, chunk extensions",
+          "markdown": "- Header obfuscation: Transfer-Encoding : chunked, duplicate TE headers, chunk extensions",
+          "notes": "Header obfuscation: Transfer-Encoding : chunked, duplicate TE headers, chunk extensions",
+          "blurb": "Header obfuscation: Transfer-Encoding : chunked, duplicate TE headers, chunk...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n768b29484598bc4",
+          "title": "HTTP/2 intermediary re-encodes to HTTP/1 incorrectly (pseudo-header vs Host, scheme conf",
+          "markdown": "- HTTP/2 intermediary re-encodes to HTTP/1 incorrectly (pseudo-header vs Host, scheme conf",
+          "notes": "HTTP/2 intermediary re-encodes to HTTP/1 incorrectly (pseudo-header vs Host, scheme conf",
+          "blurb": "HTTP/2 intermediary re-encodes to HTTP/1 incorrectly (pseudo-header vs Host,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n2773e3c5f27aad0",
+          "title": "WAF sees one framing; origin sees another-WAF bypass via smuggling.",
+          "markdown": "- WAF sees one framing; origin sees another-WAF bypass via smuggling.",
+          "notes": "WAF sees one framing; origin sees another-WAF bypass via smuggling.",
+          "blurb": "WAF sees one framing; origin sees another-WAF bypass via smuggling.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n553298a9e839a01",
+          "title": "Normalization differences: lowercase vs preserve, multiple CL headers summed vs rejected",
+          "markdown": "- Normalization differences: lowercase vs preserve, multiple CL headers summed vs rejected",
+          "notes": "Normalization differences: lowercase vs preserve, multiple CL headers summed vs rejected",
+          "blurb": "Normalization differences: lowercase vs preserve, multiple CL headers summed...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Header obfuscation: Transfer-Encoding : chunked, duplicate TE headers, chunk...",
+      "expanded": true
+    },
+    {
+      "id": "n64481a80e7af23c",
+      "title": "Defenses",
+      "markdown": "",
+      "notes": "",
+      "expanded": true,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n10fc0cf4b205844",
+          "title": "L3 \u2014 Mitigations (tier order: design > config > code > runtime)",
+          "markdown": "Design: Prefer one parser family end-to-end or HTTP/2 with strict profiles; avoid blind",
+          "notes": "Design: Prefer one parser family end-to-end or HTTP/2 with strict profiles; avoid blind",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n3284b7414b7acc1",
+              "title": "Design: Prefer one parser family end-to-end or HTTP/2 with strict profiles; avoid blind",
+              "markdown": "- Design: Prefer one parser family end-to-end or HTTP/2 with strict profiles; avoid blind",
+              "notes": "Design: Prefer one parser family end-to-end or HTTP/2 with strict profiles; avoid blind",
+              "blurb": "Design: Prefer one parser family end-to-end or HTTP/2 with strict profiles;...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n29b8dd95c58ff03",
+              "title": "Edge configuration: Reject ambiguous requests; normalize TE exactly per RFC; do not forw",
+              "markdown": "- Edge configuration: Reject ambiguous requests; normalize TE exactly per RFC; do not forw",
+              "notes": "Edge configuration: Reject ambiguous requests; normalize TE exactly per RFC; do not forw",
+              "blurb": "Edge configuration: Reject ambiguous requests; normalize TE exactly per RFC;...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n054f4bc749ba423",
+              "title": "Disable unsafe reuse: Close connections after ambiguous requests; disable pipelining whe",
+              "markdown": "- Disable unsafe reuse: Close connections after ambiguous requests; disable pipelining whe",
+              "notes": "Disable unsafe reuse: Close connections after ambiguous requests; disable pipelining whe",
+              "blurb": "Disable unsafe reuse: Close connections after ambiguous requests; disable...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd9a99abbed90903",
+              "title": "Patch and align: Same vendor advisory fixes on both tiers.",
+              "markdown": "- Patch and align: Same vendor advisory fixes on both tiers.",
+              "notes": "Patch and align: Same vendor advisory fixes on both tiers.",
+              "blurb": "Patch and align: Same vendor advisory fixes on both tiers.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0b8f20d6e1e1194",
+              "title": "Regression tests: Automated desync probes in staging (Burp scanner / custom harness)-not",
+              "markdown": "- Regression tests: Automated desync probes in staging (Burp scanner / custom harness)-not",
+              "notes": "Regression tests: Automated desync probes in staging (Burp scanner / custom harness)-not",
+              "blurb": "Regression tests: Automated desync probes in staging (Burp scanner / custom...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Design: Prefer one parser family end-to-end or HTTP/2 with strict profiles;...",
+          "expanded": false
+        },
+        {
+          "id": "n6c0b9ee2217ed5e",
+          "title": "L4 \u2014 HTTP/2 downgrade hardening checklist",
+          "markdown": "For edge stacks translating h2/h3 to h1:",
+          "notes": "For edge stacks translating h2/h3 to h1:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n9b3c4403652da45",
+              "title": "Drop ambiguous framing headers before translation.",
+              "markdown": "- Drop ambiguous framing headers before translation.",
+              "notes": "Drop ambiguous framing headers before translation.",
+              "blurb": "Drop ambiguous framing headers before translation.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n1eb9cac8b80657c",
+              "title": "Generate a single authoritative framing model when forwarding to origin.",
+              "markdown": "- Generate a single authoritative framing model when forwarding to origin.",
+              "notes": "Generate a single authoritative framing model when forwarding to origin.",
+              "blurb": "Generate a single authoritative framing model when forwarding to origin.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3022b7051916078",
+              "title": "Canonicalize Host/:authority mapping with strict validation.",
+              "markdown": "- Canonicalize Host/:authority mapping with strict validation.",
+              "notes": "Canonicalize Host/:authority mapping with strict validation.",
+              "blurb": "Canonicalize Host/:authority mapping with strict validation.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc3d8a1e0a2c9240",
+              "title": "Disable legacy compatibility modes that accept malformed transfer encodings.",
+              "markdown": "- Disable legacy compatibility modes that accept malformed transfer encodings.",
+              "notes": "Disable legacy compatibility modes that accept malformed transfer encodings.",
+              "blurb": "Disable legacy compatibility modes that accept malformed transfer encodings.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nfdd05e54dc6206c",
+              "title": "Keep downgrade components version-aligned with security patches.",
+              "markdown": "- Keep downgrade components version-aligned with security patches.",
+              "notes": "Keep downgrade components version-aligned with security patches.",
+              "blurb": "Keep downgrade components version-aligned with security patches.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "For edge stacks translating h2/h3 to h1:",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes L3 \u2014 Mitigations (tier order: design > config > code > runtime)"
+    },
+    {
+      "id": "nd00c5897a2751a0",
+      "title": "L3 \u2014 Detection and telemetry",
+      "markdown": "**Application / proxy logs:**",
+      "notes": "Application / proxy logs:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "na54177837eb0b72",
+          "title": "400/502 spikes on specific paths with chunked bodies.",
+          "markdown": "- 400/502 spikes on specific paths with chunked bodies.",
+          "notes": "400/502 spikes on specific paths with chunked bodies.",
+          "blurb": "400/502 spikes on specific paths with chunked bodies.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n6ffc5cd1f785142",
+          "title": "Duplicate or illegal combinations of CL + TE logged at edge.",
+          "markdown": "- Duplicate or illegal combinations of CL + TE logged at edge.",
+          "notes": "Duplicate or illegal combinations of CL + TE logged at edge.",
+          "blurb": "Duplicate or illegal combinations of CL + TE logged at edge.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n32d4baa3ed75d32",
+          "title": "Request boundaries that don't match content-length accounting.",
+          "markdown": "- Request boundaries that don't match content-length accounting.",
+          "notes": "Request boundaries that don't match content-length accounting.",
+          "blurb": "Request boundaries that don't match content-length accounting.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n7b335acee60cdfb",
+          "title": "Same keep-alive connection: response to request A contains data that matches smuggled pr",
+          "markdown": "- Same keep-alive connection: response to request A contains data that matches smuggled pr",
+          "notes": "Same keep-alive connection: response to request A contains data that matches smuggled pr",
+          "blurb": "Same keep-alive connection: response to request A contains data that matches...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nb840a29a7787951",
+          "title": "Alert on multiple Content-Length, obfuscated Transfer-Encoding, or chunked on paths that",
+          "markdown": "- Alert on multiple Content-Length, obfuscated Transfer-Encoding, or chunked on paths that",
+          "notes": "Alert on multiple Content-Length, obfuscated Transfer-Encoding, or chunked on paths that",
+          "blurb": "Alert on multiple Content-Length, obfuscated Transfer-Encoding, or chunked...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Application / proxy logs:",
+      "expanded": false
+    },
+    {
+      "id": "na5176f27f6ecf60",
+      "title": "Hands-on labs and references",
+      "markdown": "- **PortSwigger Web Security Academy** - HTTP request smuggling modules (CL.TE, TE.CL, TE.TE, HTTP/2).\n- **Burp Suite** - **HTTP Request Smuggler** extension; **Turbo Intruder** for timing/reuse tests.\n\n**Payload references:** [PayloadsAllTheThings](https://github.com/swisskyrepo/PayloadsAllTheThings) (community-maintained; verify before use).",
+      "notes": "- PortSwigger Web Security Academy - HTTP request smuggling modules (CL.TE, TE.CL, TE.TE, HTTP/2).\n- Burp Suite - HTTP Request Smuggler extension; Turbo Intruder for timing/reuse tests.\n\nPayload references: PayloadsAllTheThings (community-maintained; verify before use).",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "PortSwigger Web Security Academy - HTTP request smuggling modules (CL.TE,...",
+      "expanded": false
+    },
+    {
+      "id": "nab448ff1e25c918",
+      "title": "L2 \u2014 Minimal raw examples (illustrative)",
+      "markdown": "> **Lab safety:** Only reproduce on **deliberately vulnerable** apps (e.g. PortSwigger labs) or **authorized** tests.\n\n**TE.CL sketch:** Front reads chunked body; back reads `Content-Length: 4` and treats the rest as **next request**:\n\n```http\nPOST / HTTP/1.1\nHost: vulnerable.example\nTransfer-Encoding: chunked\nContent-Length: 6\n\n0\n\nSMUGGLED\n```\n\nExact byte counts and header ordering **depend on lab/version**-the interview point is **conflicting framing** and **leftover prefix**.",
+      "notes": "> Lab safety: Only reproduce on deliberately vulnerable apps (e.g. PortSwigger labs) or authorized tests.\n\nTE.CL sketch: Front reads chunked body; back reads Content-Length: 4 and treats the rest as next request:\n\nPOST / HTTP/1.1\nHost: vulnerable.example\nTransfer-Encoding: chunked\nContent-Length: 6\n\n0\n\nSMUGGLED\n\nExact byte counts and header ordering depend on lab/version-the interview point is conflicting framing and leftover prefix.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "> Lab safety: Only reproduce on deliberately vulnerable apps (e.g.",
+      "expanded": false
+    },
+    {
+      "id": "na776b2da86599b3",
+      "title": "Practice & references",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nd396e0863ab10b9",
+          "title": "Toolchain (what interviewers expect you to name)",
+          "markdown": "| Tool | Role |\n|------|------|\n| **Burp Repeater + HTTP Request Smuggler** | Craft desync; detect timing/content-length anomalies |\n| **Turbo Intruder** | High-volume or timing-sensitive tests |\n| **Wireshark / tcpdump** | Prove byte-level framing (authorized captures only) |\n| **mitmproxy** | Inspect normalized vs forwarded streams |",
+          "notes": "| Tool | Role |\n|------|------|\n| Burp Repeater + HTTP Request Smuggler | Craft desync; detect timing/content-length anomalies |\n| Turbo Intruder | High-volume or timing-sensitive tests |\n| Wireshark / tcpdump | Prove byte-level framing (authorized captures only) |\n| mitmproxy | Inspect normalized vs forwarded streams |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Tool | Role | |------|------| | Burp Repeater + HTTP Request Smuggler |...",
+          "expanded": false
+        },
+        {
+          "id": "n876a9d7f80535e3",
+          "title": "Authoritative references (re-check before interviews)",
+          "markdown": "RFC 9112 - HTTP/1.1 message syntax and routing (framing).",
+          "notes": "RFC 9112 - HTTP/1.1 message syntax and routing (framing).",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n1bb0e3979b97d80",
+              "title": "RFC 9112 - HTTP/1.1 message syntax and routing (framing).",
+              "markdown": "- RFC 9112 - HTTP/1.1 message syntax and routing (framing).",
+              "notes": "RFC 9112 - HTTP/1.1 message syntax and routing (framing).",
+              "blurb": "RFC 9112 - HTTP/1.1 message syntax and routing (framing).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nca6bbcf8a018db9",
+              "title": "RFC 7540 / 9113 - HTTP/2 (for downgrade discussions).",
+              "markdown": "- RFC 7540 / 9113 - HTTP/2 (for downgrade discussions).",
+              "notes": "RFC 7540 / 9113 - HTTP/2 (for downgrade discussions).",
+              "blurb": "RFC 7540 / 9113 - HTTP/2 (for downgrade discussions).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ncf711429523b064",
+              "title": "CWE-444 - Inconsistent interpretation of HTTP requests.",
+              "markdown": "- CWE-444 - Inconsistent interpretation of HTTP requests.",
+              "notes": "CWE-444 - Inconsistent interpretation of HTTP requests.",
+              "blurb": "CWE-444 - Inconsistent interpretation of HTTP requests.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n045a8181672b21c",
+              "title": "OWASP - Transport Layer Protection / general hardening cheat sheets (smuggling often cit",
+              "markdown": "- OWASP - Transport Layer Protection / general hardening cheat sheets (smuggling often cit",
+              "notes": "OWASP - Transport Layer Protection / general hardening cheat sheets (smuggling often cit",
+              "blurb": "OWASP - Transport Layer Protection / general hardening cheat sheets...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ne4021ad7a8500a1",
+              "title": "PortSwigger Research - Kettle's papers and blog posts on desync (primary modern source f",
+              "markdown": "- PortSwigger Research - Kettle's papers and blog posts on desync (primary modern source f",
+              "notes": "PortSwigger Research - Kettle's papers and blog posts on desync (primary modern source f",
+              "blurb": "PortSwigger Research - Kettle's papers and blog posts on desync (primary...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "RFC 9112 - HTTP/1.1 message syntax and routing (framing).",
+          "expanded": false
+        },
+        {
+          "id": "n233b2ef48dfc56b",
+          "title": "Verification checklist (for your own study)",
+          "markdown": "[ ] Explain CL.TE and TE.CL with your own diagram.",
+          "notes": "[ ] Explain CL.TE and TE.CL with your own diagram.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n867f6340c94de53",
+              "title": "[ ] Explain CL.TE and TE.CL with your own diagram.",
+              "markdown": "- [ ] Explain CL.TE and TE.CL with your own diagram.",
+              "notes": "[ ] Explain CL.TE and TE.CL with your own diagram.",
+              "blurb": "[ ] Explain CL.TE and TE.CL with your own diagram.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n161eb7b684e6d30",
+              "title": "[ ] Name two concrete impacts (not just \"RCE\").",
+              "markdown": "- [ ] Name two concrete impacts (not just \"RCE\").",
+              "notes": "[ ] Name two concrete impacts (not just \"RCE\").",
+              "blurb": "[ ] Name two concrete impacts (not just \"RCE\").",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd5a865faa79b5b7",
+              "title": "[ ] List three edge controls (reject ambiguous, align parsers, connection hygiene).",
+              "markdown": "- [ ] List three edge controls (reject ambiguous, align parsers, connection hygiene).",
+              "notes": "[ ] List three edge controls (reject ambiguous, align parsers, connection hygiene).",
+              "blurb": "[ ] List three edge controls (reject ambiguous, align parsers, connection...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb4757fb631720c8",
+              "title": "[ ] Complete one PortSwigger smuggling lab and document the parser difference.",
+              "markdown": "- [ ] Complete one PortSwigger smuggling lab and document the parser difference.",
+              "notes": "[ ] Complete one PortSwigger smuggling lab and document the parser difference.",
+              "blurb": "[ ] Complete one PortSwigger smuggling lab and document the parser difference.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3208d84fd4a5185",
+              "title": "[ ] Trace who patches what in your target employer's architecture (CDN vs SRE vs app).",
+              "markdown": "- [ ] Trace who patches what in your target employer's architecture (CDN vs SRE vs app).",
+              "notes": "[ ] Trace who patches what in your target employer's architecture (CDN vs SRE vs app).",
+              "blurb": "[ ] Trace who patches what in your target employer's architecture (CDN vs...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3bb5a4fd6e759ff",
+              "title": "[ ] Explain one queue-poisoning chain from desync to business impact.",
+              "markdown": "- [ ] Explain one queue-poisoning chain from desync to business impact.",
+              "notes": "[ ] Explain one queue-poisoning chain from desync to business impact.",
+              "blurb": "[ ] Explain one queue-poisoning chain from desync to business impact.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ncd9d5467d714c9c",
+              "title": "[ ] Describe a concrete pre-fix/post-fix validation workflow.",
+              "markdown": "- [ ] Describe a concrete pre-fix/post-fix validation workflow.",
+              "notes": "[ ] Describe a concrete pre-fix/post-fix validation workflow.",
+              "blurb": "[ ] Describe a concrete pre-fix/post-fix validation workflow.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "[ ] Explain CL.TE and TE.CL with your own diagram.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Toolchain (what interviewers expect you to name)"
+    },
+    {
+      "id": "nf05513c74744696",
+      "title": "Code examples",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n6404a4dc7155c58",
+          "title": "L3 \u2014 Queue poisoning chain anatomy",
+          "markdown": "A practical exploitation narrative often looks like:",
+          "notes": "A practical exploitation narrative often looks like:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nc6db88934b88ad9",
+              "title": "Desync is introduced on a reused front-end -> back-end connection.",
+              "markdown": "- Desync is introduced on a reused front-end -> back-end connection.",
+              "notes": "Desync is introduced on a reused front-end -> back-end connection.",
+              "blurb": "Desync is introduced on a reused front-end -> back-end connection.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ne11c1200c52bf15",
+              "title": "Attacker injects a prefix request that the back-end treats as the next victim request.",
+              "markdown": "- Attacker injects a prefix request that the back-end treats as the next victim request.",
+              "notes": "Attacker injects a prefix request that the back-end treats as the next victim request.",
+              "blurb": "Attacker injects a prefix request that the back-end treats as the next...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n04db06ece774c36",
+              "title": "Victim's legitimate request is partially interpreted as headers/body for attacker-contro",
+              "markdown": "- Victim's legitimate request is partially interpreted as headers/body for attacker-contro",
+              "notes": "Victim's legitimate request is partially interpreted as headers/body for attacker-contro",
+              "blurb": "Victim's legitimate request is partially interpreted as headers/body for...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n13e5fefcbb9535d",
+              "title": "Result is credential/session confusion, cache poisoning, internal route access, or respo",
+              "markdown": "- Result is credential/session confusion, cache poisoning, internal route access, or respo",
+              "notes": "Result is credential/session confusion, cache poisoning, internal route access, or respo",
+              "blurb": "Result is credential/session confusion, cache poisoning, internal route...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "A practical exploitation narrative often looks like:",
+          "expanded": false
+        },
+        {
+          "id": "nbc2c58b462f7a88",
+          "title": "L4 \u2014 Proof-of-fix methodology (what senior interviewers expect)",
+          "markdown": "A credible remediation story includes:",
+          "notes": "A credible remediation story includes:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ne36841f542ce6db",
+              "title": "Pre-fix reproducibility: controlled lab request pair that demonstrates parser disagreeme",
+              "markdown": "- Pre-fix reproducibility: controlled lab request pair that demonstrates parser disagreeme",
+              "notes": "Pre-fix reproducibility: controlled lab request pair that demonstrates parser disagreeme",
+              "blurb": "Pre-fix reproducibility: controlled lab request pair that demonstrates...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nacb44501abbc1ab",
+              "title": "Patch intent: exact edge/origin config or version change and expected parser behavior.",
+              "markdown": "- Patch intent: exact edge/origin config or version change and expected parser behavior.",
+              "notes": "Patch intent: exact edge/origin config or version change and expected parser behavior.",
+              "blurb": "Patch intent: exact edge/origin config or version change and expected parser...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3d8f78f6f378a8c",
+              "title": "Post-fix negative test: same payload now rejected/normalized identically on both tiers.",
+              "markdown": "- Post-fix negative test: same payload now rejected/normalized identically on both tiers.",
+              "notes": "Post-fix negative test: same payload now rejected/normalized identically on both tiers.",
+              "blurb": "Post-fix negative test: same payload now rejected/normalized identically on...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ne5632c74056e002",
+              "title": "Regression suite: automated desync probes in staging for CL/TE ambiguity and duplicate h",
+              "markdown": "- Regression suite: automated desync probes in staging for CL/TE ambiguity and duplicate h",
+              "notes": "Regression suite: automated desync probes in staging for CL/TE ambiguity and duplicate h",
+              "blurb": "Regression suite: automated desync probes in staging for CL/TE ambiguity and...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd92f3c654afd6c6",
+              "title": "Canary telemetry: monitor 4xx/5xx shifts and false-positive rate after strict rejection",
+              "markdown": "- Canary telemetry: monitor 4xx/5xx shifts and false-positive rate after strict rejection",
+              "notes": "Canary telemetry: monitor 4xx/5xx shifts and false-positive rate after strict rejection",
+              "blurb": "Canary telemetry: monitor 4xx/5xx shifts and false-positive rate after...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "A credible remediation story includes:",
+          "expanded": false
+        },
+        {
+          "id": "ne529f2979d8761e",
+          "title": "L4 \u2014 Interview clusters",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n0bdce61764d138e",
+              "title": "Junior (~60 seconds)",
+              "markdown": "- **Q:** What is request smuggling?\n- **A:** Two HTTP processors disagree on **where the request body ends**; leftover bytes become a **new** request. Usually involves **CL vs chunked** or **HTTP/2 downgrade**.",
+              "notes": "- Q: What is request smuggling?\n- A: Two HTTP processors disagree on where the request body ends; leftover bytes become a new request. Usually involves CL vs chunked or HTTP/2 downgrade.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Q: What is request smuggling?",
+              "expanded": false
+            },
+            {
+              "id": "n05d42c24c4baaa7",
+              "title": "Mid (~3 minutes)",
+              "markdown": "Explain CL.TE vs TE.CL with one diagram.",
+              "notes": "Explain CL.TE vs TE.CL with one diagram.",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "nb01bce0181752d1",
+                  "title": "Explain CL.TE vs TE.CL with one diagram.",
+                  "markdown": "- Explain CL.TE vs TE.CL with one diagram.",
+                  "notes": "Explain CL.TE vs TE.CL with one diagram.",
+                  "blurb": "Explain CL.TE vs TE.CL with one diagram.",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n3872767502ae598",
+                  "title": "Impact: cache poisoning, session confusion, routing bypass.",
+                  "markdown": "- Impact: cache poisoning, session confusion, routing bypass.",
+                  "notes": "Impact: cache poisoning, session confusion, routing bypass.",
+                  "blurb": "Impact: cache poisoning, session confusion, routing bypass.",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n5a1faec411f5112",
+                  "title": "Fix: strict parsing, reject ambiguity, align proxy and server versions.",
+                  "markdown": "- Fix: strict parsing, reject ambiguity, align proxy and server versions.",
+                  "notes": "Fix: strict parsing, reject ambiguity, align proxy and server versions.",
+                  "blurb": "Fix: strict parsing, reject ambiguity, align proxy and server versions.",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Explain CL.TE vs TE.CL with one diagram.",
+              "expanded": false
+            },
+            {
+              "id": "nb32b714bd872c82",
+              "title": "Senior (~8 minutes)",
+              "markdown": "HTTP/2 -> HTTP/1 translation risks; CDN vs origin ownership.",
+              "notes": "HTTP/2 -> HTTP/1 translation risks; CDN vs origin ownership.",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n73e41b5337a9b2e",
+                  "title": "HTTP/2 -> HTTP/1 translation risks; CDN vs origin ownership.",
+                  "markdown": "- HTTP/2 -> HTTP/1 translation risks; CDN vs origin ownership.",
+                  "notes": "HTTP/2 -> HTTP/1 translation risks; CDN vs origin ownership.",
+                  "blurb": "HTTP/2 -> HTTP/1 translation risks; CDN vs origin ownership.",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "na7f7af465928ca9",
+                  "title": "Rollout: canary strict rules; monitor 4xx/5xx; feature flags for \"reject ambiguous frami",
+                  "markdown": "- Rollout: canary strict rules; monitor 4xx/5xx; feature flags for \"reject ambiguous frami",
+                  "notes": "Rollout: canary strict rules; monitor 4xx/5xx; feature flags for \"reject ambiguous frami",
+                  "blurb": "Rollout: canary strict rules; monitor 4xx/5xx; feature flags for \"reject...",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nf69ea4b2ea30593",
+                  "title": "Prove fix: reproduce pre-patch; fail post-patch in lab; connection-level tests.",
+                  "markdown": "- Prove fix: reproduce pre-patch; fail post-patch in lab; connection-level tests.",
+                  "notes": "Prove fix: reproduce pre-patch; fail post-patch in lab; connection-level tests.",
+                  "blurb": "Prove fix: reproduce pre-patch; fail post-patch in lab; connection-level...",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "HTTP/2 -> HTTP/1 translation risks; CDN vs origin ownership.",
+              "expanded": false
+            },
+            {
+              "id": "n92581849b1dcbfd",
+              "title": "Staff scenario",
+              "markdown": "\"You own edge and app. Pen test reports smuggling via **duplicate CL**. Outline **48-hour** containment vs **90-day** structural fix.\"\n-> Containment: **WAF rule**, **block** duplicate CL, **reduce reuse**. Structural: **upgrade** proxy, **RFC-compliant** rejection, **integration tests** in CD pipeline.",
+              "notes": "\"You own edge and app. Pen test reports smuggling via duplicate CL. Outline 48-hour containment vs 90-day structural fix.\"\n-> Containment: WAF rule, block duplicate CL, reduce reuse. Structural: upgrade proxy, RFC-compliant rejection, integration tests in CD pipeline.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "\"You own edge and app.",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Junior (~60 seconds)",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes L3 \u2014 Queue poisoning chain anatomy"
+    },
+    {
+      "id": "n3c5018a75be9bcc",
+      "title": "L1 \u2014 Core model: who parses what?",
+      "markdown": "```\nClient \u2500\u2500\u25ba [ Front-end: CDN / LB / WAF / reverse proxy ] \u2500\u2500\u25ba [ Back-end: app server ]\n              parses framing (CL vs TE)                          parses framing again\n```",
+      "notes": "Client \u2500\u2500\u25ba [ Front-end: CDN / LB / WAF / reverse proxy ] \u2500\u2500\u25ba [ Back-end: app server ]\n              parses framing (CL vs TE)                          parses framing again",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nbdc381e3a3440db",
+          "title": "The front-end often normalizes requests (HTTP/2 -> HTTP/1, header folding, chunk extensi",
+          "markdown": "- The front-end often normalizes requests (HTTP/2 -> HTTP/1, header folding, chunk extensi",
+          "notes": "The front-end often normalizes requests (HTTP/2 -> HTTP/1, header folding, chunk extensi",
+          "blurb": "The front-end often normalizes requests (HTTP/2 -> HTTP/1, header folding,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ndb38e2e69a4bf54",
+          "title": "The back-end sees a byte stream and must decide body boundaries before routing to the ap",
+          "markdown": "- The back-end sees a byte stream and must decide body boundaries before routing to the ap",
+          "notes": "The back-end sees a byte stream and must decide body boundaries before routing to the ap",
+          "blurb": "The back-end sees a byte stream and must decide body boundaries before...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n6f59f58eeae707c",
+          "title": "If front thinks request A consumed bytes 0-N and back thinks A consumed 0-M, leftover by",
+          "markdown": "- If front thinks request A consumed bytes 0-N and back thinks A consumed 0-M, leftover by",
+          "notes": "If front thinks request A consumed bytes 0-N and back thinks A consumed 0-M, leftover by",
+          "blurb": "If front thinks request A consumed bytes 0-N and back thinks A consumed 0-M,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Client \u2500\u2500\u25ba [ Front-end: CDN / LB / WAF / reverse proxy ] \u2500\u2500\u25ba [ Back-end: app...",
+      "expanded": false
+    },
+    {
+      "id": "n0371a563a6e5af5",
+      "title": "Language / platform notes (not \u201cone snippet fixes all\u201d)",
+      "markdown": "Reverse proxies (nginx, HAProxy, Envoy, cloud vendor LBs) each have their own HTTP parser and options (ignoreinvalidheaders, mergeslashes, chunk handling).",
+      "notes": "Reverse proxies (nginx, HAProxy, Envoy, cloud vendor LBs) each have their own HTTP parser and options (ignoreinvalidheaders, mergeslashes, chunk handling).",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n5574f02d227a076",
+          "title": "Reverse proxies (nginx, HAProxy, Envoy, cloud vendor LBs) each have their own HTTP parse",
+          "markdown": "- Reverse proxies (nginx, HAProxy, Envoy, cloud vendor LBs) each have their own HTTP parse",
+          "notes": "Reverse proxies (nginx, HAProxy, Envoy, cloud vendor LBs) each have their own HTTP parse",
+          "blurb": "Reverse proxies (nginx, HAProxy, Envoy, cloud vendor LBs) each have their...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n99df8d878ed1900",
+          "title": "Application servers (Tomcat, Jetty, Node http-parser, Gunicorn, etc.) may differ from th",
+          "markdown": "- Application servers (Tomcat, Jetty, Node http-parser, Gunicorn, etc.) may differ from th",
+          "notes": "Application servers (Tomcat, Jetty, Node http-parser, Gunicorn, etc.) may differ from th",
+          "blurb": "Application servers (Tomcat, Jetty, Node http-parser, Gunicorn, etc.) may...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n25778f5818acaa6",
+          "title": "\"Disable HTTP/1.1 keep-alive to origin\" or use HTTP/2 end-to-end are blunt but sometimes",
+          "markdown": "- \"Disable HTTP/1.1 keep-alive to origin\" or use HTTP/2 end-to-end are blunt but sometimes",
+          "notes": "\"Disable HTTP/1.1 keep-alive to origin\" or use HTTP/2 end-to-end are blunt but sometimes",
+          "blurb": "\"Disable HTTP/1.1 keep-alive to origin\" or use HTTP/2 end-to-end are blunt...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Reverse proxies (nginx, HAProxy, Envoy, cloud vendor LBs) each have their...",
+      "expanded": false
+    },
+    {
+      "id": "n5caf1671f6c2fe9",
+      "title": "Named issues and CVEs (examples for interviews)",
+      "markdown": "Use these as **illustrative**-verify versions when discussing a specific employer stack.\n\n| Reference | Primitive |\n|-----------|-----------|\n| **Apache HTTPD** request smuggling / normalization issues (e.g. **CVE-2022-22720** area-**verify** against vendor advisory) | Parser + forwarding edge cases |\n| **Various proxies** mishandling **duplicate** `Content-Length` or **chunk extensions** | CL/TE precedence |\n| **HTTP/2 rapid reset** and related **DoS** classes (2023-2024) | Separate but often discussed alongside HTTP/2 stacks; not classic smuggling but **edge HTTP** hardening |\n\n**CWE:** **CWE-444** (Inconsistent Interpretation of HTTP Requests).",
+      "notes": "Use these as illustrative-verify versions when discussing a specific employer stack.\n\n| Reference | Primitive |\n|-----------|-----------|\n| Apache HTTPD request smuggling / normalization issues (e.g. CVE-2022-22720 area-verify against vendor advisory) | Parser + forwarding edge cases |\n| Various proxies mishandling duplicate Content-Length or chunk extensions | CL/TE precedence |\n| HTTP/2 rapid reset and related DoS classes (2023-2024) | Separate but often discussed alongside HTTP/2 stacks; not classic smuggling but edge HTTP hardening |\n\nCWE: CWE-444 (Inconsistent Interpretation of HTTP Requests).",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Use these as illustrative-verify versions when discussing a specific...",
+      "expanded": false
+    },
+    {
+      "id": "nbec82ff546f2ecd",
+      "title": "Cross-links (meaningful)",
+      "markdown": "SSRF - smuggling may bypass \"internal only\" routing to hit admin interfaces.",
+      "notes": "SSRF - smuggling may bypass \"internal only\" routing to hit admin interfaces.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n6f9e7c55d7a1e75",
+          "title": "SSRF - smuggling may bypass \"internal only\" routing to hit admin interfaces.",
+          "markdown": "- SSRF - smuggling may bypass \"internal only\" routing to hit admin interfaces.",
+          "notes": "SSRF - smuggling may bypass \"internal only\" routing to hit admin interfaces.",
+          "blurb": "SSRF - smuggling may bypass \"internal only\" routing to hit admin interfaces.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n7ef6d1cb99f9cc1",
+          "title": "HTTP Parameter Pollution (HPP)/) - different parser, same theme: duplicate semantics.",
+          "markdown": "- HTTP Parameter Pollution (HPP)/) - different parser, same theme: duplicate semantics.",
+          "notes": "HTTP Parameter Pollution (HPP)/) - different parser, same theme: duplicate semantics.",
+          "blurb": "HTTP Parameter Pollution (HPP)/) - different parser, same theme: duplicate...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nc313b51b4f03199",
+          "title": "WAF Bypass and Defense Evaluation - WAF/parser differentials.",
+          "markdown": "- WAF Bypass and Defense Evaluation - WAF/parser differentials.",
+          "notes": "WAF Bypass and Defense Evaluation - WAF/parser differentials.",
+          "blurb": "WAF Bypass and Defense Evaluation - WAF/parser differentials.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n707a197092d9daf",
+          "title": "Threat Modeling - trust boundaries at reverse proxy.",
+          "markdown": "- Threat Modeling - trust boundaries at reverse proxy.",
+          "notes": "Threat Modeling - trust boundaries at reverse proxy.",
+          "blurb": "Threat Modeling - trust boundaries at reverse proxy.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nc2af07b7ed1b09a",
+          "title": "Security Headers - complementary; not a smuggling fix but part of edge hardening.",
+          "markdown": "- Security Headers - complementary; not a smuggling fix but part of edge hardening.",
+          "notes": "Security Headers - complementary; not a smuggling fix but part of edge hardening.",
+          "blurb": "Security Headers - complementary; not a smuggling fix but part of edge...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nb162130b2e05336",
+          "title": "Penetration Testing and Security Assessment - reporting and scope.",
+          "markdown": "- Penetration Testing and Security Assessment - reporting and scope.",
+          "notes": "Penetration Testing and Security Assessment - reporting and scope.",
+          "blurb": "Penetration Testing and Security Assessment - reporting and scope.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "SSRF - smuggling may bypass \"internal only\" routing to hit admin interfaces.",
+      "expanded": false
+    },
+    {
+      "id": "nfd8ce3e881ebb76",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n1fcd7e48978f0e2",
+          "title": "One-line definition",
+          "markdown": "**Two HTTP parsers disagree on request body boundaries** -> leftover bytes prefix the **next** request on a reused connection.",
+          "notes": "Two HTTP parsers disagree on request body boundaries -> leftover bytes prefix the next request on a reused connection.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Two HTTP parsers disagree on request body boundaries -> leftover bytes...",
+          "expanded": false
+        },
+        {
+          "id": "n2e2f4ceebcf344a",
+          "title": "Framing headers (HTTP/1.1)",
+          "markdown": "| Header | Role |\n|--------|------|\n| `Content-Length: N` | Body is exactly **N** bytes |\n| `Transfer-Encoding: chunked` | Body is **chunked** stream |\n| **Both / duplicated / obfuscated** | **Danger zone** - parser differential |\n\n**Safe behavior:** Reject ambiguous messages per **RFC 9112**; no \"guess.\"",
+          "notes": "| Header | Role |\n|--------|------|\n| Content-Length: N | Body is exactly N bytes |\n| Transfer-Encoding: chunked | Body is chunked stream |\n| Both / duplicated / obfuscated | Danger zone - parser differential |\n\nSafe behavior: Reject ambiguous messages per RFC 9112; no \"guess.\"",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Header | Role | |--------|------| | Content-Length: N | Body is exactly N...",
+          "expanded": false
+        },
+        {
+          "id": "n4bc497a315aebca",
+          "title": "Taxonomy (memorize)",
+          "markdown": "| Tag | Meaning |\n|-----|---------|\n| **CL.TE** | Front: **CL**; Back: **chunked** |\n| **TE.CL** | Front: **chunked**; Back: **CL** |\n| **TE.TE** | **Obfuscated** TE -> resolves differently per hop |\n| **H2 downgrade** | HTTP/2 front -> HTTP/1 origin **translation** bugs |",
+          "notes": "| Tag | Meaning |\n|-----|---------|\n| CL.TE | Front: CL; Back: chunked |\n| TE.CL | Front: chunked; Back: CL |\n| TE.TE | Obfuscated TE -> resolves differently per hop |\n| H2 downgrade | HTTP/2 front -> HTTP/1 origin translation bugs |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Tag | Meaning | |-----|---------| | CL.TE | Front: CL; Back: chunked | |...",
+          "expanded": false
+        },
+        {
+          "id": "ne9671702f032c24",
+          "title": "High-signal indicators (ops)",
+          "markdown": "Duplicate Content-Length - Transfer-Encoding + Content-Length together on sensitive routes - Spikes in 400/502 with chunked bodies - CDN log differs from origin log for same requestid (if correlated)",
+          "notes": "Duplicate Content-Length - Transfer-Encoding + Content-Length together on sensitive routes - Spikes in 400/502 with chunked bodies - CDN log differs from origin log for same requestid (if correlated)",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n498681d0bafae84",
+              "title": "Duplicate Content-Length",
+              "markdown": "- Duplicate Content-Length",
+              "notes": "Duplicate Content-Length",
+              "blurb": "Duplicate Content-Length",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf85a14e30f043f1",
+              "title": "Transfer-Encoding + Content-Length together on sensitive routes",
+              "markdown": "- Transfer-Encoding + Content-Length together on sensitive routes",
+              "notes": "Transfer-Encoding + Content-Length together on sensitive routes",
+              "blurb": "Transfer-Encoding + Content-Length together on sensitive routes",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n683a23c82228cc6",
+              "title": "Spikes in 400/502 with chunked bodies",
+              "markdown": "- Spikes in 400/502 with chunked bodies",
+              "notes": "Spikes in 400/502 with chunked bodies",
+              "blurb": "Spikes in 400/502 with chunked bodies",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc40f4e5bd42ade9",
+              "title": "CDN log differs from origin log for same request_id (if correlated)",
+              "markdown": "- CDN log differs from origin log for same request_id (if correlated)",
+              "notes": "CDN log differs from origin log for same request_id (if correlated)",
+              "blurb": "CDN log differs from origin log for same requestid (if correlated)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Duplicate Content-Length - Transfer-Encoding + Content-Length together on...",
+          "expanded": false
+        },
+        {
+          "id": "nac01ed9887c670e",
+          "title": "Impacts (interview vocabulary)",
+          "markdown": "Cache poisoning \u00b7 Session/header smuggling \u00b7 ACL bypass \u00b7 WAF bypass \u00b7 (sometimes) chain to RCE",
+          "notes": "Cache poisoning \u00b7 Session/header smuggling \u00b7 ACL bypass \u00b7 WAF bypass \u00b7 (sometimes) chain to RCE",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Cache poisoning \u00b7 Session/header smuggling \u00b7 ACL bypass \u00b7 WAF bypass \u00b7...",
+          "expanded": false
+        },
+        {
+          "id": "n2a7ed2aca96ace6",
+          "title": "Mitigations (priority order)",
+          "markdown": "Align proxy + origin versions (vendor advisories)",
+          "notes": "Align proxy + origin versions (vendor advisories)",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nb8d942f108be9bd",
+              "title": "Align proxy + origin versions (vendor advisories)",
+              "markdown": "- Align proxy + origin versions (vendor advisories)",
+              "notes": "Align proxy + origin versions (vendor advisories)",
+              "blurb": "Align proxy + origin versions (vendor advisories)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n165a23103e1ec7a",
+              "title": "Reject illegal/ambiguous framing at edge",
+              "markdown": "- Reject illegal/ambiguous framing at edge",
+              "notes": "Reject illegal/ambiguous framing at edge",
+              "blurb": "Reject illegal/ambiguous framing at edge",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n03cc988a1e7f43e",
+              "title": "Avoid unsafe H2->H1 unless parsers proven consistent",
+              "markdown": "- Avoid unsafe H2->H1 unless parsers proven consistent",
+              "notes": "Avoid unsafe H2->H1 unless parsers proven consistent",
+              "blurb": "Avoid unsafe H2->H1 unless parsers proven consistent",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3fd4cceb6d0139e",
+              "title": "Regression tests (Burp Smuggler / CI harness) in staging",
+              "markdown": "- Regression tests (Burp Smuggler / CI harness) in staging",
+              "notes": "Regression tests (Burp Smuggler / CI harness) in staging",
+              "blurb": "Regression tests (Burp Smuggler / CI harness) in staging",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n56d7bba45c9d03a",
+              "title": "Containment: reduce pipelining / risky reuse (trade-off: performance)",
+              "markdown": "- Containment: reduce pipelining / risky reuse (trade-off: performance)",
+              "notes": "Containment: reduce pipelining / risky reuse (trade-off: performance)",
+              "blurb": "Containment: reduce pipelining / risky reuse (trade-off: performance)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Align proxy + origin versions (vendor advisories)",
+          "expanded": false
+        },
+        {
+          "id": "n41cc48ff2fbd4d4",
+          "title": "Tools",
+          "markdown": "| Tool | Use |\n|------|-----|\n| Burp **HTTP Request Smuggler** | Desync probing |\n| **Turbo Intruder** | Timing / volume |\n| **Wireshark/tcpdump** | Byte-proof (authorized) |",
+          "notes": "| Tool | Use |\n|------|-----|\n| Burp HTTP Request Smuggler | Desync probing |\n| Turbo Intruder | Timing / volume |\n| Wireshark/tcpdump | Byte-proof (authorized) |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Tool | Use | |------|-----| | Burp HTTP Request Smuggler | Desync probing...",
+          "expanded": false
+        },
+        {
+          "id": "n1e71de68b63c51f",
+          "title": "Labs & reading",
+          "markdown": "PortSwigger Web Security Academy - Request smuggling track - CWE-444 - Inconsistent interpretation of HTTP requests - RFC 9112 - HTTP/1.1 message framing - Community payloads: PayloadsAllTheThings (verify before use)",
+          "notes": "PortSwigger Web Security Academy - Request smuggling track - CWE-444 - Inconsistent interpretation of HTTP requests - RFC 9112 - HTTP/1.1 message framing - Community payloads: PayloadsAllTheThings (verify before use)",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "na12b904e85ca286",
+              "title": "PortSwigger Web Security Academy - Request smuggling track",
+              "markdown": "- PortSwigger Web Security Academy - Request smuggling track",
+              "notes": "PortSwigger Web Security Academy - Request smuggling track",
+              "blurb": "PortSwigger Web Security Academy - Request smuggling track",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n63c703993d66779",
+              "title": "CWE-444 - Inconsistent interpretation of HTTP requests",
+              "markdown": "- CWE-444 - Inconsistent interpretation of HTTP requests",
+              "notes": "CWE-444 - Inconsistent interpretation of HTTP requests",
+              "blurb": "CWE-444 - Inconsistent interpretation of HTTP requests",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n16d0e814feb47d3",
+              "title": "RFC 9112 - HTTP/1.1 message framing",
+              "markdown": "- RFC 9112 - HTTP/1.1 message framing",
+              "notes": "RFC 9112 - HTTP/1.1 message framing",
+              "blurb": "RFC 9112 - HTTP/1.1 message framing",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n38e405b35396582",
+              "title": "Community payloads: PayloadsAllTheThings (verify before use)",
+              "markdown": "- Community payloads: PayloadsAllTheThings (verify before use)",
+              "notes": "Community payloads: PayloadsAllTheThings (verify before use)",
+              "blurb": "Community payloads: PayloadsAllTheThings (verify before use)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "PortSwigger Web Security Academy - Request smuggling track - CWE-444 -...",
+          "expanded": false
+        },
+        {
+          "id": "n800ec766da74414",
+          "title": "Cross-read",
+          "markdown": "`SSRF` \u00b7 `WAF Bypass` \u00b7 `HPP` \u00b7 `Threat Modeling` (edge trust boundary)",
+          "notes": "SSRF \u00b7 WAF Bypass \u00b7 HPP \u00b7 Threat Modeling (edge trust boundary)",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "SSRF \u00b7 WAF Bypass \u00b7 HPP \u00b7 Threat Modeling (edge trust boundary)",
+          "expanded": false
+        },
+        {
+          "id": "n077ba611259b775",
+          "title": "90-second answer skeleton",
+          "markdown": "Problem: Parser desync on CL vs TE (or H2 downgrade).",
+          "notes": "Problem: Parser desync on CL vs TE (or H2 downgrade).",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nd887c96c77ab40c",
+              "title": "Problem: Parser desync on CL vs TE (or H2 downgrade).",
+              "markdown": "- Problem: Parser desync on CL vs TE (or H2 downgrade).",
+              "notes": "Problem: Parser desync on CL vs TE (or H2 downgrade).",
+              "blurb": "Problem: Parser desync on CL vs TE (or H2 downgrade).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8c010c436593dd3",
+              "title": "Mechanism: Leftover bytes -> smuggled prefix.",
+              "markdown": "- Mechanism: Leftover bytes -> smuggled prefix.",
+              "notes": "Mechanism: Leftover bytes -> smuggled prefix.",
+              "blurb": "Mechanism: Leftover bytes -> smuggled prefix.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n37f86c49f1a0fbf",
+              "title": "Impact: Cache / session / ACL / WAF - not always RCE.",
+              "markdown": "- Impact: Cache / session / ACL / WAF - not always RCE.",
+              "notes": "Impact: Cache / session / ACL / WAF - not always RCE.",
+              "blurb": "Impact: Cache / session / ACL / WAF - not always RCE.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n1b584b32a48d427",
+              "title": "Fix: Strict edge + patched stacks + tests.",
+              "markdown": "- Fix: Strict edge + patched stacks + tests.",
+              "notes": "Fix: Strict edge + patched stacks + tests.",
+              "blurb": "Fix: Strict edge + patched stacks + tests.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb703a22488d33a4",
+              "title": "Proof: PoC fails after change; logs show rejections.",
+              "markdown": "- Proof: PoC fails after change; logs show rejections.",
+              "notes": "Proof: PoC fails after change; logs show rejections.",
+              "blurb": "Proof: PoC fails after change; logs show rejections.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Problem: Parser desync on CL vs TE (or H2 downgrade).",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes One-line definition"
+    },
+    {
+      "id": "n66019afbc26bd97",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "ne5e7c0fc0de700d",
+          "title": "\"Smuggling always means RCE.\"",
+          "markdown": "**Reality:** Most real-world impact is **cache poisoning**, **session/header confusion**, **ACL bypass**, and **WAF bypass**. RCE requires **additional** vulnerabilities (e.g. unsafe internal admin panels). Interviewers reward **accurate impact** over **severity inflation**.",
+          "notes": "Reality: Most real-world impact is cache poisoning, session/header confusion, ACL bypass, and WAF bypass. RCE requires additional vulnerabilities (e.g. unsafe internal admin panels). Interviewers reward accurate impact over severity inflation.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Most real-world impact is cache poisoning, session/header...",
+          "expanded": false
+        },
+        {
+          "id": "n3c5fecad3039604",
+          "title": "\"HTTP/2 eliminates request smuggling.\"",
+          "markdown": "**Reality:** HTTP/2 changes on-the-wire framing but **HTTP/2 -> HTTP/1.1 translation** at CDNs and gateways reintroduces **CL/TE** ambiguity. **End-to-end HTTP/2** reduces classic classes; **mixed** stacks do not.",
+          "notes": "Reality: HTTP/2 changes on-the-wire framing but HTTP/2 -> HTTP/1.1 translation at CDNs and gateways reintroduces CL/TE ambiguity. End-to-end HTTP/2 reduces classic classes; mixed stacks do not.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: HTTP/2 changes on-the-wire framing but HTTP/2 -> HTTP/1.1...",
+          "expanded": false
+        },
+        {
+          "id": "nc1cafc73ee76a24",
+          "title": "\"Duplicate Content-Length is invalid so nobody handles it badly.\"",
+          "markdown": "**Reality:** Historically, some stacks **summed**, **picked first**, or **ignored** duplicates-each behavior is exploitable in combination with another hop. **Strict rejection** is the safe behavior; **assume** others are strict until proven.",
+          "notes": "Reality: Historically, some stacks summed, picked first, or ignored duplicates-each behavior is exploitable in combination with another hop. Strict rejection is the safe behavior; assume others are strict until proven.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Historically, some stacks summed, picked first, or ignored...",
+          "expanded": false
+        },
+        {
+          "id": "n74025ad20a9aa92",
+          "title": "\"Transfer-Encoding: chunked is always obvious.\"",
+          "markdown": "**Reality:** **Obfuscation**-spacing, duplicate TE lines, `identity` alongside `chunked`, chunk extensions-tricks **one** parser into treating the message differently than its peer. Defense is **strict normalization** and **reject** on ambiguity.",
+          "notes": "Reality: Obfuscation-spacing, duplicate TE lines, identity alongside chunked, chunk extensions-tricks one parser into treating the message differently than its peer. Defense is strict normalization and reject on ambiguity.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Obfuscation-spacing, duplicate TE lines, identity alongside...",
+          "expanded": false
+        },
+        {
+          "id": "n891b476b542550b",
+          "title": "\"The WAF sees the same request the origin sees.\"",
+          "markdown": "**Reality:** The WAF and origin are **different HTTP implementations**. If they **disagree** on framing, the WAF may inspect **request A** while the origin executes **smuggled request B**. **Parser parity** beats more rules.",
+          "notes": "Reality: The WAF and origin are different HTTP implementations. If they disagree on framing, the WAF may inspect request A while the origin executes smuggled request B. Parser parity beats more rules.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: The WAF and origin are different HTTP implementations.",
+          "expanded": false
+        },
+        {
+          "id": "nf1246ccc324c3ff",
+          "title": "\"Disabling keep-alive fully fixes smuggling.\"",
+          "markdown": "**Reality:** It **shrinks** the **cross-request** attack surface on a single TCP connection but is **costly** and may not address **all** desync or **pipeline** edge cases. Use as **containment**, not the **only** fix.",
+          "notes": "Reality: It shrinks the cross-request attack surface on a single TCP connection but is costly and may not address all desync or pipeline edge cases. Use as containment, not the only fix.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: It shrinks the cross-request attack surface on a single TCP...",
+          "expanded": false
+        },
+        {
+          "id": "n1a59e2d8cfd9244",
+          "title": "\"This is only a pen-test finding, not product security.\"",
+          "markdown": "**Reality:** Product and platform teams choose **proxy products**, **TLS termination**, **HTTP versions**, and **deployment topology**. Smuggling is a **design-time** and **SRE** problem as much as an **app** bug.",
+          "notes": "Reality: Product and platform teams choose proxy products, TLS termination, HTTP versions, and deployment topology. Smuggling is a design-time and SRE problem as much as an app bug.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: Product and platform teams choose proxy products, TLS termination,...",
+          "expanded": false
+        },
+        {
+          "id": "nd0ffac019d09cec",
+          "title": "\"RFC says X, so all servers do X.\"",
+          "markdown": "**Reality:** **RFC 7230/9112** evolved; implementations lagged and **differed**. Always map **advisories** to **exact** vendor versions on **both** front and back tiers.",
+          "notes": "Reality: RFC 7230/9112 evolved; implementations lagged and differed. Always map advisories to exact vendor versions on both front and back tiers.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Reality: RFC 7230/9112 evolved; implementations lagged and differed.",
+          "expanded": false
+        },
+        {
+          "id": "n7610da18952b56d",
+          "title": "Generic traps (still true)",
+          "markdown": "Tool trivia without mechanism loses interviews-explain byte boundaries first.",
+          "notes": "Tool trivia without mechanism loses interviews-explain byte boundaries first.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n8bf95c61aa41919",
+              "title": "Tool trivia without mechanism loses interviews-explain byte boundaries first.",
+              "markdown": "- Tool trivia without mechanism loses interviews-explain byte boundaries first.",
+              "notes": "Tool trivia without mechanism loses interviews-explain byte boundaries first.",
+              "blurb": "Tool trivia without mechanism loses interviews-explain byte boundaries first.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n34075daa0945088",
+              "title": "One-off header patches without parser upgrades often fail against variant obfuscations.",
+              "markdown": "- One-off header patches without parser upgrades often fail against variant obfuscations.",
+              "notes": "One-off header patches without parser upgrades often fail against variant obfuscations.",
+              "blurb": "One-off header patches without parser upgrades often fail against variant...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6de6674b64c966a",
+              "title": "Skipping verification (no pre/post reproduction) weakens credibility.",
+              "markdown": "- Skipping verification (no pre/post reproduction) weakens credibility.",
+              "notes": "Skipping verification (no pre/post reproduction) weakens credibility.",
+              "blurb": "Skipping verification (no pre/post reproduction) weakens credibility.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Tool trivia without mechanism loses interviews-explain byte boundaries first.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes \"Smuggling always means RCE.\""
+    },
+    {
+      "id": "n5529ba8eb7b62d2",
+      "title": "How to test",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nb17bd9ec49e9557",
+          "title": "Objective",
+          "markdown": "Create a repeatable assessment workflow for `HTTP Request Smuggling` that produces reproducible evidence and actionable remediation guidance.",
+          "notes": "Create a repeatable assessment workflow for HTTP Request Smuggling that produces reproducible evidence and actionable remediation guidance.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Create a repeatable assessment workflow for HTTP Request Smuggling that...",
+          "expanded": false
+        },
+        {
+          "id": "n91e5b9563f0c0fc",
+          "title": "Phase 1 - Scope and preparation",
+          "markdown": "Confirm in-scope assets, test windows, and prohibited actions.",
+          "notes": "Confirm in-scope assets, test windows, and prohibited actions.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n721eadd8b6cac3d",
+              "title": "Confirm in-scope assets, test windows, and prohibited actions.",
+              "markdown": "- Confirm in-scope assets, test windows, and prohibited actions.",
+              "notes": "Confirm in-scope assets, test windows, and prohibited actions.",
+              "blurb": "Confirm in-scope assets, test windows, and prohibited actions.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n4f95fdc015e59a7",
+              "title": "Identify critical user journeys and trust boundaries.",
+              "markdown": "- Identify critical user journeys and trust boundaries.",
+              "notes": "Identify critical user journeys and trust boundaries.",
+              "blurb": "Identify critical user journeys and trust boundaries.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "naf811297ce11a62",
+              "title": "Define severity rubric and evidence requirements before testing.",
+              "markdown": "- Define severity rubric and evidence requirements before testing.",
+              "notes": "Define severity rubric and evidence requirements before testing.",
+              "blurb": "Define severity rubric and evidence requirements before testing.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Confirm in-scope assets, test windows, and prohibited actions.",
+          "expanded": false
+        },
+        {
+          "id": "nf527404026ed0fa",
+          "title": "Phase 2 - Recon and attack-surface mapping",
+          "markdown": "Enumerate relevant endpoints, flows, and data paths.",
+          "notes": "Enumerate relevant endpoints, flows, and data paths.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n296ba8368a54726",
+              "title": "Enumerate relevant endpoints, flows, and data paths.",
+              "markdown": "- Enumerate relevant endpoints, flows, and data paths.",
+              "notes": "Enumerate relevant endpoints, flows, and data paths.",
+              "blurb": "Enumerate relevant endpoints, flows, and data paths.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0a581caa1b62515",
+              "title": "Document where security checks are expected to happen.",
+              "markdown": "- Document where security checks are expected to happen.",
+              "notes": "Document where security checks are expected to happen.",
+              "blurb": "Document where security checks are expected to happen.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb82e1b10ec69da9",
+              "title": "Mark high-value assets and high-impact paths.",
+              "markdown": "- Mark high-value assets and high-impact paths.",
+              "notes": "Mark high-value assets and high-impact paths.",
+              "blurb": "Mark high-value assets and high-impact paths.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Enumerate relevant endpoints, flows, and data paths.",
+          "expanded": false
+        },
+        {
+          "id": "nea27d198c4ceb26",
+          "title": "Phase 3 - Hypothesis-driven testing",
+          "markdown": "Start with low-risk probes and baseline behavior.",
+          "notes": "Start with low-risk probes and baseline behavior.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nf104b771fdaf645",
+              "title": "Start with low-risk probes and baseline behavior.",
+              "markdown": "- Start with low-risk probes and baseline behavior.",
+              "notes": "Start with low-risk probes and baseline behavior.",
+              "blurb": "Start with low-risk probes and baseline behavior.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n7a8547729d32b01",
+              "title": "Test failure hypotheses systematically (one variable at a time).",
+              "markdown": "- Test failure hypotheses systematically (one variable at a time).",
+              "notes": "Test failure hypotheses systematically (one variable at a time).",
+              "blurb": "Test failure hypotheses systematically (one variable at a time).",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9cf1d33602309ba",
+              "title": "Capture request/response artifacts for each finding candidate.",
+              "markdown": "- Capture request/response artifacts for each finding candidate.",
+              "notes": "Capture request/response artifacts for each finding candidate.",
+              "blurb": "Capture request/response artifacts for each finding candidate.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Start with low-risk probes and baseline behavior.",
+          "expanded": false
+        },
+        {
+          "id": "nc45cd62c7811ccd",
+          "title": "Phase 4 - Validation and impact proof",
+          "markdown": "Reproduce findings with clean-state retests.",
+          "notes": "Reproduce findings with clean-state retests.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n0ed72ad8b5d8491",
+              "title": "Reproduce findings with clean-state retests.",
+              "markdown": "- Reproduce findings with clean-state retests.",
+              "notes": "Reproduce findings with clean-state retests.",
+              "blurb": "Reproduce findings with clean-state retests.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n5c7962c3db0af9d",
+              "title": "Confirm exploitability and practical impact.",
+              "markdown": "- Confirm exploitability and practical impact.",
+              "notes": "Confirm exploitability and practical impact.",
+              "blurb": "Confirm exploitability and practical impact.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3b07397ff246f79",
+              "title": "Eliminate false positives; record confidence level.",
+              "markdown": "- Eliminate false positives; record confidence level.",
+              "notes": "Eliminate false positives; record confidence level.",
+              "blurb": "Eliminate false positives; record confidence level.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Reproduce findings with clean-state retests.",
+          "expanded": false
+        },
+        {
+          "id": "n6c2460f25875573",
+          "title": "Phase 5 - Remediation and verification",
+          "markdown": "Provide immediate containment + structural fix recommendations.",
+          "notes": "Provide immediate containment + structural fix recommendations.",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ndec225124f92cc7",
+              "title": "Provide immediate containment + structural fix recommendations.",
+              "markdown": "- Provide immediate containment + structural fix recommendations.",
+              "notes": "Provide immediate containment + structural fix recommendations.",
+              "blurb": "Provide immediate containment + structural fix recommendations.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n119ea786ba5fc7c",
+              "title": "Define post-fix verification tests and telemetry checks.",
+              "markdown": "- Define post-fix verification tests and telemetry checks.",
+              "notes": "Define post-fix verification tests and telemetry checks.",
+              "blurb": "Define post-fix verification tests and telemetry checks.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n6f559667f56c932",
+              "title": "Re-test after remediation and close with evidence.",
+              "markdown": "- Re-test after remediation and close with evidence.",
+              "notes": "Re-test after remediation and close with evidence.",
+              "blurb": "Re-test after remediation and close with evidence.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Provide immediate containment + structural fix recommendations.",
+          "expanded": false
+        },
+        {
+          "id": "n539c4cfe7b9922e",
+          "title": "Evidence template",
+          "markdown": "Asset / endpoint: - Preconditions: - Reproduction steps: - Observed behavior: - Security impact: - Business impact: - Recommended fix: - Verification result:",
+          "notes": "Asset / endpoint: - Preconditions: - Reproduction steps: - Observed behavior: - Security impact: - Business impact: - Recommended fix: - Verification result:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nb8d9ed4db7717c4",
+              "title": "Asset / endpoint",
+              "markdown": "- Asset / endpoint",
+              "notes": "Asset / endpoint",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd4300a2fbef7f23",
+              "title": "Preconditions",
+              "markdown": "- Preconditions",
+              "notes": "Preconditions",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0cd54e25bcc9f0b",
+              "title": "Reproduction steps",
+              "markdown": "- Reproduction steps",
+              "notes": "Reproduction steps",
+              "blurb": "Reproduction steps",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n92f3665096da8bc",
+              "title": "Observed behavior",
+              "markdown": "- Observed behavior",
+              "notes": "Observed behavior",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n65212d78fb858c4",
+              "title": "Security impact",
+              "markdown": "- Security impact",
+              "notes": "Security impact",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nbc598560f50381d",
+              "title": "Business impact",
+              "markdown": "- Business impact",
+              "notes": "Business impact",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "naf7f3f151c67049",
+              "title": "Recommended fix",
+              "markdown": "- Recommended fix",
+              "notes": "Recommended fix",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n00daf037f9462aa",
+              "title": "Verification result",
+              "markdown": "- Verification result",
+              "notes": "Verification result",
+              "blurb": "Verification result",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Asset / endpoint: - Preconditions: - Reproduction steps: - Observed...",
+          "expanded": false
+        },
+        {
+          "id": "neace62ce13de24d",
+          "title": "Interview drill",
+          "markdown": "In 3 minutes, explain how you would run this VAPT workflow for one production-like service and what evidence you need before escalating severity.",
+          "notes": "In 3 minutes, explain how you would run this VAPT workflow for one production-like service and what evidence you need before escalating severity.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "In 3 minutes, explain how you would run this VAPT workflow for one...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Objective"
+    },
+    {
+      "id": "n788a6a2bcaf153c",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n95023a39e342d6a",
+          "title": "60-second elevator answer",
+          "markdown": "**Q: What is HTTP request smuggling?**\n\n**A:** It is when a **reverse proxy** and an **origin server** (or any two HTTP processors on the same connection) **disagree on where an HTTP request ends**. Attackers send **ambiguous framing**-usually conflicting **`Content-Length`** and **`Transfer-Encoding: chunked`**-so one side consumes part of the stream and the other leaves **smuggled bytes** that become the **start of the next request**. That can poison caches, hijack sessions, or bypass access controls. Defenses are **strict RFC parsing**, **rejecting illegal combinations**, **aligning parser versions**, and sometimes **disabling keep-alive reuse** to the origin.",
+          "notes": "Q: What is HTTP request smuggling?\n\nA: It is when a reverse proxy and an origin server (or any two HTTP processors on the same connection) disagree on where an HTTP request ends. Attackers send ambiguous framing-usually conflicting Content-Length and Transfer-Encoding: chunked-so one side consumes part of the stream and the other leaves smuggled bytes that become the start of the next request. That can poison caches, hijack sessions, or bypass access controls. Defenses are strict RFC parsing, rejecting illegal combinations, aligning parser versions, and sometimes disabling keep-alive reuse to the origin.",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "Q: What is HTTP request smuggling?",
+          "expanded": false
+        },
+        {
+          "id": "ne2335a91bdaf039",
+          "title": "Mechanism and taxonomy",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n6d5f1eb6ead8008",
+              "title": "Q: Explain CL.TE vs TE.CL in one minute.",
+              "markdown": "**A:** Both are **desync directions**. In **CL.TE**, the **front-end** treats **`Content-Length`** as authoritative while the **back-end** decodes **`Transfer-Encoding: chunked`**, so they consume different amounts of data. In **TE.CL**, the **front** decodes **chunked** but the **back** uses **`Content-Length`** only. The **impact** is the same class: **leftover bytes** on a reused connection become an attacker-influenced **prefix** of the next request. Which variant works depends on **which parser wins** on each hop.",
+              "notes": "A: Both are desync directions. In CL.TE, the front-end treats Content-Length as authoritative while the back-end decodes Transfer-Encoding: chunked, so they consume different amounts of data. In TE.CL, the front decodes chunked but the back uses Content-Length only. The impact is the same class: leftover bytes on a reused connection become an attacker-influenced prefix of the next request. Which variant works depends on which parser wins on each hop.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Both are desync directions.",
+              "expanded": false
+            },
+            {
+              "id": "nd7fead89b2c5ce1",
+              "title": "Q: What is TE.TE?",
+              "markdown": "**A:** Both sides claim to support **`Transfer-Encoding`**, but **obfuscation**-duplicate TE headers, `chunked` with junk, spacing/casing tricks-makes **one** parser normalize to **chunked** and the **other** fall back to **`Content-Length`** or ignore TE. It collapses into another **CL vs TE** split after normalization.",
+              "notes": "A: Both sides claim to support Transfer-Encoding, but obfuscation-duplicate TE headers, chunked with junk, spacing/casing tricks-makes one parser normalize to chunked and the other fall back to Content-Length or ignore TE. It collapses into another CL vs TE split after normalization.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Both sides claim to support Transfer-Encoding, but obfuscation-duplicate...",
+              "expanded": false
+            },
+            {
+              "id": "naa4cecf6c00380c",
+              "title": "Q: How does HTTP/2 relate to smuggling?",
+              "markdown": "**A:** HTTP/2 frames messages differently (no CL/TE on the wire in the same way). Risk appears at **HTTP/2 -> HTTP/1.1 downgrade**: the intermediary translates H2 to H1 and may produce **invalid or ambiguous** CL/TE combinations the **origin** parses differently. Interviewers expect you to mention **downgrade** and **dual-stack** edges, not \"H2 fixes everything.\"",
+              "notes": "A: HTTP/2 frames messages differently (no CL/TE on the wire in the same way). Risk appears at HTTP/2 -> HTTP/1.1 downgrade: the intermediary translates H2 to H1 and may produce invalid or ambiguous CL/TE combinations the origin parses differently. Interviewers expect you to mention downgrade and dual-stack edges, not \"H2 fixes everything.\"",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: HTTP/2 frames messages differently (no CL/TE on the wire in the same way).",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: Explain CL.TE vs TE.CL in one minute.",
+          "expanded": false
+        },
+        {
+          "id": "n45073cf48185073",
+          "title": "Impact and exploitation",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n7e6f813722d2041",
+              "title": "Q: What can you actually achieve with smuggling?",
+              "markdown": "**A:** Typical goals: **web cache poisoning** (smuggle a stored response), **credential/header smuggling** (prepend a request with attacker-controlled headers), **routing bypass** (hit internal-only paths), and **filter bypass** (WAF sees request A; origin executes B). **RCE** is **not** guaranteed-it requires a **further** vulnerable component-but teams still rate smuggling **high** because it **breaks isolation assumptions**.",
+              "notes": "A: Typical goals: web cache poisoning (smuggle a stored response), credential/header smuggling (prepend a request with attacker-controlled headers), routing bypass (hit internal-only paths), and filter bypass (WAF sees request A; origin executes B). RCE is not guaranteed-it requires a further vulnerable component-but teams still rate smuggling high because it breaks isolation assumptions.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Typical goals: web cache poisoning (smuggle a stored response),...",
+              "expanded": false
+            },
+            {
+              "id": "n5a081b68f2c3980",
+              "title": "Q: Smuggling vs HTTP request splitting?",
+              "markdown": "**A:** **Splitting** often refers to **header injection** via CRLF in a single hop (e.g. bad concatenation). **Smuggling** is specifically **two processors** disagreeing on **body framing** across **tiers**. In practice, **reporting** may blur terms; clarify **trust boundaries**.",
+              "notes": "A: Splitting often refers to header injection via CRLF in a single hop (e.g. bad concatenation). Smuggling is specifically two processors disagreeing on body framing across tiers. In practice, reporting may blur terms; clarify trust boundaries.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Splitting often refers to header injection via CRLF in a single hop (e.g.",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: What can you actually achieve with smuggling?",
+          "expanded": false
+        },
+        {
+          "id": "nf845b5a0e976879",
+          "title": "Defense and architecture",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nec3636512b00c65",
+              "title": "Q: How would you fix smuggling in production?",
+              "markdown": "**A:** Tiered answer: (1) **Patch** proxy and app servers to versions that **reject** RFC-illegal CL+TE combinations. (2) **Configure** the edge to **normalize** or **drop** ambiguous requests. (3) **Avoid** blind H2->H1 if parsers differ. (4) **Testing:** regression **desync** tests in staging. (5) **Operational:** monitor **duplicate CL**, **chunked on odd routes**, and **connection reuse** errors.",
+              "notes": "A: Tiered answer: (1) Patch proxy and app servers to versions that reject RFC-illegal CL+TE combinations. (2) Configure the edge to normalize or drop ambiguous requests. (3) Avoid blind H2->H1 if parsers differ. (4) Testing: regression desync tests in staging. (5) Operational: monitor duplicate CL, chunked on odd routes, and connection reuse errors.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Tiered answer: (1) Patch proxy and app servers to versions that reject...",
+              "expanded": false
+            },
+            {
+              "id": "nfdbc8af0205b02a",
+              "title": "Q: Who owns the fix\u2014CDN or application team?",
+              "markdown": "**A:** **Both.** The **edge** must enforce **strict** HTTP; the **origin** must not **accept** framing that contradicts the edge. Staff answer: **platform SRE** ships parser upgrades; **app** avoids **assumptions** about body length; **security** runs **purple-team** validation.",
+              "notes": "A: Both. The edge must enforce strict HTTP; the origin must not accept framing that contradicts the edge. Staff answer: platform SRE ships parser upgrades; app avoids assumptions about body length; security runs purple-team validation.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            },
+            {
+              "id": "nf85c8b4d8b53c61",
+              "title": "Q: Is disabling keep-alive a valid mitigation?",
+              "markdown": "**A:** It **reduces** impact from **cross-request** desync on one TCP connection but **hurts performance** and may not eliminate all classes. It is a **containment** lever, not a **complete** strategy.",
+              "notes": "A: It reduces impact from cross-request desync on one TCP connection but hurts performance and may not eliminate all classes. It is a containment lever, not a complete strategy.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: It reduces impact from cross-request desync on one TCP connection but...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: How would you fix smuggling in production?",
+          "expanded": false
+        },
+        {
+          "id": "n198f89848b9c6eb",
+          "title": "Testing and validation",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n40ca82208bfc23e",
+              "title": "Q: How do you test for smuggling safely?",
+              "markdown": "**A:** Only with **written authorization** and on **non-prod** or **lab** stacks. Use **Burp HTTP Request Smuggler** / Academy labs; capture **before/after** with **tcpdump** to prove framing. In prod-like envs, coordinate with **SRE** to avoid **availability** impact.",
+              "notes": "A: Only with written authorization and on non-prod or lab stacks. Use Burp HTTP Request Smuggler / Academy labs; capture before/after with tcpdump to prove framing. In prod-like envs, coordinate with SRE to avoid availability impact.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Only with written authorization and on non-prod or lab stacks.",
+              "expanded": false
+            },
+            {
+              "id": "n67d8dab6c3960d1",
+              "title": "Q: What proves remediation worked?",
+              "markdown": "**A:** **Prior** PoC fails **reliably** after change; **automated** negative tests pass; **edge logs** show **rejection** of ambiguous patterns; **no** new desync variants in **follow-up** assessment.",
+              "notes": "A: Prior PoC fails reliably after change; automated negative tests pass; edge logs show rejection of ambiguous patterns; no new desync variants in follow-up assessment.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Prior PoC fails reliably after change; automated negative tests pass;...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: How do you test for smuggling safely?",
+          "expanded": false
+        },
+        {
+          "id": "n2852414922eb97b",
+          "title": "Senior / staff traps",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nf283b945bf9c93b",
+              "title": "Q: Our WAF blocks smuggling payloads. Are we safe?",
+              "markdown": "**A:** **No.** If the WAF parses differently than the origin, the WAF can be **bypassed** by smuggling-the **origin** still sees the smuggled request. **Consistent parsing** matters more than a **signature**.",
+              "notes": "A: No. If the WAF parses differently than the origin, the WAF can be bypassed by smuggling-the origin still sees the smuggled request. Consistent parsing matters more than a signature.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "",
+              "expanded": false
+            },
+            {
+              "id": "ne0a98b603e591c8",
+              "title": "Q: How do you roll out stricter header validation without an outage?",
+              "markdown": "**A:** **Canary** on a slice of traffic; **monitor** 4xx/5xx and **latency**; **allowlist** known-bad legacy clients if needed; **time-box** exceptions with **compensating** monitoring; **document** residual risk.",
+              "notes": "A: Canary on a slice of traffic; monitor 4xx/5xx and latency; allowlist known-bad legacy clients if needed; time-box exceptions with compensating monitoring; document residual risk.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "A: Canary on a slice of traffic; monitor 4xx/5xx and latency; allowlist...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Q: Our WAF blocks smuggling payloads. Are we safe?",
+          "expanded": false
+        },
+        {
+          "id": "n0d6ed9b5a902b54",
+          "title": "Depth: Interview follow-ups \u2014 HTTP Request Smuggling",
+          "markdown": "**Authoritative references (re-verify):** RFC 9112 (HTTP/1.1 framing); CWE-444; PortSwigger research (James Kettle).",
+          "notes": "Authoritative references (re-verify): RFC 9112 (HTTP/1.1 framing); CWE-444; PortSwigger research (James Kettle).",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n7e13f251814343a",
+              "title": "Walk through one CL.TE lab scenario verbally (headers + who consumes how many bytes).",
+              "markdown": "- Walk through one CL.TE lab scenario verbally (headers + who consumes how many bytes).",
+              "notes": "Walk through one CL.TE lab scenario verbally (headers + who consumes how many bytes).",
+              "blurb": "Walk through one CL.TE lab scenario verbally (headers + who consumes how...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "ndef2efae05bb9bc",
+              "title": "How would HTTP/2-only end-to-end change your threat model?",
+              "markdown": "- How would HTTP/2-only end-to-end change your threat model?",
+              "notes": "How would HTTP/2-only end-to-end change your threat model?",
+              "blurb": "How would HTTP/2-only end-to-end change your threat model?",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n37509a5ebea248b",
+              "title": "What log lines would you hunt for in nginx vs application logs?",
+              "markdown": "- What log lines would you hunt for in nginx vs application logs?",
+              "notes": "What log lines would you hunt for in nginx vs application logs?",
+              "blurb": "What log lines would you hunt for in nginx vs application logs?",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3f18b059a662dd0",
+              "title": "How does smuggling interact with caching (CDN cache vs browser cache)?",
+              "markdown": "- How does smuggling interact with caching (CDN cache vs browser cache)?",
+              "notes": "How does smuggling interact with caching (CDN cache vs browser cache)?",
+              "blurb": "How does smuggling interact with caching (CDN cache vs browser cache)?",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nf49261911bb0053",
+              "title": "Name two reasons duplicate Content-Length is dangerous.",
+              "markdown": "- Name two reasons duplicate Content-Length is dangerous.",
+              "notes": "Name two reasons duplicate Content-Length is dangerous.",
+              "blurb": "Name two reasons duplicate Content-Length is dangerous.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Authoritative references (re-verify): RFC 9112 (HTTP/1.1 framing); CWE-444;...",
+          "expanded": false
+        },
+        {
+          "id": "n1ee81843c02d15b",
+          "title": "Flagship mock question ladder",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nf232e0660d46cd2",
+              "title": "Junior",
+              "markdown": "- What two headers are most associated with classic smuggling?\n- Why are **keep-alive** connections relevant?",
+              "notes": "- What two headers are most associated with classic smuggling?\n- Why are keep-alive connections relevant?",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "What two headers are most associated with classic smuggling?",
+              "expanded": false
+            },
+            {
+              "id": "nfc166e3f1f0c1c7",
+              "title": "Mid",
+              "markdown": "- Difference between **CL.TE** and **TE.CL**?\n- Name **two** impacts other than RCE.",
+              "notes": "- Difference between CL.TE and TE.CL?\n- Name two impacts other than RCE.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Difference between CL.TE and TE.CL?",
+              "expanded": false
+            },
+            {
+              "id": "n4147f84868c56fa",
+              "title": "Senior",
+              "markdown": "- Describe **H2 downgrade** risk in **your** architecture.\n- How do you **prove** parser alignment after a migration?",
+              "notes": "- Describe H2 downgrade risk in your architecture.\n- How do you prove parser alignment after a migration?",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Describe H2 downgrade risk in your architecture.",
+              "expanded": false
+            },
+            {
+              "id": "nd3946005315ab65",
+              "title": "Staff",
+              "markdown": "- Program plan: **eliminate** desync class across **multi-cloud** edges in **one quarter**.\n- How do you **measure** \"smuggling risk\" for leadership without false precision?",
+              "notes": "- Program plan: eliminate desync class across multi-cloud edges in one quarter.\n- How do you measure \"smuggling risk\" for leadership without false precision?",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Program plan: eliminate desync class across multi-cloud edges in one quarter.",
+              "expanded": false
+            },
+            {
+              "id": "n2f0f83ef10b3f66",
+              "title": "10-minute mock drill",
+              "markdown": "3 min: Elevator + CL.TE vs TE.CL.",
+              "notes": "3 min: Elevator + CL.TE vs TE.CL.",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "na26b525bb5df223",
+                  "title": "3 min: Elevator + CL.TE vs TE.CL.",
+                  "markdown": "- 3 min: Elevator + CL.TE vs TE.CL.",
+                  "notes": "3 min: Elevator + CL.TE vs TE.CL.",
+                  "blurb": "3 min: Elevator + CL.TE vs TE.CL.",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nb7a7257cde15b7e",
+                  "title": "4 min: Defense stack + rollout.",
+                  "markdown": "- 4 min: Defense stack + rollout.",
+                  "notes": "4 min: Defense stack + rollout.",
+                  "blurb": "4 min: Defense stack + rollout.",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nda76dc6aa3e88f1",
+                  "title": "3 min: One failure mode (WAF bypass) and metric.",
+                  "markdown": "- 3 min: One failure mode (WAF bypass) and metric.",
+                  "notes": "3 min: One failure mode (WAF bypass) and metric.",
+                  "blurb": "3 min: One failure mode (WAF bypass) and metric.",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "3 min: Elevator + CL.TE vs TE.CL.",
+              "expanded": false
+            },
+            {
+              "id": "n960e9fbe90d0a8c",
+              "title": "Answer quality rubric (0\u20132 each)",
+              "markdown": "**Accuracy \u00b7 Depth \u00b7 Practicality \u00b7 Verification** - aim for **7-8/8** before interviewing on this topic.",
+              "notes": "Accuracy \u00b7 Depth \u00b7 Practicality \u00b7 Verification - aim for 7-8/8 before interviewing on this topic.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Accuracy \u00b7 Depth \u00b7 Practicality \u00b7 Verification - aim for 7-8/8 before...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Junior",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes 60-second elevator answer"
+    }
+  ],
+  "topicId": "http-request-smuggling",
+  "name": "HTTP Request Smuggling",
+  "structure": "logic-right",
+  "blurb": "HTTP request smuggling abuses disagreement between HTTP parsers (reverse..."
+}

@@ -1,0 +1,1960 @@
+{
+  "id": "n0c9bd1f31c7f7d1",
+  "title": "Web Application Security Vulnerabilities",
+  "markdown": "Product security interviews expect you to move fluently between **OWASP-style risk categories**, **concrete defenses** (what you ship in code and config), and **how you verify** controls in production. The OWASP Top 10 (2021) is a vocabulary, not a complete threat model: real incidents often cluster around **broken authorization**, **session and token handling**, **injection and deserialization**, **SSRF in internal services**, and **business logic** paired with missing abuse detection.\n\nThis guide orients the Top 10 to **defense patterns**, then deepens **authentication and session security**, **injection**, **XSS and CSRF**, **SSRF**, and **unsafe deserialization**, and closes with **how to frame answers** in interviews.\n\n**Authoritative references:** [OWASP Top 10 (2021)](https://owasp.org/Top10/); map findings to [CWE](https://cwe.mitre.org/) when discussing root cause and metrics.",
+  "notes": "Product security interviews expect you to move fluently between OWASP-style risk categories, concrete defenses (what you ship in code and config), and how you verify controls in production. The OWASP Top 10 (2021) is a vocabulary, not a complete threat model: real incidents often cluster around broken authorization, session and token handling, injection and deserialization, SSRF in internal services, and business logic paired with missing abuse detection.\n\nThis guide orients the Top 10 to defense patterns, then deepens authentication and session security, injection, XSS and CSRF, SSRF, and unsafe deserialization, and closes with how to frame answers in interviews.\n\nAuthoritative references: OWASP Top 10 (2021); map findings to CWE when discussing root cause and metrics.",
+  "expanded": true,
+  "children": [
+    {
+      "id": "n799aaaddb463a2a",
+      "title": "At a glance",
+      "markdown": "Product security interviews expect you to move fluently between **OWASP-style risk categories**, **concrete defenses** (what you ship in code and config), and **how you verify** controls in production. The OWASP Top 10 (2021) is a vocabulary, not a complete threat model: real incidents often cluster around **broken authorization**, **session and token handling**, **injection and deserialization**, **SSRF in internal services**, and **business logic** paired with missing abuse detection.\n\nThis guide orients the Top 10 to **defense patterns**, then deepens **authentication and session security**, **injection**, **XSS and CSRF**, **SSRF**, and **unsafe deserialization**, and closes with **how to frame answers** in interviews.\n\n**Authoritative references:** [OWASP Top 10 (2021)](https://owasp.org/Top10/); map findings to [CWE](https://cwe.mitre.org/) when discussing root cause and metrics.",
+      "notes": "Product security interviews expect you to move fluently between OWASP-style risk categories, concrete defenses (what you ship in code and config), and how you verify controls in production. The OWASP Top 10 (2021) is a vocabulary, not a complete threat model: real incidents often cluster around broken authorization, session and token handling, injection and deserialization, SSRF in internal services, and business logic paired with missing abuse detection.\n\nThis guide orients the Top 10 to defense patterns, then deepens authentication and session security, injection, XSS and CSRF, SSRF, and unsafe deserialization, and closes with how to frame answers in interviews.\n\nAuthoritative references: OWASP Top 10 (2021); map findings to CWE when discussing root cause and metrics.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Product security interviews expect you to move fluently between OWASP-style...",
+      "expanded": false
+    },
+    {
+      "id": "n78fd02cfc15daf6",
+      "title": "OWASP Top 10 (2021) \u2014 interview-oriented tour",
+      "markdown": "Use this as a **checklist narrative** in interviews: name the risk, give a **plausible abuse**, state **primary mitigations**, mention **logging/detection** where it matters.",
+      "notes": "Use this as a checklist narrative in interviews: name the risk, give a plausible abuse, state primary mitigations, mention logging/detection where it matters.",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n3d8599688093364",
+          "title": "A01: Broken access control",
+          "markdown": "**What breaks:** Users access objects or actions outside their entitlement (horizontal IDOR, vertical privilege escalation, forced browsing to admin URLs, mass assignment changing `role`).\n\n**Defenses:** **Deny by default**; **server-side** authorization on every mutation and sensitive read; **object-level** checks (bind resource to tenant/user); avoid **security by obscurity** (guessable IDs alone are not access control). **Tests:** horizontal/vertical matrix tests, automation for authZ regressions.",
+          "notes": "What breaks: Users access objects or actions outside their entitlement (horizontal IDOR, vertical privilege escalation, forced browsing to admin URLs, mass assignment changing role).\n\nDefenses: Deny by default; server-side authorization on every mutation and sensitive read; object-level checks (bind resource to tenant/user); avoid security by obscurity (guessable IDs alone are not access control). Tests: horizontal/vertical matrix tests, automation for authZ regressions.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "What breaks: Users access objects or actions outside their entitlement...",
+          "expanded": false
+        },
+        {
+          "id": "n05797c0fdcb0162",
+          "title": "A02: Cryptographic failures",
+          "markdown": "**What breaks:** Sensitive data exposed because TLS is missing or weak, passwords stored reversibly, hardcoded keys, wrong algorithm choices, or **secrets in logs**.\n\n**Defenses:** **TLS** for transit; **strong password hashing** (Argon2id, bcrypt with work factor policy); **envelope encryption** or KMS for keys at rest; **no secrets in client code**; rotate and scope keys. Verify with **crypto inventory** and **scanner rules** for known anti-patterns.",
+          "notes": "What breaks: Sensitive data exposed because TLS is missing or weak, passwords stored reversibly, hardcoded keys, wrong algorithm choices, or secrets in logs.\n\nDefenses: TLS for transit; strong password hashing (Argon2id, bcrypt with work factor policy); envelope encryption or KMS for keys at rest; no secrets in client code; rotate and scope keys. Verify with crypto inventory and scanner rules for known anti-patterns.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "What breaks: Sensitive data exposed because TLS is missing or weak,...",
+          "expanded": false
+        },
+        {
+          "id": "n1b03b104f28491d",
+          "title": "A03: Injection",
+          "markdown": "**What breaks:** Untrusted input becomes part of a command or query (SQL, OS command, LDAP, XPath, template injection).\n\n**Defenses:** **Parameterized queries** / ORM bindings; **separate code from data** for shells; **typed APIs**; **least-privilege DB roles**. Validate **business rules** after binding, not as a substitute for parameterization.",
+          "notes": "What breaks: Untrusted input becomes part of a command or query (SQL, OS command, LDAP, XPath, template injection).\n\nDefenses: Parameterized queries / ORM bindings; separate code from data for shells; typed APIs; least-privilege DB roles. Validate business rules after binding, not as a substitute for parameterization.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "What breaks: Untrusted input becomes part of a command or query (SQL, OS...",
+          "expanded": false
+        },
+        {
+          "id": "na0dd2567702cbee",
+          "title": "A04: Insecure design",
+          "markdown": "**What breaks:** The feature is unsafe by construction (no rate limits on sensitive flows, \"password reset\" without proof, trust of client-sent prices).\n\n**Defenses:** **Threat modeling** early; **secure defaults**; **use abuse cases** alongside user stories; **separation of duties** for high-risk operations.",
+          "notes": "What breaks: The feature is unsafe by construction (no rate limits on sensitive flows, \"password reset\" without proof, trust of client-sent prices).\n\nDefenses: Threat modeling early; secure defaults; use abuse cases alongside user stories; separation of duties for high-risk operations.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "What breaks: The feature is unsafe by construction (no rate limits on...",
+          "expanded": false
+        },
+        {
+          "id": "nd0b3c0898a6d9b8",
+          "title": "A05: Security misconfiguration",
+          "markdown": "**What breaks:** Debug on in prod, default creds, open buckets, verbose errors, permissive CORS, missing security headers.\n\n**Defenses:** **Hardened baselines**, **IaC review**, **staging mirrors prod**, **minimal permissions**, **error messages safe for users** and rich for **server-side** logs only.",
+          "notes": "What breaks: Debug on in prod, default creds, open buckets, verbose errors, permissive CORS, missing security headers.\n\nDefenses: Hardened baselines, IaC review, staging mirrors prod, minimal permissions, error messages safe for users and rich for server-side logs only.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "What breaks: Debug on in prod, default creds, open buckets, verbose errors,...",
+          "expanded": false
+        },
+        {
+          "id": "n83265f42ec48ec7",
+          "title": "A06: Vulnerable and outdated components",
+          "markdown": "**What breaks:** Known CVEs in frameworks, transitive dependencies, container images.\n\n**Defenses:** **SBOM**, **dependabot/Snyk-class** workflows, **pinning** with upgrade policy, **virtual patching** only as bridge-not the fix.",
+          "notes": "What breaks: Known CVEs in frameworks, transitive dependencies, container images.\n\nDefenses: SBOM, dependabot/Snyk-class workflows, pinning with upgrade policy, virtual patching only as bridge-not the fix.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "What breaks: Known CVEs in frameworks, transitive dependencies, container...",
+          "expanded": false
+        },
+        {
+          "id": "nc472a490d2f823a",
+          "title": "A07: Identification and authentication failures",
+          "markdown": "**What breaks:** Weak creds, missing MFA where needed, session fixation, broken logout, credential stuffing success.\n\n**Defenses:** **MFA** for sensitive accounts, **rate limits** and **CAPTCHA** where appropriate, **secure session cookies** (HttpOnly, Secure, SameSite), **rotation** on privilege change, **breach-resistant** password policies.",
+          "notes": "What breaks: Weak creds, missing MFA where needed, session fixation, broken logout, credential stuffing success.\n\nDefenses: MFA for sensitive accounts, rate limits and CAPTCHA where appropriate, secure session cookies (HttpOnly, Secure, SameSite), rotation on privilege change, breach-resistant password policies.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "What breaks: Weak creds, missing MFA where needed, session fixation, broken...",
+          "expanded": false
+        },
+        {
+          "id": "n570090a5253874e",
+          "title": "A08: Software and data integrity failures",
+          "markdown": "**What breaks:** Unsigned updates, CI/CD compromise, unsafe plugins, trusting **client-supplied** integrity flags.\n\n**Defenses:** **Signed artifacts**, **verified provenance**, **immutable deploys**, **dependency pinning** with integrity hashes where supported.",
+          "notes": "What breaks: Unsigned updates, CI/CD compromise, unsafe plugins, trusting client-supplied integrity flags.\n\nDefenses: Signed artifacts, verified provenance, immutable deploys, dependency pinning with integrity hashes where supported.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "What breaks: Unsigned updates, CI/CD compromise, unsafe plugins, trusting...",
+          "expanded": false
+        },
+        {
+          "id": "n91423b4ad8ca3a9",
+          "title": "A09: Security logging and monitoring failures",
+          "markdown": "**What breaks:** Attacks succeed silently; you cannot answer \"who did what, when\" for incidents.\n\n**Defenses:** **AuthN/authZ failures**, **admin actions**, **sensitive data access** logged with **correlation IDs**; **tamper-resistant** or centralized logs; **alerting** on spikes and impossible travel patterns where applicable.",
+          "notes": "What breaks: Attacks succeed silently; you cannot answer \"who did what, when\" for incidents.\n\nDefenses: AuthN/authZ failures, admin actions, sensitive data access logged with correlation IDs; tamper-resistant or centralized logs; alerting on spikes and impossible travel patterns where applicable.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "What breaks: Attacks succeed silently; you cannot answer \"who did what,...",
+          "expanded": false
+        },
+        {
+          "id": "n47aa03ecf6fde0a",
+          "title": "A10: Server-side request forgery (SSRF)",
+          "markdown": "**What breaks:** Server is tricked into calling internal addresses (metadata, admin panels, Redis) using its **higher trust**.\n\n**Defenses:** **Allowlists** of destinations; **disable URL schemes** you do not need; **network segmentation**; **no raw IP** from user input without policy; **metadata hardening** (IMDSv2-style patterns in cloud).",
+          "notes": "What breaks: Server is tricked into calling internal addresses (metadata, admin panels, Redis) using its higher trust.\n\nDefenses: Allowlists of destinations; disable URL schemes you do not need; network segmentation; no raw IP from user input without policy; metadata hardening (IMDSv2-style patterns in cloud).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "What breaks: Server is tricked into calling internal addresses (metadata,...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Use this as a checklist narrative in interviews: name the risk, give a...",
+      "expanded": true
+    },
+    {
+      "id": "nc4d3cc4fed43ffb",
+      "title": "Core defense patterns (use these in every answer)",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n56c94643cddf9c7",
+          "title": "Validate, then bind; encode for context",
+          "markdown": "**Input validation** answers \"is this shape allowed?\" (length, charset, enum). It does **not** replace **parameterization** for SQL. **Output encoding** is **context-specific**: HTML, attribute, JavaScript, URL, and CSS each need the right escaping or API (`textContent` vs `innerHTML`).",
+          "notes": "Input validation answers \"is this shape allowed?\" (length, charset, enum). It does not replace parameterization for SQL. Output encoding is context-specific: HTML, attribute, JavaScript, URL, and CSS each need the right escaping or API (textContent vs innerHTML).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Input validation answers \"is this shape allowed?\" (length, charset, enum).",
+          "expanded": false
+        },
+        {
+          "id": "nf4026ff0ec39f61",
+          "title": "Least privilege end to end",
+          "markdown": "Database roles, service accounts, cloud IAM, and **application roles** should be **minimal** for the code path. Interviewers listen for **blast radius**: what one compromised token can do.",
+          "notes": "Database roles, service accounts, cloud IAM, and application roles should be minimal for the code path. Interviewers listen for blast radius: what one compromised token can do.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Database roles, service accounts, cloud IAM, and application roles should be...",
+          "expanded": false
+        },
+        {
+          "id": "n4b544219af69006",
+          "title": "Secure defaults and safe frameworks",
+          "markdown": "Auto-escaping templates, CSRF middleware in server-rendered apps, framework CSRF for cookie-session models, and **turning off dangerous features** (XML external entities, debug endpoints) by default.",
+          "notes": "Auto-escaping templates, CSRF middleware in server-rendered apps, framework CSRF for cookie-session models, and turning off dangerous features (XML external entities, debug endpoints) by default.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Auto-escaping templates, CSRF middleware in server-rendered apps, framework...",
+          "expanded": false
+        },
+        {
+          "id": "n0b7fa8038477d28",
+          "title": "Defense in depth without magical thinking",
+          "markdown": "WAFs and RASP **reduce noise** and catch some exploits; they **fail open** or bypass with novel payloads. Your story should still center on **correct authorization** and **safe parsing**.",
+          "notes": "WAFs and RASP reduce noise and catch some exploits; they fail open or bypass with novel payloads. Your story should still center on correct authorization and safe parsing.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "WAFs and RASP reduce noise and catch some exploits; they fail open or bypass...",
+          "expanded": false
+        },
+        {
+          "id": "nd4186a0fc3a5ac1",
+          "title": "Verification",
+          "markdown": "**SAST/DAST/IAST**, **manual testing** for authZ and business logic, **pentest** findings fed into **design reviews**, and **production metrics** (failed auth spikes, SSRF-like egress patterns).",
+          "notes": "SAST/DAST/IAST, manual testing for authZ and business logic, pentest findings fed into design reviews, and production metrics (failed auth spikes, SSRF-like egress patterns).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "SAST/DAST/IAST, manual testing for authZ and business logic, pentest...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Validate, then bind; encode for context",
+      "expanded": true
+    },
+    {
+      "id": "n4503afca12a035e",
+      "title": "Authentication and session security",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nc4994d93505a11e",
+          "title": "Passwords and MFA",
+          "markdown": "Store **salted slow hashes**; never reversible encryption for passwords. Enforce **reasonable length** (long passphrases encouraged) and check against **breach corpora** where policy allows. **MFA** (WebAuthn, TOTP, push) for admin and high-value users; know **phishing-resistant** factors vs SMS weaknesses.",
+          "notes": "Store salted slow hashes; never reversible encryption for passwords. Enforce reasonable length (long passphrases encouraged) and check against breach corpora where policy allows. MFA (WebAuthn, TOTP, push) for admin and high-value users; know phishing-resistant factors vs SMS weaknesses.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Store salted slow hashes; never reversible encryption for passwords.",
+          "expanded": false
+        },
+        {
+          "id": "nad7cb4659942692",
+          "title": "Sessions and cookies",
+          "markdown": "For browser sessions, prefer **opaque server-side sessions** or **signed tokens** with **short lifetimes** and **refresh** rotation where used. Cookie flags: **HttpOnly** (no script access), **Secure** (HTTPS only), **SameSite** (CSRF mitigation for cookie-based models). **Regenerate session ID** on login to mitigate **session fixation**.",
+          "notes": "For browser sessions, prefer opaque server-side sessions or signed tokens with short lifetimes and refresh rotation where used. Cookie flags: HttpOnly (no script access), Secure (HTTPS only), SameSite (CSRF mitigation for cookie-based models). Regenerate session ID on login to mitigate session fixation.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "For browser sessions, prefer opaque server-side sessions or signed tokens...",
+          "expanded": false
+        },
+        {
+          "id": "na60182756279680",
+          "title": "Tokens (JWT and opaque API tokens)",
+          "markdown": "**JWTs are credentials**: treat compromise like a stolen password. Validate **signature, `iss`, `aud`, `exp`**, and **intended use**. Avoid putting **PII** in claims. For APIs, prefer **short-lived access** + **rotation** for refresh or use **opaque tokens** with server-side revocation when you need instant kill.",
+          "notes": "JWTs are credentials: treat compromise like a stolen password. Validate signature, iss, aud, exp, and intended use. Avoid putting PII in claims. For APIs, prefer short-lived access + rotation for refresh or use opaque tokens with server-side revocation when you need instant kill.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "JWTs are credentials: treat compromise like a stolen password.",
+          "expanded": false
+        },
+        {
+          "id": "n767191d7ba80c2f",
+          "title": "Common interview scenarios",
+          "markdown": "Credential stuffing: rate limits, MFA, device signals, step-up for risky logins.",
+          "notes": "Credential stuffing: rate limits, MFA, device signals, step-up for risky logins.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n8f0e628065649c5",
+              "title": "Credential stuffing: rate limits, MFA, device signals, step-up for risky logins.",
+              "markdown": "- Credential stuffing: rate limits, MFA, device signals, step-up for risky logins.",
+              "notes": "Credential stuffing: rate limits, MFA, device signals, step-up for risky logins.",
+              "blurb": "Credential stuffing: rate limits, MFA, device signals, step-up for risky...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc7c7936d85fd8db",
+              "title": "Session hijacking: TLS, Secure cookies, binding session to user agent/IP only with care",
+              "markdown": "- Session hijacking: TLS, Secure cookies, binding session to user agent/IP only with care",
+              "notes": "Session hijacking: TLS, Secure cookies, binding session to user agent/IP only with care",
+              "blurb": "Session hijacking: TLS, Secure cookies, binding session to user agent/IP...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nead731cc9941261",
+              "title": "Account enumeration: consistent responses and timing discipline for login and reset flow",
+              "markdown": "- Account enumeration: consistent responses and timing discipline for login and reset flow",
+              "notes": "Account enumeration: consistent responses and timing discipline for login and reset flow",
+              "blurb": "Account enumeration: consistent responses and timing discipline for login...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Credential stuffing: rate limits, MFA, device signals, step-up for risky...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Passwords and MFA",
+      "expanded": true
+    },
+    {
+      "id": "n25ee2772b6c6182",
+      "title": "Injection (beyond \u201cuse prepared statements\u201d)",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n78779429dcc49c1",
+          "title": "SQL injection",
+          "markdown": "**Root cause:** string concatenation builds SQL. **Fix:** prepared statements with **bound parameters**; ORM **parameterized** APIs only (watch raw SQL fragments). **Second-order** SQLi: stored input executed later-treat stored data as untrusted when building queries.",
+          "notes": "Root cause: string concatenation builds SQL. Fix: prepared statements with bound parameters; ORM parameterized APIs only (watch raw SQL fragments). Second-order SQLi: stored input executed later-treat stored data as untrusted when building queries.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Root cause: string concatenation builds SQL.",
+          "expanded": false
+        },
+        {
+          "id": "nbd1ba91d2388b00",
+          "title": "Command injection",
+          "markdown": "**Root cause:** user input passed to `shell=True` or string-built shell commands. **Fix:** **avoid shells**; use `execve`-style APIs with **argument arrays**; strict allowlists if you must invoke binaries.",
+          "notes": "Root cause: user input passed to shell=True or string-built shell commands. Fix: avoid shells; use execve-style APIs with argument arrays; strict allowlists if you must invoke binaries.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Root cause: user input passed to shell=True or string-built shell commands.",
+          "expanded": false
+        },
+        {
+          "id": "nb146710fbc538d2",
+          "title": "LDAP, XPath, NoSQL",
+          "markdown": "Same pattern: **parameterized** or **typed** APIs; escape only when the API demands it and you understand the grammar.",
+          "notes": "Same pattern: parameterized or typed APIs; escape only when the API demands it and you understand the grammar.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Same pattern: parameterized or typed APIs; escape only when the API demands...",
+          "expanded": false
+        },
+        {
+          "id": "n95f9e4850062754",
+          "title": "Template injection (SSTI)",
+          "markdown": "Server-side template engines sometimes **evaluate** expressions in user content. **Fix:** never let users pick template fragments; **sandbox** is fragile-prefer **logicless** rendering paths.",
+          "notes": "Server-side template engines sometimes evaluate expressions in user content. Fix: never let users pick template fragments; sandbox is fragile-prefer logicless rendering paths.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Server-side template engines sometimes evaluate expressions in user content.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes SQL injection",
+      "expanded": false
+    },
+    {
+      "id": "n2f05f18902e090a",
+      "title": "XSS and CSRF as a pair",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n71fce126dbdf54f",
+          "title": "XSS types",
+          "markdown": "Reflected: payload in request echoed in response.",
+          "notes": "Reflected: payload in request echoed in response.",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n92753c4a360fb12",
+              "title": "Reflected: payload in request echoed in response.",
+              "markdown": "- Reflected: payload in request echoed in response.",
+              "notes": "Reflected: payload in request echoed in response.",
+              "blurb": "Reflected: payload in request echoed in response.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc2f366e1d1c3f3b",
+              "title": "Stored: payload persisted and served to victims.",
+              "markdown": "- Stored: payload persisted and served to victims.",
+              "notes": "Stored: payload persisted and served to victims.",
+              "blurb": "Stored: payload persisted and served to victims.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8dc5fc21077cb88",
+              "title": "DOM-based: unsafe sinks in client JS (innerHTML, document.write, eval) using attacker-in",
+              "markdown": "- DOM-based: unsafe sinks in client JS (innerHTML, document.write, eval) using attacker-in",
+              "notes": "DOM-based: unsafe sinks in client JS (innerHTML, document.write, eval) using attacker-in",
+              "blurb": "DOM-based: unsafe sinks in client JS (innerHTML, document.write, eval) using...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Reflected: payload in request echoed in response.",
+          "expanded": false
+        },
+        {
+          "id": "n368c05b7eb1b9f7",
+          "title": "CSRF",
+          "markdown": "**Classic model:** browser automatically sends **cookies** to your origin; attacker's site triggers a **state-changing** request.\n\n**Mitigations for cookie sessions:** **SameSite cookies** (Lax/Strict per use case), **CSRF tokens** tied to session, **double-submit cookie** patterns where appropriate, **Origin/Referer** checks as defense-in-depth. For **SPA + token APIs**, CSRF is less about cookies if **no ambient credentials**-but **CORS** and **token storage** (XSS still steals tokens from `localStorage`) become the story.",
+          "notes": "Classic model: browser automatically sends cookies to your origin; attacker's site triggers a state-changing request.\n\nMitigations for cookie sessions: SameSite cookies (Lax/Strict per use case), CSRF tokens tied to session, double-submit cookie patterns where appropriate, Origin/Referer checks as defense-in-depth. For SPA + token APIs, CSRF is less about cookies if no ambient credentials-but CORS and token storage (XSS still steals tokens from localStorage) become the story.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Classic model: browser automatically sends cookies to your origin;...",
+          "expanded": false
+        },
+        {
+          "id": "n9b95b705b057daa",
+          "title": "Interview sound bite",
+          "markdown": "\"XSS is **execution in the victim's browser**; CSRF is **the browser doing something the user didn't intend** using existing session mechanics. CSP and encoding stop XSS; SameSite and tokens stop classic CSRF.\"",
+          "notes": "\"XSS is execution in the victim's browser; CSRF is the browser doing something the user didn't intend using existing session mechanics. CSP and encoding stop XSS; SameSite and tokens stop classic CSRF.\"",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "\"XSS is execution in the victim's browser; CSRF is the browser doing...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes XSS types",
+      "expanded": false
+    },
+    {
+      "id": "n7eeee956e2fcced",
+      "title": "SSRF",
+      "markdown": "**Attack:** You control all or part of a URL, hostname, or redirect target consumed by a **server-side HTTP client**, **PDF fetcher**, **webhook validator**, or **SSO** integration. The server reaches **internal IPs**, **cloud metadata**, or **localhost admin**.\n\n**Mitigations:**",
+      "notes": "Attack: You control all or part of a URL, hostname, or redirect target consumed by a server-side HTTP client, PDF fetcher, webhook validator, or SSO integration. The server reaches internal IPs, cloud metadata, or localhost admin.\n\nMitigations:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "ne0de9f75b1086bd",
+          "title": "Allowlist hosts and schemes; block link-local and metadata ranges by policy.",
+          "markdown": "- Allowlist hosts and schemes; block link-local and metadata ranges by policy.",
+          "notes": "Allowlist hosts and schemes; block link-local and metadata ranges by policy.",
+          "blurb": "Allowlist hosts and schemes; block link-local and metadata ranges by policy.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "ncca6fd1cf63dce2",
+          "title": "Disable redirects or re-validate destination after redirect.",
+          "markdown": "- Disable redirects or re-validate destination after redirect.",
+          "notes": "Disable redirects or re-validate destination after redirect.",
+          "blurb": "Disable redirects or re-validate destination after redirect.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n3ecdea8c9a5bac6",
+          "title": "Network controls: egress proxy, private link patterns, no public egress from sensitive t",
+          "markdown": "- Network controls: egress proxy, private link patterns, no public egress from sensitive t",
+          "notes": "Network controls: egress proxy, private link patterns, no public egress from sensitive t",
+          "blurb": "Network controls: egress proxy, private link patterns, no public egress from...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "n6c14bb618acdae9",
+          "title": "Parse carefully: differences between URL parsers and HTTP clients enable parser differen",
+          "markdown": "- Parse carefully: differences between URL parsers and HTTP clients enable parser differen",
+          "notes": "Parse carefully: differences between URL parsers and HTTP clients enable parser differen",
+          "blurb": "Parse carefully: differences between URL parsers and HTTP clients enable...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Attack: You control all or part of a URL, hostname, or redirect target...",
+      "expanded": false
+    },
+    {
+      "id": "n9bdba2287c10bc3",
+      "title": "Unsafe deserialization",
+      "markdown": "**Risk:** Turning bytes into **objects** with **methods** and **gadget chains** (Java, .NET, PHP, Python `pickle`). Attacker supplies a serialized blob that triggers **arbitrary code** or **unexpected behavior** during **readObject**-style paths.\n\n**Mitigations:**",
+      "notes": "Risk: Turning bytes into objects with methods and gadget chains (Java, .NET, PHP, Python pickle). Attacker supplies a serialized blob that triggers arbitrary code or unexpected behavior during readObject-style paths.\n\nMitigations:",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nf7c411474a6861c",
+          "title": "Prefer JSON or other schema-bound formats with plain data types and explicit DTO mapping",
+          "markdown": "- Prefer JSON or other schema-bound formats with plain data types and explicit DTO mapping",
+          "notes": "Prefer JSON or other schema-bound formats with plain data types and explicit DTO mapping",
+          "blurb": "Prefer JSON or other schema-bound formats with plain data types and explicit...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "nc93ab886317b754",
+          "title": "Never deserialize untrusted input with native object serializers (pickle, Java serializa",
+          "markdown": "- Never deserialize untrusted input with native object serializers (pickle, Java serializa",
+          "notes": "Never deserialize untrusted input with native object serializers (pickle, Java serializa",
+          "blurb": "Never deserialize untrusted input with native object serializers (pickle,...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        },
+        {
+          "id": "na74fe67b272260a",
+          "title": "If you must support binary RPC, enforce size limits, schema validation, and library upda",
+          "markdown": "- If you must support binary RPC, enforce size limits, schema validation, and library upda",
+          "notes": "If you must support binary RPC, enforce size limits, schema validation, and library upda",
+          "blurb": "If you must support binary RPC, enforce size limits, schema validation, and...",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "expanded": false
+        }
+      ],
+      "blurb": "Risk: Turning bytes into objects with methods and gadget chains (Java, .NET,...",
+      "expanded": false
+    },
+    {
+      "id": "n118f89995299a29",
+      "title": "Authorization and business logic (often the real interview depth)",
+      "markdown": "**IDOR:** predictable IDs or missing server checks. Fix with **authorization service**, **row-level** checks, **tenant scoping** in queries.\n\n**Mass assignment:** client sets `isAdmin`. Fix with **explicit allowlists** for writable fields.\n\n**Workflow abuse:** skip payment, reuse coupons, race **limits**. Fix with **server-side state machines**, **idempotency keys**, **concurrency controls**, and **monitoring**.",
+      "notes": "IDOR: predictable IDs or missing server checks. Fix with authorization service, row-level checks, tenant scoping in queries.\n\nMass assignment: client sets isAdmin. Fix with explicit allowlists for writable fields.\n\nWorkflow abuse: skip payment, reuse coupons, race limits. Fix with server-side state machines, idempotency keys, concurrency controls, and monitoring.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "IDOR: predictable IDs or missing server checks.",
+      "expanded": false
+    },
+    {
+      "id": "n6133851e62240ff",
+      "title": "Interview framing",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "n099f25728a038fb",
+          "title": "Structure (60\u2013120 seconds)",
+          "markdown": "Threat: one sentence on what fails (e.g., \"missing object-level auth\").",
+          "notes": "Threat: one sentence on what fails (e.g., \"missing object-level auth\").",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "nce980e8a7785406",
+              "title": "Threat: one sentence on what fails (e.g., \"missing object-level auth\").",
+              "markdown": "- Threat: one sentence on what fails (e.g., \"missing object-level auth\").",
+              "notes": "Threat: one sentence on what fails (e.g., \"missing object-level auth\").",
+              "blurb": "Threat: one sentence on what fails (e.g., \"missing object-level auth\").",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nfffe5209085d653",
+              "title": "Exploit sketch: how an attacker abuses it (no live malware; stay conceptual).",
+              "markdown": "- Exploit sketch: how an attacker abuses it (no live malware; stay conceptual).",
+              "notes": "Exploit sketch: how an attacker abuses it (no live malware; stay conceptual).",
+              "blurb": "Exploit sketch: how an attacker abuses it (no live malware; stay conceptual).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nfbac343a31adb9e",
+              "title": "Controls: 2-3 concrete defenses you would implement or require.",
+              "markdown": "- Controls: 2-3 concrete defenses you would implement or require.",
+              "notes": "Controls: 2-3 concrete defenses you would implement or require.",
+              "blurb": "Controls: 2-3 concrete defenses you would implement or require.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n7a9be254b4851e2",
+              "title": "Tradeoff: UX, performance, or false positives (e.g., aggressive CSP breaks third-party s",
+              "markdown": "- Tradeoff: UX, performance, or false positives (e.g., aggressive CSP breaks third-party s",
+              "notes": "Tradeoff: UX, performance, or false positives (e.g., aggressive CSP breaks third-party s",
+              "blurb": "Tradeoff: UX, performance, or false positives (e.g., aggressive CSP breaks...",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n8de199e320219b8",
+              "title": "Proof: test you ran, SAST rule, pentest theme, or metric you tracked.",
+              "markdown": "- Proof: test you ran, SAST rule, pentest theme, or metric you tracked.",
+              "notes": "Proof: test you ran, SAST rule, pentest theme, or metric you tracked.",
+              "blurb": "Proof: test you ran, SAST rule, pentest theme, or metric you tracked.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Threat: one sentence on what fails (e.g., \"missing object-level auth\").",
+          "expanded": false
+        },
+        {
+          "id": "nddf280b155adefa",
+          "title": "Credibility markers",
+          "markdown": "Name where the check lives (server, not client).",
+          "notes": "Name where the check lives (server, not client).",
+          "kind": "topic",
+          "level": 3,
+          "children": [
+            {
+              "id": "n52cb9e44ef83228",
+              "title": "Name where the check lives (server, not client).",
+              "markdown": "- Name where the check lives (server, not client).",
+              "notes": "Name where the check lives (server, not client).",
+              "blurb": "Name where the check lives (server, not client).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n47f18ea15ad7482",
+              "title": "Mention regression tests for authZ and logging for detective control.",
+              "markdown": "- Mention regression tests for authZ and logging for detective control.",
+              "notes": "Mention regression tests for authZ and logging for detective control.",
+              "blurb": "Mention regression tests for authZ and logging for detective control.",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n695092e36844ce2",
+              "title": "Acknowledge what you do not solve in one layer (WAF vs code).",
+              "markdown": "- Acknowledge what you do not solve in one layer (WAF vs code).",
+              "notes": "Acknowledge what you do not solve in one layer (WAF vs code).",
+              "blurb": "Acknowledge what you do not solve in one layer (WAF vs code).",
+              "kind": "topic",
+              "level": 4,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Name where the check lives (server, not client).",
+          "expanded": false
+        },
+        {
+          "id": "nc3dec0f765e8ad2",
+          "title": "Cross-topics to mention",
+          "markdown": "Pair this module with **rate limiting**, **security headers**, **SSRF**, **XSS vs CSRF**, **secrets management**, and **incident response** for end-to-end stories.",
+          "notes": "Pair this module with rate limiting, security headers, SSRF, XSS vs CSRF, secrets management, and incident response for end-to-end stories.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Pair this module with rate limiting, security headers, SSRF, XSS vs CSRF,...",
+          "expanded": false
+        },
+        {
+          "id": "nb4e8fa92d949079",
+          "title": "Prioritization when everything is \u201chigh\u201d",
+          "markdown": "Interviewers often ask how you **rank** work. A pragmatic stack rank for many B2B and consumer web apps: **(1)** authentication and **authorization** correctness on money and PII paths; **(2)** **injection** and **SSRF** in services that **fetch** or **query** on behalf of users; **(3)** **XSS** and **CSRF** on surfaces that still use **cookies** for session; **(4)** **deserialization** and **parser** issues in **edge parsers** (XML, archives, image decoders); **(5)** **misconfiguration** and **secrets** in CI/CD; **(6)** **dependency** CVEs with **reachable** attack paths. Tie each item to **exploitability**, **impact**, and **exposure** (internet vs internal).",
+          "notes": "Interviewers often ask how you rank work. A pragmatic stack rank for many B2B and consumer web apps: (1) authentication and authorization correctness on money and PII paths; (2) injection and SSRF in services that fetch or query on behalf of users; (3) XSS and CSRF on surfaces that still use cookies for session; (4) deserialization and parser issues in edge parsers (XML, archives, image decoders); (5) misconfiguration and secrets in CI/CD; (6) dependency CVEs with reachable attack paths. Tie each item to exploitability, impact, and exposure (internet vs internal).",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Interviewers often ask how you rank work.",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Structure (60\u2013120 seconds)",
+      "expanded": false
+    },
+    {
+      "id": "n8a49882cb34cf67",
+      "title": "Related patterns that interviewers bundle with \u201cTop 10\u201d",
+      "markdown": "",
+      "notes": "",
+      "kind": "topic",
+      "level": 2,
+      "children": [
+        {
+          "id": "nc820ee2024203d9",
+          "title": "XML external entity (XXE) and unsafe XML",
+          "markdown": "When the app parses **XML** from untrusted sources with **DTD** processing enabled, attackers can read local files or hit internal URLs (**SSRF via XML**). **Mitigations:** disable **external entities** and **XInclude** in parser configuration; use **JSON** where possible; validate **size** and **depth** limits.",
+          "notes": "When the app parses XML from untrusted sources with DTD processing enabled, attackers can read local files or hit internal URLs (SSRF via XML). Mitigations: disable external entities and XInclude in parser configuration; use JSON where possible; validate size and depth limits.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "When the app parses XML from untrusted sources with DTD processing enabled,...",
+          "expanded": false
+        },
+        {
+          "id": "n40253ef60cdee52",
+          "title": "File uploads and path traversal",
+          "markdown": "**Risk:** executable content uploaded to web roots, **double extensions**, **`..`** segments in filenames, or **MIME** spoofing. **Mitigations:** store outside web root; **content-type sniffing** with care; **randomized names**; **AV/clam** where warranted; **separate bucket** with **no script execution**; enforce **size** and **dimension** limits for images.",
+          "notes": "Risk: executable content uploaded to web roots, double extensions, .. segments in filenames, or MIME spoofing. Mitigations: store outside web root; content-type sniffing with care; randomized names; AV/clam where warranted; separate bucket with no script execution; enforce size and dimension limits for images.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Risk: executable content uploaded to web roots, double extensions, ..",
+          "expanded": false
+        },
+        {
+          "id": "n2d38aa2e94510df",
+          "title": "CORS and cross-origin data",
+          "markdown": "**Misconfiguration:** `Access-Control-Allow-Origin: *` paired with **`Access-Control-Allow-Credentials: true`** is invalid per spec-browsers block it-but **reflected origins** and **overly broad** whitelists leak **cookie-authenticated** JSON to attacker-controlled sites. **Mitigations:** **explicit allowlist** of origins; avoid **`null`** origin surprises; treat **CORS** as **browser enforcement** only-**authorization** still belongs on the server.",
+          "notes": "Misconfiguration: Access-Control-Allow-Origin:  paired with Access-Control-Allow-Credentials: true is invalid per spec-browsers block it-but reflected origins and overly broad whitelists leak cookie-authenticated JSON to attacker-controlled sites. Mitigations: explicit allowlist of origins; avoid null origin surprises; treat CORS as browser enforcement only-authorization still belongs on the server.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Misconfiguration: Access-Control-Allow-Origin: paired with...",
+          "expanded": false
+        },
+        {
+          "id": "ne3ebf8a20d2b5e6",
+          "title": "Open redirects and OAuth/OIDC confusion",
+          "markdown": "Open redirects poison **return URLs** for **token theft** or **phishing**. Validate **redirect URIs** against **exact registered** values. Pair with **state** and **PKCE** for public clients in OAuth flows.",
+          "notes": "Open redirects poison return URLs for token theft or phishing. Validate redirect URIs against exact registered values. Pair with state and PKCE for public clients in OAuth flows.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Open redirects poison return URLs for token theft or phishing.",
+          "expanded": false
+        },
+        {
+          "id": "ne9f440a2ef19017",
+          "title": "Prototype pollution and supply chain (JavaScript)",
+          "markdown": "**Prototype pollution** in JS object merge utilities can alter application behavior. **Mitigations:** freeze prototypes where feasible, use **safe merge** libraries, **pin** dependencies, and **monitor** for known gadgets. This is a modern twist on **A06/A08** in web stacks.",
+          "notes": "Prototype pollution in JS object merge utilities can alter application behavior. Mitigations: freeze prototypes where feasible, use safe merge libraries, pin dependencies, and monitor for known gadgets. This is a modern twist on A06/A08 in web stacks.",
+          "kind": "topic",
+          "level": 3,
+          "children": [],
+          "blurb": "Prototype pollution in JS object merge utilities can alter application...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes XML external entity (XXE) and unsafe XML",
+      "expanded": false
+    },
+    {
+      "id": "nec46994000af479",
+      "title": "Alignment with OWASP ASVS (how senior candidates sound)",
+      "markdown": "**Application Security Verification Standard (ASVS)** gives **testable** requirements (auth, session, access control, validation, cryptography). In interviews, mentioning **ASVS Level 2** for internet-facing apps shows you think in **verifiable controls**, not only vulnerabilities. Map backlog items to **V** chapters: e.g., \"V4 access control\" for IDOR fixes, \"V2 authentication\" for session rotation.",
+      "notes": "Application Security Verification Standard (ASVS) gives testable requirements (auth, session, access control, validation, cryptography). In interviews, mentioning ASVS Level 2 for internet-facing apps shows you think in verifiable controls, not only vulnerabilities. Map backlog items to V chapters: e.g., \"V4 access control\" for IDOR fixes, \"V2 authentication\" for session rotation.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Application Security Verification Standard (ASVS) gives testable...",
+      "expanded": false
+    },
+    {
+      "id": "n0140b5fd28243e7",
+      "title": "Detection and logging hooks (tie to A09)",
+      "markdown": "Instrument **high-signal** events: **failed logins**, **password reset** attempts, **MFA** challenges, **authorization denials** (without logging secrets), **admin** and **billing** mutations, **export** endpoints, and **SSRF-prone** fetchers. Use **structured logs** with **request IDs** and **tenant IDs** where applicable. Alert on **thresholds** and **anomalies** (spike in 401/403, unusual egress destinations). Red-team exercises should validate that **detectors fire** before you claim maturity.",
+      "notes": "Instrument high-signal events: failed logins, password reset attempts, MFA challenges, authorization denials (without logging secrets), admin and billing mutations, export endpoints, and SSRF-prone fetchers. Use structured logs with request IDs and tenant IDs where applicable. Alert on thresholds and anomalies (spike in 401/403, unusual egress destinations). Red-team exercises should validate that detectors fire before you claim maturity.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "Instrument high-signal events: failed logins, password reset attempts, MFA...",
+      "expanded": false
+    },
+    {
+      "id": "n8553cd3dffec0eb",
+      "title": "Quick reference table",
+      "markdown": "| Risk | Typical flaw | Primary fix | Verify |\n|------|----------------|------------|--------|\n| Broken access control | Missing object check | Server-side authZ every time | IDOR matrix tests |\n| Injection | String-built SQL | Parameterized queries | SAST + integration tests |\n| XSS | Unsafe HTML sink | Encode + CSP | DOM tests, CSP reports |\n| CSRF | Cookie session POST | SameSite + token | Replay in test harness |\n| SSRF | Open fetcher | Allowlist egress | Unit tests for URL policy |\n| Deserialization | `pickle`/Java gadgets | JSON DTOs, no magic types | Ban-list imports, review |\n| Auth failures | No MFA, weak session | MFA + cookie flags | Auth event metrics |\n\n---\n\nThis guide is sized for interview preparation: use the Top 10 as **structure**, then drill the **families** (authZ, injection, browser, SSRF, deserialization) where your target role spends engineering time. Supplement with **ASVS-style verification** and **logging** when interviewers ask how you **operationalize** security beyond finding bugs.",
+      "notes": "| Risk | Typical flaw | Primary fix | Verify |\n|------|----------------|------------|--------|\n| Broken access control | Missing object check | Server-side authZ every time | IDOR matrix tests |\n| Injection | String-built SQL | Parameterized queries | SAST + integration tests |\n| XSS | Unsafe HTML sink | Encode + CSP | DOM tests, CSP reports |\n| CSRF | Cookie session POST | SameSite + token | Replay in test harness |\n| SSRF | Open fetcher | Allowlist egress | Unit tests for URL policy |\n| Deserialization | pickle/Java gadgets | JSON DTOs, no magic types | Ban-list imports, review |\n| Auth failures | No MFA, weak session | MFA + cookie flags | Auth event metrics |\n\n---\n\nThis guide is sized for interview preparation: use the Top 10 as structure, then drill the families (authZ, injection, browser, SSRF, deserialization) where your target role spends engineering time. Supplement with ASVS-style verification and logging when interviewers ask how you operationalize security beyond finding bugs.",
+      "kind": "topic",
+      "level": 2,
+      "children": [],
+      "blurb": "| Risk | Typical flaw | Primary fix | Verify |...",
+      "expanded": false
+    },
+    {
+      "id": "nd09830e18904bb9",
+      "title": "Quick recall",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nf2fb6644cdb4b19",
+          "title": "OWASP Top 10 (2021)",
+          "markdown": "Broken Access Control",
+          "notes": "Broken Access Control",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n8b23c646d0fbbdc",
+              "title": "Broken Access Control",
+              "markdown": "- Broken Access Control",
+              "notes": "Broken Access Control",
+              "blurb": "Broken Access Control",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9db94955f072d7d",
+              "title": "Cryptographic Failures",
+              "markdown": "- Cryptographic Failures",
+              "notes": "Cryptographic Failures",
+              "blurb": "Cryptographic Failures",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n994aa7b06fd049b",
+              "title": "Insecure Design",
+              "markdown": "- Insecure Design",
+              "notes": "Insecure Design",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n0ec02e276d714fe",
+              "title": "Security Misconfiguration",
+              "markdown": "- Security Misconfiguration",
+              "notes": "Security Misconfiguration",
+              "blurb": "Security Misconfiguration",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nfbcedfc03807e34",
+              "title": "Vulnerable and Outdated Components",
+              "markdown": "- Vulnerable and Outdated Components",
+              "notes": "Vulnerable and Outdated Components",
+              "blurb": "Vulnerable and Outdated Components",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n367f7ab52444739",
+              "title": "Identification and Authentication Failures",
+              "markdown": "- Identification and Authentication Failures",
+              "notes": "Identification and Authentication Failures",
+              "blurb": "Identification and Authentication Failures",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n27d412a1aaa56ea",
+              "title": "Software and Data Integrity Failures",
+              "markdown": "- Software and Data Integrity Failures",
+              "notes": "Software and Data Integrity Failures",
+              "blurb": "Software and Data Integrity Failures",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nbb7f854c61d0a73",
+              "title": "Security Logging and Monitoring Failures",
+              "markdown": "- Security Logging and Monitoring Failures",
+              "notes": "Security Logging and Monitoring Failures",
+              "blurb": "Security Logging and Monitoring Failures",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n00ea7377356fdf5",
+              "title": "Server-Side Request Forgery (SSRF)",
+              "markdown": "- Server-Side Request Forgery (SSRF)",
+              "notes": "Server-Side Request Forgery (SSRF)",
+              "blurb": "Server-Side Request Forgery (SSRF)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Broken Access Control",
+          "expanded": false
+        },
+        {
+          "id": "nb9f5d1fb8c3f624",
+          "title": "Testing Methods",
+          "markdown": "| Method | Description | Tools |\n| --- | --- | --- |\n| **SAST** | Static Application Security Testing | SonarQube, Checkmarx |\n| **DAST** | Dynamic Application Security Testing | OWASP ZAP, Burp Suite |\n| **IAST** | Interactive Application Security Testing | Contrast Security |\n| **Manual** | Code review, penetration testing | - |",
+          "notes": "| Method | Description | Tools |\n| --- | --- | --- |\n| SAST | Static Application Security Testing | SonarQube, Checkmarx |\n| DAST | Dynamic Application Security Testing | OWASP ZAP, Burp Suite |\n| IAST | Interactive Application Security Testing | Contrast Security |\n| Manual | Code review, penetration testing | - |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Method | Description | Tools | | --- | --- | --- | | SAST | Static...",
+          "expanded": false
+        },
+        {
+          "id": "n4e1f5c14b0bc729",
+          "title": "Common Vulnerabilities and Mitigations",
+          "markdown": "| Vulnerability | Mitigation |\n| --- | --- |\n| **SQL Injection** | Parameterized queries, input validation |\n| **XSS** | Output encoding, CSP, input validation |\n| **CSRF** | CSRF tokens, SameSite cookies |\n| **Broken Authentication** | Strong passwords, MFA, secure sessions |\n| **Insecure Direct Object References** | Authorization checks, indirect references |",
+          "notes": "| Vulnerability | Mitigation |\n| --- | --- |\n| SQL Injection | Parameterized queries, input validation |\n| XSS | Output encoding, CSP, input validation |\n| CSRF | CSRF tokens, SameSite cookies |\n| Broken Authentication | Strong passwords, MFA, secure sessions |\n| Insecure Direct Object References | Authorization checks, indirect references |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Vulnerability | Mitigation | | --- | --- | | SQL Injection | Parameterized...",
+          "expanded": false
+        },
+        {
+          "id": "n9af76a0d68890e1",
+          "title": "Defense in Depth Checklist",
+          "markdown": "\u2705 Input validation - \u2705 Output encoding - \u2705 Parameterized queries - \u2705 Authentication and authorization - \u2705 Encryption (in transit and at rest) - \u2705 Secure configuration - \u2705 Security headers (CSP, HSTS) - \u2705 Monitoring and...",
+          "notes": "\u2705 Input validation - \u2705 Output encoding - \u2705 Parameterized queries - \u2705 Authentication and authorization - \u2705 Encryption (in transit and at rest) - \u2705 Secure configuration - \u2705 Security headers (CSP, HSTS) - \u2705 Monitoring and...",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nfe577475eb8feeb",
+              "title": "Input validation",
+              "markdown": "- Input validation",
+              "notes": "Input validation",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n3c92fa969656368",
+              "title": "Output encoding",
+              "markdown": "- Output encoding",
+              "notes": "Output encoding",
+              "blurb": "",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n832e10045fbc5cd",
+              "title": "Parameterized queries",
+              "markdown": "- Parameterized queries",
+              "notes": "Parameterized queries",
+              "blurb": "Parameterized queries",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n9ee0a377cb0d582",
+              "title": "Authentication and authorization",
+              "markdown": "- Authentication and authorization",
+              "notes": "Authentication and authorization",
+              "blurb": "Authentication and authorization",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n24b8d37140efc88",
+              "title": "Encryption (in transit and at rest)",
+              "markdown": "- Encryption (in transit and at rest)",
+              "notes": "Encryption (in transit and at rest)",
+              "blurb": "Encryption (in transit and at rest)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n955358df5eff851",
+              "title": "Secure configuration",
+              "markdown": "- Secure configuration",
+              "notes": "Secure configuration",
+              "blurb": "Secure configuration",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb91ad525d8a8c4f",
+              "title": "Security headers (CSP, HSTS)",
+              "markdown": "- Security headers (CSP, HSTS)",
+              "notes": "Security headers (CSP, HSTS)",
+              "blurb": "Security headers (CSP, HSTS)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n17f740240eb1f26",
+              "title": "Monitoring and logging",
+              "markdown": "- Monitoring and logging",
+              "notes": "Monitoring and logging",
+              "blurb": "Monitoring and logging",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "\u2705 Input validation - \u2705 Output encoding - \u2705 Parameterized queries - \u2705...",
+          "expanded": false
+        },
+        {
+          "id": "n884f6ed8f9444bb",
+          "title": "Security Headers",
+          "markdown": "| Header | Purpose |\n| --- | --- |\n| **CSP** | Content Security Policy (XSS prevention) |\n| **HSTS** | HTTP Strict Transport Security |\n| **X-Frame-Options** | Clickjacking prevention |\n| **X-Content-Type-Options** | MIME type sniffing prevention |",
+          "notes": "| Header | Purpose |\n| --- | --- |\n| CSP | Content Security Policy (XSS prevention) |\n| HSTS | HTTP Strict Transport Security |\n| X-Frame-Options | Clickjacking prevention |\n| X-Content-Type-Options | MIME type sniffing prevention |",
+          "kind": "topic",
+          "level": 2,
+          "children": [],
+          "blurb": "| Header | Purpose | | --- | --- | | CSP | Content Security Policy (XSS...",
+          "expanded": false
+        },
+        {
+          "id": "n7f4d6cbccd68c8b",
+          "title": "Key Principles",
+          "markdown": "Defense in depth (multiple layers) - Input validation and output encoding - Least privilege access control - Secure by default configuration - Regular security testing",
+          "notes": "Defense in depth (multiple layers) - Input validation and output encoding - Least privilege access control - Secure by default configuration - Regular security testing",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nfa5b4fccdd60b5c",
+              "title": "Defense in depth (multiple layers)",
+              "markdown": "- Defense in depth (multiple layers)",
+              "notes": "Defense in depth (multiple layers)",
+              "blurb": "Defense in depth (multiple layers)",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n7f1fed4d8755c1a",
+              "title": "Input validation and output encoding",
+              "markdown": "- Input validation and output encoding",
+              "notes": "Input validation and output encoding",
+              "blurb": "Input validation and output encoding",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nbe308a400c323a9",
+              "title": "Least privilege access control",
+              "markdown": "- Least privilege access control",
+              "notes": "Least privilege access control",
+              "blurb": "Least privilege access control",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nbe76661ba1dc5eb",
+              "title": "Secure by default configuration",
+              "markdown": "- Secure by default configuration",
+              "notes": "Secure by default configuration",
+              "blurb": "Secure by default configuration",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "n644255f5a73c663",
+              "title": "Regular security testing",
+              "markdown": "- Regular security testing",
+              "notes": "Regular security testing",
+              "blurb": "Regular security testing",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Defense in depth (multiple layers) - Input validation and output encoding -...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes OWASP Top 10 (2021)"
+    },
+    {
+      "id": "n3edd49054bdbe96",
+      "title": "Misconceptions",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "nb00b020768e631c",
+          "title": "Common Misconceptions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nafb7731daad68e5",
+              "title": "\"OWASP Top 10 covers all security vulnerabilities\"",
+              "markdown": "**Truth:** OWASP Top 10 is a **starting point**, not comprehensive coverage of all vulnerabilities.\n\n**Limitations:**",
+              "notes": "Truth: OWASP Top 10 is a starting point, not comprehensive coverage of all vulnerabilities.\n\nLimitations:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n7cece06bf793689",
+                  "title": "Focuses on most common issues",
+                  "markdown": "- Focuses on most common issues",
+                  "notes": "Focuses on most common issues",
+                  "blurb": "Focuses on most common issues",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nbf7ac03993fe49c",
+                  "title": "Doesn't cover business logic flaws",
+                  "markdown": "- Doesn't cover business logic flaws",
+                  "notes": "Doesn't cover business logic flaws",
+                  "blurb": "Doesn't cover business logic flaws",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n1341789fa566460",
+                  "title": "Misses infrastructure and configuration issues",
+                  "markdown": "- Misses infrastructure and configuration issues",
+                  "notes": "Misses infrastructure and configuration issues",
+                  "blurb": "Misses infrastructure and configuration issues",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ne4a67ab5bcb15ca",
+                  "title": "Doesn't address newer attack vectors",
+                  "markdown": "- Doesn't address newer attack vectors",
+                  "notes": "Doesn't address newer attack vectors",
+                  "blurb": "Doesn't address newer attack vectors",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: OWASP Top 10 is a starting point, not comprehensive coverage of all...",
+              "expanded": false
+            },
+            {
+              "id": "ndb0d9c4656b378f",
+              "title": "\"Input validation alone prevents injection attacks\"",
+              "markdown": "**Truth:** Input validation is **one layer** of defense - defense in depth is required.\n\n**Defense Layers for Injection:**",
+              "notes": "Truth: Input validation is one layer of defense - defense in depth is required.\n\nDefense Layers for Injection:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n0dfead0cbbcc9bf",
+                  "title": "Input validation (whitelist approach preferred)",
+                  "markdown": "- Input validation (whitelist approach preferred)",
+                  "notes": "Input validation (whitelist approach preferred)",
+                  "blurb": "Input validation (whitelist approach preferred)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nbf5a6ce2a258285",
+                  "title": "Parameterized queries (SQL injection)",
+                  "markdown": "- Parameterized queries (SQL injection)",
+                  "notes": "Parameterized queries (SQL injection)",
+                  "blurb": "Parameterized queries (SQL injection)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ncef30f93ef36ceb",
+                  "title": "Output encoding (XSS)",
+                  "markdown": "- Output encoding (XSS)",
+                  "notes": "Output encoding (XSS)",
+                  "blurb": "Output encoding (XSS)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nbec742335882cb9",
+                  "title": "Least privilege database access",
+                  "markdown": "- Least privilege database access",
+                  "notes": "Least privilege database access",
+                  "blurb": "Least privilege database access",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n20cd078ba6b5411",
+                  "title": "WAF (Web Application Firewall) as additional layer",
+                  "markdown": "- WAF (Web Application Firewall) as additional layer",
+                  "notes": "WAF (Web Application Firewall) as additional layer",
+                  "blurb": "WAF (Web Application Firewall) as additional layer",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: Input validation is one layer of defense - defense in depth is...",
+              "expanded": false
+            },
+            {
+              "id": "n9ac892cb352d842",
+              "title": "\"HTTPS means the application is secure\"",
+              "markdown": "**Truth:** HTTPS only **encrypts data in transit** - it doesn't protect against application vulnerabilities.\n\n**What HTTPS Provides:**",
+              "notes": "Truth: HTTPS only encrypts data in transit - it doesn't protect against application vulnerabilities.\n\nWhat HTTPS Provides:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "n793404fc329607e",
+                  "title": "Encryption of data in transit",
+                  "markdown": "- Encryption of data in transit",
+                  "notes": "Encryption of data in transit",
+                  "blurb": "Encryption of data in transit",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n0f6b30d19245815",
+                  "title": "Server authentication",
+                  "markdown": "- Server authentication",
+                  "notes": "Server authentication",
+                  "blurb": "Server authentication",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n9821f7947aba367",
+                  "title": "Protection against man-in-the-middle attacks",
+                  "markdown": "- Protection against man-in-the-middle attacks",
+                  "notes": "Protection against man-in-the-middle attacks",
+                  "blurb": "Protection against man-in-the-middle attacks",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ndd6f228134d8660",
+                  "title": "SQL injection",
+                  "markdown": "- SQL injection",
+                  "notes": "SQL injection",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n556fd959dd760f5",
+                  "title": "XSS attacks",
+                  "markdown": "- XSS attacks",
+                  "notes": "XSS attacks",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "ne0e526ccea72cce",
+                  "title": "Authentication flaws",
+                  "markdown": "- Authentication flaws",
+                  "notes": "Authentication flaws",
+                  "blurb": "Authentication flaws",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n70a0e0c54176f36",
+                  "title": "Authorization bypasses",
+                  "markdown": "- Authorization bypasses",
+                  "notes": "Authorization bypasses",
+                  "blurb": "Authorization bypasses",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n9b8b2f1d5282712",
+                  "title": "Business logic flaws",
+                  "markdown": "- Business logic flaws",
+                  "notes": "Business logic flaws",
+                  "blurb": "Business logic flaws",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: HTTPS only encrypts data in transit - it doesn't protect against...",
+              "expanded": false
+            },
+            {
+              "id": "n1837a76bc324a97",
+              "title": "\"Modern frameworks prevent common vulnerabilities automatically\"",
+              "markdown": "**Truth:** Modern frameworks **reduce risk** but don't eliminate vulnerabilities - secure coding is still required.\n\n**Framework Benefits:**",
+              "notes": "Truth: Modern frameworks reduce risk but don't eliminate vulnerabilities - secure coding is still required.\n\nFramework Benefits:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "na713f11174bc7cb",
+                  "title": "Built-in protections (CSRF tokens, parameterized queries)",
+                  "markdown": "- Built-in protections (CSRF tokens, parameterized queries)",
+                  "notes": "Built-in protections (CSRF tokens, parameterized queries)",
+                  "blurb": "Built-in protections (CSRF tokens, parameterized queries)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd1f8a047dd86743",
+                  "title": "Security best practices built-in",
+                  "markdown": "- Security best practices built-in",
+                  "notes": "Security best practices built-in",
+                  "blurb": "Security best practices built-in",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n9b39804795a6d51",
+                  "title": "Regular security updates",
+                  "markdown": "- Regular security updates",
+                  "notes": "Regular security updates",
+                  "blurb": "Regular security updates",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n2e37f7eabd16238",
+                  "title": "Developers can override security features",
+                  "markdown": "- Developers can override security features",
+                  "notes": "Developers can override security features",
+                  "blurb": "Developers can override security features",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nbdaec9454d9af27",
+                  "title": "Misconfiguration creates vulnerabilities",
+                  "markdown": "- Misconfiguration creates vulnerabilities",
+                  "notes": "Misconfiguration creates vulnerabilities",
+                  "blurb": "Misconfiguration creates vulnerabilities",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n3796e62d63e6cfa",
+                  "title": "Framework vulnerabilities exist",
+                  "markdown": "- Framework vulnerabilities exist",
+                  "notes": "Framework vulnerabilities exist",
+                  "blurb": "Framework vulnerabilities exist",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n6f709dd2229eea9",
+                  "title": "Business logic flaws aren't prevented",
+                  "markdown": "- Business logic flaws aren't prevented",
+                  "notes": "Business logic flaws aren't prevented",
+                  "blurb": "Business logic flaws aren't prevented",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: Modern frameworks reduce risk but don't eliminate vulnerabilities -...",
+              "expanded": false
+            },
+            {
+              "id": "n73dad6979869f60",
+              "title": "\"Low-severity vulnerabilities can be ignored\"",
+              "markdown": "**Truth:** Low-severity vulnerabilities can be **exploited in combination** or in specific contexts to cause significant impact.\n\n**Why Low-Severity Matters:**",
+              "notes": "Truth: Low-severity vulnerabilities can be exploited in combination or in specific contexts to cause significant impact.\n\nWhy Low-Severity Matters:",
+              "kind": "topic",
+              "level": 3,
+              "children": [
+                {
+                  "id": "nde6b70f74d1fd9b",
+                  "title": "Combined attacks (chaining vulnerabilities)",
+                  "markdown": "- Combined attacks (chaining vulnerabilities)",
+                  "notes": "Combined attacks (chaining vulnerabilities)",
+                  "blurb": "Combined attacks (chaining vulnerabilities)",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd8853725e372664",
+                  "title": "Context-dependent severity",
+                  "markdown": "- Context-dependent severity",
+                  "notes": "Context-dependent severity",
+                  "blurb": "Context-dependent severity",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n8dad2fbf538cc9a",
+                  "title": "Information disclosure aiding other attacks",
+                  "markdown": "- Information disclosure aiding other attacks",
+                  "notes": "Information disclosure aiding other attacks",
+                  "blurb": "Information disclosure aiding other attacks",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nf270a717bec600e",
+                  "title": "Compliance requirements",
+                  "markdown": "- Compliance requirements",
+                  "notes": "Compliance requirements",
+                  "blurb": "Compliance requirements",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Truth: Low-severity vulnerabilities can be exploited in combination or in...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes \"OWASP Top 10 covers all security vulnerabilities\"",
+          "expanded": false
+        },
+        {
+          "id": "nf5297ed23412a07",
+          "title": "Key Takeaways",
+          "markdown": "OWASP Top 10 is a Start: Use as baseline, not complete coverage",
+          "notes": "OWASP Top 10 is a Start: Use as baseline, not complete coverage",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "ne238b8f191a72a3",
+              "title": "OWASP Top 10 is a Start: Use as baseline, not complete coverage",
+              "markdown": "- OWASP Top 10 is a Start: Use as baseline, not complete coverage",
+              "notes": "OWASP Top 10 is a Start: Use as baseline, not complete coverage",
+              "blurb": "OWASP Top 10 is a Start: Use as baseline, not complete coverage",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc0ca10af416d554",
+              "title": "Defense in Depth: Multiple layers needed, not just input validation",
+              "markdown": "- Defense in Depth: Multiple layers needed, not just input validation",
+              "notes": "Defense in Depth: Multiple layers needed, not just input validation",
+              "blurb": "Defense in Depth: Multiple layers needed, not just input validation",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "na49ea730267d748",
+              "title": "HTTPS \u2260 Security: Encrypts transit but doesn't protect against app vulnerabilities",
+              "markdown": "- HTTPS \u2260 Security: Encrypts transit but doesn't protect against app vulnerabilities",
+              "notes": "HTTPS \u2260 Security: Encrypts transit but doesn't protect against app vulnerabilities",
+              "blurb": "HTTPS \u2260 Security: Encrypts transit but doesn't protect against app...",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nb44069cb003f877",
+              "title": "Frameworks Help But Don't Eliminate: Secure coding still required",
+              "markdown": "- Frameworks Help But Don't Eliminate: Secure coding still required",
+              "notes": "Frameworks Help But Don't Eliminate: Secure coding still required",
+              "blurb": "Frameworks Help But Don't Eliminate: Secure coding still required",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nd6e192d5b9ffc4a",
+              "title": "Context Matters: Low-severity vulnerabilities can be significant in context",
+              "markdown": "- Context Matters: Low-severity vulnerabilities can be significant in context",
+              "notes": "Context Matters: Low-severity vulnerabilities can be significant in context",
+              "blurb": "Context Matters: Low-severity vulnerabilities can be significant in context",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "OWASP Top 10 is a Start: Use as baseline, not complete coverage",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Common Misconceptions"
+    },
+    {
+      "id": "n9a062463306eca4",
+      "title": "Interview prompts",
+      "markdown": "",
+      "notes": "",
+      "expanded": false,
+      "kind": "group",
+      "children": [
+        {
+          "id": "n234f2dd9891591a",
+          "title": "Fundamentals and process",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n66b28f42edbd920",
+              "title": "How do you use the OWASP Top 10 in real work without treating it as...",
+              "markdown": "**Answer:** I use it as a **shared vocabulary** and **coverage checklist** for training, requirements, and reporting, not as a complete model. In practice I still prioritize **authorization bugs**, **business logic abuse**, and **SSRF in internal services** because they dominate many incidents even when they map awkwardly to a single Top 10 line. For each major feature I ask: **who can call it**, **what object** is touched, **what parser** runs, and **what downstream fetch** happens. Verification combines **SAST/DAST**, **dependency scanning**, **manual authZ tests**, and **metrics** (failed auth spikes, weird egress). I map findings to **CWE** when discussing root cause and trending with engineering.",
+              "notes": "Answer: I use it as a shared vocabulary and coverage checklist for training, requirements, and reporting, not as a complete model. In practice I still prioritize authorization bugs, business logic abuse, and SSRF in internal services because they dominate many incidents even when they map awkwardly to a single Top 10 line. For each major feature I ask: who can call it, what object is touched, what parser runs, and what downstream fetch happens. Verification combines SAST/DAST, dependency scanning, manual authZ tests, and metrics (failed auth spikes, weird egress). I map findings to CWE when discussing root cause and trending with engineering.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: I use it as a shared vocabulary and coverage checklist for training,...",
+              "expanded": false
+            },
+            {
+              "id": "n0d77b179e9e3974",
+              "title": "What is the difference between authentication and authorization, and...",
+              "markdown": "**Answer:** **Authentication** establishes **identity** (login, MFA, session or token issuance). **Authorization** decides **whether that identity may perform this action on this resource**. Confusing them leads to systems that \"know who you are\" but never ask \"are you allowed here?\"-classic **IDOR** and **horizontal privilege escalation**. Defenses must be **server-side** on every sensitive route: resolve the **subject**, load the **resource**, enforce **policy** (RBAC, ABAC, or row-level checks), then execute. Client-side UI hiding of buttons is **not** a control.",
+              "notes": "Answer: Authentication establishes identity (login, MFA, session or token issuance). Authorization decides whether that identity may perform this action on this resource. Confusing them leads to systems that \"know who you are\" but never ask \"are you allowed here?\"-classic IDOR and horizontal privilege escalation. Defenses must be server-side on every sensitive route: resolve the subject, load the resource, enforce policy (RBAC, ABAC, or row-level checks), then execute. Client-side UI hiding of buttons is not a control.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Authentication establishes identity (login, MFA, session or token...",
+              "expanded": false
+            },
+            {
+              "id": "n510f7e8baa9ce2e",
+              "title": "Explain \u201cdefense in depth\u201d for a web application without listing tools...",
+              "markdown": "**Answer:** Defense in depth means **multiple independent layers** fail safely if one breaks: **safe framework defaults** (auto-escaping, CSRF middleware where applicable), **correct authorization** in application code, **parameterized data access**, **TLS**, **hardened configuration** (no debug in prod, least-privilege IAM), **WAF/RASP** as noisy signal-not a substitute for fixes-and **logging** for detection. I describe what each layer **catches** and what it **misses** (e.g., a WAF may miss a novel authZ bug). The story ends with **verification**: tests and alerts that prove controls still work after refactors.",
+              "notes": "Answer: Defense in depth means multiple independent layers fail safely if one breaks: safe framework defaults (auto-escaping, CSRF middleware where applicable), correct authorization in application code, parameterized data access, TLS, hardened configuration (no debug in prod, least-privilege IAM), WAF/RASP as noisy signal-not a substitute for fixes-and logging for detection. I describe what each layer catches and what it misses (e.g., a WAF may miss a novel authZ bug). The story ends with verification: tests and alerts that prove controls still work after refactors.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Defense in depth means multiple independent layers fail safely if...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes How do you use the OWASP Top 10 in real work without treating it as..",
+          "expanded": false
+        },
+        {
+          "id": "n12014751e299ae0",
+          "title": "Access control and design",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n08648450f914829",
+              "title": "What is IDOR and how do you prevent it in a typical REST API?",
+              "markdown": "**Answer:** **Insecure direct object reference** means users can access another user's record by **changing an identifier** (ID in path, query, or body) because the server checks **authentication** but not **ownership or policy**. Prevention: treat every read/write as **object-level authorization**-bind the record to **tenant** and **subject**, use **non-guessable IDs** only as **defense in depth**, never as the sole control, and prefer **opaque** or **scoped** identifiers where it helps operations. Testing uses a **matrix**: two users A and B; A must never retrieve B's resources. Automate regression tests for new endpoints.",
+              "notes": "Answer: Insecure direct object reference means users can access another user's record by changing an identifier (ID in path, query, or body) because the server checks authentication but not ownership or policy. Prevention: treat every read/write as object-level authorization-bind the record to tenant and subject, use non-guessable IDs only as defense in depth, never as the sole control, and prefer opaque or scoped identifiers where it helps operations. Testing uses a matrix: two users A and B; A must never retrieve B's resources. Automate regression tests for new endpoints.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Insecure direct object reference means users can access another...",
+              "expanded": false
+            },
+            {
+              "id": "n4a9db87bf9d8992",
+              "title": "How would you catch \u201cmass assignment\u201d vulnerabilities?",
+              "markdown": "**Answer:** Mass assignment happens when the server binds **client JSON** directly into a model and the client can set **privileged fields** like `role`, `isAdmin`, or `accountBalance`. Prevention: **explicit allowlists** of writable fields per use case (DTOs), separate **admin** APIs with stricter guards, and ignore unknown fields where frameworks support it. In review I look for `bind`, `merge`, `update(req.body)` patterns and ORMs that map **all** columns from user input. Tests include sending **extra fields** and asserting they **do not persist**.",
+              "notes": "Answer: Mass assignment happens when the server binds client JSON directly into a model and the client can set privileged fields like role, isAdmin, or accountBalance. Prevention: explicit allowlists of writable fields per use case (DTOs), separate admin APIs with stricter guards, and ignore unknown fields where frameworks support it. In review I look for bind, merge, update(req.body) patterns and ORMs that map all columns from user input. Tests include sending extra fields and asserting they do not persist.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Mass assignment happens when the server binds client JSON directly...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes What is IDOR and how do you prevent it in a typical REST API?",
+          "expanded": false
+        },
+        {
+          "id": "n5505539ebae0dc8",
+          "title": "Injection and parsers",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n48a27a2e1fd6d37",
+              "title": "How do you prevent SQL injection, including second-order cases?",
+              "markdown": "**Answer:** Use **parameterized queries** or **bound parameters** for all dynamic SQL; with ORMs, avoid string concatenation and **raw** fragments fed by users. **Second-order** SQLi is stored content executed later-I treat **stored data** as untrusted when it becomes part of a query. I verify with **code review**, **SAST**, and **tests** that attempt metacharacters in every text field. **Least-privilege DB roles** limit blast radius if a bug slips through.",
+              "notes": "Answer: Use parameterized queries or bound parameters for all dynamic SQL; with ORMs, avoid string concatenation and raw fragments fed by users. Second-order SQLi is stored content executed later-I treat stored data as untrusted when it becomes part of a query. I verify with code review, SAST, and tests that attempt metacharacters in every text field. Least-privilege DB roles limit blast radius if a bug slips through.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Use parameterized queries or bound parameters for all dynamic SQL;...",
+              "expanded": false
+            },
+            {
+              "id": "n5a01de4fe14f0b4",
+              "title": "What is server-side template injection (SSTI) and how do you avoid it?",
+              "markdown": "**Answer:** SSTI occurs when a template engine **evaluates** user-controlled template syntax, turning **data** into **code execution**. It often appears when apps let users supply **format strings** or **template fragments**. Mitigation: **never** pass user input into template **logic**; use **logicless** rendering; if users need rich text, use a **strict HTML sanitizer** and a safe subset-not arbitrary template features. Detection in review: search for render APIs that accept **user-controlled** template strings.",
+              "notes": "Answer: SSTI occurs when a template engine evaluates user-controlled template syntax, turning data into code execution. It often appears when apps let users supply format strings or template fragments. Mitigation: never pass user input into template logic; use logicless rendering; if users need rich text, use a strict HTML sanitizer and a safe subset-not arbitrary template features. Detection in review: search for render APIs that accept user-controlled template strings.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: SSTI occurs when a template engine evaluates user-controlled...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes How do you prevent SQL injection, including second-order cases?",
+          "expanded": false
+        },
+        {
+          "id": "n5f08e37a111e3f9",
+          "title": "Browser-facing: XSS and CSRF",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nd7e68162daa8f96",
+              "title": "Compare reflected, stored, and DOM-based XSS. What mitigations do you...",
+              "markdown": "**Answer:** **Reflected** XSS echoes input in one response; **stored** persists it for other users; **DOM-based** happens purely in client JS when untrusted data hits **dangerous sinks** (`innerHTML`, `eval`). Priorities: **contextual output encoding** for server-rendered HTML, **CSP** with **nonces** or **hashes** where feasible, **avoid inline script**, use **`textContent`** or framework-safe bindings, and **sanitize** rich HTML only with mature allowlist libraries. **HttpOnly** cookies reduce impact of **session theft** via XSS but **do not** stop XSS itself.",
+              "notes": "Answer: Reflected XSS echoes input in one response; stored persists it for other users; DOM-based happens purely in client JS when untrusted data hits dangerous sinks (innerHTML, eval). Priorities: contextual output encoding for server-rendered HTML, CSP with nonces or hashes where feasible, avoid inline script, use textContent or framework-safe bindings, and sanitize rich HTML only with mature allowlist libraries. HttpOnly cookies reduce impact of session theft via XSS but do not stop XSS itself.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Reflected XSS echoes input in one response; stored persists it for...",
+              "expanded": false
+            },
+            {
+              "id": "nda4c1d74cb2a428",
+              "title": "When is CSRF a risk for your API, and what defenses apply?",
+              "markdown": "**Answer:** Classic CSRF targets **browser cookie sessions**: the browser **automatically** sends cookies, so a malicious site can POST on the user's behalf. Defenses: **SameSite** cookies (`Lax`/`Strict` by flow), **CSRF tokens** tied to session for state-changing requests, and **Origin/Referer** checks as backup. For **SPAs** using **Authorization headers** and **no cookie** session, ambient CSRF is reduced-but **CORS** must not **reflect** arbitrary origins with **credentials**, and **XSS** can still steal tokens from storage. I match the defense to the **session model** rather than quoting CSRF tokens where they do not apply.",
+              "notes": "Answer: Classic CSRF targets browser cookie sessions: the browser automatically sends cookies, so a malicious site can POST on the user's behalf. Defenses: SameSite cookies (Lax/Strict by flow), CSRF tokens tied to session for state-changing requests, and Origin/Referer checks as backup. For SPAs using Authorization headers and no cookie session, ambient CSRF is reduced-but CORS must not reflect arbitrary origins with credentials, and XSS can still steal tokens from storage. I match the defense to the session model rather than quoting CSRF tokens where they do not apply.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Classic CSRF targets browser cookie sessions: the browser...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Compare reflected, stored, and DOM-based XSS. What mitigations do you",
+          "expanded": false
+        },
+        {
+          "id": "nfd7b7105ff40be1",
+          "title": "SSRF and outbound trust",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n09f679d2bdc345d",
+              "title": "Explain SSRF as if to a backend engineer. What controls actually work?",
+              "markdown": "**Answer:** **Server-side request forgery** tricks a **trusted server** into issuing HTTP (or other) requests to **internal** addresses-metadata, admin panels, Redis-using **higher network trust** than an external attacker has. Effective controls: **allowlist** destinations and schemes, **block** or **policy-deny** link-local and cloud metadata ranges, **disable** or **re-validate** redirects, run fetchers in a **restricted egress** path, and **segment** networks so a compromised app cannot reach everything. I also **log** outbound URLs (carefully with PII) and alert on anomalies. Parser differentials between **URL parser** and **HTTP client** are a common bypass theme-tests should include **encoded** hosts and **IPv6** forms.",
+              "notes": "Answer: Server-side request forgery tricks a trusted server into issuing HTTP (or other) requests to internal addresses-metadata, admin panels, Redis-using higher network trust than an external attacker has. Effective controls: allowlist destinations and schemes, block or policy-deny link-local and cloud metadata ranges, disable or re-validate redirects, run fetchers in a restricted egress path, and segment networks so a compromised app cannot reach everything. I also log outbound URLs (carefully with PII) and alert on anomalies. Parser differentials between URL parser and HTTP client are a common bypass theme-tests should include encoded hosts and IPv6 forms.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Server-side request forgery tricks a trusted server into issuing...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Explain SSRF as if to a backend engineer. What controls actually work",
+          "expanded": false
+        },
+        {
+          "id": "nae6bead7eba1674",
+          "title": "Deserialization and integrity",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nf016cac14ca3c5b",
+              "title": "Why is unsafe deserialization different from \u201cparsing JSON,\u201d and how...",
+              "markdown": "**Answer:** Typical **JSON** to **plain DTOs** maps data into **known fields** without executing **object graphs**. **Unsafe deserialization** (Java serialization, .NET binary formatters, **Python pickle**) instantiates **types** and **gadget chains** that run **code** during **readObject**-style paths. Mitigation: prefer **schema-bound** formats, **reject** polymorphic type tags from clients, ban **pickle** on untrusted input, and upgrade libraries with **known gadget** issues. For JSON, risks shift to **parser bugs** and **logic** (prototype pollution in JS merges)-still serious, but a different interview thread.",
+              "notes": "Answer: Typical JSON to plain DTOs maps data into known fields without executing object graphs. Unsafe deserialization (Java serialization, .NET binary formatters, Python pickle) instantiates types and gadget chains that run code during readObject-style paths. Mitigation: prefer schema-bound formats, reject polymorphic type tags from clients, ban pickle on untrusted input, and upgrade libraries with known gadget issues. For JSON, risks shift to parser bugs and logic (prototype pollution in JS merges)-still serious, but a different interview thread.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Typical JSON to plain DTOs maps data into known fields without...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Why is unsafe deserialization different from \u201cparsing JSON,\u201d and how.",
+          "expanded": false
+        },
+        {
+          "id": "na02ba1a8b5002bf",
+          "title": "Authentication and sessions",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "nfc20d91cdab4c6f",
+              "title": "How do you defend against session fixation and session hijacking?",
+              "markdown": "**Answer:** **Session fixation:** attacker sets a victim's session ID before login; if the **same ID** persists across authentication, the attacker inherits the session. Fix: **regenerate session ID** on successful login and **invalidate** old IDs. **Hijacking:** attacker steals a session cookie or token-mitigate with **TLS**, **Secure** and **HttpOnly** cookies, **short session lifetimes**, **rotation** on privilege changes, **re-auth** for sensitive actions, and **MFA**. IP binding is **brittle** on mobile; I mention it cautiously. Detection: **concurrent** session anomalies and **logout everywhere** features for high-risk accounts.",
+              "notes": "Answer: Session fixation: attacker sets a victim's session ID before login; if the same ID persists across authentication, the attacker inherits the session. Fix: regenerate session ID on successful login and invalidate old IDs. Hijacking: attacker steals a session cookie or token-mitigate with TLS, Secure and HttpOnly cookies, short session lifetimes, rotation on privilege changes, re-auth for sensitive actions, and MFA. IP binding is brittle on mobile; I mention it cautiously. Detection: concurrent session anomalies and logout everywhere features for high-risk accounts.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Session fixation: attacker sets a victim's session ID before login;...",
+              "expanded": false
+            },
+            {
+              "id": "n08fb6d31cd8d9c3",
+              "title": "What are common JWT mistakes in web APIs?",
+              "markdown": "**Answer:** Trusting **unsigned** or **alg-none** tokens, ignoring **`aud`** and **`iss`**, accepting **expired** tokens without clock skew policy, putting **sensitive data** in **payload** (base64 is not encryption), using **long-lived** JWTs without **revocation** story, and **trusting client claims** without server-side authorization. Mitigation: validate **signature** and **standard claims**, short **TTL**, **rotation** for keys, **opaque tokens** when you need instant revocation, and always **authorize** the **operation** after authentication.",
+              "notes": "Answer: Trusting unsigned or alg-none tokens, ignoring aud and iss, accepting expired tokens without clock skew policy, putting sensitive data in payload (base64 is not encryption), using long-lived JWTs without revocation story, and trusting client claims without server-side authorization. Mitigation: validate signature and standard claims, short TTL, rotation for keys, opaque tokens when you need instant revocation, and always authorize the operation after authentication.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Trusting unsigned or alg-none tokens, ignoring aud and iss,...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes How do you defend against session fixation and session hijacking?",
+          "expanded": false
+        },
+        {
+          "id": "n598a7d35f739ff1",
+          "title": "Configuration, crypto, and components",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n99ebf35a17c9742",
+              "title": "Give examples of \u201csecurity misconfiguration\u201d you look for in...",
+              "markdown": "**Answer:** **Debug** stacks exposed, **default credentials**, **directory listing** on, **verbose errors** to users, **open** admin consoles, **wildcard CORS** with **credentials**, missing **security headers** (CSP, HSTS where HTTPS), **TLS** off or weak ciphers, **overly permissive** IAM on buckets, and **sample apps** left deployed. I fix with **hardened baselines**, **IaC checks**, **staging parity**, and **continuous config scanning**. Verification includes **headers** checks and **authenticated** crawl of admin paths.",
+              "notes": "Answer: Debug stacks exposed, default credentials, directory listing on, verbose errors to users, open admin consoles, wildcard CORS with credentials, missing security headers (CSP, HSTS where HTTPS), TLS off or weak ciphers, overly permissive IAM on buckets, and sample apps left deployed. I fix with hardened baselines, IaC checks, staging parity, and continuous config scanning. Verification includes headers checks and authenticated crawl of admin paths.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Debug stacks exposed, default credentials, directory listing on,...",
+              "expanded": false
+            },
+            {
+              "id": "n70f0efb3224b784",
+              "title": "What do \u201ccryptographic failures\u201d look like in web applications...",
+              "markdown": "**Answer:** Beyond \"no TLS,\" I see **passwords** stored with fast hashes or reversible encryption, **secrets** in repos and front-end bundles, **static API keys** in mobile apps without **rotation**, **weak randomness** for tokens, and **PII** in URLs or logs. Mitigation: **Argon2id** or **bcrypt** for passwords, **KMS**-backed keys, **secrets managers**, **TLS everywhere**, and **tokenization** or **field-level encryption** where data classification demands it. I tie controls to **data classification** so tradeoffs sound business-aware.",
+              "notes": "Answer: Beyond \"no TLS,\" I see passwords stored with fast hashes or reversible encryption, secrets in repos and front-end bundles, static API keys in mobile apps without rotation, weak randomness for tokens, and PII in URLs or logs. Mitigation: Argon2id or bcrypt for passwords, KMS-backed keys, secrets managers, TLS everywhere, and tokenization or field-level encryption where data classification demands it. I tie controls to data classification so tradeoffs sound business-aware.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Beyond \"no TLS,\" I see passwords stored with fast hashes or...",
+              "expanded": false
+            },
+            {
+              "id": "n26285751e91dd8c",
+              "title": "How do you prioritize vulnerable dependencies when scanners flood you...",
+              "markdown": "**Answer:** I prioritize by **reachability** (is the package on the **attack path**?), **exploitability** in our deployment (internet-facing vs batch), **severity**, and **fix cost**. I use **SBOM** alignment, **pinning** with a **regular upgrade** cadence, and **temporary compensating** controls only when needed (WAF rules, feature flags)-never as a permanent substitute for upgrading. Communication to engineering includes **one** clear upgrade or isolate decision per item, not raw dump.",
+              "notes": "Answer: I prioritize by reachability (is the package on the attack path?), exploitability in our deployment (internet-facing vs batch), severity, and fix cost. I use SBOM alignment, pinning with a regular upgrade cadence, and temporary compensating controls only when needed (WAF rules, feature flags)-never as a permanent substitute for upgrading. Communication to engineering includes one clear upgrade or isolate decision per item, not raw dump.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: I prioritize by reachability (is the package on the attack path?),...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Give examples of \u201csecurity misconfiguration\u201d you look for in...",
+          "expanded": false
+        },
+        {
+          "id": "n50d106f9fcc0995",
+          "title": "Testing, logging, and leadership",
+          "markdown": "",
+          "notes": "",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n7d03763eb55de60",
+              "title": "Compare SAST, DAST, and manual testing for web apps\u2014what does each miss?",
+              "markdown": "**Answer:** **SAST** finds **pattern** issues early (SQLi strings, weak crypto) but produces **false positives** and misses **runtime authZ** and **business logic**. **DAST** exercises **running** apps and finds **deployment** issues but struggles with **deep workflows** and **auth**. **Manual** review and **pentest** find **logic** and **chain** exploits. I use **all** in a **risk-based** mix: SAST in CI, DAST on staging, **manual** focus on **money** and **admin** paths. **IAST** can help in test envs with agent support.",
+              "notes": "Answer: SAST finds pattern issues early (SQLi strings, weak crypto) but produces false positives and misses runtime authZ and business logic. DAST exercises running apps and finds deployment issues but struggles with deep workflows and auth. Manual review and pentest find logic and chain exploits. I use all in a risk-based mix: SAST in CI, DAST on staging, manual focus on money and admin paths. IAST can help in test envs with agent support.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: SAST finds pattern issues early (SQLi strings, weak crypto) but...",
+              "expanded": false
+            },
+            {
+              "id": "n515c9ae2770d757",
+              "title": "What security events would you log for a typical authenticated web...",
+              "markdown": "**Answer:** **Failed and successful logins**, **MFA** events, **password reset** requests, **session** creation and termination, **authorization denials** on sensitive routes, **admin** and **billing** changes, **bulk export** or **download** actions, and **SSRF-prone** fetches with **sanitized** destination metadata. Logs should be **structured**, include **request/correlation IDs**, avoid **secrets** and **full tokens**, and feed **alerts** on thresholds. I mention **privacy** and **retention** because interviewers often probe GDPR-style constraints.",
+              "notes": "Answer: Failed and successful logins, MFA events, password reset requests, session creation and termination, authorization denials on sensitive routes, admin and billing changes, bulk export or download actions, and SSRF-prone fetches with sanitized destination metadata. Logs should be structured, include request/correlation IDs, avoid secrets and full tokens, and feed alerts on thresholds. I mention privacy and retention because interviewers often probe GDPR-style constraints.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Failed and successful logins, MFA events, password reset requests,...",
+              "expanded": false
+            },
+            {
+              "id": "nb2ced04ca898023",
+              "title": "Walk me through how you would run a security review before a major...",
+              "markdown": "**Answer:** I start with **threat model** light: assets, actors, trust boundaries, and data flows-especially **new** outbound calls and **parsers**. I review **authZ** on new endpoints with an **IDOR matrix**, check **session/token** handling changes, scan **dependencies**, run **SAST**, and schedule **DAST** on staging. I read **diffs** for **SQL/string concat**, **deserialization**, **file upload**, and **redirect** parameters. Exit criteria: **no critical** open issues, **documented** accepted risks with owners, and **tests** or **monitors** for fragile areas.",
+              "notes": "Answer: I start with threat model light: assets, actors, trust boundaries, and data flows-especially new outbound calls and parsers. I review authZ on new endpoints with an IDOR matrix, check session/token handling changes, scan dependencies, run SAST, and schedule DAST on staging. I read diffs for SQL/string concat, deserialization, file upload, and redirect parameters. Exit criteria: no critical open issues, documented accepted risks with owners, and tests or monitors for fragile areas.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: I start with threat model light: assets, actors, trust boundaries,...",
+              "expanded": false
+            },
+            {
+              "id": "nef06872a5454978",
+              "title": "How do you explain the tradeoff between strict CSP and product...",
+              "markdown": "**Answer:** Strict **CSP** shrinks XSS blast radius but can **break** analytics, support widgets, and payment scripts if those vendors require **inline** script or **wide** `script-src`. I discuss **nonces** for necessary inline, **subresource integrity** where static, **vendor** contracts for **allowlist** maintenance, and **fallback** reporting-only CSP during migration. The credible answer admits **business** impact and proposes a **phased** rollout with **violation reports** monitored before **enforce** mode.",
+              "notes": "Answer: Strict CSP shrinks XSS blast radius but can break analytics, support widgets, and payment scripts if those vendors require inline script or wide script-src. I discuss nonces for necessary inline, subresource integrity where static, vendor contracts for allowlist maintenance, and fallback reporting-only CSP during migration. The credible answer admits business impact and proposes a phased rollout with violation reports monitored before enforce mode.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "blurb": "Answer: Strict CSP shrinks XSS blast radius but can break analytics, support...",
+              "expanded": false
+            }
+          ],
+          "blurb": "Includes Compare SAST, DAST, and manual testing for web apps\u2014what does each mi",
+          "expanded": false
+        },
+        {
+          "id": "n95407900bcdf2ff",
+          "title": "Depth: Interview follow-ups \u2014 Web Application Security Vulnerabilities",
+          "markdown": "**Authoritative references:** [OWASP Top 10](https://owasp.org/www-project-top-ten/) (verify current year list); mapping to [CWE Top 25](https://cwe.mitre.org/top25/) for prioritization discussions.\n\n**Follow-ups:**",
+          "notes": "Authoritative references: OWASP Top 10 (verify current year list); mapping to CWE Top 25 for prioritization discussions.\n\nFollow-ups:",
+          "kind": "topic",
+          "level": 2,
+          "children": [
+            {
+              "id": "n78236723c646afa",
+              "title": "Top 10 vs real org risk - business logic and authZ often dominate in practice.",
+              "markdown": "- Top 10 vs real org risk - business logic and authZ often dominate in practice.",
+              "notes": "Top 10 vs real org risk - business logic and authZ often dominate in practice.",
+              "blurb": "Top 10 vs real org risk - business logic and authZ often dominate in practice.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nea12c7ec4ea6ac1",
+              "title": "Defense in depth: WAF limitations vs code fixes.",
+              "markdown": "- Defense in depth: WAF limitations vs code fixes.",
+              "notes": "Defense in depth: WAF limitations vs code fixes.",
+              "blurb": "Defense in depth: WAF limitations vs code fixes.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            },
+            {
+              "id": "nc8be817696c13eb",
+              "title": "SSRF/XXE in APIs and parsers-how you prioritize and test URL policies.",
+              "markdown": "- SSRF/XXE in APIs and parsers-how you prioritize and test URL policies.",
+              "notes": "SSRF/XXE in APIs and parsers-how you prioritize and test URL policies.",
+              "blurb": "SSRF/XXE in APIs and parsers-how you prioritize and test URL policies.",
+              "kind": "topic",
+              "level": 3,
+              "children": [],
+              "expanded": false
+            }
+          ],
+          "blurb": "Authoritative references: OWASP Top 10 (verify current year list); mapping...",
+          "expanded": false
+        }
+      ],
+      "blurb": "Includes Fundamentals and process"
+    }
+  ],
+  "topicId": "web-application-security-vulnerabilities",
+  "name": "Web Application Security Vulnerabilities",
+  "structure": "logic-right",
+  "blurb": "Product security interviews expect you to move fluently between OWASP-style..."
+}

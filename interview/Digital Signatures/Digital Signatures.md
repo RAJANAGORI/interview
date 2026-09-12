@@ -7,3 +7,5 @@
 [**Critical Clarification: Digital Signatures Misconceptions**](Critical%20Clarification%20Digital%20Signatures.md)
 
 [**Digital Signatures - Quick Reference Guide**](Digital%20Signature%20-%20Quick%20Reference%20Guide.md)
+
+[**Digital Signatures - Mind Map**](Digital%20Signatures%20-%20Mind%20Map.md)

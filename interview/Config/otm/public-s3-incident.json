@@ -1,0 +1,130 @@
+{
+  "otmVersion": "0.2.0",
+  "id": "public-s3-incident",
+  "title": "Public object storage exposure",
+  "blurb": "Customer data bucket left public. Good for IR + threat-model retrofit interviews.",
+  "difficulty": "beginner",
+  "minutes": 10,
+  "relatedTopicIds": ["threat-modeling", "production-security-incident-response", "cloud-security-architecture"],
+  "project": {
+    "name": "Customer document storage",
+    "id": "docs-storage-v1",
+    "description": "SaaS feature that stores customer-uploaded documents in cloud object storage."
+  },
+  "trustZones": [
+    { "id": "tz-internet", "name": "Internet", "risk": "high" },
+    { "id": "tz-app", "name": "App tier", "risk": "medium" },
+    { "id": "tz-storage", "name": "Object storage account", "risk": "high" }
+  ],
+  "components": [
+    { "id": "comp-user", "name": "Customer", "type": "actor", "trustZone": "tz-internet" },
+    { "id": "comp-attacker", "name": "Unauthenticated scanner", "type": "actor", "trustZone": "tz-internet" },
+    { "id": "comp-app", "name": "Docs API", "type": "process", "trustZone": "tz-app" },
+    { "id": "comp-bucket", "name": "Customer docs bucket", "type": "data-store", "trustZone": "tz-storage" }
+  ],
+  "assets": [
+    { "id": "asset-docs", "name": "Customer documents", "type": "data", "sensitivity": "critical", "storedIn": ["comp-bucket"] },
+    { "id": "asset-urls", "name": "Object URLs / keys", "type": "data", "sensitivity": "high", "storedIn": ["comp-app", "comp-bucket"] }
+  ],
+  "dataflows": [
+    {
+      "id": "flow-upload",
+      "name": "Authenticated upload",
+      "source": "comp-user",
+      "destination": "comp-bucket",
+      "assets": ["asset-docs"],
+      "crosses": ["tz-internet", "tz-app", "tz-storage"],
+      "protocol": "HTTPS"
+    },
+    {
+      "id": "flow-public-read",
+      "name": "Public read (misconfiguration)",
+      "source": "comp-attacker",
+      "destination": "comp-bucket",
+      "assets": ["asset-docs"],
+      "crosses": ["tz-internet", "tz-storage"],
+      "protocol": "HTTPS"
+    },
+    {
+      "id": "flow-app-read",
+      "name": "App generates download URL",
+      "source": "comp-app",
+      "destination": "comp-bucket",
+      "assets": ["asset-urls", "asset-docs"],
+      "crosses": ["tz-app", "tz-storage"],
+      "protocol": "HTTPS"
+    }
+  ],
+  "threats": [
+    {
+      "id": "threat-public",
+      "name": "Public bucket listing and download",
+      "description": "Bucket ACL/policy allows anonymous read; scanners enumerate and exfiltrate documents.",
+      "categories": ["Information Disclosure"],
+      "cwes": ["CWE-552"],
+      "targets": ["comp-bucket", "flow-public-read"],
+      "risk": { "likelihood": 70, "impact": 95 }
+    },
+    {
+      "id": "threat-guessable",
+      "name": "Guessable object keys",
+      "description": "Sequential or predictable keys enable enumeration even with listing disabled.",
+      "categories": ["Information Disclosure"],
+      "cwes": ["CWE-330"],
+      "targets": ["comp-bucket", "asset-urls"],
+      "risk": { "likelihood": 45, "impact": 80 }
+    },
+    {
+      "id": "threat-url-leak",
+      "name": "Long-lived signed URL leakage",
+      "description": "Presigned URLs with long TTL leak via logs, Referer, or support tickets.",
+      "categories": ["Information Disclosure"],
+      "cwes": ["CWE-598"],
+      "targets": ["comp-app", "flow-app-read"],
+      "risk": { "likelihood": 40, "impact": 70 }
+    }
+  ],
+  "mitigations": [
+    {
+      "id": "mit-block-public",
+      "name": "Block public access",
+      "description": "Account-level block public access; private bucket; deny anonymous principals.",
+      "riskReduction": 90,
+      "threats": ["threat-public"]
+    },
+    {
+      "id": "mit-keys",
+      "name": "Unpredictable object keys",
+      "description": "Random object keys; no directory listing; authorize downloads through the app.",
+      "riskReduction": 70,
+      "threats": ["threat-guessable"]
+    },
+    {
+      "id": "mit-presign",
+      "name": "Short-lived presigned URLs",
+      "description": "Short TTL, minimal scope, strip Referer where possible, avoid logging full URLs.",
+      "riskReduction": 65,
+      "threats": ["threat-url-leak"]
+    }
+  ],
+  "prompts": [
+    {
+      "id": "p-first-hour",
+      "title": "You just found flow-public-read in production for two weeks. What is your first hour?",
+      "seconds": 120,
+      "answerMarkdown": "Contain: remove public access / enable block public access. Preserve evidence: access logs, policy versions, config history. Scope: which prefixes, which tenants, whether objects were listed or downloaded. Notify security IC / legal if customer data may be exposed. Do not start with a long redesign; contain first, then investigate."
+    },
+    {
+      "id": "p-model-gap",
+      "title": "What was missing from the original threat model that allowed this?",
+      "seconds": 90,
+      "answerMarkdown": "Likely missing: anonymous internet actor, public-read dataflow, asset sensitivity on the bucket, and a control requiring private ACLs plus CI checks. Good answer names the absent element in OTM terms (actor, flow, threat, mitigation) and the verification that would have caught it (policy-as-code, CSPM)."
+    },
+    {
+      "id": "p-verify",
+      "title": "After containment, how do you verify customers are safe and the class of bug will not return?",
+      "seconds": 120,
+      "answerMarkdown": "Review access logs for unauthorized GETs; rotate any exposed documents if needed; customer notification per legal. Prevention: org-level block public access, IaC policy deny, continuous scanning, and a design rule that downloads go through authenticated app URLs only. Track as a recurring control, not a one-off ticket."
+    }
+  ]
+}

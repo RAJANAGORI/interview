@@ -9,3 +9,5 @@
 [**Session Fixation and Session Hijacking - Quick Reference**](Session%20Fixation%20and%20Session%20Hijacking%20-%20Quick%20Ref.md)
 
 [**Session Fixation and Session Hijacking - VAPT Methodology**](Session%20Fixation%20and%20Session%20Hijacking%20-%20VAPT%20Methodology.md)
+
+[**Session Fixation and Session Hijacking - Mind Map**](Session%20Fixation%20and%20Session%20Hijacking%20-%20Mind%20Map.md)

