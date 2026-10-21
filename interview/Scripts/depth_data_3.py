@@ -39,7 +39,7 @@ SUPP = {
 **Cross-read:** Zero Trust, TLS, IAM, Container Security.""",
     "third-party-integration-security": """## Depth: Interview follow-ups — Third-Party Integration Security
 
-**Authoritative references:** Vendor risk frameworks (e.g. [SOC 2](https://www.aicpa.org/soc) reports—high level); [OWASP API Security Top 10](https://owasp.org/www-project-api-security/) for API integrations.
+**Authoritative references:** Vendor risk frameworks (e.g. [SOC 2](https://www.aicpa.org/soc) reports—high level); [OWASP API Security Top 10](https://owasp.org/projects/api-security-project) for API integrations.
 
 **Follow-ups:**
 - **Webhook signing** — replay, timestamp, idempotency.

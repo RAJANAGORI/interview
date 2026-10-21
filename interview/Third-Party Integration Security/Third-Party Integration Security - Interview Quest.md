@@ -134,7 +134,7 @@
 
 ## Depth: Interview follow-ups — Third-Party Integration Security
 
-**Authoritative references:** Vendor assurance frameworks such as [SOC 2](https://www.aicpa.org/soc) (scope and CUECs); [OWASP API Security Top 10](https://owasp.org/www-project-api-security/) for integration endpoints; OAuth 2.1 security best current practice (PKCE, redirect URI discipline); NIST SSDF themes for supply-chain controls.
+**Authoritative references:** Vendor assurance frameworks such as [SOC 2](https://www.aicpa.org/soc) (scope and CUECs); [OWASP API Security Top 10](https://owasp.org/projects/api-security-project) for integration endpoints; OAuth 2.1 security best current practice (PKCE, redirect URI discipline); NIST SSDF themes for supply-chain controls.
 
 **Follow-ups interviewers like:**
 

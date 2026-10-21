@@ -126,7 +126,7 @@
 
 ## Depth: Interview follow-ups — Rate Limiting and Abuse Prevention
 
-**Authoritative references:** [OWASP Automated Threats](https://owasp.org/www-project-automated-threats-to-web-applications/); [OWASP API Security](https://owasp.org/www-project-api-security/) (API4:2023 Unlimited Resource Consumption); [RFC 6585](https://www.rfc-editor.org/rfc/rfc6585) (429 and Retry-After).
+**Authoritative references:** [OWASP Automated Threats](https://owasp.org/www-project-automated-threats-to-web-applications/); [OWASP API Security](https://owasp.org/projects/api-security-project) (API4:2023 Unlimited Resource Consumption); [RFC 6585](https://www.rfc-editor.org/rfc/rfc6585) (429 and Retry-After).
 
 **Follow-ups:**
 

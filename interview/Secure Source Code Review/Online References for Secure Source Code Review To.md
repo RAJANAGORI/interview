@@ -534,7 +534,7 @@ This document provides authoritative online references for all topics covered in
 
 ### **32. OWASP API Security Top 10**
 
-**URL:** [https://owasp.org/www-project-api-security/](https://owasp.org/www-project-api-security/)
+**URL:** [https://owasp.org/projects/api-security-project](https://owasp.org/projects/api-security-project)
 
 **Topics Covered:**
 

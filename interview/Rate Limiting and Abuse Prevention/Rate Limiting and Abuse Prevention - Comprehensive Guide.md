@@ -317,4 +317,4 @@ Publish limits, header meanings, and **how to request** higher quotas. Client SD
 
 See also in this repo: **DDoS and Resilience**, **GraphQL and API Security**, **OAuth/API tokens**, **Business Logic Abuse**, **Security Observability**, **Third-Party Integration Security**.
 
-**External references:** [OWASP API Security Top 10](https://owasp.org/www-project-api-security/) (resource consumption); [OWASP Automated Threats](https://owasp.org/www-project-automated-threats-to-web-applications/); [RFC 6585](https://www.rfc-editor.org/rfc/rfc6585) (Additional HTTP Status Codes).
+**External references:** [OWASP API Security Top 10](https://owasp.org/projects/api-security-project) (resource consumption); [OWASP Automated Threats](https://owasp.org/www-project-automated-threats-to-web-applications/); [RFC 6585](https://www.rfc-editor.org/rfc/rfc6585) (Additional HTTP Status Codes).

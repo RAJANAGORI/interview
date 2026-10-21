@@ -111,7 +111,7 @@ SUPP = {
 **Cross-read:** Proactive Assessment, Risk Metrics, Agile Compliance.""",
     "penetration-testing-and-security-assessment": """## Depth: Interview follow-ups — Penetration Testing vs Security Assessment
 
-**Authoritative references:** [PTES](http://www.pentest-standard.org/) (methodology overview); NIST [SP 800-115](https://csrc.nist.gov/publications/detail/sp/800-115/final) (technical security testing—verify relevance); OWASP Testing Guide (project).
+**Authoritative references:** [PTES](https://pentest-standard.readthedocs.io/en/latest/) (methodology overview); NIST [SP 800-115](https://csrc.nist.gov/publications/detail/sp/800-115/final) (technical security testing—verify relevance); OWASP Testing Guide (project).
 
 **Follow-ups:**
 - **Pentest is a time-boxed attack simulation; assessment is broader** (design, config, process).

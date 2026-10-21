@@ -3,7 +3,7 @@
 SUPP = {
     "graphql-and-api-security": """## Depth: Interview follow-ups — GraphQL and API Security
 
-**Authoritative references:** [OWASP API Security Top 10](https://owasp.org/www-project-api-security/); [GraphQL OWASP Cheat Sheet (draft/community)](https://cheatsheetseries.owasp.org/) — search “GraphQL” on OWASP cheat sheet index for latest; [CWE-400](https://cwe.mitre.org/data/definitions/400.html) (resource exhaustion).
+**Authoritative references:** [OWASP API Security Top 10](https://owasp.org/projects/api-security-project); [GraphQL OWASP Cheat Sheet (draft/community)](https://cheatsheetseries.owasp.org/) — search “GraphQL” on OWASP cheat sheet index for latest; [CWE-400](https://cwe.mitre.org/data/definitions/400.html) (resource exhaustion).
 
 **Follow-ups:**
 - **Field-level authZ:** How do you prevent **BOLA/IDOR** when nested resolvers fetch related objects?
@@ -27,7 +27,7 @@ SUPP = {
 **Cross-read:** TLS, Zero Trust, Secure Microservices Communication, Container Security.""",
     "rate-limiting-and-abuse-prevention": """## Depth: Interview follow-ups — Rate Limiting and Abuse Prevention
 
-**Authoritative references:** [OWASP Automated Threats](https://owasp.org/www-project-automated-threats-to-web-applications/); [OWASP API Security](https://owasp.org/www-project-api-security/) (API4:2023 Unlimited Resource Consumption); [NIST SP 800-207](https://csrc.nist.gov/publications/detail/sp/800-207/final) (zero trust continuous validation—related to per-request decisions).
+**Authoritative references:** [OWASP Automated Threats](https://owasp.org/www-project-automated-threats-to-web-applications/); [OWASP API Security](https://owasp.org/projects/api-security-project) (API4:2023 Unlimited Resource Consumption); [NIST SP 800-207](https://csrc.nist.gov/publications/detail/sp/800-207/final) (zero trust continuous validation—related to per-request decisions).
 
 **Follow-ups:**
 - **GraphQL/API cost:** Limiting **expensive** operations vs naive per-IP HTTP limits.

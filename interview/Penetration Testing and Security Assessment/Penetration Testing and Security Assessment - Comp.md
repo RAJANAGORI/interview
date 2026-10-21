@@ -285,7 +285,7 @@ For regulated customers, maintain **evidence of scope, dates, tester qualificati
 
 ## Further reading (authoritative sources)
 
-- PTES: [http://www.pentest-standard.org/](http://www.pentest-standard.org/) — methodology overview.
+- PTES: [https://pentest-standard.readthedocs.io/en/latest/](https://pentest-standard.readthedocs.io/en/latest/) — methodology overview.
 - NIST SP 800-115: [https://csrc.nist.gov/publications/detail/sp/800-115/final](https://csrc.nist.gov/publications/detail/sp/800-115/final) — organizational technical security testing; map to your program and compliance story.
 - OWASP Testing Guide (WSTG): [https://owasp.org/www-project-web-security-testing-guide/](https://owasp.org/www-project-web-security-testing-guide/) — detailed technical test cases.
 

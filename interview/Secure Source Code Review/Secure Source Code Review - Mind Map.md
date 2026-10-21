@@ -1307,7 +1307,7 @@ mindmap
 ## Additional Specialized Resources
 
 ### OWASP API Security Top 10
-- URL: https://owasp.org/www-project-api-security/
+- URL: https://owasp.org/projects/api-security-project
 - API authentication
 - API authorization
 - API input validation

@@ -142,7 +142,7 @@
 
 ## Authoritative references
 
-- PTES — [Penetration Testing Execution Standard](http://www.pentest-standard.org/)
+- PTES — [Penetration Testing Execution Standard](https://pentest-standard.readthedocs.io/en/latest/)
 - NIST SP 800-115 — [Technical Guide to Information Security Testing and Assessment](https://csrc.nist.gov/publications/detail/sp/800-115/final)
 - OWASP — [Web Security Testing Guide](https://owasp.org/www-project-web-security-testing-guide/)
 
