@@ -6,14 +6,6 @@ const state = {
   view: "topics",
   paths: [],
   topicMeta: {},
-  practiceIndex: [],
-  practiceUi: null,
-  scenarioCatalog: [],
-  scenarioUi: null,
-  otmIndex: null,
-  otmUi: null,
-  diagnosticConfig: null,
-  diagnosticUi: null,
   searchDocs: null,
   searchLoading: null,
   contentHitTopicIds: null,
@@ -37,28 +29,13 @@ const els = {
   masteryBar: document.getElementById("masteryBar"),
   confidenceSelect: document.getElementById("confidenceSelect"),
   markReviewed: document.getElementById("markReviewed"),
-  practiceTopicBtn: document.getElementById("practiceTopicBtn"),
-  scenariosTopicBtn: document.getElementById("scenariosTopicBtn"),
-  otmTopicBtn: document.getElementById("otmTopicBtn"),
   lastReviewedLabel: document.getElementById("lastReviewedLabel"),
 
   completionCheckbox: document.getElementById("completionCheckbox"),
 
   navTopics: document.getElementById("navTopics"),
-  navStart: document.getElementById("navStart"),
-  navPractice: document.getElementById("navPractice"),
-  navScenarios: document.getElementById("navScenarios"),
-  navOtm: document.getElementById("navOtm"),
   navDashboard: document.getElementById("navDashboard"),
   topicsView: document.getElementById("topicsView"),
-  diagnosticView: document.getElementById("diagnosticView"),
-  diagnosticRoot: document.getElementById("diagnosticRoot"),
-  practiceView: document.getElementById("practiceView"),
-  practiceRoot: document.getElementById("practiceRoot"),
-  scenariosView: document.getElementById("scenariosView"),
-  scenariosRoot: document.getElementById("scenariosRoot"),
-  otmView: document.getElementById("otmView"),
-  otmRoot: document.getElementById("otmRoot"),
   dashboardView: document.getElementById("dashboardView"),
   resetProgress: document.getElementById("resetProgress"),
   exportProgress: document.getElementById("exportProgress"),
@@ -66,11 +43,7 @@ const els = {
   pathSelect: document.getElementById("pathSelect"),
   pathBlurb: document.getElementById("pathBlurb"),
   nextTopicCard: document.getElementById("nextTopicCard"),
-  diagnosticCard: document.getElementById("diagnosticCard"),
   dueReviewTable: document.getElementById("dueReviewTable"),
-  weakPracticeTable: document.getElementById("weakPracticeTable"),
-  weakScenariosTable: document.getElementById("weakScenariosTable"),
-  weakOtmTable: document.getElementById("weakOtmTable"),
 
   sidebar: document.getElementById("topicSidebar"),
   sidebarBackdrop: document.getElementById("sidebarBackdrop"),
@@ -96,10 +69,6 @@ function emptyProgress() {
     modules: {},
     mastery: {},
     pathId: null,
-    practice: {},
-    scenarios: {},
-    otm: {},
-    diagnostic: null,
   };
 }
 
@@ -111,10 +80,6 @@ function normalizeProgress(raw) {
       modules: raw.modules,
       mastery: raw.mastery && typeof raw.mastery === "object" ? raw.mastery : {},
       pathId: typeof raw.pathId === "string" ? raw.pathId : null,
-      practice: raw.practice && typeof raw.practice === "object" ? raw.practice : {},
-      scenarios: raw.scenarios && typeof raw.scenarios === "object" ? raw.scenarios : {},
-      otm: raw.otm && typeof raw.otm === "object" ? raw.otm : {},
-      diagnostic: raw.diagnostic && typeof raw.diagnostic === "object" ? raw.diagnostic : null,
     };
   }
   const modules = {};
@@ -140,10 +105,6 @@ function normalizeProgress(raw) {
     modules,
     mastery: {},
     pathId: null,
-    practice: {},
-    scenarios: {},
-    otm: {},
-    diagnostic: null,
   };
 }
 
@@ -202,206 +163,6 @@ function setPathId(pathId) {
   const progress = loadProgress();
   progress.pathId = pathId || null;
   saveProgress(progress);
-}
-
-function saveDiagnosticResult(result) {
-  const progress = loadProgress();
-  progress.diagnostic = {
-    at: new Date().toISOString(),
-    role: result.role,
-    horizon: result.horizon,
-    stack: result.stack,
-    scores: result.scores || {},
-    total: Number(result.total) || 0,
-    pathId: result.pathId || null,
-    gapTopicIds: Array.isArray(result.gapTopicIds) ? result.gapTopicIds : [],
-    storiesReady: !!result.storiesReady,
-    bandLabel: result.bandLabel || "",
-  };
-  if (result.pathId) progress.pathId = result.pathId;
-  // Seed low confidence on gap topics
-  for (const topicId of progress.diagnostic.gapTopicIds.slice(0, 8)) {
-    const mastery =
-      progress.mastery[topicId] && typeof progress.mastery[topicId] === "object"
-        ? progress.mastery[topicId]
-        : {};
-    if (!mastery.confidence || mastery.confidence > 2) mastery.confidence = 2;
-    mastery.lastReviewed = progress.diagnostic.at;
-    progress.mastery[topicId] = mastery;
-  }
-  saveProgress(progress);
-}
-
-function savePracticeAttempt(attempt) {
-  const progress = loadProgress();
-  const topicId = attempt.topicId;
-  const bucket =
-    progress.practice[topicId] && typeof progress.practice[topicId] === "object"
-      ? progress.practice[topicId]
-      : { attempts: [] };
-  const attempts = Array.isArray(bucket.attempts) ? bucket.attempts.slice() : [];
-  attempts.push({
-    at: new Date().toISOString(),
-    promptId: attempt.promptId,
-    title: attempt.title,
-    scores: attempt.scores,
-    total: attempt.total,
-    secondsUsed: attempt.secondsUsed,
-    secondsBudget: attempt.secondsBudget,
-  });
-  // keep last 40 attempts per topic
-  bucket.attempts = attempts.slice(-40);
-  progress.practice[topicId] = bucket;
-
-  const mastery = progress.mastery[topicId] && typeof progress.mastery[topicId] === "object"
-    ? progress.mastery[topicId]
-    : {};
-  mastery.lastReviewed = new Date().toISOString();
-  // Map /8 total into rough 1-5 confidence
-  const conf = attempt.total <= 3 ? 1 : attempt.total <= 5 ? 2 : attempt.total <= 6 ? 3 : attempt.total <= 7 ? 4 : 5;
-  mastery.confidence = conf;
-  progress.mastery[topicId] = mastery;
-  saveProgress(progress);
-}
-
-function practiceStatsByTopic() {
-  const progress = loadProgress();
-  const out = {};
-  for (const [topicId, bucket] of Object.entries(progress.practice || {})) {
-    const attempts = Array.isArray(bucket?.attempts) ? bucket.attempts : [];
-    if (!attempts.length) continue;
-    const recent = attempts.slice(-5);
-    const avg = recent.reduce((sum, a) => sum + (Number(a.total) || 0), 0) / recent.length;
-    const last = attempts[attempts.length - 1];
-    out[topicId] = {
-      count: attempts.length,
-      avg: Math.round(avg * 10) / 10,
-      lastTotal: Number(last.total) || 0,
-      lastAt: last.at || "",
-    };
-  }
-  return out;
-}
-
-function saveScenarioAttempt(attempt) {
-  const progress = loadProgress();
-  const scenarioId = attempt.scenarioId;
-  const bucket =
-    progress.scenarios[scenarioId] && typeof progress.scenarios[scenarioId] === "object"
-      ? progress.scenarios[scenarioId]
-      : { attempts: [] };
-  const attempts = Array.isArray(bucket.attempts) ? bucket.attempts.slice() : [];
-  attempts.push({
-    at: new Date().toISOString(),
-    title: attempt.title,
-    kind: attempt.kind,
-    difficulty: attempt.difficulty,
-    scores: attempt.scores,
-    total: attempt.total,
-    tasksChecked: attempt.tasksChecked,
-    tasksTotal: attempt.tasksTotal,
-    secondsUsed: attempt.secondsUsed,
-    secondsBudget: attempt.secondsBudget,
-  });
-  bucket.attempts = attempts.slice(-30);
-  progress.scenarios[scenarioId] = bucket;
-
-  const related = Array.isArray(attempt.relatedTopicIds) ? attempt.relatedTopicIds : [];
-  const conf =
-    attempt.total <= 3 ? 1 : attempt.total <= 5 ? 2 : attempt.total <= 6 ? 3 : attempt.total <= 7 ? 4 : 5;
-  for (const topicId of related.slice(0, 2)) {
-    const mastery =
-      progress.mastery[topicId] && typeof progress.mastery[topicId] === "object"
-        ? progress.mastery[topicId]
-        : {};
-    mastery.lastReviewed = new Date().toISOString();
-    mastery.confidence = conf;
-    progress.mastery[topicId] = mastery;
-  }
-  saveProgress(progress);
-}
-
-function scenarioStats() {
-  const progress = loadProgress();
-  const byId = Object.fromEntries((state.scenarioCatalog || []).map((s) => [s.id, s]));
-  const out = [];
-  for (const [scenarioId, bucket] of Object.entries(progress.scenarios || {})) {
-    const attempts = Array.isArray(bucket?.attempts) ? bucket.attempts : [];
-    if (!attempts.length) continue;
-    const recent = attempts.slice(-5);
-    const avg = recent.reduce((sum, a) => sum + (Number(a.total) || 0), 0) / recent.length;
-    const last = attempts[attempts.length - 1];
-    const meta = byId[scenarioId] || {
-      id: scenarioId,
-      title: last?.title || scenarioId,
-      kind: last?.kind || "",
-      difficulty: last?.difficulty || "",
-    };
-    out.push({
-      scenario: meta,
-      avg: Math.round(avg * 10) / 10,
-      count: attempts.length,
-      lastTotal: Number(last?.total) || 0,
-    });
-  }
-  return out;
-}
-
-function saveOtmAttempt(attempt) {
-  const progress = loadProgress();
-  const modelId = attempt.modelId;
-  const bucket =
-    progress.otm[modelId] && typeof progress.otm[modelId] === "object"
-      ? progress.otm[modelId]
-      : { attempts: [] };
-  const attempts = Array.isArray(bucket.attempts) ? bucket.attempts.slice() : [];
-  attempts.push({
-    at: new Date().toISOString(),
-    promptId: attempt.promptId,
-    title: attempt.title,
-    scores: attempt.scores,
-    total: attempt.total,
-    secondsUsed: attempt.secondsUsed,
-    secondsBudget: attempt.secondsBudget,
-  });
-  bucket.attempts = attempts.slice(-30);
-  progress.otm[modelId] = bucket;
-
-  const related = Array.isArray(attempt.relatedTopicIds) ? attempt.relatedTopicIds : [];
-  const conf =
-    attempt.total <= 3 ? 1 : attempt.total <= 5 ? 2 : attempt.total <= 6 ? 3 : attempt.total <= 7 ? 4 : 5;
-  for (const topicId of related.slice(0, 2)) {
-    const mastery =
-      progress.mastery[topicId] && typeof progress.mastery[topicId] === "object"
-        ? progress.mastery[topicId]
-        : {};
-    mastery.lastReviewed = new Date().toISOString();
-    mastery.confidence = conf;
-    progress.mastery[topicId] = mastery;
-  }
-  saveProgress(progress);
-}
-
-function otmStats() {
-  const progress = loadProgress();
-  const models = state.otmIndex?.models || [];
-  const byId = Object.fromEntries(models.map((m) => [m.id, m]));
-  const out = [];
-  for (const [modelId, bucket] of Object.entries(progress.otm || {})) {
-    const attempts = Array.isArray(bucket?.attempts) ? bucket.attempts : [];
-    if (!attempts.length) continue;
-    const recent = attempts.slice(-5);
-    const avg = recent.reduce((sum, a) => sum + (Number(a.total) || 0), 0) / recent.length;
-    const last = attempts[attempts.length - 1];
-    const meta = byId[modelId] || { id: modelId, title: last?.title || modelId };
-    out.push({
-      model: meta,
-      avg: Math.round(avg * 10) / 10,
-      count: attempts.length,
-      lastTotal: Number(last?.total) || 0,
-    });
-  }
-  return out;
 }
 
 function topicMeta(topicId) {
@@ -681,20 +442,7 @@ function openTopicFile(topicId, fileKey) {
   const topic = state.topics.find((t) => t.id === topicId);
   if (!topic || !topic.files?.[fileKey]) return;
   setView("topics");
-  selectTopic(topic, { fromQuery: true });
-  els.fileTypeSelector.value = fileKey;
-  state.selectedFileKey = fileKey;
-  syncCompletionCheckbox();
-  const loader =
-    fileKey === "mindMap"
-      ? loadLogicChart(topic.id)
-      : loadMarkdown(topic.files[fileKey]);
-  Promise.resolve(loader).then(() => {
-    updateTopicQuery();
-    if (isMobileLayout()) {
-      els.markdownContent.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
-  });
+  selectTopic(topic, { fileKey });
 }
 
 async function applyFilters() {
@@ -755,9 +503,6 @@ function syncMasteryBar(topic) {
   if (!els.masteryBar) return;
   if (!topic) {
     els.masteryBar.classList.add("hidden");
-    if (els.practiceTopicBtn) els.practiceTopicBtn.disabled = true;
-    if (els.scenariosTopicBtn) els.scenariosTopicBtn.disabled = true;
-    if (els.otmTopicBtn) els.otmTopicBtn.disabled = true;
     return;
   }
   els.masteryBar.classList.remove("hidden");
@@ -767,23 +512,6 @@ function syncMasteryBar(topic) {
     els.confidenceSelect.value = mastery.confidence ? String(mastery.confidence) : "";
   }
   if (els.markReviewed) els.markReviewed.disabled = false;
-  if (els.practiceTopicBtn) {
-    const hasDeck = state.practiceIndex.some((p) => p.id === topic.id);
-    els.practiceTopicBtn.disabled = !hasDeck;
-  }
-  if (els.scenariosTopicBtn) {
-    const hasScenario =
-      topic.id === "product-security-real-world-scenarios" ||
-      state.scenarioCatalog.some((s) => (s.relatedTopicIds || []).includes(topic.id));
-    els.scenariosTopicBtn.disabled = !hasScenario;
-  }
-  if (els.otmTopicBtn) {
-    const models = state.otmIndex?.models || [];
-    const hasOtm =
-      topic.id === "threat-modeling" ||
-      models.some((m) => (m.relatedTopicIds || []).includes(topic.id));
-    els.otmTopicBtn.disabled = !hasOtm;
-  }
   if (els.lastReviewedLabel) {
     els.lastReviewedLabel.textContent = mastery.lastReviewed
       ? `Last reviewed ${mastery.lastReviewed.slice(0, 10)}`
@@ -930,17 +658,27 @@ function enhanceMarkdownDocument(container) {
   scrollTopHandler();
 }
 
-async function loadMarkdown(path) {
+let topicLoadToken = 0;
+
+function defaultFileKey(topic) {
+  if (topic?.files?.comprehensive) return "comprehensive";
+  return availableFileTypes(topic?.files)[0]?.value || "";
+}
+
+async function loadMarkdown(path, token) {
   removeScrollTopButton();
   clearLogicChart();
   try {
     const response = await fetch(toAbsolute(path));
+    if (token !== topicLoadToken) return;
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const markdown = await response.text();
+    if (token !== topicLoadToken) return;
     els.markdownContent.innerHTML = marked.parse(markdown);
     document.querySelectorAll("#markdownContent pre code").forEach((block) => hljs.highlightElement(block));
     enhanceMarkdownDocument(els.markdownContent);
   } catch (error) {
+    if (token !== topicLoadToken) return;
     els.markdownContent.innerHTML = `<p>Unable to load content from <code>${path}</code>.</p>`;
   }
 }
@@ -950,7 +688,7 @@ function clearLogicChart() {
   els.markdownContent.classList.remove("has-logic-chart");
 }
 
-async function loadLogicChart(topicId) {
+async function loadLogicChart(topicId, token) {
   removeScrollTopButton();
   if (window.LogicChart) window.LogicChart.unmount();
   els.markdownContent.classList.add("has-logic-chart");
@@ -966,9 +704,28 @@ async function loadLogicChart(topicId) {
       xmindUrl: toAbsolute(`mindmaps/${topicId}.xmind`),
     });
   } catch (error) {
+    if (token !== topicLoadToken) return;
     els.markdownContent.classList.add("has-logic-chart");
     els.markdownContent.innerHTML = `<p>Unable to load the logic chart for <code>${topicId}</code>.</p>`;
   }
+}
+
+function showTopicFile(topic, fileKey) {
+  if (!topic || !fileKey || !topic.files?.[fileKey]) return;
+  const token = ++topicLoadToken;
+  els.fileTypeSelector.value = fileKey;
+  state.selectedFileKey = fileKey;
+  syncCompletionCheckbox();
+  els.markdownContent.innerHTML = `<p class="kpi-sub">Loading…</p>`;
+  const loader =
+    fileKey === "mindMap" ? loadLogicChart(topic.id, token) : loadMarkdown(topic.files[fileKey], token);
+  Promise.resolve(loader).then(() => {
+    if (token !== topicLoadToken) return;
+    updateTopicQuery();
+    if (isMobileLayout()) {
+      els.markdownContent.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  });
 }
 
 function syncCompletionCheckbox() {
@@ -1005,21 +762,11 @@ function applyQueryParams() {
   if (!topicId) return;
   const topic = state.topics.find((t) => t.id === topicId);
   if (!topic) return;
-  selectTopic(topic, { fromQuery: true });
   const fileKey = params.get("file");
-  if (fileKey === "mindMap" && topic.files?.mindMap) {
-    els.fileTypeSelector.value = "mindMap";
-    state.selectedFileKey = "mindMap";
-    syncCompletionCheckbox();
-    loadLogicChart(topic.id);
-    return;
-  }
-  if (fileKey && topic.files?.[fileKey]) {
-    els.fileTypeSelector.value = fileKey;
-    state.selectedFileKey = fileKey;
-    syncCompletionCheckbox();
-    loadMarkdown(topic.files[fileKey]);
-  }
+  selectTopic(topic, {
+    fromQuery: true,
+    fileKey: fileKey && topic.files?.[fileKey] ? fileKey : "",
+  });
 }
 
 function selectTopic(topic, opts = {}) {
@@ -1033,31 +780,16 @@ function selectTopic(topic, opts = {}) {
     closeSidebar();
   }
   scrollPanelIntoView(els.topicsView);
-  if (!opts.fromQuery) {
-    updateTopicQuery();
-  }
+  const fileKey =
+    opts.fileKey && topic.files?.[opts.fileKey] ? opts.fileKey : defaultFileKey(topic);
+  if (fileKey) showTopicFile(topic, fileKey);
+  else if (!opts.fromQuery) updateTopicQuery();
 }
 
 els.fileTypeSelector.addEventListener("change", (event) => {
   const key = event.target.value;
   if (!key || !state.selectedTopic?.files?.[key]) return;
-  state.selectedFileKey = key;
-  syncCompletionCheckbox();
-  if (key === "mindMap") {
-    loadLogicChart(state.selectedTopic.id).then(() => {
-      updateTopicQuery();
-      if (isMobileLayout()) {
-        els.markdownContent.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }
-    });
-    return;
-  }
-  loadMarkdown(state.selectedTopic.files[key]).then(() => {
-    updateTopicQuery();
-    if (isMobileLayout()) {
-      els.markdownContent.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
-  });
+  showTopicFile(state.selectedTopic, key);
 });
 
 els.completionCheckbox.addEventListener("change", (event) => {
@@ -1078,41 +810,12 @@ els.category.addEventListener("change", () => {
 });
 
 function setView(view) {
-  state.view = view;
-  const isTopics = view === "topics";
-  const isDiagnostic = view === "diagnostic";
-  const isPractice = view === "practice";
-  const isScenarios = view === "scenarios";
-  const isOtm = view === "otm";
   const isDashboard = view === "dashboard";
-  els.topicsView.classList.toggle("hidden", !isTopics);
-  if (els.diagnosticView) els.diagnosticView.classList.toggle("hidden", !isDiagnostic);
-  if (els.practiceView) els.practiceView.classList.toggle("hidden", !isPractice);
-  if (els.scenariosView) els.scenariosView.classList.toggle("hidden", !isScenarios);
-  if (els.otmView) els.otmView.classList.toggle("hidden", !isOtm);
+  state.view = isDashboard ? "dashboard" : "topics";
+  els.topicsView.classList.toggle("hidden", state.view !== "topics");
   els.dashboardView.classList.toggle("hidden", !isDashboard);
 
-  if (isDiagnostic) {
-    closeSidebar();
-    removeScrollTopButton();
-    ensureDiagnosticUi();
-    scrollPanelIntoView(els.diagnosticView);
-  } else if (isPractice) {
-    closeSidebar();
-    removeScrollTopButton();
-    ensurePracticeUi();
-    scrollPanelIntoView(els.practiceView);
-  } else if (isScenarios) {
-    closeSidebar();
-    removeScrollTopButton();
-    ensureScenarioUi();
-    scrollPanelIntoView(els.scenariosView);
-  } else if (isOtm) {
-    closeSidebar();
-    removeScrollTopButton();
-    ensureOtmUi();
-    scrollPanelIntoView(els.otmView);
-  } else if (isDashboard) {
+  if (isDashboard) {
     closeSidebar();
     removeScrollTopButton();
     renderDashboard();
@@ -1120,83 +823,6 @@ function setView(view) {
   } else {
     scrollPanelIntoView(els.topicsView);
   }
-}
-
-function ensurePracticeUi() {
-  if (!els.practiceRoot || !window.PracticeMode) return;
-  if (!state.practiceUi) {
-    state.practiceUi = window.PracticeMode.create(els.practiceRoot, {
-      toAbsolute,
-      practiceIndex: state.practiceIndex,
-      saveAttempt: savePracticeAttempt,
-    });
-  }
-  const preferred =
-    state.selectedTopic?.id ||
-    findNextTopic(loadProgress().pathId)?.id ||
-    state.practiceIndex[0]?.id ||
-    "";
-  state.practiceUi.fillTopics(state.topics, preferred);
-}
-
-function ensureDiagnosticUi() {
-  if (!els.diagnosticRoot || !window.DiagnosticMode) return;
-  if (!state.diagnosticUi) {
-    state.diagnosticUi = window.DiagnosticMode.create(els.diagnosticRoot, {
-      topics: state.topics,
-      paths: state.paths,
-      saveDiagnostic: saveDiagnosticResult,
-      applyPath(pathId) {
-        setPathId(pathId);
-        if (els.pathSelect) {
-          els.pathSelect.value = pathId || "";
-          updatePathBlurb(pathId || "");
-        }
-      },
-      openTopic(topicId) {
-        const topic = state.topics.find((t) => t.id === topicId);
-        if (!topic) {
-          setView("dashboard");
-          return;
-        }
-        setView("topics");
-        selectTopic(topic);
-      },
-      openPractice(topicId) {
-        if (topicId) {
-          const topic = state.topics.find((t) => t.id === topicId);
-          if (topic) state.selectedTopic = topic;
-        }
-        setView("practice");
-      },
-      openDashboard() {
-        setView("dashboard");
-      },
-    });
-  }
-  state.diagnosticUi.loadConfig(state.diagnosticConfig || {});
-}
-
-function ensureScenarioUi(preferredId) {
-  if (!els.scenariosRoot || !window.ScenarioMode) return;
-  if (!state.scenarioUi) {
-    state.scenarioUi = window.ScenarioMode.create(els.scenariosRoot, {
-      toAbsolute,
-      saveAttempt: saveScenarioAttempt,
-    });
-  }
-  state.scenarioUi.loadCatalog(state.scenarioCatalog, preferredId || "");
-}
-
-function ensureOtmUi(preferredId) {
-  if (!els.otmRoot || !window.OtmLab) return;
-  if (!state.otmUi) {
-    state.otmUi = window.OtmLab.create(els.otmRoot, {
-      toAbsolute,
-      saveAttempt: saveOtmAttempt,
-    });
-  }
-  state.otmUi.loadCatalog(state.otmIndex || { models: [] }, preferredId || "");
 }
 
 function onTopicsNavClick() {
@@ -1332,30 +958,6 @@ function renderNextTopic() {
   });
 }
 
-function renderDiagnosticCard() {
-  if (!els.diagnosticCard) return;
-  const diag = loadProgress().diagnostic;
-  if (!diag) {
-    els.diagnosticCard.innerHTML = `
-      <p class="kpi-sub">Not run yet. Takes about 35-45 minutes and sets your path.</p>
-      <button id="openDiagnostic" class="btn btn-primary" type="button">Run diagnostic</button>
-    `;
-  } else {
-    const path = state.paths.find((p) => p.id === diag.pathId);
-    const gaps = Array.isArray(diag.gapTopicIds) ? diag.gapTopicIds.length : 0;
-    els.diagnosticCard.innerHTML = `
-      <strong>${diag.total}/16 · ${diag.bandLabel || "Completed"}</strong>
-      <p class="kpi-sub">${path?.name || diag.pathId || "path"} · ${gaps} gap topics · ${
-        diag.at ? diag.at.slice(0, 10) : ""
-      }</p>
-      <button id="openDiagnostic" class="btn" type="button">Retake</button>
-    `;
-  }
-  els.diagnosticCard.querySelector("#openDiagnostic")?.addEventListener("click", () => {
-    setView("diagnostic");
-  });
-}
-
 function reviewIntervalDays(confidence) {
   const c = Number(confidence) || 0;
   if (c >= 5) return 14;
@@ -1375,7 +977,6 @@ function daysSinceIso(iso) {
 
 function dueReviewRows() {
   const progress = loadProgress();
-  const gapSet = new Set(progress.diagnostic?.gapTopicIds || []);
   const rows = [];
 
   for (const topic of state.topics) {
@@ -1384,11 +985,10 @@ function dueReviewRows() {
     const hasModules = !!(modules && Object.values(modules).some(Boolean));
     const conf = Number(mastery.confidence) || 0;
     const last = mastery.lastReviewed || "";
-    const isGap = gapSet.has(topic.id);
 
-    if (!last && !conf && !hasModules && !isGap) continue;
+    if (!last && !conf && !hasModules) continue;
 
-    const interval = reviewIntervalDays(conf || (isGap ? 1 : 2));
+    const interval = reviewIntervalDays(conf || 2);
     const age = last ? daysSinceIso(last) : Number.POSITIVE_INFINITY;
     const due = !last || age >= interval;
     if (!due) continue;
@@ -1399,8 +999,6 @@ function dueReviewRows() {
       confidence: conf,
       lastReviewed: last,
       overdueDays,
-      isGap,
-      hasPractice: state.practiceIndex.some((p) => p.id === topic.id),
     });
   }
 
@@ -1419,7 +1017,7 @@ function renderDueReview() {
   els.dueReviewTable.innerHTML = "";
   if (!rows.length) {
     els.dueReviewTable.innerHTML =
-      `<p class="kpi-sub">Nothing due. Mark topics reviewed or raise confidence after drills; intervals grow from 1 day (shaky) to 14 days (teach it).</p>`;
+      `<p class="kpi-sub">Nothing due. Mark topics reviewed or set confidence; intervals grow from 1 day (shaky) to 14 days (teach it).</p>`;
     return;
   }
   for (const r of rows) {
@@ -1431,131 +1029,18 @@ function renderDueReview() {
         : "due today"
       : "never reviewed";
     const conf = r.confidence ? `conf ${r.confidence}/5` : "no confidence";
-    const gap = r.isGap ? " · diagnostic gap" : "";
     div.innerHTML = `
       <div>
         <strong>${r.topic.name}</strong>
-        <small>${when} · ${conf}${gap}</small>
+        <small>${when} · ${conf}</small>
       </div>
-      <div class="due-actions">
-        <button type="button" class="btn" data-due-open="${r.topic.id}">Open</button>
-        <button type="button" class="btn btn-primary" data-due-practice="${r.topic.id}" ${
-          r.hasPractice ? "" : "disabled"
-        }>Practice</button>
-      </div>
+      <button type="button" class="btn" data-due-open="${r.topic.id}">Open</button>
     `;
     div.querySelector("[data-due-open]")?.addEventListener("click", () => {
       setView("topics");
       selectTopic(r.topic);
     });
-    div.querySelector("[data-due-practice]")?.addEventListener("click", () => {
-      if (!r.hasPractice) return;
-      state.selectedTopic = r.topic;
-      setView("practice");
-    });
     els.dueReviewTable.appendChild(div);
-  }
-}
-
-function renderWeakPractice() {
-  if (!els.weakPracticeTable) return;
-  const byId = Object.fromEntries(state.topics.map((t) => [t.id, t]));
-  const stats = practiceStatsByTopic();
-  const rows = Object.entries(stats)
-    .map(([topicId, v]) => ({ topic: byId[topicId], ...v }))
-    .filter((r) => r.topic && (r.avg <= 5 || r.lastTotal <= 5))
-    .sort((a, b) => a.avg - b.avg || a.topic.name.localeCompare(b.topic.name));
-
-  els.weakPracticeTable.innerHTML = "";
-  if (!rows.length) {
-    els.weakPracticeTable.innerHTML =
-      `<p class="kpi-sub">No weak drills yet. Run Practice, self-score a few prompts, and averages under 5/8 show up here.</p>`;
-    return;
-  }
-  for (const r of rows) {
-    const div = document.createElement("div");
-    div.className = "topic-progress-row";
-    const label = window.PracticeMode?.scoreLabel?.(Math.round(r.avg)) || "";
-    div.innerHTML = `
-      <div>
-        <strong>${r.topic.name}</strong>
-        <small>avg ${r.avg}/8 · ${r.count} attempts · last ${r.lastTotal}/8${
-          label ? ` · ${label}` : ""
-        }</small>
-      </div>
-      <button type="button" class="btn" data-practice-topic="${r.topic.id}">Drill</button>
-    `;
-    div.querySelector("button")?.addEventListener("click", () => {
-      state.selectedTopic = r.topic;
-      setView("practice");
-    });
-    els.weakPracticeTable.appendChild(div);
-  }
-}
-
-function renderWeakScenarios() {
-  if (!els.weakScenariosTable) return;
-  const rows = scenarioStats()
-    .filter((r) => r.avg <= 5 || r.lastTotal <= 5)
-    .sort((a, b) => a.avg - b.avg || a.scenario.title.localeCompare(b.scenario.title));
-
-  els.weakScenariosTable.innerHTML = "";
-  if (!rows.length) {
-    els.weakScenariosTable.innerHTML =
-      `<p class="kpi-sub">No weak scenarios yet. Run Scenarios, self-score, and averages under 5/8 show up here.</p>`;
-    return;
-  }
-  for (const r of rows) {
-    const div = document.createElement("div");
-    div.className = "topic-progress-row";
-    const label = window.ScenarioMode?.scoreLabel?.(Math.round(r.avg)) || "";
-    div.innerHTML = `
-      <div>
-        <strong>${r.scenario.title}</strong>
-        <small>${r.scenario.kind || "scenario"} · avg ${r.avg}/8 · ${r.count} attempts · last ${
-          r.lastTotal
-        }/8${label ? ` · ${label}` : ""}</small>
-      </div>
-      <button type="button" class="btn" data-scenario-id="${r.scenario.id}">Retry</button>
-    `;
-    div.querySelector("button")?.addEventListener("click", () => {
-      setView("scenarios");
-      state.scenarioUi?.selectById?.(r.scenario.id);
-    });
-    els.weakScenariosTable.appendChild(div);
-  }
-}
-
-function renderWeakOtm() {
-  if (!els.weakOtmTable) return;
-  const rows = otmStats()
-    .filter((r) => r.avg <= 5 || r.lastTotal <= 5)
-    .sort((a, b) => a.avg - b.avg || (a.model.title || "").localeCompare(b.model.title || ""));
-
-  els.weakOtmTable.innerHTML = "";
-  if (!rows.length) {
-    els.weakOtmTable.innerHTML =
-      `<p class="kpi-sub">No weak OTM drills yet. Open OTM Lab, score a prompt, and averages under 5/8 show up here.</p>`;
-    return;
-  }
-  for (const r of rows) {
-    const div = document.createElement("div");
-    div.className = "topic-progress-row";
-    const label = window.OtmLab?.scoreLabel?.(Math.round(r.avg)) || "";
-    div.innerHTML = `
-      <div>
-        <strong>${r.model.title || r.model.id}</strong>
-        <small>avg ${r.avg}/8 · ${r.count} attempts · last ${r.lastTotal}/8${
-          label ? ` · ${label}` : ""
-        }</small>
-      </div>
-      <button type="button" class="btn" data-otm-id="${r.model.id}">Retry</button>
-    `;
-    div.querySelector("button")?.addEventListener("click", () => {
-      setView("otm");
-      state.otmUi?.selectById?.(r.model.id);
-    });
-    els.weakOtmTable.appendChild(div);
   }
 }
 
@@ -1567,12 +1052,8 @@ function renderDashboard() {
 
   drawProgressBar(els.overallChart, pct);
   drawCategoryBars(els.categoryChart, stats.byCategory);
-  renderDiagnosticCard();
   renderNextTopic();
   renderDueReview();
-  renderWeakPractice();
-  renderWeakScenarios();
-  renderWeakOtm();
 
   const rows = [...state.topics]
     .map((t) => {
@@ -1655,18 +1136,6 @@ if (typeof mqMobile.addEventListener === "function") {
 }
 
 els.navTopics.addEventListener("click", onTopicsNavClick);
-if (els.navStart) {
-  els.navStart.addEventListener("click", () => setView("diagnostic"));
-}
-if (els.navPractice) {
-  els.navPractice.addEventListener("click", () => setView("practice"));
-}
-if (els.navScenarios) {
-  els.navScenarios.addEventListener("click", () => setView("scenarios"));
-}
-if (els.navOtm) {
-  els.navOtm.addEventListener("click", () => setView("otm"));
-}
 els.navDashboard.addEventListener("click", () => setView("dashboard"));
 
 if (els.closeSidebar) {
@@ -1747,34 +1216,6 @@ if (els.markReviewed) {
     if (state.view === "dashboard") renderDashboard();
   });
 }
-if (els.practiceTopicBtn) {
-  els.practiceTopicBtn.addEventListener("click", () => {
-    if (!state.selectedTopic) return;
-    setView("practice");
-  });
-}
-if (els.scenariosTopicBtn) {
-  els.scenariosTopicBtn.addEventListener("click", () => {
-    if (!state.selectedTopic) return;
-    const topicId = state.selectedTopic.id;
-    const match =
-      state.scenarioCatalog.find((s) => (s.relatedTopicIds || []).includes(topicId)) ||
-      state.scenarioCatalog[0];
-    setView("scenarios");
-    if (match) state.scenarioUi?.selectById?.(match.id);
-  });
-}
-if (els.otmTopicBtn) {
-  els.otmTopicBtn.addEventListener("click", () => {
-    if (!state.selectedTopic) return;
-    const topicId = state.selectedTopic.id;
-    const models = state.otmIndex?.models || [];
-    const match =
-      models.find((m) => (m.relatedTopicIds || []).includes(topicId)) || models[0];
-    setView("otm");
-    if (match) state.otmUi?.selectById?.(match.id);
-  });
-}
 
 async function init() {
   if (els.copyrightYear) {
@@ -1784,61 +1225,32 @@ async function init() {
   setSidebarOpen(false);
 
   try {
-    const [topicsRes, pathsRes, metaRes, practiceRes, scenariosRes, otmRes, diagRes] =
-      await Promise.all([
-        fetch(toAbsolute("Config/topics.json")),
-        fetch(toAbsolute("Config/paths.json")),
-        fetch(toAbsolute("Config/topic_meta.json")),
-        fetch(toAbsolute("Config/practice/index.json")),
-        fetch(toAbsolute("Config/scenarios/index.json")),
-        fetch(toAbsolute("Config/otm/index.json")),
-        fetch(toAbsolute("Config/diagnostic.json")),
-      ]);
+    const [topicsRes, pathsRes, metaRes] = await Promise.all([
+      fetch(toAbsolute("Config/topics.json")),
+      fetch(toAbsolute("Config/paths.json")),
+      fetch(toAbsolute("Config/topic_meta.json")),
+    ]);
     if (!topicsRes.ok) throw new Error(`HTTP ${topicsRes.status}`);
     state.topics = await topicsRes.json();
     state.filtered = [...state.topics];
     state.paths = pathsRes.ok ? await pathsRes.json() : [];
     state.topicMeta = metaRes.ok ? await metaRes.json() : {};
-    state.practiceIndex = practiceRes.ok ? await practiceRes.json() : [];
-    if (scenariosRes.ok) {
-      const payload = await scenariosRes.json();
-      state.scenarioCatalog = Array.isArray(payload?.scenarios) ? payload.scenarios : [];
-    } else {
-      state.scenarioCatalog = [];
-    }
-    state.otmIndex = otmRes.ok ? await otmRes.json() : { models: [] };
-    state.diagnosticConfig = diagRes.ok ? await diagRes.json() : null;
     populatePathSelect();
     renderTopicList();
-    applyQueryParams();
     const params = new URLSearchParams(window.location.search);
-    if (params.get("view") === "diagnostic" || params.get("view") === "start") {
-      setView("diagnostic");
+    const view = params.get("view");
+    const removedViews = new Set(["start", "diagnostic", "practice", "scenarios", "otm"]);
+    if (removedViews.has(view) || params.has("scenario") || params.has("otm")) {
+      if (removedViews.has(view)) params.delete("view");
+      params.delete("scenario");
+      params.delete("otm");
+      const url = new URL(window.location.href);
+      const next = params.toString();
+      url.search = next ? `?${next}` : "";
+      history.replaceState(null, "", url);
     }
-    if (params.get("view") === "practice") setView("practice");
-    if (params.get("view") === "scenarios") setView("scenarios");
-    if (params.get("view") === "otm") setView("otm");
-    if (params.get("view") === "dashboard") setView("dashboard");
-    const scenarioId = params.get("scenario");
-    if (scenarioId) {
-      setView("scenarios");
-      state.scenarioUi?.selectById?.(scenarioId);
-    }
-    const otmId = params.get("otm");
-    if (otmId) {
-      setView("otm");
-      state.otmUi?.selectById?.(otmId);
-    }
-    // First visit: nudge Start if no path and no diagnostic yet
-    const progress = loadProgress();
-    if (
-      !params.get("view") &&
-      !params.get("topic") &&
-      !progress.pathId &&
-      !progress.diagnostic
-    ) {
-      // leave on topics; dashboard card + Start nav are enough
-    }
+    applyQueryParams();
+    if (view === "dashboard") setView("dashboard");
   } catch (error) {
     els.markdownContent.innerHTML = "<p>Failed to load topics index.</p>";
   }
