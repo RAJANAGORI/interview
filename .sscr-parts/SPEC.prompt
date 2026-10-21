@@ -1,0 +1,116 @@
+# Spec for Secure Source Code Review code labs
+
+## Context
+
+Repo: /Users/rajanagori/Documents/vault/Projects/interview (a static security interview prep site).
+Target guide: `interview/Secure Source Code Review/Secure Source Code Review - Comprehensive Guide.md`.
+
+The guide is being rewritten so every review point (previously a checkbox list) becomes vulnerable vs fixed code in
+Python, Go, and Node.js, plus "where to look" and "how to think" guidance. The goal: a candidate understands what each
+point means, where to look for it in a real codebase, and how to reason about it during review and implementation.
+
+The site renders fences tagged like ```` ```python vulnerable ```` into a tabbed "code lab" widget (Python | Go | Node.js
+tabs, each tab shows a Vulnerable pane and a Fixed pane side by side). The section parts are written into
+`/Users/rajanagori/Documents/vault/Projects/interview/.sscr-parts/` and stitched together later.
+
+REFERENCE: `/Users/rajanagori/Documents/vault/Projects/interview/.sscr-parts/01-authentication.md` is the finished
+Authentication section. Read it fully before writing. Match its structure, tone, depth, snippet length, and comment
+style.
+
+## Whole-guide outline (so you don't duplicate another section's lab)
+
+- Authentication (done): User login flow; User registration flow; Forgot password flow; User identification; Password
+  policies; Password hashing; Timing attacks; Two-factor authentication (2FA); User enumeration; Brute force protection;
+  Session fixation; Session destruction; Session length; Session security; Service-to-service authentication.
+- Authorization: Role identification; Sensitive and privileged endpoints; Authorization expectations; Access control
+  questions; Authorization functions and filters; Broken access control; Insecure direct object reference (IDOR); Missing
+  function level access control; Authorization filter verification; Generic authorization flaws; CSRF protection;
+  Critical operations re-authentication.
+- Auditing and Logging: Exception handling; Error messages; Logging practices; Log injection; Logging configuration.
+- Memory Best Practices: Buffer overflow prevention; Buffer size management; Off-by-one errors; Format string injection;
+  Memory management.
+- File Handling: File upload security; File storage; Path traversal; Local and remote file inclusion.
+- Input Validation: Comprehensive input validation; Validation approaches; Client-side vs server-side validation; Regular
+  expression security; Numeric input validation; Input length validation; Data and command separation; Data and
+  client-side script separation; HTTP header validation; Open redirects.
+- Output Encoding: Parameterized queries; ORM security; Mass assignment; Output encoding contexts; Output encoding
+  libraries; Encoding routine weaknesses.
+- Injection: SQL injection; NoSQL injection; LDAP injection; XML injection and XXE; Command injection; Template injection.
+- Configuration: Configuration files; Endpoint protection; Framework security configuration; Language and framework
+  versions; Security headers.
+- Cryptography: Cryptographic libraries; Hashing functions; Encryption functions; Cipher strength; SSL/TLS
+  configuration; Key and secret protection.
+- SAST tools and automation (prose, no labs).
+
+## Format rules (strict)
+
+1. Start the file with `## <Section name>` and a short intro paragraph (2 to 4 sentences): where this class of code lives
+   in a codebase and what to find first.
+2. For each point, write `### <Point name>` (sentence case, no bold markup in headings), then:
+   - 1 to 3 sentences in plain language: what the point means and how it breaks.
+   - A blockquote exactly in this shape:
+
+     ```
+     > **Where to look:** concrete files and handlers, then grep strings in backticks labelled (Python), (Go), (Node).
+     >
+     > **How to think:** the reviewer's questions, as a short paragraph (not bullets).
+     ```
+
+   - Then exactly six fenced blocks in this order, separated only by blank lines. No prose between them or the widget
+     breaks: ```` ```python vulnerable ````, ```` ```python fixed ````, ```` ```go vulnerable ````, ```` ```go fixed ````,
+     ```` ```javascript vulnerable ````, ```` ```javascript fixed ````.
+   - When the highlight language differs from the tab (a requirements.txt, go.mod, or package.json snippet), add a third
+     token naming the tab: ```` ```ini vulnerable python ````, ```` ```plaintext fixed go ````,
+     ```` ```json vulnerable javascript ````. Available highlight languages: python, go, javascript, json, yaml, ini,
+     bash, c, plaintext, xml, dockerfile. The syntax checker only checks blocks whose first token is python, go, or
+     javascript.
+   - Optional extra tab: C (```` ```c vulnerable ```` / ```` ```c fixed ````), placed after the javascript pair. Only use it
+     where the assignment says so.
+3. Vulnerable and fixed show the SAME scenario with a minimal diff so the reader can compare them. 6 to 30 lines each,
+   ideally 8 to 20.
+4. Put an end-of-line `# BUG: <why, in a few words>` (Python) or `// BUG: ...` (Go, JS) on the exact exploitable line(s),
+   and `# FIX: ...` / `// FIX: ...` on the line(s) that close the hole. 1 to 3 of each per snippet. Other comments only
+   when they state a constraint the code can't show.
+5. The fixed version must be genuinely correct. Don't leave a second bug that a sharp interviewer would catch (ignored Go
+   errors that lead to a nil dereference, `crypto.timingSafeEqual` without a length check, and so on). If a fix depends
+   on another point, add a short comment such as `# see Path traversal`.
+6. Stacks:
+   - Python: Flask, Python 3.11+. Use Django only where it shows the point better, and then make the first line
+     `# Django`.
+   - Go: standard library, Go 1.22+ routing (`mux.HandleFunc("POST /path", ...)`, `r.PathValue("id")`), `database/sql`
+     with `$1` placeholders, `log/slog`. Well-known libraries are fine (golang.org/x/crypto, google/uuid, go-ldap).
+   - Node: Express, CommonJS `require`, async/await. Well-known libraries are fine (helmet, express-rate-limit, multer,
+     mongoose, sequelize, pg, pino, zod, lru-cache).
+7. Only use real APIs that you're sure exist with the signatures shown. When unsure, fall back to the standard library.
+   Names like `db`, `audit`, `logger`, `render`, `current_user`, and a `User` model can be assumed.
+8. Every snippet must parse on its own:
+   - Python: `ast.parse`.
+   - Go: `gofmt -e`. Fragments are fine, but each snippet must be EITHER a list of declarations (funcs, types, vars,
+     consts, optionally with imports at the top) OR a list of statements. Don't mix the two.
+   - JavaScript: `node --check` as an ES module file. `require` calls are fine; a top-level `return` is not.
+9. Indentation: Go uses tabs, Python 4 spaces, JS 2 spaces.
+10. End each output file with a line containing only `---`.
+
+## Prose rules (strict, a scanner enforces them)
+
+- ASCII only in the whole file, code included: no em dash, no en dash, no smart quotes, no ellipsis character, no
+  non-breaking spaces. Use "-" or rephrase.
+- Banned outside code fences: delve, tapestry, landscape, realm, at its core, it's important to note, it is important to
+  note, dive in, in conclusion, to summarize, game-changer, unlock, empower, seamless, robust, leverage, utilize,
+  crucial, vital, moreover, furthermore, in addition, "not only ... but also", testament, cutting-edge,
+  state-of-the-art, holistic, myriad, plethora, it's worth noting, needless to say, at the end of the day, why this
+  matters, problem statement, residual risk.
+- No "It's not X, it's Y" sentences.
+- Write like an experienced reviewer talking to a colleague: contractions, mixed sentence lengths, specific details. Use
+  bold only for the two blockquote labels.
+
+## Validation (both must pass before you finish)
+
+```
+python3 /Users/rajanagori/Documents/vault/Projects/interview/interview/Scripts/check_code_labs.py <your file>
+python3 ~/.cursor/hooks/prose_guard.py scan <your file>
+```
+
+The first must end with `0 problem(s)`. The second must print `OK`. Fix and re-run until both pass.
+
+Write ONLY your assigned output file(s). Don't edit any other file in the repo.

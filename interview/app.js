@@ -658,6 +658,152 @@ function enhanceMarkdownDocument(container) {
   scrollTopHandler();
 }
 
+const CODE_LANG_KEY = "interview_code_lang";
+const CODE_LAB_TABS = [
+  { id: "python", label: "Python" },
+  { id: "go", label: "Go" },
+  { id: "javascript", label: "Node.js" },
+  { id: "c", label: "C" },
+];
+const CODE_LAB_ALIASES = { py: "python", golang: "go", js: "javascript", node: "javascript" };
+const CODE_VARIANTS = { vulnerable: "Vulnerable", fixed: "Fixed" };
+
+// Fences tagged ```<highlight-lang> vulnerable|fixed [tab-lang] become code lab panes.
+marked.use({
+  renderer: {
+    code({ text, lang }) {
+      const [hl = "", variant = "", tab = hl] = (lang || "").trim().split(/\s+/);
+      if (!CODE_VARIANTS[variant]) return false;
+      const tabId = CODE_LAB_ALIASES[tab] || tab;
+      const hlLang = window.hljs?.getLanguage(hl) ? hl : "plaintext";
+      return `<pre class="code-variant" data-variant="${variant}" data-tab="${escapeHtml(tabId)}"><code class="language-${escapeHtml(hlLang)}">${escapeHtml(text)}</code></pre>\n`;
+    },
+  },
+});
+
+function codeTabRank(tab) {
+  const i = CODE_LAB_TABS.findIndex((t) => t.id === tab);
+  return i === -1 ? CODE_LAB_TABS.length : i;
+}
+
+function codeTabLabel(tab) {
+  return CODE_LAB_TABS.find((t) => t.id === tab)?.label || tab;
+}
+
+function preferredCodeTab() {
+  try {
+    return localStorage.getItem(CODE_LANG_KEY) || CODE_LAB_TABS[0].id;
+  } catch {
+    return CODE_LAB_TABS[0].id;
+  }
+}
+
+function selectCodeLabTab(lab, tab) {
+  lab.querySelectorAll(".code-lab-tab").forEach((btn) => {
+    const on = btn.dataset.tab === tab;
+    btn.setAttribute("aria-selected", String(on));
+    btn.tabIndex = on ? 0 : -1;
+  });
+  lab.querySelectorAll(".code-lab-panel").forEach((panel) => {
+    panel.hidden = panel.dataset.tab !== tab;
+  });
+}
+
+function activateCodeTab(tab, anchor) {
+  const before = anchor.getBoundingClientRect().top;
+  try {
+    localStorage.setItem(CODE_LANG_KEY, tab);
+  } catch {
+    /* private mode */
+  }
+  els.markdownContent.querySelectorAll(".code-lab").forEach((lab) => {
+    if (lab.querySelector(`.code-lab-tab[data-tab="${tab}"]`)) selectCodeLabTab(lab, tab);
+  });
+  // Switching every lab changes heights above the clicked one; keep it under the pointer.
+  const shift = anchor.getBoundingClientRect().top - before;
+  if (shift) window.scrollBy(0, shift);
+}
+
+function onCodeLabKeydown(event) {
+  const tabs = [...event.currentTarget.querySelectorAll(".code-lab-tab")];
+  const i = tabs.indexOf(document.activeElement);
+  if (i === -1) return;
+  const next = {
+    ArrowRight: tabs[(i + 1) % tabs.length],
+    ArrowLeft: tabs[(i - 1 + tabs.length) % tabs.length],
+    Home: tabs[0],
+    End: tabs[tabs.length - 1],
+  }[event.key];
+  if (!next) return;
+  event.preventDefault();
+  next.focus();
+  activateCodeTab(next.dataset.tab, next);
+}
+
+function buildCodeLabs(container) {
+  const groups = [];
+  container.querySelectorAll("pre.code-variant").forEach((pre) => {
+    const last = groups[groups.length - 1];
+    if (last && last[last.length - 1].nextElementSibling === pre) last.push(pre);
+    else groups.push([pre]);
+  });
+
+  const preferred = preferredCodeTab();
+  groups.forEach((group, gi) => {
+    const byTab = new Map();
+    group.forEach((pre) => {
+      if (!byTab.has(pre.dataset.tab)) byTab.set(pre.dataset.tab, {});
+      byTab.get(pre.dataset.tab)[pre.dataset.variant] = pre;
+    });
+    const order = [...byTab.keys()].sort((a, b) => codeTabRank(a) - codeTabRank(b));
+
+    const lab = document.createElement("div");
+    lab.className = "code-lab";
+    group[0].before(lab);
+
+    const tablist = document.createElement("div");
+    tablist.className = "code-lab-tabs";
+    tablist.setAttribute("role", "tablist");
+    tablist.setAttribute("aria-label", "Code language");
+    tablist.addEventListener("keydown", onCodeLabKeydown);
+    lab.appendChild(tablist);
+
+    order.forEach((tab) => {
+      const panelId = `code-lab-${gi}-${tab}`;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "code-lab-tab";
+      btn.id = `${panelId}-tab`;
+      btn.dataset.tab = tab;
+      btn.setAttribute("role", "tab");
+      btn.setAttribute("aria-controls", panelId);
+      btn.textContent = codeTabLabel(tab);
+      btn.addEventListener("click", () => activateCodeTab(tab, btn));
+      tablist.appendChild(btn);
+
+      const panel = document.createElement("div");
+      panel.className = "code-lab-panel";
+      panel.id = panelId;
+      panel.dataset.tab = tab;
+      panel.setAttribute("role", "tabpanel");
+      panel.setAttribute("aria-labelledby", btn.id);
+      Object.keys(CODE_VARIANTS).forEach((variant) => {
+        const pre = byTab.get(tab)[variant];
+        if (!pre) return;
+        const pane = document.createElement("figure");
+        pane.className = `code-pane code-pane--${variant}`;
+        const caption = document.createElement("figcaption");
+        caption.textContent = CODE_VARIANTS[variant];
+        pane.append(caption, pre);
+        panel.appendChild(pane);
+      });
+      lab.appendChild(panel);
+    });
+
+    selectCodeLabTab(lab, order.includes(preferred) ? preferred : order[0]);
+  });
+}
+
 let topicLoadToken = 0;
 
 function defaultFileKey(topic) {
@@ -676,6 +822,7 @@ async function loadMarkdown(path, token) {
     if (token !== topicLoadToken) return;
     els.markdownContent.innerHTML = marked.parse(markdown);
     document.querySelectorAll("#markdownContent pre code").forEach((block) => hljs.highlightElement(block));
+    buildCodeLabs(els.markdownContent);
     enhanceMarkdownDocument(els.markdownContent);
   } catch (error) {
     if (token !== topicLoadToken) return;
