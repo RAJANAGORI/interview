@@ -1,3 +1,5 @@
+<!-- {% raw %} -->
+
 # Secure Source Code Review - Comprehensive Guide
 
 ## At a glance
@@ -7429,3 +7431,5 @@ Commit rules like this to the repo (a `.semgrep/` directory works) and run them 
 ## Cross-links
 
 OWASP categories, SQL Injection, XSS, IDOR, deserialization topics, Product Security Real-World Scenarios.
+
+<!-- {% endraw %} -->
