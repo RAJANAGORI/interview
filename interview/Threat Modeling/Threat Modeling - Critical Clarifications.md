@@ -1,328 +1,123 @@
 # Threat Modeling - Critical Clarifications
 
-## **Common Misconceptions**
+## Where people get this wrong
 
-### **❌ Misconception 1: "CIA and AAA are the same thing"**
+### 1. "CIA and AAA are the same thing"
 
-**Reality:**
+CIA is a property of a thing you named. Who may read the processor token. Who may change `orders.total`. Who may stop `POST /payments`. AAA is the actor on that flow. What proves them, what they may do to this object, what record exists if they deny it.
 
-- **CIA (Confidentiality, Integrity, Availability)** focuses on **security properties** of data and systems
-- **AAA (Authentication, Authorization, Accounting)** focuses on **access control mechanisms**
-- They are complementary but serve different purposes:
-    - CIA answers: "What security properties must be protected?"
-    - AAA answers: "How do we control access to resources?"
-
-**Example:**
-
-```
-CIA Analysis:
-- Confidentiality: User passwords must remain secret
-- Integrity: Financial transactions must not be altered
-- Availability: Payment system must be accessible 99.9% of the time
-
-AAA Analysis:
-- Authentication: How do we verify user identity? (MFA, OAuth)
-- Authorization: What can authenticated users access? (RBAC, ABAC)
-- Accounting: How do we track user actions? (Audit logs, SIEM)
-
-```
+Amount tampering is one finding. CIA name: integrity of the charge. AAA name: the server never authorized the number. If you write them as two sections with two mitigation lists, you will ship TLS 1.3 twice and still take `amount` from the JSON.
 
 ---
 
-### **❌ Misconception 2: "Design by Action and Design by Component are mutually exclusive"**
+### 2. "Design by Action and Design by Component are mutually exclusive"
 
-**Reality:**
+They are two ways to pick where you sit. Charge-order is an action. The webhook handler is a component on a boundary. Use both on one change if the risk lives in a journey *and* in a box. Write the unsigned-webhook finding once.
 
-- Both approaches can be used **together** in the same threat model
-- **Design by Action** is better for **process-oriented** systems (workflows, APIs)
-- **Design by Component** is better for **architecture-oriented** systems (microservices, distributed systems)
-- **Best Practice**: Use both approaches and cross-reference findings
-
-**Example:**
-
-```
-Design by Component (Architecture View):
-- Web Server Component
-- Database Component
-- API Gateway Component
-
-Design by Action (Process View):
-- User Registration Action
-- Payment Processing Action
-- Data Export Action
-
-Combined Analysis:
-- Component: Database → Action: Payment Processing
-  Threat: SQL Injection during payment transaction
-  CIA Impact: Integrity (transaction tampering)
-  AAA Gap: Authorization (insufficient input validation)
-
-```
+The failure mode is not "you forgot a method." It is writing amount-tampering under the action, again under the API component, again under CIA, and calling that coverage.
 
 ---
 
-### **❌ Misconception 3: "OTM is just another documentation format"**
+### 3. "OTM is just another documentation format"
 
-**Reality:**
+It is a format. Own that. YAML in git, next to the service, on the same PR as the handler. A linter can demand an owner and a ticket id. A later tool can render it.
 
-- **OTM (Open Threat Modeling Format)** is a **machine-readable** standard
-- Enables **automation** of threat modeling processes
-- Supports **integration** with security tools (SAST, DAST, SIEM)
-- Allows **version control** and **collaboration** on threat models
-- Enables **risk calculation** and **prioritization** automation
-
-**Key Benefits:**
-
-- Platform-independent (works with any tool)
-- Structured data (enables analysis and reporting)
-- Integration-ready (connects to security toolchains)
-- Standardized (consistent threat model representation)
+What it is not: a method, a scanner, a reason to skip the diagram. It will not find the bug. It will not generate SAST rules that matter. If the file lives in a wiki with `likelihood: 50` on every row, you used a standard to look busy.
 
 ---
 
-### **❌ Misconception 4: "CIA only applies to data, not systems"**
+### 4. "CIA only applies to data, not systems"
 
-**Reality:**
+The processor secret in the payment pod is a confidentiality asset of the system. The deploy that can change it is an integrity asset. If you only encrypt columns and never ask who can `kubectl edit`, you modeled the table and missed the box that writes to it.
 
-- CIA applies to **both data and systems**
-- **Confidentiality**: Protects data AND system configurations
-- **Integrity**: Ensures data accuracy AND system behavior correctness
-- **Availability**: Ensures data access AND system functionality
-
-**Example:**
-
-```
-Data-Level CIA:
-- Confidentiality: Encrypt PII in database
-- Integrity: Use checksums to detect data tampering
-- Availability: Replicate data across regions
-
-System-Level CIA:
-- Confidentiality: Protect API keys and secrets
-- Integrity: Ensure system configurations aren't modified
-- Availability: Ensure services remain operational
-
-```
+Availability of the charge path is a system property too. Retry-on-500 with no idempotency key knocks over the processor. That is not "the data was unavailable." That is the process.
 
 ---
 
-### **❌ Misconception 5: "AAA is only about user access control"**
+### 5. "AAA is only about user access control"
 
-**Reality:**
+The processor is an actor. The webhook authenticates the processor, authorizes this `invoice_id` for us, and writes a row you cannot quietly delete. Payment API calling the processor is an actor with a key. The notifier worker is an actor that should not be allowed to fetch a URL from a queue message.
 
-- AAA applies to **users, services, and systems**
-- **Authentication**: Verify identity of users, services, and devices
-- **Authorization**: Control access for users, APIs, and system components
-- **Accounting**: Track actions of users, services, and automated processes
-
-**Example:**
-
-```
-User AAA:
-- Authentication: User login with MFA
-- Authorization: User can access their own data
-- Accounting: Log user actions
-
-Service AAA:
-- Authentication: Service-to-service authentication (mTLS)
-- Authorization: API rate limiting and scopes
-- Accounting: Service call logging
-
-System AAA:
-- Authentication: Device certificates
-- Authorization: Network segmentation rules
-- Accounting: System event logging
-
-```
+Tenants are an authorization boundary, not a login feature. Role `customer` does not isolate rows. `WHERE tenant_id = :current` does.
 
 ---
 
-### **❌ Misconception 6: "Threat modeling is only done at design time"**
+### 6. "Threat modeling is only done at design time"
 
-**Reality:**
+The diagram is stale when the arrows are stale. New webhook, new admin tool, new vendor, new column that holds money, an incident in staging: those are the triggers. I attach the note to the PR for that change.
 
-- Threat modeling should be **continuous** throughout the SDLC
-- **Design Phase**: Initial threat model
-- **Development Phase**: Update as code changes
-- **Testing Phase**: Validate threat model against actual implementation
-- **Deployment Phase**: Update for production environment
-- **Operations Phase**: Continuous monitoring and threat model updates
-
-**Best Practice:**
-
-- Threat model updates should be **triggered by**:
-    - New features
-    - Architecture changes
-    - Security incidents
-    - New threat intelligence
-    - Compliance requirements
+A 40-page PDF from 2023 in SharePoint is a souvenir. Start over on the next feature and keep it short. "Continuous" does not mean a quarterly workshop. It means the file moves when the code moves.
 
 ---
 
-### **❌ Misconception 7: "Design by Action means listing all possible actions"**
+### 7. "Design by Action means listing all possible actions"
 
-**Reality:**
+No. Checkout, refund, export, impersonation. Not view-product, not health, not "update display name" unless that flow just became an email-change that resets MFA.
 
-- Design by Action focuses on **critical business operations**
-- Not every action needs threat modeling
-- Prioritize based on:
-    - **Business criticality** (payment processing > user profile update)
-    - **Data sensitivity** (PII handling > public content)
-    - **Attack surface** (external-facing APIs > internal services)
-    - **Compliance requirements** (GDPR data export > analytics)
-
-**Example:**
-
-```
-High Priority Actions (Must Model):
-- User authentication
-- Payment processing
-- Data export (GDPR)
-- Admin privilege escalation
-
-Low Priority Actions (May Skip):
-- Public content viewing
-- Non-sensitive configuration updates
-- Internal health checks
-
-```
+Pick by damage, by data, by new exposure, by a compliance regime that names the action. Three is a good number. One is enough if the feature is "add Apple Pay." Older text in this topic listed ten e-commerce steps and called it a process. That was a product tour.
 
 ---
 
-### **❌ Misconception 8: "Design by Component means modeling every component"**
+### 8. "Design by Component means modeling every component"
 
-**Reality:**
+Sit on the boxes that sit on a trust boundary or hold an asset you named. Payment API, `orders`, the processor as you *use* it, the worker. Skip the CDN. Skip "PostgreSQL" as a brand unless this change adds a cluster or a role.
 
-- Focus on **components with security implications**
-- Not all components need detailed threat modeling
-- Prioritize based on:
-    - **Trust boundaries** (external-facing components)
-    - **Data handling** (components processing sensitive data)
-    - **Attack surface** (components exposed to attackers)
-    - **Criticality** (components essential to business operations)
-
-**Example:**
-
-```
-High Priority Components (Must Model):
-- Authentication service
-- Payment gateway
-- Database (sensitive data)
-- API gateway (external-facing)
-
-Lower Priority Components (May Skip):
-- Static content CDN
-- Internal monitoring tools
-- Development utilities
-
-```
+"Internal monitoring" can wait. The shared `orders` table cannot, because two tenants live in it.
 
 ---
 
-### **❌ Misconception 9: "OTM replaces traditional threat modeling"**
+### 9. "OTM replaces traditional threat modeling"
 
-**Reality:**
+You still draw. You still ask what can go wrong. You still decide mitigate or accept, with a name. OTM is how you write that down so a machine can parse it.
 
-- OTM is a **format**, not a methodology
-- You still need to:
-    - Identify threats (using STRIDE, CIA, etc.)
-    - Assess risks (using DREAD, CVSS, etc.)
-    - Design mitigations
-    - Document findings
-- OTM just provides a **standardized way to represent** your threat model
-
-**Workflow:**
-
-```
-1. Perform threat modeling (using your methodology)
-2. Document findings
-3. Structure in OTM format
-4. Use OTM for automation and integration
-
-```
+Workflow that actually happens: session, tickets, then the YAML. Not: generate YAML, hope a tool invents the threats, fail CI on a homemade score.
 
 ---
 
-### **❌ Misconception 10: "CIA and STRIDE are competing frameworks"**
+### 10. "CIA and STRIDE are competing frameworks"
 
-**Reality:**
+STRIDE is the attack prompt, per element. CIA is which property fails. Same row.
 
-- They are **complementary** frameworks
-- **CIA** focuses on **what** to protect (security properties)
-- **STRIDE** focuses on **how** it can be attacked (threat categories)
-- Use together: CIA identifies what's at risk, STRIDE identifies how it can be attacked
-
-**Example:**
-
-```
-CIA Analysis:
-- Confidentiality: User passwords must be protected
-
-STRIDE Analysis:
-- Spoofing: Attacker impersonates user
-- Information Disclosure: Password leaked in logs
-- Tampering: Password changed without authorization
-
-Combined:
-- Threat: Password disclosure via log injection
-- CIA Impact: Confidentiality breach
-- STRIDE Category: Information Disclosure
-- Mitigation: Sanitize logs, use secure logging
-
-```
+Unsigned webhook: spoofing, integrity of order status. Client `amount`: tampering, integrity of the charge. PAN in a 500 log: information disclosure, confidentiality of the token. They do not compete. A page that explains CIA for six screens and STRIDE for six more, with the same payment example, taught them as rivals by accident.
 
 ---
 
-## **Key Takeaways**
+### 11. "Use every framework on every box"
 
-1. **CIA and AAA are complementary**, not competing frameworks
-2. **Design by Action and Design by Component** can be used together
-3. **OTM is a format**, not a replacement for threat modeling methodology
-4. **CIA applies to both data and systems**
-5. **AAA applies to users, services, and systems**
-6. **Threat modeling is continuous**, not a one-time activity
-7. **Prioritize** actions and components based on risk and criticality
-8. **Use multiple frameworks** together for comprehensive analysis
+This page used to close with that line. It is how a model becomes a spreadsheet nobody opens.
+
+One diagram. STRIDE on the arrows where trust changes. CIA and AAA as columns on those threats. Action or component to pick where you sit. Stop when you have a short list with owners. Depth on checkout beats breadth on the marketing site.
 
 ---
 
-## **Best Practices**
+### 12. "Risk is impact times likelihood, as a percentage"
 
-### **When to Use CIA Framework**
+`likelihood: 50`, `impact: 100`, `riskReduction: 80` is a dashboard. It is not a measurement.
 
-- ✅ Assessing security properties of data
-- ✅ Defining security requirements
-- ✅ Compliance mapping (GDPR, HIPAA)
-- ✅ Risk assessment focused on data protection
-
-### **When to Use AAA Framework**
-
-- ✅ Access control design
-- ✅ Identity and access management
-- ✅ Audit and compliance requirements
-- ✅ Privilege management
-
-### **When to Use Design by Action**
-
-- ✅ Process-oriented systems
-- ✅ API security analysis
-- ✅ Workflow security
-- ✅ Business operation security
-
-### **When to Use Design by Component**
-
-- ✅ Architecture security analysis
-- ✅ Microservices security
-- ✅ Distributed system security
-- ✅ Infrastructure security
-
-### **When to Use OTM Format**
-
-- ✅ Automation and tool integration
-- ✅ Version control of threat models
-- ✅ Cross-team collaboration
-- ✅ Continuous threat modeling
+Say the damage in the business's words. Wrong amount: chargebacks and a processor review. Unsigned webhook: free orders. PAN in logs: PCI scope this quarter. Likelihood is the assumption that makes it easy: the amount is in the JSON today. Then mitigate or accept, with an owner and a check. Processor slowness you might accept for 30 days. Put a name on that too.
 
 ---
 
-Remember: **The best threat model uses multiple frameworks and approaches together!**
+### 13. "A mitigation list is a model"
+
+TLS 1.3, AES-256, MFA, parameterized queries, rate limiting. Those may all be true and still leave `amount` in the body. A mitigation is a ticket with a test: POST with a mismatched amount returns 409, owner payments-api, PAY-1882.
+
+If nobody owns it, it is a wish. If it has an owner and no check, it will regress the first time someone "simplifies" the handler.
+
+---
+
+### 14. "It is inside the VPC, so it is trusted"
+
+That is an assumption. Write it next to the arrow or drop it.
+
+Two pods in one cluster still need to prove who they are. Network policy is blast radius. It is not AuthN. "Internal" payment routes that trust `X-User-Id` from the caller have reintroduced the browser. The processor webhook is on the internet even if your API is in a private subnet. Treat it as a stranger until the signature checks out.
+
+---
+
+## What I want you to remember
+
+CIA names the damage. AAA names the skipped question. STRIDE names the attack. Action and component are how you pick a seat. OTM is the file after you decided.
+
+Users, services, and tenants all get AAA. Data and systems both get CIA. You model the change in front of you, not the estate. You model it again when the diagram changes.
+
+A short list with owners beats a complete matrix. Theater is a model whose mitigations are not engineering work.

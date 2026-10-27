@@ -1,17 +1,17 @@
 # Critical Clarification: Encryption vs Hashing Misconceptions
 
-## **⚠️ Common Misconceptions**
+## ⚠️ Common Misconceptions
 
-### **Misconception 1: "Hashing is a form of encryption"**
+### Misconception 1: "Hashing is a form of encryption"
 
-**Truth:** Hashing and encryption are **completely different** cryptographic techniques that serve different purposes.
+Truth: Hashing and encryption are completely different cryptographic techniques that serve different purposes.
 
-**What they are:**
+What they are:
 
-- **Encryption**: Reversible transformation (can decrypt back to original)
-- **Hashing**: One-way transformation (cannot reverse to original)
+- Encryption: Reversible transformation (can decrypt back to original)
+- Hashing: One-way transformation (cannot reverse to original)
 
-**Key Distinction:**
+Key Distinction:
 
 ```
 Encryption: Plaintext → Ciphertext → Plaintext (reversible)
@@ -19,7 +19,7 @@ Hashing: Input → Hash → ??? (irreversible)
 
 ```
 
-**Example:**
+Example:
 
 ```jsx
 // Encryption (reversible)
@@ -34,19 +34,19 @@ const original = reverseHash(hash);  // ❌ IMPOSSIBLE - cannot reverse!
 
 ```
 
-**Why this matters:**
+Where this bites:
 
-- ❌ **Never use encryption for password storage** (can be decrypted)
-- ✅ **Always use hashing for password storage** (one-way, cannot reverse)
-- ❌ **Never use hashing when you need to retrieve original data** (irreversible)
+- ❌ Never use encryption for password storage (can be decrypted)
+- ✅ Always use hashing for password storage (one-way, cannot reverse)
+- ❌ Never use hashing when you need to retrieve original data (irreversible)
 
 ---
 
-### **Misconception 2: "Encrypted passwords are secure"**
+### Misconception 2: "Encrypted passwords are secure"
 
-**Truth:** **Encrypted passwords are NOT secure for password storage** because encryption is reversible. If the key is compromised, all passwords can be decrypted.
+Truth: Encrypted passwords are NOT secure for password storage because encryption is reversible. If the key is compromised, all passwords can be decrypted.
 
-**The Problem:**
+The Problem:
 
 ```jsx
 // ❌ WRONG: Encrypting passwords
@@ -59,7 +59,7 @@ const decrypted = decrypt(encrypted, key);  // "mypassword123" ✅
 
 ```
 
-**The Solution:**
+The Solution:
 
 ```jsx
 // ✅ CORRECT: Hashing passwords
@@ -72,32 +72,32 @@ const original = reverseHash(hashed);  // ❌ IMPOSSIBLE
 
 ```
 
-**Why Hashing is Better for Passwords:**
+Why Hashing is Better for Passwords:
 
 - ✅ One-way function (cannot reverse)
 - ✅ Even with hash, cannot get original password
 - ✅ Can only verify by hashing input and comparing
 - ✅ Key compromise doesn't expose passwords (no key needed)
 
-**When to Use Encryption for Passwords:**
+When to Use Encryption for Passwords:
 
-- ❌ **Never** for password storage
+- ❌ Never for password storage
 - ✅ Only for password transmission (HTTPS/TLS)
 - ✅ Only for temporary password storage (in-memory, short-lived)
 
 ---
 
-### **Misconception 3: "Hashing can be used to protect data confidentiality"**
+### Misconception 3: "Hashing can be used to protect data confidentiality"
 
-**Truth:** Hashing **does NOT protect confidentiality**. It's designed for **data integrity**, not secrecy.
+Truth: Hashing does NOT protect confidentiality. It's designed for data integrity, not secrecy.
 
-**What Hashing Does:**
+What Hashing Does:
 
 - ✅ Verifies data hasn't changed (integrity)
 - ✅ Creates unique fingerprint of data
 - ❌ Does NOT hide data (anyone can see the input)
 
-**Example:**
+Example:
 
 ```jsx
 // Hashing does NOT hide data
@@ -114,7 +114,7 @@ if (sha256(message) === hash) {
 
 ```
 
-**For Confidentiality, Use Encryption:**
+For Confidentiality, Use Encryption:
 
 ```jsx
 // Encryption hides data
@@ -129,18 +129,18 @@ const decrypted = decrypt(encrypted, key);  // "Secret: 12345"
 
 ```
 
-**Key Point:**
+Key Point:
 
-- **Hashing** = Data integrity (verification)
-- **Encryption** = Data confidentiality (secrecy)
+- Hashing = Data integrity (verification)
+- Encryption = Data confidentiality (secrecy)
 
 ---
 
-### **Misconception 4: "You can decrypt a hash if you have the right key"**
+### Misconception 4: "You can decrypt a hash if you have the right key"
 
-**Truth:** **Hashing does NOT use keys** (in traditional sense) and **cannot be reversed**, even with a key.
+Truth: Hashing does NOT use keys (in traditional sense) and cannot be reversed, even with a key.
 
-**How Hashing Works:**
+How Hashing Works:
 
 ```jsx
 // Hashing: Input → Hash (one-way)
@@ -152,7 +152,7 @@ const hash = sha256("password123");
 
 ```
 
-**How Encryption Works:**
+How Encryption Works:
 
 ```jsx
 // Encryption: Plaintext + Key → Ciphertext (reversible)
@@ -164,7 +164,7 @@ const plaintext = decrypt(ciphertext, key);  // "password123" ✅
 
 ```
 
-**HMAC (Hash-based Message Authentication Code):**
+HMAC (Hash-based Message Authentication Code):
 
 ```jsx
 // HMAC uses a key, but it's still one-way
@@ -176,32 +176,32 @@ const hmac = hmac_sha256("message", secretKey);
 
 ```
 
-**Key Difference:**
+Key Difference:
 
-- **Encryption key**: Used to encrypt AND decrypt (reversible)
-- **Hashing**: No key (or key used for authentication, not decryption)
+- Encryption key: Used to encrypt AND decrypt (reversible)
+- Hashing: No key (or key used for authentication, not decryption)
 
 ---
 
-### **Misconception 5: "MD5 and SHA-1 are secure for password hashing"**
+### Misconception 5: "MD5 and SHA-1 are secure for password hashing"
 
-**Truth:** MD5 and SHA-1 are **NOT secure** for password hashing. They're fast hash functions designed for data integrity, not password security.
+Truth: MD5 and SHA-1 are NOT secure for password hashing. They're fast hash functions designed for data integrity, not password security.
 
-**Problems with MD5/SHA-1 for Passwords:**
+Problems with MD5/SHA-1 for Passwords:
 
-1. **Too Fast:**
+1. Too Fast:
     - Designed for speed (data integrity checks)
     - Easy to brute-force
     - Can compute billions of hashes per second
-2. **Vulnerable to Attacks:**
+2. Vulnerable to Attacks:
     - MD5: Completely broken (collision attacks)
     - SHA-1: Deprecated (collision attacks found)
     - Rainbow tables available
-3. **No Salt Support:**
+3. No Salt Support:
     - Same password = same hash
     - Vulnerable to rainbow table attacks
 
-**Example:**
+Example:
 
 ```jsx
 // ❌ WRONG: Using MD5 for passwords
@@ -215,7 +215,7 @@ const hash = md5(password);  // "482c811da5d5b4bc6d497ffa98491e38"
 
 ```
 
-**Correct Approach:**
+Correct Approach:
 
 ```jsx
 // ✅ CORRECT: Use password hashing algorithms
@@ -233,23 +233,23 @@ const hash = argon2.hash(password, {
 
 ```
 
-**Secure Password Hashing Algorithms:**
+Secure Password Hashing Algorithms:
 
-- ✅ **bcrypt** - Widely used, battle-tested
-- ✅ **Argon2** - Modern standard (winner of Password Hashing Competition)
-- ✅ **scrypt** - Memory-hard function
-- ✅ **PBKDF2** - Key derivation function
-- ❌ **MD5** - Never use for passwords
-- ❌ **SHA-1** - Never use for passwords
-- ❌ **SHA-256** - Too fast, use with salt and iterations (PBKDF2)
+- ✅ bcrypt - Widely used, battle-tested
+- ✅ Argon2 - Modern standard (winner of Password Hashing Competition)
+- ✅ scrypt - Memory-hard function
+- ✅ PBKDF2 - Key derivation function
+- ❌ MD5 - Never use for passwords
+- ❌ SHA-1 - Never use for passwords
+- ❌ SHA-256 - Too fast, use with salt and iterations (PBKDF2)
 
 ---
 
-### **Misconception 6: "Encryption and hashing are interchangeable"**
+### Misconception 6: "Encryption and hashing are interchangeable"
 
-**Truth:** Encryption and hashing are **NOT interchangeable**. They solve different problems and have different use cases.
+Truth: Encryption and hashing are NOT interchangeable. They solve different problems and have different use cases.
 
-**When to Use Encryption:**
+When to Use Encryption:
 
 - ✅ Protect data confidentiality (secrets, PII, credit cards)
 - ✅ Need to retrieve original data
@@ -257,7 +257,7 @@ const hash = argon2.hash(password, {
 - ✅ Data at rest (encrypted databases)
 - ✅ Temporary data protection
 
-**When to Use Hashing:**
+When to Use Hashing:
 
 - ✅ Password storage (one-way, cannot reverse)
 - ✅ Data integrity verification (file checksums)
@@ -265,9 +265,9 @@ const hash = argon2.hash(password, {
 - ✅ Deduplication (same content = same hash)
 - ✅ Fast data comparison
 
-**Example Scenarios:**
+Example Scenarios:
 
-**Scenario 1: Storing Credit Card Numbers**
+Scenario 1: Storing Credit Card Numbers
 
 ```jsx
 // ❌ WRONG: Hashing credit cards
@@ -282,7 +282,7 @@ const encrypted = encrypt(cardNumber, key);
 
 ```
 
-**Scenario 2: Storing Passwords**
+Scenario 2: Storing Passwords
 
 ```jsx
 // ❌ WRONG: Encrypting passwords
@@ -299,18 +299,18 @@ const hashed = bcrypt(password);
 
 ---
 
-### **Misconception 7: "Salted hashes can be decrypted"**
+### Misconception 7: "Salted hashes can be decrypted"
 
-**Truth:** **Salted hashes still cannot be decrypted**. Salt makes hashing more secure, but it doesn't make it reversible.
+Truth: Salted hashes still cannot be decrypted. Salt makes hashing more secure, but it doesn't make it reversible.
 
-**What Salt Does:**
+What Salt Does:
 
 - ✅ Prevents rainbow table attacks
 - ✅ Makes same password produce different hashes
 - ✅ Adds randomness to hashing process
 - ❌ Does NOT make hashing reversible
 
-**Example:**
+Example:
 
 ```jsx
 // Without salt (vulnerable)
@@ -330,7 +330,7 @@ const original = reverseHash(hash1);  // ❌ IMPOSSIBLE
 
 ```
 
-**How Salt Works:**
+How Salt Works:
 
 ```jsx
 // Password storage with salt
@@ -356,19 +356,31 @@ function verifyPassword(inputPassword, storedHash, storedSalt) {
 
 ---
 
-## **Key Takeaways**
+### Misconception 8: "Alice encrypts with her private key, Bob decrypts with her public key"
 
-### **✅ Understanding:**
+That is a signature, described backwards, sold as confidentiality. Anyone with Alice's public key can "decrypt" that blob, which means anyone can read it. Confidentiality uses Bob's public key to encrypt and Bob's private key to decrypt. Signatures use Alice's private key to sign and Alice's public key to verify. Do not reuse one sentence for both.
 
-1. **Encryption = Reversible** (can decrypt back to original)
-2. **Hashing = Irreversible** (cannot get original back)
-3. **Encryption = Confidentiality** (hides data)
-4. **Hashing = Integrity** (verifies data hasn't changed)
-5. **Passwords = Always hash** (never encrypt)
-6. **Sensitive data = Encrypt** (when you need to retrieve it)
-7. **Use proper algorithms** (bcrypt/Argon2 for passwords, AES for encryption)
+### Misconception 9: "If I hide Bob's public key behind login, the message stays secret"
 
-### **❌ Common Mistakes:**
+A public key is not a secret. Login on `/keys/bob` is access control on a download. Charlie can still have the key from a cert, a mail header, or last week's response. He still cannot decrypt without Bob's private key. The private key is the boundary. Hiding the public key also does not stop a substitution: Alice has to know the key she used is actually Bob's.
+
+If several people should read one message, wrapping the DEK only to Bob is not an ACL. Wrap per recipient, or let a KMS decide who may unwrap. Details and the hybrid (AES-GCM plus a wrapped DEK) sit in the comprehensive guide under "Who encrypts with whose key."
+
+---
+
+## What to keep straight
+
+### ✅ Understanding:
+
+1. Encryption = Reversible (can decrypt back to original)
+2. Hashing = Irreversible (cannot get original back)
+3. Encryption = Confidentiality (hides data)
+4. Hashing = Integrity (verifies data hasn't changed)
+5. Passwords = Always hash (never encrypt)
+6. Sensitive data = Encrypt (when you need to retrieve it)
+7. Use proper algorithms (bcrypt/Argon2 for passwords, AES for encryption)
+
+### ❌ Common Mistakes:
 
 - ❌ Using encryption for password storage
 - ❌ Using hashing for data confidentiality
@@ -379,18 +391,18 @@ function verifyPassword(inputPassword, storedHash, storedSalt) {
 
 ---
 
-## **Summary Table**
+## Summary Table
 
 | Aspect | Encryption | Hashing |
 | --- | --- | --- |
-| **Purpose** | Confidentiality (hide data) | Integrity (verify data) |
-| **Reversible?** | ✅ Yes (with key) | ❌ No (one-way) |
-| **Uses Key?** | ✅ Yes (required) | ⚠️ Optional (HMAC) |
-| **Password Storage** | ❌ Never | ✅ Always |
-| **Data Retrieval** | ✅ Can decrypt | ❌ Cannot reverse |
-| **Speed** | ⚠️ Slower | ✅ Faster |
-| **Use Cases** | Secrets, PII, transmission | Passwords, integrity, signatures |
+| Purpose | Confidentiality (hide data) | Integrity (verify data) |
+| Reversible? | ✅ Yes (with key) | ❌ No (one-way) |
+| Uses Key? | ✅ Yes (required) | ⚠️ Optional (HMAC) |
+| Password Storage | ❌ Never | ✅ Always |
+| Data Retrieval | ✅ Can decrypt | ❌ Cannot reverse |
+| Speed | ⚠️ Slower | ✅ Faster |
+| Use Cases | Secrets, PII, transmission | Passwords, integrity, signatures |
 
 ---
 
-Remember: **Encryption protects confidentiality (secrecy), Hashing protects integrity (verification). They're complementary, not interchangeable!**
+Remember: Encryption protects confidentiality (secrecy), Hashing protects integrity (verification). They're complementary, not interchangeable!

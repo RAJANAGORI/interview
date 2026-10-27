@@ -4,7 +4,7 @@ description: Quick Digital Signatures spine: attacks, controls, traps, and the t
 
 # Digital Signatures revision map
 
-Last mock I bounced around the Digital Signatures folder. This file is the stop that. Drawn from Critical Clarification Digital Signatures.md, Digital Signatures Interview Questions & Answers.md, Digital Signature - Quick Reference Guide.md, Digital Signatures - Comprehensive Guide.md. Skim the mermaid, then the outline.
+Last mock I bounced around the Digital Signatures folder. This file is the stop that. Drawn from Critical Clarification Digital Signatures.md, Digital Signatures - Comprehensive Guide.md, Digital Signatures Interview Questions & Answers.md, Digital Signature - Quick Reference Guide.md. Skim the mermaid, then the outline.
 
 ```mermaid
 mindmap
@@ -486,6 +486,9 @@ mindmap
 - Usually distributed via digital certificates
 - Certificate Authority (CA) vouches for the binding
 
+### "Encrypt with your private key so the receiver decrypts with your public key"
+- A signature does not hide the document. Combine them if you need both: sign, then encrypt to the recipient. For a messaging API that also does AuthN and AuthZ, see "Who encrypts with whose key" in Encryption vs Hashing.
+
 ## Understanding the Process
 
 ### Creation Process (Sender's Side)
@@ -554,7 +557,7 @@ mindmap
 ## Common Interview Question
 - Q: "What's the difference between a digital signature and encryption?"
 
-## Key Takeaways
+## What to keep straight
 - Digital signatures do NOT encrypt documents
 - They sign a hash, not the document itself
 - Document remains readable
@@ -588,11 +591,14 @@ mindmap
 - Explain the concept of non-repudiation in digital signatures.
 - What is timestamping and why is it important for digital signatures?
 - How do you handle key rotation in a digital signature system?
+- Someone says they will encrypt with their private key so only verified users can decrypt with the public key. How do you correct that, and how would you build the messaging feature they actually want?
 - Quick Reference Answers
 - What does a digital signature provide?
-- What key is used to create a signature?
 
 ## Advanced Questions
+
+### What key is used to create a signature?
+- See the source section `What key is used to create a signature?` for the worked example.
 
 ### What key is used to verify a signature?
 - See the source section `What key is used to verify a signature?` for the worked example.

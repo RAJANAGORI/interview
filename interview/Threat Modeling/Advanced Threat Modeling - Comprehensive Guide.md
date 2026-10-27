@@ -2,1782 +2,450 @@
 
 ## At a glance
 
-**Threat modeling** identifies **credible threats** against a system **early**—structured (STRIDE, PASTA, LINDDUN, attack trees) or scenario-driven—so teams prioritize controls before code **hardens**. Advanced practice integrates **diagrams** (DFD, architecture), **abuse cases**, **data classification**, and **continuous** updates as features ship.
+Threat modeling is how you decide which threats deserve a control before the code hardens around the wrong assumption. You draw the system, mark where trust changes, name the threats on each crossing, and leave each one with a decision someone owns.
+
+This guide runs that session on one payment API. CIA, AAA, STRIDE, Design by Action, Design by Component, and OTM all show up, but they show up as questions you ask on the same diagram, not as five separate writeups of the same bug.
 
 ---
 
 ## Learning outcomes
 
-- Facilitate **STRIDE** (or chosen method) on a real architecture without checklist theater.
-- Connect findings to **controls**, **owners**, and **verification** (tests, monitoring).
-- Explain how threat modeling **scales** (templates, champions, service catalog).
+- Run a model: assets, data flow, trust boundaries, threats, rank, and what you still accept.
+- Use STRIDE, CIA, and AAA as three questions about the same flow.
+- Walk one business action and one component boundary and leave with a threat you can verify.
+- Record the result as a ticket or an Open Threat Modeling entry, with an owner and a way to check the mitigation.
 
 ---
 
 ## Prerequisites
 
-Core AppSec topics (auth, data flows), Product Security Real-World Scenarios for practice (this repo).
+Auth, data flows, and the OWASP-style bug classes in the rest of this repo. Enough of a backend to follow a request from a browser to a processor webhook.
 
 ---
 
-## **Introduction**
+## What the work actually is
 
-### **What is Advanced Threat Modeling?**
+Adam Shostack's four questions are the whole job:
 
-Advanced threat modeling goes beyond basic STRIDE analysis to provide comprehensive security assessment using multiple frameworks, design approaches, and standardized formats. It enables:
+1. What are we building?
+2. What can go wrong?
+3. What are we going to do about it?
+4. Did we do a good job?
 
-- **Systematic risk assessment** using CIA and AAA frameworks
-- **Structured analysis** through design-by-action and design-by-component approaches
-- **Automation and integration** via OTM format
-- **Comprehensive coverage** of security properties and access control mechanisms
+Everything else is a way to answer those without lying to yourself. STRIDE is a prompt for question 2. CIA is a prompt for "gone wrong for whom." AAA is a prompt for "who is this actor, what may they do, and what record exists if they deny it." Design by Action and Design by Component are two ways to pick where you start. OTM is a file format for the answer, after you have one.
 
-### **Why Multiple Frameworks?**
+The artifact you leave with is small.
 
-Different frameworks answer different questions:
+- A diagram of this change, not the whole company.
+- Assumptions written as sentences. "The browser is hostile." "The processor webhook is a stranger until the signature checks out." "A JWT proves an account, not the right to every row that shares the table."
+- A short threat list. Five good ones beat forty rows of "SQL injection on the database."
+- For each threat: mitigate, accept, or needs a test. A name. A way you will know the control is real.
 
-- **CIA**: What security properties must be protected?
-- **AAA**: How do we control access?
-- **STRIDE**: How can the system be attacked?
-- **Design Approaches**: How do we structure the analysis?
-
-Using multiple frameworks provides **comprehensive coverage** and **defense in depth**.
+If you cannot point at those four things after the meeting, you had a workshop. You did not model anything.
 
 ---
 
-## **CIA Framework (Confidentiality, Integrity, Availability)**
+## How a session runs
 
-### **Overview**
+I do this in one sitting for a feature. An hour, maybe ninety minutes if the webhook is new. Quarterly all-day reviews that produce a spreadsheet nobody opens are how the practice got a bad name.
 
-The CIA triad is the foundation of information security, representing three core security properties that must be protected.
+Who sits in the room: the engineer who will write the handler, someone who can contradict the diagram (another service owner, the person who actually talks to the processor), and whoever will own the tickets. Security facilitates. Security does not invent the architecture while the team watches.
 
-### **Confidentiality**
+What I refuse to model in that hour:
 
-**Definition:** Ensuring that information is accessible only to authorized users, systems, or processes.
+- Every user action the product has ever shipped. Checkout, refund, and the processor webhook. Not "view product."
+- Every box on the infra diagram. The payment API, the orders table, the processor, the queue. Not the CDN in front of the marketing site.
+- Generic catalogues. "Apply STRIDE to the database" is how you get "information disclosure" as a finding with no path.
 
-**Threats to Confidentiality:**
+Scope is a decision. Write it at the top. "In: `POST /payments`, the charge to the processor, the `invoice.paid` webhook, tenant isolation on `orders`. Out: card-processor internals, the marketing site, load testing the edge."
 
-- Unauthorized access to data
-- Data interception (network sniffing, MitM)
-- Data leakage (logs, error messages, backups)
-- Insufficient access controls
-- Weak encryption
+A useful rule I stole from assessments: if you cannot name the interface, it is not in scope.
 
-**Mitigations:**
+---
 
-- Encryption (at rest and in transit)
-- Access control (RBAC, ABAC)
-- Data classification and labeling
-- Secure communication channels (TLS/SSL)
-- Data loss prevention (DLP)
-- Secure storage and disposal
+## Draw it first
 
-**Example - E-commerce Payment System:**
+You cannot STRIDE a paragraph. You STRIDE a diagram.
 
-```
-Confidentiality Requirements:
-- Credit card numbers must be encrypted (PCI-DSS)
-- Customer PII must be protected (GDPR)
-- Payment tokens must not be exposed in logs
-- API keys must be stored securely
+I use a data flow diagram because it forces the crossings. Four symbols, and I do not add a fifth unless I am lost.
 
-Threats:
-- SQL Injection exposing credit card data
-- Unencrypted database backups
-- API keys in source code
-- Sensitive data in error messages
+| Symbol | Meaning | On this payment API |
+| --- | --- | --- |
+| External entity | Something outside your process that sends or receives data | Browser. Card processor. |
+| Process | Code that transforms data | Payment API. Notifier worker. |
+| Data store | Data at rest | `orders`. Audit log. Job queue. |
+| Data flow | An arrow with a name | `POST /payments`. Processor charge. `invoice.paid` webhook. |
 
-Mitigations:
-- AES-256 encryption for data at rest
-- TLS 1.3 for data in transit
-- Tokenization for credit card numbers
-- Secure key management (HSM, Key Vault)
+Trust boundaries are the lines where the story you tell yourself stops being true. On this system I mark four, and I write them as assumptions because that is what they are.
 
-```
+1. Browser to API. Anything in a header, query string, or JSON body is hostile, including a user id the client swears is its own, and including `amount`.
+2. API to the card processor. The processor is outside your trust. Its webhook is a stranger until the signature checks out.
+3. Queue to worker. A message is data. A URL inside it is not an instruction to fetch.
+4. Tenant to tenant. A logged-in session proves an account, not the right to order 4413.
 
-### **Integrity**
-
-**Definition:** Ensuring that data and systems remain accurate, complete, and unmodified by unauthorized parties.
-
-**Threats to Integrity:**
-
-- Unauthorized data modification
-- Data corruption
-- Tampering with system configurations
-- Man-in-the-middle attacks
-- Insecure data transmission
-
-**Mitigations:**
-
-- Digital signatures
-- Hash functions (SHA-256, SHA-512)
-- Checksums and integrity checks
-- Access controls and audit trails
-- Secure communication protocols
-- Version control and change management
-
-**Example - Financial Transaction System:**
-
-```
-Integrity Requirements:
-- Transaction amounts cannot be modified
-- Account balances must be accurate
-- Audit logs must be tamper-proof
-- System configurations must be protected
-
-Threats:
-- SQL Injection modifying transaction amounts
-- Man-in-the-middle altering payment data
-- Unauthorized configuration changes
-- Log tampering to hide fraudulent activity
-
-Mitigations:
-- Database constraints and triggers
-- Digital signatures on transactions
-- Immutable audit logs
-- Configuration management tools
-- Hash-based integrity verification
-
+```mermaid
+flowchart LR
+  Browser -->|POST /payments| PayAPI[Payment API]
+  PayAPI --> Orders[(orders)]
+  PayAPI --> Processor[Card processor]
+  Processor -->|invoice.paid webhook| PayAPI
+  PayAPI --> Queue[(job queue)]
+  Queue --> Worker[Notifier]
+  PayAPI --> Audit[(audit log)]
 ```
 
-### **Availability**
+Assets worth naming before you list threats, in sentences, not labels.
 
-**Definition:** Ensuring that systems and data are accessible and usable when needed by authorized users.
+- Card data and tokens: the processor should see them. Your logs should not. Confidentiality.
+- Order price and refund amount: the client does not get to pick these. Integrity.
+- The charge path itself: if `POST /payments` is down, you are not taking money. Availability.
+- The audit row that says who moved money: if it can be edited, repudiation is free. Accounting.
 
-**Threats to Availability:**
+I write the assumptions next to the arrows. "VPC peers are trusted" is the one that usually fails, so I do not let it sit unspoken. If the payment API calls the processor over the public internet, say that. If the worker runs on a shared cluster, say that too.
 
-- Denial of Service (DoS) attacks
-- Distributed Denial of Service (DDoS)
-- System failures and outages
-- Resource exhaustion
-- Natural disasters
+Do not skip this section because you "already know the architecture." The diagram is where the team discovers they disagree.
 
-**Mitigations:**
+---
 
-- Redundancy and failover
-- Load balancing
-- Rate limiting and throttling
-- DDoS protection (CloudFlare, AWS Shield)
-- Backup and disaster recovery
-- High availability architectures
-- Monitoring and alerting
+## STRIDE on that diagram
 
-**Example - Cloud-Based SaaS Application:**
+STRIDE is per element, not per product. Microsoft's docs treat it that way and they are right. You stand on a process, a store, or a flow, and you ask six questions. You do not open a blank spreadsheet and fill every cell.
 
-```
-Availability Requirements:
-- 99.9% uptime SLA (8.76 hours downtime/year)
-- Sub-second response times
-- Graceful degradation during peak load
-- Disaster recovery within 4 hours
+| Letter | Question on this element | Control direction |
+| --- | --- | --- |
+| S Spoofing | Who is this, and what would a fake one look like? | AuthN, mTLS, webhook signatures |
+| T Tampering | What could change in flight or at rest? | Integrity checks, HMAC, TLS, server-side totals |
+| R Repudiation | Can they deny they did it? | Signed audit logs, WORM storage |
+| I Information disclosure | Who else can read this? | Encryption, least privilege, redaction |
+| D Denial of service | How do they stop everyone else? | Rate limits, quotas, timeouts |
+| E Elevation of privilege | What can they do that they should not? | AuthZ, object-level checks, tenant filters |
 
-Threats:
-- DDoS attacks overwhelming servers
-- Database connection pool exhaustion
-- Single point of failure in architecture
-- Cloud provider outages
+I do not run all six on every box. A static asset store does not need a spoofing novella. The payment API, the webhook, and the `orders` table do.
 
-Mitigations:
-- Multi-region deployment
-- Auto-scaling based on load
-- CDN for static content
-- Database replication and failover
-- Circuit breakers and rate limiting
-- DDoS protection services
+Here is STRIDE on the diagram above, the threats I would actually write down. CIA and AAA sit in the last two columns so you can see they are the same finding, named three ways.
 
-```
-
-### **CIA Threat Modeling Process**
-
-**Step 1: Identify Assets**
-
-```
-Data Assets:
-- Customer PII (Confidentiality)
-- Financial transactions (Integrity)
-- System configurations (Integrity)
-- API keys and secrets (Confidentiality)
-
-System Assets:
-- Web servers (Availability)
-- Databases (Confidentiality, Integrity, Availability)
-- APIs (All three)
-- Authentication services (Confidentiality, Availability)
-
-```
-
-**Step 2: Assess CIA Requirements**
-
-```
-For each asset, determine:
-- Confidentiality Level: Public, Internal, Confidential, Restricted
-- Integrity Level: Low, Medium, High, Critical
-- Availability Level: Standard, High, Critical
-
-Example:
-- Credit Card Data:
-  Confidentiality: Restricted (encrypted, access-controlled)
-  Integrity: Critical (cannot be modified)
-  Availability: High (must be accessible for transactions)
-
-```
-
-**Step 3: Identify Threats**
-
-```
-Use CIA-specific threat categories:
-
-Confidentiality Threats:
-- Unauthorized access
-- Data leakage
-- Eavesdropping
-- Insufficient encryption
-
-Integrity Threats:
-- Data tampering
-- Unauthorized modification
-- Man-in-the-middle
-- Configuration drift
-
-Availability Threats:
-- DoS/DDoS
-- Resource exhaustion
-- System failures
-- Network outages
-
-```
-
-**Step 4: Map Threats to Assets**
-
-```markdown
-Create threat-asset matrix:
-
-| Asset | Confidentiality Threat | Integrity Threat | Availability Threat |
-|-------|----------------------|-----------------|-------------------|
-| User Database | SQL Injection | Data tampering | Connection exhaustion |
-| Payment API | API key theft | Transaction modification | Rate limit bypass |
-| Config Files | Secret exposure | Unauthorized changes | File system failure |
-
-```
-
-**Step 5: Assess Risk**
-
-```
-Risk = Impact × Likelihood
-
-Impact based on CIA:
-- Confidentiality: Data sensitivity, regulatory impact
-- Integrity: Business impact, trust impact
-- Availability: Revenue impact, user impact
-
-Likelihood:
-- Attack complexity
-- Existing controls
-- Threat actor capability
-- Exposure level
-
-```
-
-**Step 6: Design Mitigations**
-
-```
-Prioritize based on risk:
-- High Risk: Immediate mitigation
-- Medium Risk: Planned mitigation
-- Low Risk: Accept or monitor
-
-Example Mitigation Strategy:
-- Confidentiality: Encryption + Access Control
-- Integrity: Digital Signatures + Audit Logs
-- Availability: Redundancy + DDoS Protection
-
-```
-
-### **CIA Risk Assessment Matrix**
-
-| CIA Property | Impact Level | Likelihood | Risk Level | Mitigation Priority |
+| Element | STRIDE | Threat I would write | CIA property that fails | AAA question that was skipped |
 | --- | --- | --- | --- | --- |
-| Confidentiality (PII) | High | High | **CRITICAL** | Immediate |
-| Integrity (Transactions) | High | Medium | **HIGH** | High Priority |
-| Availability (API) | Medium | High | **HIGH** | High Priority |
-| Confidentiality (Logs) | Medium | Low | **MEDIUM** | Planned |
-| Integrity (Config) | Low | Medium | **MEDIUM** | Planned |
-| Availability (Static) | Low | Low | **LOW** | Monitor |
+| Flow: `POST /payments` body | T | Client `amount` is charged as-is | Integrity of the charge | Authorization of the amount (server never decided) |
+| Flow: `POST /payments` | E | Pay for order 4413 while logged in as the owner of 4412 | Integrity, and confidentiality of 4413 | Authorization of the object |
+| Flow: `invoice.paid` webhook | S | Anyone who can POST to the webhook URL marks an invoice paid | Integrity of order status | Authentication of the processor |
+| Store: audit log | R / I | PAN or raw card token lands in the log line, or an admin edits the row | Confidentiality of card data; integrity of the trail | Accounting that cannot be rewritten |
+| Process: Payment API | D | Caller retries a 500 and the processor sees twenty charges | Availability of the processor; integrity if duplicates land | (rate and idempotency, not an identity gap) |
+
+That table is the model. The sections below unpack CIA and AAA on the same rows. They do not invent a second list.
 
 ---
 
-## **AAA Framework (Authentication, Authorization, Accounting)**
+## Which CIA property fails
 
-### **Overview**
+CIA is three properties of a thing you already named. It is not a catalogue of every bug that has ever existed.
 
-AAA provides a framework for access control, ensuring that only authorized entities can access resources and that all access is tracked.
+- Confidentiality: who is allowed to read this.
+- Integrity: who is allowed to change this, and how you would notice.
+- Availability: who is allowed to stop this.
 
-### **Authentication**
+Ask them of a flow or a store, and add "for whom." Card tokens leaking to a support engineer is a different finding from card tokens leaking to another tenant. "PII must be protected" is a requirement document. "The notifier must not put PAN in the receipt email" is a threat.
 
-**Definition:** Verifying the identity of users, services, or systems attempting to access resources.
+On the payment API:
 
-**Authentication Methods:**
+**Confidentiality.** The processor sees the charge. The API sees a token. The audit log sees `orderId`, `userId`, last four, and a processor id. If a 500 handler dumps the request body, confidentiality is gone and nobody needed SQL injection to get there. Same property if tenant 4412 can `GET /orders/4413`.
 
-- **Something you know**: Passwords, PINs, security questions
-- **Something you have**: Tokens, smart cards, mobile devices
-- **Something you are**: Biometrics (fingerprint, face, iris)
-- **Something you do**: Behavioral biometrics
+**Integrity.** The amount charged must be the stored order total, not the number in the JSON. Order status must move `pending -> paid` because the processor said so, not because a stranger hit the webhook. A refund must not exceed the captured amount. Those are integrity threats that look like business rules. They are still threats.
 
-**Multi-Factor Authentication (MFA):**
+**Availability.** `POST /payments` has to work during a sale. The cheap DoS is not a SYN flood. It is "retry on 500 with no idempotency key," or "let the client pick `quantity=999999`," or "the processor timeout is 30s and we hold a worker the whole time." Availability here is an engineering property of the charge path, not a CDN checkbox.
 
-- Requires two or more authentication factors
-- Significantly reduces risk of credential compromise
-- Common combinations: Password + SMS, Password + TOTP, Password + Biometric
+I do not score Confidentiality of PII as CRITICAL because a matrix told me both axes were High. I say: if this lands, we have a PCI finding and we reissue tokens. That sentence is the impact. The matrix can wait.
 
-**Threats to Authentication:**
-
-- Credential theft (phishing, keyloggers)
-- Weak passwords
-- Password reuse
-- Session hijacking
-- Brute force attacks
-- Social engineering
-
-**Mitigations:**
-
-- Strong password policies
-- Multi-factor authentication
-- Password managers
-- Account lockout after failed attempts
-- CAPTCHA for automated attacks
-- Secure session management
-- Biometric authentication
-
-**Example - Enterprise SSO System:**
-
-```
-Authentication Requirements:
-- Support multiple identity providers (SAML, OAuth, LDAP)
-- MFA for sensitive operations
-- Session timeout after inactivity
-- Password complexity requirements
-
-Threats:
-- Credential stuffing attacks
-- Session fixation
-- Man-in-the-middle during authentication
-- Weak identity provider configuration
-
-Mitigations:
-- OAuth 2.0 with PKCE
-- SAML with proper signature validation
-- MFA enforcement
-- Session ID regeneration after login
-- Certificate pinning
-
-```
-
-### **Authorization**
-
-**Definition:** Determining what actions an authenticated entity is permitted to perform on specific resources.
-
-**Authorization Models:**
-
-**1. Role-Based Access Control (RBAC):**
-
-```
-Roles: Admin, Manager, User, Guest
-Permissions assigned to roles
-Users assigned to roles
-
-Example:
-- Admin: Full access
-- Manager: Read/Write to assigned resources
-- User: Read own data, Write own data
-- Guest: Read public data only
-
-```
-
-**2. Attribute-Based Access Control (ABAC):**
-
-```
-Access decisions based on:
-- User attributes (department, clearance level)
-- Resource attributes (classification, owner)
-- Environmental attributes (time, location)
-- Action attributes (read, write, delete)
-
-Example:
-- User from Finance department
-- Accessing Financial data
-- During business hours
-- From corporate network
-→ Allow read access
-
-```
-
-**3. Discretionary Access Control (DAC):**
-
-```
-Resource owners control access
-Common in file systems
-
-Example:
-- File owner sets permissions
-- Owner can grant/revoke access
-- Used in Unix/Linux file systems
-
-```
-
-**4. Mandatory Access Control (MAC):**
-
-```
-System-enforced access control
-Based on security labels
-Common in military/government systems
-
-Example:
-- Top Secret, Secret, Confidential labels
-- Users have clearance levels
-- System enforces access rules
-
-```
-
-**Threats to Authorization:**
-
-- Privilege escalation
-- Insecure direct object references (IDOR)
-- Missing authorization checks
-- Broken access control
-- Overly permissive policies
-
-**Mitigations:**
-
-- Principle of least privilege
-- Regular access reviews
-- Authorization checks at every layer
-- Centralized authorization service
-- Regular policy audits
-- Separation of duties
-
-**Example - API Authorization:**
-
-```
-Authorization Requirements:
-- API endpoints require proper scopes
-- Users can only access their own data
-- Admins have additional permissions
-- Rate limiting based on user role
-
-Threats:
-- Missing authorization checks
-- Token scope escalation
-- IDOR vulnerabilities
-- Privilege escalation via API
-
-Mitigations:
-- OAuth 2.0 scopes
-- Resource-level authorization checks
-- Input validation and sanitization
-- Regular security testing
-- API gateway with authorization policies
-
-```
-
-### **Accounting (Auditing)**
-
-**Definition:** Tracking and logging all security-relevant events for accountability, compliance, and forensic analysis.
-
-**What to Log:**
-
-- Authentication events (success, failure)
-- Authorization decisions (granted, denied)
-- Data access (read, write, delete)
-- Configuration changes
-- Administrative actions
-- Security events (attacks, anomalies)
-
-**Log Requirements:**
-
-- **Completeness**: All security events logged
-- **Integrity**: Logs cannot be tampered with
-- **Retention**: Appropriate retention period
-- **Access Control**: Only authorized personnel can access logs
-- **Performance**: Logging doesn't impact system performance
-
-**Threats to Accounting:**
-
-- Log tampering
-- Insufficient logging
-- Log deletion
-- Unauthorized log access
-- Performance impact from excessive logging
-
-**Mitigations:**
-
-- Immutable logs (write-once storage)
-- Centralized logging (SIEM)
-- Log integrity verification (hashes, signatures)
-- Secure log storage
-- Regular log reviews
-- Automated log analysis
-
-**Example - Compliance Logging:**
-
-```
-Accounting Requirements (GDPR, PCI-DSS):
-- Log all access to PII
-- Log all authentication attempts
-- Log all data modifications
-- Retain logs for 7 years
-- Tamper-proof logs
-
-Implementation:
-- Structured logging (JSON format)
-- Centralized SIEM (Splunk, ELK)
-- Log encryption at rest
-- Regular integrity checks
-- Automated alerting on anomalies
-
-```
-
-### **AAA Threat Modeling Process**
-
-**Step 1: Identify Authentication Points**
-
-```
-System Entry Points:
-- User login (web, mobile)
-- API authentication
-- Service-to-service authentication
-- Administrative access
-
-Authentication Mechanisms:
-- Username/password
-- OAuth 2.0
-- API keys
-- mTLS certificates
-
-```
-
-**Step 2: Map Authorization Requirements**
-
-```
-For each resource/action:
-- Who can access?
-- What can they do?
-- Under what conditions?
-
-Example:
-- Payment API:
-  Who: Authenticated users
-  What: Create payment, view own payments
-  Conditions: Valid payment method, sufficient balance
-
-```
-
-**Step 3: Define Accounting Requirements**
-
-```
-What events to log:
-- Authentication: All login attempts
-- Authorization: All access denials
-- Data access: Sensitive data access
-- Changes: All modifications
-
-Compliance requirements:
-- GDPR: PII access logging
-- PCI-DSS: Payment data access
-- SOX: Financial data changes
-
-```
-
-**Step 4: Identify AAA Threats**
-
-```
-Authentication Threats:
-- Weak authentication
-- Credential theft
-- Session hijacking
-- MFA bypass
-
-Authorization Threats:
-- Missing authorization checks
-- Privilege escalation
-- IDOR vulnerabilities
-- Overly permissive policies
-
-Accounting Threats:
-- Insufficient logging
-- Log tampering
-- Unauthorized log access
-
-```
-
-**Step 5: Design AAA Controls**
-
-```
-Authentication Controls:
-- Strong password policies
-- MFA enforcement
-- Secure session management
-- Account lockout
-
-Authorization Controls:
-- RBAC/ABAC implementation
-- Principle of least privilege
-- Regular access reviews
-- Authorization middleware
-
-Accounting Controls:
-- Comprehensive logging
-- Immutable log storage
-- Log integrity verification
-- SIEM integration
-
-```
-
-### **AAA Risk Assessment**
-
-| AAA Component | Threat | Impact | Likelihood | Risk | Mitigation |
-| --- | --- | --- | --- | --- | --- |
-| Authentication | Credential theft | High | High | **CRITICAL** | MFA, Strong passwords |
-| Authentication | Session hijacking | High | Medium | **HIGH** | Secure sessions, HTTPS |
-| Authorization | Privilege escalation | High | Medium | **HIGH** | Least privilege, Regular reviews |
-| Authorization | Missing checks | High | High | **CRITICAL** | Authorization middleware |
-| Accounting | Log tampering | Medium | Low | **MEDIUM** | Immutable logs |
-| Accounting | Insufficient logging | High | Medium | **HIGH** | Comprehensive logging |
+CIA of the *system* is in play too. The API's config (processor secret, signing key) is a confidentiality asset. The deploy pipeline that can change that config is an integrity asset. If you only encrypt columns and never ask who can `kubectl edit`, you modeled the table and missed the box that writes to it.
 
 ---
 
-## **Design by Action Approach**
+## AAA of the actor
 
-### **Overview**
+AAA is the actor on the flow you drew. Three questions.
 
-Design by Action focuses on **business operations and workflows** rather than system components. It analyzes threats based on what the system **does** rather than what it **is**.
+- Authentication: what proves this is who it claims to be.
+- Authorization: what that principal may do to *this* object, right now.
+- Accounting: what record exists if they later say they did not.
 
-### **When to Use Design by Action**
+Users are the obvious actor. They are not the only one.
 
-- **Process-oriented systems**: Workflows, business processes
-- **API security**: REST APIs, GraphQL endpoints
-- **User journeys**: Authentication flows, payment processes
-- **Business operations**: Order processing, data export
-- **Compliance requirements**: GDPR data export, audit trails
+On `POST /payments` the browser presents a JWT. That is authentication of a person. It does not authorize `amount`, and it does not authorize `orderId` 4413. I have watched teams add MFA to login and still take `amount` from the body. MFA answered a spoofing question. The tampering question was still open.
 
-### **Design by Action Process**
+The card processor is an actor. The webhook must authenticate the processor (signature, shared secret, mTLS, whatever they document). Then authorize the event: this `invoice_id` belongs to us, this amount matches, this event has not been applied. Then write an accounting row you cannot quietly delete. If you skip the first step, anyone who finds the URL can mark invoices paid. That is spoofing of a service, and it is an AAA miss.
 
-**Step 1: Identify Critical Actions**
+Service-to-service is the same three questions. Payment API calling the processor: the API authenticates itself (API key, mTLS client cert). The processor authorizes that key to charge, not to refund another merchant. Your side logs the request id you sent. "It is inside the VPC" is not authentication. It is an assumption, and you already wrote it next to the arrow or you forgot.
 
-List all business-critical operations:
+Tenants are an authorization boundary, not a network one. Two customers sharing `orders` is the common case. The check is `WHERE id = :orderId AND tenant_id = :current_tenant`. A role of `customer` does not do that work. RBAC answers "which verbs." Object-level authorization answers "which row."
 
-```
-Example - E-commerce Platform:
-1. User Registration
-2. User Authentication
-3. Product Browsing
-4. Add to Cart
-5. Checkout
-6. Payment Processing
-7. Order Fulfillment
-8. Order Cancellation
-9. User Profile Update
-10. Password Reset
-
-```
-
-**Step 2: Map Action Flow**
-
-For each action, document the flow:
-
-```
-Example - Payment Processing Action:
-
-1. User initiates payment
-   → Input: Payment method, amount, order ID
-
-2. System validates payment method
-   → Check: Card validity, sufficient funds
-
-3. System processes payment
-   → External: Payment gateway API call
-
-4. System updates order status
-   → Database: Update order record
-
-5. System sends confirmation
-   → Notification: Email, SMS
-
-```
-
-**Step 3: Identify Threats per Action**
-
-For each step in the action flow, identify threats:
-
-```
-Payment Processing - Threat Analysis:
-
-Step 1: User Input
-- Threat: Input manipulation (amount tampering)
-- CIA Impact: Integrity
-- AAA Gap: Missing input validation
-
-Step 2: Payment Validation
-- Threat: Bypass validation (race condition)
-- CIA Impact: Integrity, Confidentiality
-- AAA Gap: Insufficient authorization
-
-Step 3: External API Call
-- Threat: Man-in-the-middle, API key theft
-- CIA Impact: Confidentiality, Integrity
-- AAA Gap: Weak authentication
-
-Step 4: Database Update
-- Threat: SQL Injection, unauthorized modification
-- CIA Impact: Integrity
-- AAA Gap: Missing authorization check
-
-Step 5: Notification
-- Threat: Information disclosure, email interception
-- CIA Impact: Confidentiality
-- AAA Gap: Insufficient data protection
-
-```
-
-**Step 4: Map CIA/AAA to Actions**
-
-```
-Action: Payment Processing
-
-CIA Analysis:
-- Confidentiality: Payment data must be encrypted
-- Integrity: Transaction amounts cannot be modified
-- Availability: Payment service must be accessible
-
-AAA Analysis:
-- Authentication: User must be authenticated
-- Authorization: User can only pay for own orders
-- Accounting: All payment attempts must be logged
-
-```
-
-**Step 5: Design Mitigations**
-
-```
-Action: Payment Processing
-
-Mitigations:
-1. Input Validation
-   - Validate amount against order total
-   - Sanitize all inputs
-   - Use parameterized queries
-
-2. Secure Communication
-   - TLS 1.3 for API calls
-   - Certificate pinning
-   - API key rotation
-
-3. Authorization Checks
-   - Verify user owns the order
-   - Check payment permissions
-   - Enforce rate limits
-
-4. Audit Logging
-   - Log all payment attempts
-   - Include user ID, amount, timestamp
-   - Store in immutable log system
-
-```
-
-### **Design by Action Template**
-
-```markdown
-## Action: [Action Name]
-
-### Description
-[What this action does]
-
-### Flow
-1. [Step 1]
-2. [Step 2]
-3. [Step 3]
-
-### CIA Requirements
-- Confidentiality: [Requirements]
-- Integrity: [Requirements]
-- Availability: [Requirements]
-
-### AAA Requirements
-- Authentication: [Requirements]
-- Authorization: [Requirements]
-- Accounting: [Requirements]
-
-### Threats
-| Step | Threat | CIA Impact | AAA Gap | Risk |
-|------|--------|------------|---------|------|
-| 1 | [Threat] | [Impact] | [Gap] | [Risk] |
-
-### Mitigations
-- [Mitigation 1]
-- [Mitigation 2]
-- [Mitigation 3]
-
-```
-
-### **Real-World Example: User Registration Action**
-
-```markdown
-## Action: User Registration
-
-### Description
-New user creates an account in the system.
-
-### Flow
-1. User submits registration form (email, password, name)
-2. System validates input (email format, password strength)
-3. System checks if email exists
-4. System creates user account
-5. System sends verification email
-6. User clicks verification link
-7. System activates account
-
-### CIA Requirements
-- Confidentiality: Password must be hashed, email protected
-- Integrity: User data must be accurate, verification link must be valid
-- Availability: Registration service must be accessible
-
-### AAA Requirements
-- Authentication: Email verification required
-- Authorization: New users have limited permissions
-- Accounting: All registration attempts logged
-
-### Threats
-| Step | Threat | CIA Impact | AAA Gap | Risk |
-|------|--------|------------|---------|------|
-| 1 | Input injection (XSS, SQLi) | Integrity | Missing validation | HIGH |
-| 2 | Validation bypass | Integrity | Weak validation | MEDIUM |
-| 3 | Email enumeration | Confidentiality | Information disclosure | MEDIUM |
-| 4 | Account creation race condition | Integrity | Missing transaction | MEDIUM |
-| 5 | Email interception | Confidentiality | Unencrypted email | LOW |
-| 6 | Verification link tampering | Integrity | Weak token | HIGH |
-| 7 | Account activation bypass | Integrity | Missing verification | HIGH |
-
-### Mitigations
-- Input validation and sanitization
-- Strong password requirements
-- Rate limiting to prevent enumeration
-- Secure token generation for verification
-- HTTPS for all communication
-- Comprehensive logging
-
-```
+Accounting is where people get lazy. "We log everything" is not a model. I want: payment attempts (success and fail), who, which order, which amount you *intended*, which amount the processor captured, request id. I want those rows in a store the payment API's database role cannot UPDATE. If the same admin who can refund can also edit the log, repudiation is a policy, not a control.
 
 ---
 
-## **Design by Component Approach**
+## Design by Action
 
-### **Overview**
+Design by Action starts from what the system *does*. Checkout. Refund. Export. You walk the steps of one operation and you ask STRIDE, CIA, and AAA at each step.
 
-Design by Component focuses on **system architecture and components** rather than business operations. It analyzes threats based on what the system **is** rather than what it **does**.
+The current trap, and I have written the trap into older versions of this page, is to list every action the product has. User registration, add to cart, profile update, password reset, health check. That list is a product tour. It is not a model.
 
-### **When to Use Design by Component**
+Pick the actions that can move money, change identity, cross a tenant line, or dump data. Three is a good number for a feature review. One is enough if the feature is "add Apple Pay to checkout."
 
-- **Architecture analysis**: Microservices, distributed systems
-- **Infrastructure security**: Cloud services, network components
-- **System design**: Component interactions, data flow
-- **Technology stack**: Specific technologies and frameworks
-- **Deployment architecture**: Containers, serverless, hybrid
+How I pick:
 
-### **Design by Component Process**
+- Business damage if it goes wrong. Payment beats "update display name."
+- Data that should not leak. Export and admin tools beat public catalog.
+- New or newly exposed. A webhook you did not have last quarter beats a path you modeled last month and did not change.
+- Compliance that names the action. "Right to export" is an action. "We have GDPR" is not.
 
-**Step 1: Identify Components**
+### The payment action, walked
 
-List all system components:
+Action: charge an order.
 
-```
-Example - Microservices Architecture:
+1. Browser sends `POST /payments` with `orderId`, `paymentMethodId`, and (today) `amount`.
+2. API authenticates the JWT.
+3. API loads the order.
+4. API calls the processor with a charge.
+5. API writes the transaction and order status.
+6. API enqueues a receipt.
+7. Processor later POSTs `invoice.paid`.
 
-1. API Gateway
-2. Authentication Service
-3. User Service
-4. Payment Service
-5. Order Service
-6. Notification Service
-7. Database (PostgreSQL)
-8. Cache (Redis)
-9. Message Queue (RabbitMQ)
-10. Load Balancer
-11. CDN
-12. Monitoring Service
+I do not STRIDE all seven with equal love. Steps 1, 3, 4, and 7 are where trust changes. Step 6 is interesting only if the receipt can contain a PAN or a token.
 
-```
+| Step | What can go wrong | CIA | AAA gap | What I would do |
+| --- | --- | --- | --- | --- |
+| 1 Body | Client `amount` charged | Integrity | Server never authorized the amount | Ignore client amount. Charge `orders.total`. |
+| 3 Load order | Order 4413 paid by owner of 4412 | Integrity, confidentiality | No object-level check | `tenant_id = current_user.tenant_id` and status is `payable`. |
+| 4 Processor | Secret in env dumped on 500; retries duplicate charges | Confidentiality, integrity | AuthN of *our* client to them is fine; we lack idempotency | Processor secret from a manager, not a log. Idempotency key = `orderId`. |
+| 7 Webhook | Unsigned POST marks paid | Integrity | Processor not authenticated | Verify signature. Match amount. Reject replays. |
 
-**Step 2: Map Component Interactions**
+Four threats. Each has a control I can describe to the engineer in one sentence. That is a session.
 
-Document how components interact:
-
-```
-Example - Component Interaction:
-
-User → API Gateway → Authentication Service
-                    ↓
-                    User Service → Database
-                    ↓
-                    Payment Service → External Payment Gateway
-                    ↓
-                    Order Service → Database
-                    ↓
-                    Notification Service → Email/SMS Gateway
-
-```
-
-**Step 3: Identify Trust Boundaries**
-
-Define trust boundaries between components:
-
-```
-Trust Boundaries:
-
-External (Untrusted):
-- Internet users
-- External APIs
-- Third-party services
-
-DMZ (Semi-Trusted):
-- API Gateway
-- Load Balancer
-- CDN
-
-Internal (Trusted):
-- Microservices
-- Internal databases
-- Message queues
-
-Highly Trusted:
-- Authentication service
-- Key management service
-
-```
-
-**Step 4: Identify Threats per Component**
-
-For each component, identify threats:
-
-```
-Component: API Gateway
-
-Threats:
-- DDoS attacks (Availability)
-- API key theft (Confidentiality)
-- Request tampering (Integrity)
-- Rate limit bypass (Availability)
-- Authentication bypass (Authorization)
-
-CIA Impact:
-- Confidentiality: Medium (API keys, tokens)
-- Integrity: High (Request manipulation)
-- Availability: High (DoS attacks)
-
-AAA Gaps:
-- Authentication: Weak API key management
-- Authorization: Missing request validation
-- Accounting: Insufficient logging
-
-```
-
-**Step 5: Map CIA/AAA to Components**
-
-```
-Component: Payment Service
-
-CIA Analysis:
-- Confidentiality: High (Payment data encryption)
-- Integrity: Critical (Transaction integrity)
-- Availability: High (Payment processing must be available)
-
-AAA Analysis:
-- Authentication: Service-to-service authentication (mTLS)
-- Authorization: Role-based access to payment functions
-- Accounting: All payment operations logged
-
-```
-
-**Step 6: Design Component-Level Mitigations**
-
-```
-Component: Payment Service
-
-Mitigations:
-1. Encryption
-   - TLS 1.3 for all communications
-   - AES-256 for data at rest
-   - Key management via HSM
-
-2. Authentication
-   - mTLS for service-to-service
-   - OAuth 2.0 for user authentication
-   - API key rotation
-
-3. Authorization
-   - RBAC for service functions
-   - Transaction-level authorization
-   - Principle of least privilege
-
-4. Monitoring
-   - Comprehensive logging
-   - Real-time monitoring
-   - Anomaly detection
-
-```
-
-### **Design by Component Template**
+### Action notes I actually keep
 
 ```markdown
-## Component: [Component Name]
+## Action: Charge order
 
-### Description
-[What this component does]
+What it does: take a stored total and capture it at the processor.
 
-### Technology Stack
-- [Technology 1]
-- [Technology 2]
+In scope: POST /payments, processor charge, invoice.paid webhook.
+Out of scope: processor internals, the marketing site, adding a new payment method.
 
-### Trust Boundary
-[External/DMZ/Internal/Highly Trusted]
+Assumptions:
+- Browser is hostile.
+- JWT proves a tenant, not an order.
+- Processor webhook is untrusted until the signature verifies.
+- Queue payload is data.
 
-### Interactions
-- Receives from: [Components]
-- Sends to: [Components]
+Threats we will act on:
+- Client amount trusted. Owner: payments-api. Check: POST with mismatched amount returns 409. Ticket PAY-1882.
+- Cross-tenant orderId. Owner: payments-api. Check: as tenant A, POST for tenant B's order returns 404. Ticket PAY-1883.
+- Unsigned webhook. Owner: payments-api. Check: POST to /webhooks/processor with a bad signature returns 401. Ticket PAY-1884.
 
-### CIA Requirements
-- Confidentiality: [Requirements]
-- Integrity: [Requirements]
-- Availability: [Requirements]
-
-### AAA Requirements
-- Authentication: [Requirements]
-- Authorization: [Requirements]
-- Accounting: [Requirements]
-
-### Threats
-| Threat | CIA Impact | AAA Gap | Risk |
-|--------|------------|---------|------|
-| [Threat] | [Impact] | [Gap] | [Risk] |
-
-### Mitigations
-- [Mitigation 1]
-- [Mitigation 2]
-
+What we still accept:
+- Processor can be slow. We time out at 8s and mark the order `unknown` for a reconcile job. Owner: payments-api. Review in 30 days.
 ```
 
-### **Real-World Example: Authentication Service Component**
-
-```markdown
-## Component: Authentication Service
-
-### Description
-Handles user authentication, token generation, and session management.
-
-### Technology Stack
-- Node.js/Express
-- JWT for tokens
-- Redis for session storage
-- PostgreSQL for user data
-
-### Trust Boundary
-Internal (Trusted)
-
-### Interactions
-- Receives from: API Gateway, User Service
-- Sends to: User Service, Notification Service
-
-### CIA Requirements
-- Confidentiality: High (Passwords, tokens must be protected)
-- Integrity: High (Token signatures must be valid)
-- Availability: High (Authentication must be available)
-
-### AAA Requirements
-- Authentication: Multi-factor authentication support
-- Authorization: Token-based authorization
-- Accounting: All authentication events logged
-
-### Threats
-| Threat | CIA Impact | AAA Gap | Risk |
-|--------|------------|---------|------|
-| Password brute force | Confidentiality | Weak password policy | HIGH |
-| Token theft | Confidentiality | Insecure token storage | HIGH |
-| Session hijacking | Confidentiality | Weak session management | HIGH |
-| Token forgery | Integrity | Weak token signing | CRITICAL |
-| DoS attack | Availability | No rate limiting | MEDIUM |
-
-### Mitigations
-- Strong password requirements + MFA
-- HttpOnly, Secure cookies for tokens
-- Short token expiration + refresh tokens
-- Strong JWT signing (RS256)
-- Rate limiting and CAPTCHA
-- Comprehensive audit logging
-
-```
+Owner, check, ticket. If a row cannot grow those three, it is a wish. Put it under "what we still accept" or delete it.
 
 ---
 
-## **Open Threat Modeling Format (OTM)**
+## Design by Component
 
-### **Overview**
+Design by Component starts from what the system *is*. Boxes and the arrows between them. You use it when the risk lives in a boundary, a protocol, or a store, not in a user journey. Microservices, a new queue, a new admin app, a shared database.
 
-OTM (Open Threat Modeling Format) is a **platform-independent, machine-readable format** for defining threat models. It enables automation, integration, and standardization of threat modeling.
+Same trap as actions: do not model the CDN, the internal dashboard nobody can reach from the internet, and the health checker. Model the components that sit on a trust boundary or that hold the data you named as assets.
 
-**Key Benefits:**
+How I pick a component:
 
-- **Machine-readable**: Enables automation and tool integration
-- **Platform-independent**: Works with any threat modeling tool
-- **Version control**: Threat models can be versioned like code
-- **Collaboration**: Standardized format for team collaboration
-- **Integration**: Connects to SAST, DAST, SIEM tools
+- It crosses a boundary you already drew. API gateway, webhook handler, worker that reads a queue.
+- It holds or transforms an asset. `orders`, the processor secret, the audit log.
+- It can mint or check identity. Auth service, token signer.
+- It is new. New store, new vendor, new runtime.
 
-### **OTM Structure**
+You can, and often should, use both views on one change. The action tells you "charge order" is in scope. The component view tells you the webhook handler is a separate process with its own auth story, and the worker is a separate identity. Cross-check. Do not write the amount-tampering finding twice.
 
-Based on the [OTM specification](https://github.com/iriusrisk/OpenThreatModel), an OTM document contains:
+### Components on the payment diagram
+
+I would sit on three.
+
+**Payment API.** Faces the browser. Parses JSON. Holds the processor key. Writes `orders` and the audit log. STRIDE here is the table in the STRIDE section. CIA: the secret and the payloads. AAA: JWT in, object-level checks, audit out.
+
+**Card processor (external).** You do not model Stripe's internals. You model *your use* of it: how you authenticate, what you send, how you treat the webhook, what you do when it is down. Shared responsibility is an assumption. Write it.
+
+**Notifier worker.** Reads the queue. Sends email. The threat that is unique to this box is "the queue message is an instruction." If the payload contains a URL the worker fetches, you just grew an SSRF surface that checkout never had. If it contains PAN because the API copied the request body into the job, confidentiality moved from a log line to a Redis dump.
+
+I would skip the CDN. I would skip "PostgreSQL" as a box of its own unless this change adds a new cluster or a new role. The `orders` store is already on the diagram. The threats are "who can SELECT" and "who can UPDATE the audit table," which are properties of roles, not of the brand of database.
+
+### Component notes I actually keep
+
+```markdown
+## Component: Processor webhook handler
+
+Where it sits: internet -> TLS -> /webhooks/processor -> Payment API process.
+Trust boundary: processor to API. The caller is not a user.
+
+Technology: same process as POST /payments today. That is a smell. A separate
+route still shares the deploy and the secret store.
+
+Assumptions:
+- Anyone who can reach the URL will POST to it.
+- The processor signs the body with a key we store in the secret manager.
+- Replays of a valid body are possible.
+
+Threats we will act on:
+- Unsigned or badly signed body accepted. Owner: payments-api. Check: 401 on
+  bad signature. Ticket PAY-1884.
+- Valid body applied twice. Owner: payments-api. Check: second POST of the
+  same event id is 200 and does not recapture. Ticket PAY-1885.
+
+What we still accept:
+- Handler shares a process with the user-facing API. If we split it, we will
+  model the new identity. Owner: platform. Not this sprint.
+```
+
+Notice the webhook showed up in the action walk *and* here. That is fine. One ticket. Do not double-count it in a risk register because two methods found it.
+
+---
+
+## Rank it, then write it down
+
+Risk = Impact x Likelihood is a slogan that produces `likelihood: 50` and `impact: 100` and a dashboard nobody believes. I still rank. I just refuse to pretend the number is a measurement.
+
+Impact in the business's words.
+
+- "We charge the wrong amount" -> refunds, chargebacks, a processor review.
+- "Tenant A sees tenant B's order" -> contract issue, maybe a reportable event depending on what is on the order.
+- "Webhook is a public 'mark paid' button" -> free orders.
+- "PAN in logs" -> PCI scope expansion this quarter.
+
+Likelihood is the assumption that makes it easy.
+
+- Amount is in the JSON today, and there is no server check. That is not "50." That is "the bug is already deployed."
+- Webhook signature is implemented. Replays are not. Likelihood of replay is "anyone who can sniff or retry," which for a partner callback is higher than you want to admit.
+- Cross-tenant check exists in `GET /orders/:id` and was forgotten on `POST /payments`. Likelihood is "the next curious customer," which is how IDORs ship.
+
+Then a decision.
+
+| Threat | Decision | Owner | How we will know |
+| --- | --- | --- | --- |
+| Client amount trusted | Mitigate this sprint | payments-api | Test: mismatched amount -> 409. Ticket PAY-1882 |
+| Cross-tenant orderId | Mitigate this sprint | payments-api | Test: tenant A, order B -> 404. Ticket PAY-1883 |
+| Unsigned webhook | Mitigate this sprint | payments-api | Test: bad signature -> 401. Ticket PAY-1884 |
+| Webhook replay | Mitigate this sprint | payments-api | Test: second event id does not recapture. PAY-1885 |
+| Processor slowness | Accept for 30 days | payments-api | Timeout 8s, reconcile job, calendar reminder |
+
+A mitigation with no owner is a wish. A mitigation with an owner and no check is a story you will tell in the next incident review. The check can be a unit test, a contract test, a canary assertion, or a log query you actually run. "We'll be careful" is not a check.
+
+### OTM after the thinking
+
+[Open Threat Model](https://github.com/iriusrisk/OpenThreatModel) is a YAML (or JSON) file you can put in git. It is not a method. It will not find the amount bug for you. It will let a later tool, or a later person, parse what you already decided.
+
+I record the threats from this session, not a catalogue of CWE. I do not invent a `riskReduction: 80` field and then fail the build on a made-up threshold. If a pipeline looks at this file, the useful checks are: valid document, every threat has an owner, every "mitigate" row has a ticket id. That is lint. It is still more honest than generating SAST rules from a diagram.
 
 ```yaml
 otmVersion: "0.2.0"
 project:
-  name: "E-commerce Platform"
-  id: "ecommerce-platform-v1"
-
-representations:
-  - name: "System Architecture"
-    id: "arch-diagram-1"
-    type: "diagram"
-    # Diagram data
-
-assets:
-  - name: "User Database"
-    id: "asset-db-1"
-    type: "data-store"
-    # Asset properties
-
-threats:
-  - name: "SQL Injection"
-    id: "threat-sqli-1"
-    categories: ["Tampering"]
-    risk:
-      likelihood: 70
-      impact: 90
-    # Threat details
-
-mitigations:
-  - name: "Parameterized Queries"
-    id: "mitigation-1"
-    riskReduction: 80
-    # Mitigation details
-
-```
-
-### **OTM Core Elements**
-
-**1. Project**
-
-```yaml
-project:
-  name: "Project Name"
-  id: "unique-project-id"
-  description: "Project description"
-
-```
-
-**2. Representations (Diagrams)**
-
-```yaml
-representations:
-  - name: "Data Flow Diagram"
-    id: "dfd-1"
-    type: "diagram"
-    size:
-      width: 800
-      height: 600
-
-```
-
-**3. Assets**
-
-```yaml
-assets:
-  - name: "Web Server"
-    id: "asset-web-1"
-    type: "process"
-    description: "Main web application server"
-    attributes:
-      technology: "Node.js"
-      environment: "Production"
-
-```
-
-**4. Threats**
-
-```yaml
-threats:
-  - name: "Cross-Site Scripting (XSS)"
-    id: "threat-xss-1"
-    description: "Attacker injects malicious scripts"
-    categories:
-      - "Tampering"
-      - "Information Disclosure"
-    cwes:
-      - "CWE-79"
-    risk:
-      likelihood: 60
-      likelihoodComment: "Common vulnerability in web apps"
-      impact: 80
-      impactComment: "Can steal user sessions and data"
-    tags:
-      - "web"
-      - "injection"
-
-```
-
-**5. Mitigations**
-
-```yaml
-mitigations:
-  - name: "Input Sanitization"
-    id: "mitigation-1"
-    description: "Sanitize all user inputs"
-    riskReduction: 75
-    attributes:
-      standard: "OWASP-ASVS"
-      implementation: "Content Security Policy"
-
-```
-
-**6. Threat Instances**
-
-```yaml
-threats:
-  - threat: "threat-xss-1"
-    state: "mitigated"
-    mitigations:
-      - mitigation: "mitigation-1"
-        state: "implemented"
-
-```
-
-### **Creating OTM from Threat Model**
-
-**Step 1: Define Project**
-
-```yaml
-otmVersion: "0.2.0"
-project:
-  name: "Payment Processing System"
-  id: "payment-system-v2"
-  description: "Secure payment processing microservice"
-
-```
-
-**Step 2: Define Assets**
-
-```yaml
+  name: "Checkout payment"
+  id: "checkout-pay-v3"
+  owner: "payments-api"
+  attributes:
+    in_scope: "POST /payments, processor charge, invoice.paid webhook"
+    out_of_scope: "processor internals, marketing site"
 assets:
   - name: "Payment API"
-    id: "asset-payment-api"
+    id: "asset-pay-api"
     type: "process"
-    description: "REST API for payment processing"
-
-  - name: "Payment Database"
-    id: "asset-payment-db"
+  - name: "orders"
+    id: "asset-orders"
     type: "data-store"
-    description: "Stores payment transactions"
-
-  - name: "Payment Gateway"
-    id: "asset-gateway"
-    type: "external"
-    description: "External payment gateway service"
-
-```
-
-**Step 3: Define Threats**
-
-```yaml
-threats:
-  - name: "Payment Amount Tampering"
-    id: "threat-tamper-1"
-    description: "Attacker modifies payment amount"
-    categories:
-      - "Tampering"
-    cwes:
-      - "CWE-345"
-    risk:
-      likelihood: 50
-      impact: 100
-      impactComment: "Financial loss and fraud"
-
-  - name: "Payment Data Theft"
-    id: "threat-theft-1"
-    description: "Attacker steals payment card data"
-    categories:
-      - "Information Disclosure"
-    cwes:
-      - "CWE-200"
-    risk:
-      likelihood: 40
-      impact: 95
-      impactComment: "PCI-DSS violation, customer trust loss"
-
-```
-
-**Step 4: Define Mitigations**
-
-```yaml
-mitigations:
-  - name: "Input Validation"
-    id: "mitigation-validate-1"
-    description: "Validate payment amounts server-side"
-    riskReduction: 80
-
-  - name: "Encryption"
-    id: "mitigation-encrypt-1"
-    description: "Encrypt payment data at rest and in transit"
-    riskReduction: 90
-
-```
-
-**Step 5: Map Threats to Assets**
-
-```yaml
-# In threat instance
-threats:
-  - threat: "threat-tamper-1"
-    state: "mitigated"
-    mitigations:
-      - mitigation: "mitigation-validate-1"
-        state: "implemented"
-
-```
-
-### **OTM Integration Examples**
-
-**1. CI/CD Integration**
-
-```yaml
-# .github/workflows/threat-model.yml
-name: Threat Model Validation
-on: [push, pull_request]
-jobs:
-  validate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Validate OTM
-        run: |
-          otm-validator threat-model.otm.yaml
-      - name: Generate Report
-        run: |
-          otm-report threat-model.otm.yaml --format html
-
-```
-
-**2. SAST Integration**
-
-```python
-# Parse OTM and generate SAST rules
-import yaml
-
-with open('threat-model.otm.yaml') as f:
-    otm = yaml.safe_load(f)
-
-for threat in otm['threats']:
-    if 'CWE-79' in threat.get('cwes', []):
-        # Generate XSS detection rule
-        generate_sast_rule('xss', threat)
-
-```
-
-**3. Risk Dashboard**
-
-```python
-# Calculate risk scores from OTM
-def calculate_risk(otm):
-    risks = []
-    for threat in otm['threats']:
-        risk = threat['risk']
-        score = (risk['likelihood'] * risk['impact']) / 100
-
-        # Apply mitigations
-        for mitigation in threat.get('mitigations', []):
-            reduction = mitigation['riskReduction']
-            score *= (1 - reduction / 100)
-
-        risks.append({
-            'threat': threat['name'],
-            'risk_score': score
-        })
-    return risks
-
-```
-
-### **OTM Best Practices**
-
-1. **Version Control**: Store OTM files in Git
-2. **Validation**: Validate OTM structure before committing
-3. **Automation**: Integrate OTM into CI/CD pipelines
-4. **Documentation**: Include detailed descriptions
-5. **Regular Updates**: Update OTM as system changes
-6. **Tool Integration**: Use OTM with threat modeling tools
-
----
-
-## **Combining Frameworks and Approaches**
-
-### **Integrated Threat Modeling Process**
-
-**Step 1: Start with Design Approach**
-
-Choose primary approach based on system type:
-
-- **Design by Action**: For process-oriented systems
-- **Design by Component**: For architecture-oriented systems
-- **Both**: For comprehensive analysis
-
-**Step 2: Apply CIA Framework**
-
-For each action/component, assess CIA requirements:
-
-```
-Action: Payment Processing
-
-CIA Assessment:
-- Confidentiality: Payment data must be encrypted
-- Integrity: Transaction amounts cannot be modified
-- Availability: Payment service must be available 99.9%
-
-```
-
-**Step 3: Apply AAA Framework**
-
-For each action/component, assess AAA requirements:
-
-```
-Action: Payment Processing
-
-AAA Assessment:
-- Authentication: User must be authenticated
-- Authorization: User can only pay for own orders
-- Accounting: All payment attempts logged
-
-```
-
-**Step 4: Use STRIDE for Threat Identification**
-
-Map STRIDE threats to CIA/AAA:
-
-```
-Threat: Payment Amount Tampering
-
-STRIDE: Tampering
-CIA Impact: Integrity
-AAA Gap: Missing authorization check
-
-```
-
-**Step 5: Document in OTM Format**
-
-Structure findings in OTM:
-
-```yaml
-threats:
-  - name: "Payment Amount Tampering"
-    categories: ["Tampering"]
-    risk:
-      likelihood: 50
-      impact: 100
-    # CIA/AAA mapping in attributes
-    attributes:
-      cia_impact: "Integrity"
-      aaa_gap: "Authorization"
-
-```
-
-### **Comprehensive Example: E-commerce Platform**
-
-**Design by Action + Design by Component + CIA + AAA + OTM**
-
-```yaml
-# OTM Document
-otmVersion: "0.2.0"
-project:
-  name: "E-commerce Platform"
-  id: "ecommerce-v1"
-
-# Components (Design by Component)
-assets:
-  - name: "Payment Service"
-    id: "asset-payment-service"
+  - name: "Processor webhook"
+    id: "asset-webhook"
     type: "process"
-
-  - name: "Payment Database"
-    id: "asset-payment-db"
-    type: "data-store"
-
-# Actions (Design by Action)
-# Represented as processes in OTM
-
-# Threats with CIA/AAA mapping
 threats:
-  - name: "Payment Amount Tampering"
-    id: "threat-payment-tamper"
+  - name: "Client-supplied amount charged as-is"
+    id: "threat-amount-tamper"
+    description: "POST /payments takes amount from the body. A caller who owns order 4412 can charge 1.00 against a 240.00 cart."
     categories: ["Tampering"]
-    risk:
-      likelihood: 50
-      impact: 100
+    cwes: ["CWE-345"]
     attributes:
-      # CIA mapping
-      confidentiality_impact: "None"
-      integrity_impact: "Critical"
-      availability_impact: "None"
-      # AAA mapping
-      authentication_required: "Yes"
-      authorization_gap: "Missing server-side validation"
-      accounting_required: "Yes"
-    cwes:
-      - "CWE-345"
-
-  - name: "Payment Data Theft"
-    id: "threat-payment-theft"
-    categories: ["Information Disclosure"]
-    risk:
-      likelihood: 40
-      impact: 95
+      owner: "payments-api"
+      ticket: "PAY-1882"
+      check: "POST with mismatched amount returns 409"
+      decision: "mitigate"
+  - name: "Unsigned processor webhook marks invoice paid"
+    id: "threat-webhook-spoof"
+    description: "POST /webhooks/processor with any JSON body sets order status to paid."
+    categories: ["Spoofing"]
+    cwes: ["CWE-345"]
     attributes:
-      confidentiality_impact: "Critical"
-      integrity_impact: "None"
-      availability_impact: "None"
-      authentication_required: "Yes"
-      authorization_gap: "None"
-      accounting_required: "Yes"
-    cwes:
-      - "CWE-200"
-
-# Mitigations
+      owner: "payments-api"
+      ticket: "PAY-1884"
+      check: "POST with a bad signature returns 401"
+      decision: "mitigate"
 mitigations:
-  - name: "Input Validation"
-    id: "mitigation-validate"
-    riskReduction: 80
-    attributes:
-      addresses_cia: "Integrity"
-      addresses_aaa: "Authorization"
-
-  - name: "Encryption"
-    id: "mitigation-encrypt"
-    riskReduction: 90
-    attributes:
-      addresses_cia: "Confidentiality"
-
+  - name: "Charge the stored order total"
+    id: "mit-amount-server"
+    description: "Ignore client amount. Capture orders.total. Ticket PAY-1882."
+  - name: "Verify processor signature"
+    id: "mit-webhook-sig"
+    description: "HMAC of the raw body with the processor secret. Ticket PAY-1884."
 ```
+
+Put the file next to the service, in the same repo, on the same PR as the handler change. A threat model that lives in a wiki two clicks away from the code is how models rot.
 
 ---
 
-## **Advanced Threat Modeling Techniques**
+## When the shape changes
 
-### **Threat Modeling for Microservices**
+The method does not change. The diagram does. I stop writing a new "threat modeling for X" chapter for every stack. Four shapes come up constantly. Each one is a boundary you probably forgot to draw.
 
-**Challenges:**
+**Service to service is not the VPC edge.** Two pods in one cluster still need to prove who they are. Network policy is a reduce-the-blast-radius control. It is not authentication. If payment API can be called by anyone on the mesh, you modeled a gateway and missed east-west. mTLS or a bound token between services is the AuthN answer. Object-level checks inside the callee are still the AuthZ answer. I have seen "internal" payment endpoints that trusted `X-User-Id` from the caller. That header is the browser all over again.
 
-- Multiple services and interactions
-- Service-to-service authentication
-- Distributed data
-- Network communication
+**An object id is an authorization boundary.** `GET /api/users/{id}` and `POST /payments` with `orderId` are the same class. The identifier in the request is a claim, not a permission. Design by Action will catch this if you walk the load-object step. Design by Component will catch it if you sit on the API and ask Elevation. If your model says "RBAC: customer role" and never mentions the row, you missed it.
 
-**Approach:**
+**Cloud shared responsibility is an assumption you write down.** AWS encrypts the disk if you turn it on. AWS does not check that tenant A cannot read tenant B's object in *your* table. IAM of the role your pod assumes, bucket policies, and who can `sts:AssumeRole` belong on the diagram as an external entity called "our cloud account." If a contractor's laptop can impersonate the payment role, confidentiality of every charge token is a people problem with an IAM shape. Do not bury it under "cloud provider security."
 
-1. Model each service as a component
-2. Map service interactions
-3. Identify trust boundaries
-4. Assess CIA/AAA per service
-5. Document in OTM format
+**A phone is hostile storage.** Tokens in app storage, logs on a rooted device, a reverse-engineered client that sends `amount`. Treat the mobile app as a browser with a nicer UI. The API still decides. Certificate pinning is a tampering control on the channel, not a reason to trust the client.
 
-### **Threat Modeling for APIs**
-
-**Focus Areas:**
-
-- Authentication (OAuth, API keys)
-- Authorization (Scopes, permissions)
-- Input validation
-- Rate limiting
-- Error handling
-
-**Design by Action for APIs:**
-
-```
-Action: GET /api/users/{id}
-
-CIA:
-- Confidentiality: User data must be protected
-- Integrity: Response must be accurate
-- Availability: API must be accessible
-
-AAA:
-- Authentication: Valid API key/token
-- Authorization: User can only access own data
-- Accounting: All API calls logged
-
-```
-
-### **Threat Modeling for Cloud Services**
-
-**Considerations:**
-
-- Shared responsibility model
-- Cloud provider security
-- Configuration management
-- Identity and access management (IAM)
-- Network security groups
-
-**Components to Model:**
-
-- Cloud resources (VMs, containers, serverless)
-- Storage (S3, databases)
-- Networking (VPC, load balancers)
-- Identity (IAM, SSO)
-
-### **Threat Modeling for Mobile Applications**
-
-**Focus Areas:**
-
-- Device security
-- App store security
-- Data storage (local, cloud)
-- Network communication
-- Authentication and authorization
-
-**Design by Action:**
-
-```
-Action: Mobile App Login
-
-CIA:
-- Confidentiality: Credentials protected
-- Integrity: Authentication tokens valid
-- Availability: Login service accessible
-
-AAA:
-- Authentication: MFA support
-- Authorization: Role-based access
-- Accounting: Login attempts logged
-
-```
+If a new shape appears (LLM with a tool, a partner SFTP drop, an admin impersonation switch), draw it, mark the boundary, run STRIDE on the new arrows. You already know how.
 
 ---
 
-## **Real-World Case Studies**
+## Keep the model alive
 
-### **Case Study 1: Payment Processing System**
+A model is stale when the diagram is stale. Triggers I actually use:
 
-**Scenario:** E-commerce platform processing credit card payments.
+- New external entity: webhook, partner API, admin tool, mobile client.
+- New store or a new column that holds money, identity, or a secret.
+- A security incident, even a near miss. If the unsigned webhook was hit in staging, the model that said "we verify signatures" was a lie.
+- A processor or cloud IAM change.
 
-**Threat Modeling Approach:**
+I attach the OTM file, or a short markdown note like the action template, to the same PR as the handler. Reviewers can argue with the assumption in the same place they argue with the code. That is the opposite of a quarterly board.
 
-- Design by Action (Payment processing flow)
-- CIA Framework (Confidentiality, Integrity critical)
-- AAA Framework (Strong authentication, authorization)
-- OTM Documentation
+Mitigations go in the backlog the team already uses. If PAY-1882 is not a ticket, it is not a mitigation. If the ticket has no test, it will regress the first time someone "simplifies" the handler.
 
-**Key Findings:**
-
-- Payment amount tampering (Integrity threat)
-- Payment data theft (Confidentiality threat)
-- Missing server-side validation (Authorization gap)
-
-**Mitigations Implemented:**
-
-- Input validation and sanitization
-- Encryption (TLS 1.3, AES-256)
-- Strong authentication (MFA)
-- Comprehensive logging
-
-### **Case Study 2: Microservices Architecture**
-
-**Scenario:** Distributed system with multiple microservices.
-
-**Threat Modeling Approach:**
-
-- Design by Component (Each service as component)
-- CIA Framework (Per-service assessment)
-- AAA Framework (Service-to-service authentication)
-- OTM Documentation
-
-**Key Findings:**
-
-- Weak service-to-service authentication
-- Insufficient network segmentation
-- Missing authorization checks between services
-
-**Mitigations Implemented:**
-
-- mTLS for service-to-service communication
-- Network policies and segmentation
-- Service mesh with authorization policies
-- Centralized logging and monitoring
-
----
-
-## **Best Practices and Recommendations**
-
-### **Threat Modeling Best Practices**
-
-1. **Start Early**: Begin threat modeling in design phase
-2. **Iterate**: Update threat model as system evolves
-3. **Use Multiple Frameworks**: Combine CIA, AAA, STRIDE
-4. **Document in OTM**: Use standardized format
-5. **Involve Stakeholders**: Include developers, architects, security
-6. **Prioritize**: Focus on high-risk threats first
-7. **Validate**: Test mitigations and verify effectiveness
-
-### **Framework Selection Guide**
-
-| Scenario | Primary Framework | Secondary Framework | Design Approach |
-| --- | --- | --- | --- |
-| Data Protection | CIA | AAA | Design by Component |
-| Access Control | AAA | CIA | Design by Action |
-| API Security | AAA | CIA | Design by Action |
-| Infrastructure | CIA | AAA | Design by Component |
-| Business Process | CIA + AAA | STRIDE | Design by Action |
-| Architecture | CIA + AAA | STRIDE | Design by Component |
-
-### **OTM Integration Strategy**
-
-1. **Version Control**: Store OTM files in Git
-2. **CI/CD Integration**: Validate OTM in pipelines
-3. **Tool Integration**: Connect to SAST/DAST tools
-4. **Reporting**: Generate risk dashboards from OTM
-5. **Automation**: Automate threat model updates
-
----
-
-## **Summary**
-
-Advanced threat modeling combines multiple frameworks and approaches:
-
-- **CIA Framework**: Protects security properties (Confidentiality, Integrity, Availability)
-- **AAA Framework**: Controls access (Authentication, Authorization, Accounting)
-- **Design by Action**: Analyzes business operations and workflows
-- **Design by Component**: Analyzes system architecture and components
-- **OTM Format**: Standardizes threat model documentation
-
-**Best Practice**: Use all frameworks and approaches together for comprehensive security analysis!
-
----
-
-**References:**
-
-- [Open Threat Modeling Format (OTM)](https://github.com/iriusrisk/OpenThreatModel)
-- [OWASP Threat Modeling](https://owasp.org/www-community/Threat_Modeling)
-- [Microsoft Threat Modeling](https://docs.microsoft.com/en-us/azure/security/develop/threat-modeling-tool)
+Did we do a good job? Question 4. I answer it with the checks in the table, not with a completeness score. Can a new engineer find the diagram. Can they see which threats are still accepted. Can they run the tests. If those are yes, the model is doing work. If the answer is a 40-page PDF in a SharePoint folder from 2023, start over on the next feature and keep it short.
 
 ---
 
 ## Interview clusters
 
-- **Fundamentals:** “What is STRIDE?” “What diagram do you start from?”
-- **Senior:** “How do you prioritize threats?” “Who owns mitigations?”
-- **Staff:** “Scale threat modeling to 500 teams without one central bottleneck.”
+- Fundamentals: "What is STRIDE?" "What diagram do you start from?" "What do you refuse to put in scope?"
+- Senior: "How do you rank if you will not multiply two numbers?" "Who owns mitigations?" "Show me a threat you accepted."
+- Staff: "How does this not become a central bottleneck for 500 teams?" "When is a model theater?"
+
+Theater is a model whose mitigations are not engineering work. If you cannot name the ticket, you are performing.
 
 ---
 
 ## Cross-links
 
-Product Security Real-World Scenarios, Risk Prioritization, Secure Design / Zero Trust, Agile Security Compliance (evidence).
+Product Security Real-World Scenarios, Risk Prioritization, Secure Design / Zero Trust, Agile Security Compliance (evidence), Authorization and Authentication.
+
+---
+
+## References
+
+- [OWASP Threat Modeling](https://owasp.org/www-community/Threat_Modeling)
+- [STRIDE, per element](https://learn.microsoft.com/en-us/azure/security/develop/threat-modeling-tool-threats)
+- [Open Threat Model spec](https://github.com/iriusrisk/OpenThreatModel)

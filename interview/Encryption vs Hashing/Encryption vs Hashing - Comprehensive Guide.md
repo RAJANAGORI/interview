@@ -2,15 +2,16 @@
 
 ## At a glance
 
-**Encryption** provides **confidentiality** (reversible with the right key). **Hashing** produces a **fixed-size digest**—by default **one-way** for password storage (with proper algorithms and **salting**). They are **not interchangeable**; interviews often probe **when** you need authenticated encryption, **KDFs**, and why **MD5/SHA1** are wrong for passwords.
+Encryption provides confidentiality (reversible with the right key). Hashing produces a fixed-size digest-by default one-way for password storage (with proper algorithms and salting). They are not interchangeable; interviews often probe when you need authenticated encryption, KDFs, and why MD5/SHA1 are wrong for passwords.
 
 ---
 
 ## Learning outcomes
 
-- Contrast goals: confidentiality vs integrity vs password **verification**.
-- Name modern choices: **AES-GCM**, **ChaCha20-Poly1305** for symmetric; **Argon2/bcrypt/scrypt** for passwords.
-- Explain **salt**, **pepper** (conceptually), and why **speed** matters for password hashes.
+- Contrast goals: confidentiality vs integrity vs password verification.
+- Name modern choices: AES-GCM, ChaCha20-Poly1305 for symmetric; Argon2/bcrypt/scrypt for passwords.
+- Explain salt, pepper (conceptually), and why speed matters for password hashes.
+- Encrypt with the receiver's public key, sign with the sender's private key, and not mix those two operations.
 
 ---
 
@@ -20,38 +21,38 @@ Basic crypto vocabulary; TLS topic optional (this repo).
 
 ---
 
-## **Introduction**
+## Introduction
 
-Encryption and hashing are fundamental cryptographic techniques used in information security, but they serve different purposes and operate in distinct ways. Understanding their differences is crucial for implementing secure systems.
+Encryption and hashing show up in every AppSec interview. They are not two names for the same trick, and picking the wrong one is how password databases get stored under AES "because it felt stronger."
 
-**Key Point:** Encryption and hashing are **complementary** techniques that solve different security problems. They are **not interchangeable**.
+Key Point: Encryption and hashing are complementary techniques that solve different security problems. They are not interchangeable.
 
 ---
 
-## **What is Encryption**
+## What is Encryption
 
-### **Definition**
+### Definition
 
-**Encryption** is the process of transforming plaintext (readable data) into ciphertext (unreadable data) using an encryption algorithm and a secret key. The ciphertext can be decrypted back to the original plaintext using the corresponding decryption algorithm and key.
+Encryption is the process of transforming plaintext (readable data) into ciphertext (unreadable data) using an encryption algorithm and a secret key. The ciphertext can be decrypted back to the original plaintext using the corresponding decryption algorithm and key.
 
-### **Key Characteristics**
+### Key Characteristics
 
-- ✅ **Reversible**: Can decrypt back to original data
-- ✅ **Requires key**: Secret key needed for encryption/decryption
-- ✅ **Confidentiality**: Protects data secrecy
-- ✅ **Two-way process**: Encrypt → Decrypt
+- ✅ Reversible: Can decrypt back to original data
+- ✅ Requires key: Secret key needed for encryption/decryption
+- ✅ Confidentiality: Protects data secrecy
+- ✅ Two-way process: Encrypt → Decrypt
 
-### **Purpose**
+### Purpose
 
-**Primary Purpose:** Protect the **confidentiality** of data.
+Primary Purpose: Protect the confidentiality of data.
 
-**What it does:**
+What it does:
 
 - Makes data unreadable to unauthorized parties
 - Ensures only authorized parties with the key can read data
 - Protects data in transit and at rest
 
-### **How Encryption Works**
+### How Encryption Works
 
 ```
 Plaintext + Encryption Algorithm + Key → Ciphertext
@@ -59,7 +60,7 @@ Ciphertext + Decryption Algorithm + Key → Plaintext
 
 ```
 
-**Example:**
+Example:
 
 ```jsx
 // Encryption
@@ -76,32 +77,32 @@ const decrypted = decrypt(ciphertext, key);
 
 ---
 
-## **What is Hashing**
+## What is Hashing
 
-### **Definition**
+### Definition
 
-**Hashing** is the process of converting an input of any size into a fixed-length hash value using a hashing algorithm. Hash functions are designed to be one-way, meaning it is computationally infeasible to derive the original input from the hash value.
+Hashing is the process of converting an input of any size into a fixed-length hash value using a hashing algorithm. Hash functions are designed to be one-way, meaning it is computationally infeasible to derive the original input from the hash value.
 
-### **Key Characteristics**
+### Key Characteristics
 
-- ✅ **Irreversible**: Cannot reverse to get original data
-- ⚠️ **No key required**: Traditional hashing doesn't use keys (HMAC uses keys)
-- ✅ **Fixed length**: Always produces same-length output
-- ✅ **Deterministic**: Same input always produces same hash
-- ✅ **One-way process**: Input → Hash (no reverse)
+- ✅ Irreversible: Cannot reverse to get original data
+- ⚠️ No key required: Traditional hashing doesn't use keys (HMAC uses keys)
+- ✅ Fixed length: Always produces same-length output
+- ✅ Deterministic: Same input always produces same hash
+- ✅ One-way process: Input → Hash (no reverse)
 
-### **Purpose**
+### Purpose
 
-**Primary Purpose:** Verify **data integrity** and create unique fingerprints.
+Primary Purpose: Verify data integrity and create unique fingerprints.
 
-**What it does:**
+What it does:
 
 - Creates unique fingerprint of data
 - Verifies data hasn't been modified
 - Used for password storage (one-way)
 - Used for digital signatures
 
-### **How Hashing Works**
+### How Hashing Works
 
 ```
 Input → Hash Function → Hash Value (fixed length)
@@ -109,7 +110,7 @@ Hash Value → ??? → ❌ Cannot reverse!
 
 ```
 
-**Example:**
+Example:
 
 ```jsx
 // Hashing
@@ -124,28 +125,28 @@ const original = reverseHash(hash);  // ❌ IMPOSSIBLE
 
 ---
 
-## **Key Differences**
+## Key Differences
 
-### **Fundamental Difference**
+### Fundamental Difference
 
 | Aspect | Encryption | Hashing |
 | --- | --- | --- |
-| **Purpose** | Confidentiality (hide data) | Integrity (verify data) |
-| **Reversible?** | ✅ Yes (with key) | ❌ No (one-way) |
-| **Uses Key?** | ✅ Yes (required) | ⚠️ Optional (HMAC) |
-| **Output** | Variable length (ciphertext) | Fixed length (hash) |
-| **Speed** | ⚠️ Slower | ✅ Faster |
-| **Use Case** | Protect secrets | Verify integrity |
+| Purpose | Confidentiality (hide data) | Integrity (verify data) |
+| Reversible? | ✅ Yes (with key) | ❌ No (one-way) |
+| Uses Key? | ✅ Yes (required) | ⚠️ Optional (HMAC) |
+| Output | Variable length (ciphertext) | Fixed length (hash) |
+| Speed | ⚠️ Slower | ✅ Faster |
+| Use Case | Protect secrets | Verify integrity |
 
-### **Purpose Difference**
+### Purpose Difference
 
-**Encryption:**
+Encryption:
 
 - Answers: "How do I hide data from unauthorized access?"
 - Focus: Confidentiality and secrecy
 - Use when: You need to retrieve original data
 
-**Hashing:**
+Hashing:
 
 - Answers: "How do I verify data hasn't changed?"
 - Focus: Integrity and verification
@@ -153,28 +154,28 @@ const original = reverseHash(hash);  // ❌ IMPOSSIBLE
 
 ---
 
-## **Detailed Comparison**
+## Detailed Comparison
 
-### **Comparison Table**
+### Comparison Table
 
 | Feature | Encryption | Hashing |
 | --- | --- | --- |
-| **Purpose** | Protect confidentiality | Verify integrity |
-| **Reversibility** | ✅ Reversible (with key) | ❌ Irreversible |
-| **Key Usage** | ✅ Required | ⚠️ Optional (HMAC) |
-| **Output Length** | Variable (same as input) | Fixed (e.g., 256 bits) |
-| **Speed** | Slower | Faster |
-| **Password Storage** | ❌ Never use | ✅ Always use |
-| **Data Retrieval** | ✅ Can decrypt | ❌ Cannot reverse |
-| **Confidentiality** | ✅ Protects | ❌ Does not protect |
-| **Integrity** | ⚠️ Does not verify | ✅ Verifies |
-| **Use Cases** | Secrets, PII, transmission | Passwords, checksums, signatures |
+| Purpose | Protect confidentiality | Verify integrity |
+| Reversibility | ✅ Reversible (with key) | ❌ Irreversible |
+| Key Usage | ✅ Required | ⚠️ Optional (HMAC) |
+| Output Length | Variable (same as input) | Fixed (e.g., 256 bits) |
+| Speed | Slower | Faster |
+| Password Storage | ❌ Never use | ✅ Always use |
+| Data Retrieval | ✅ Can decrypt | ❌ Cannot reverse |
+| Confidentiality | ✅ Protects | ❌ Does not protect |
+| Integrity | ⚠️ Does not verify | ✅ Verifies |
+| Use Cases | Secrets, PII, transmission | Passwords, checksums, signatures |
 
-### **Detailed Analysis**
+### Detailed Analysis
 
-### **1. Reversibility**
+### 1. Reversibility
 
-**Encryption:**
+Encryption:
 
 ```jsx
 // Reversible with key
@@ -184,7 +185,7 @@ const decrypted = decrypt(ciphertext, key);  // "Secret Message" ✅
 
 ```
 
-**Hashing:**
+Hashing:
 
 ```jsx
 // Irreversible
@@ -194,29 +195,29 @@ const original = reverseHash(hash);  // ❌ IMPOSSIBLE
 
 ```
 
-### **2. Key Usage**
+### 2. Key Usage
 
-**Encryption:**
+Encryption:
 
 - ✅ Always requires a key
 - Key used for both encryption and decryption
 - Key must be kept secret
 
-**Hashing:**
+Hashing:
 
 - ⚠️ Traditional hashing: No key
 - HMAC: Uses key for authentication (still one-way)
 - Key in HMAC is for authentication, not decryption
 
-### **3. Output Characteristics**
+### 3. Output Characteristics
 
-**Encryption:**
+Encryption:
 
 - Output length ≈ input length
 - Output is random-looking
 - Different plaintexts produce different ciphertexts
 
-**Hashing:**
+Hashing:
 
 - Fixed output length (e.g., SHA-256 = 256 bits)
 - Deterministic (same input = same output)
@@ -224,75 +225,168 @@ const original = reverseHash(hash);  // ❌ IMPOSSIBLE
 
 ---
 
-## **Encryption Algorithms**
+## Encryption Algorithms
 
-### **Symmetric Key Encryption**
+### Symmetric Key Encryption
 
-**Definition:** Uses the same key for encryption and decryption.
+Definition: Uses the same key for encryption and decryption.
 
-**Characteristics:**
+Characteristics:
 
 - ✅ Fast
 - ✅ Efficient for large data
 - ⚠️ Key distribution challenge
 - ⚠️ Key must be shared securely
 
-**Algorithms:**
+Algorithms:
 
-**1. AES (Advanced Encryption Standard)**
+1. AES (Advanced Encryption Standard)
 
 - Most widely used
 - Key sizes: 128, 192, 256 bits
 - Block size: 128 bits
 - Modes: CBC, GCM, CTR
 
-**2. DES (Data Encryption Standard)**
+2. DES (Data Encryption Standard)
 
 - ❌ Deprecated (too weak)
 - 56-bit key (insecure)
 - Replaced by AES
 
-**3. Blowfish**
+3. Blowfish
 
 - Variable key length (32-448 bits)
 - Fast and efficient
 - Used in some legacy systems
 
-### **Asymmetric Key Encryption**
+### Asymmetric Key Encryption
 
-**Definition:** Uses different keys for encryption and decryption (public/private key pair).
+Definition: Uses different keys for encryption and decryption (public/private key pair).
 
-**Characteristics:**
+Characteristics:
 
 - ✅ Solves key distribution problem
 - ⚠️ Slower than symmetric
 - ✅ Digital signatures possible
 - ⚠️ Limited data size
 
-**Algorithms:**
+Algorithms:
 
-**1. RSA (Rivest-Shamir-Adleman)**
+1. RSA (Rivest-Shamir-Adleman)
 
 - Most common asymmetric algorithm
 - Key sizes: 2048, 4096 bits
 - Used for key exchange and digital signatures
 
-**2. ECC (Elliptic Curve Cryptography)**
+2. ECC (Elliptic Curve Cryptography)
 
 - Smaller keys for same security
 - Faster than RSA
 - Used in modern systems
 
-### **Stream Cipher vs Block Cipher**
+---
 
-**Stream Cipher:**
+## Who encrypts with whose key
+
+This is the mix-up I hear in interviews every cycle. Someone says "Alice encrypts with her private key so Bob can decrypt with her public key." That is a mangled description of a digital signature. It is not how you keep a message confidential.
+
+A pair has two jobs, and they are not interchangeable.
+
+| Goal | Operation | Key used |
+| --- | --- | --- |
+| Keep a message confidential for Bob | Encrypt | Bob's public key |
+| Recover that message | Decrypt | Bob's private key |
+| Prove Alice signed a message | Sign | Alice's private signing key |
+| Check Alice's signature | Verify | Alice's public verification key |
+
+A private key used for signing is not ordinarily used to encrypt messages for confidentiality. Anyone who can see a signed message and Alice's public key can generally verify the signature. Verification is the point. Secrecy is not.
+
+### Confidentiality: Alice writes to Bob
+
+1. Bob generates a public-private pair and publishes the public half through something that proves it is his (a certificate, a key directory your app already trusts).
+2. Alice encrypts for that public key.
+3. Only Bob's private key opens it, if the algorithm is sound and that key stayed private.
+
+If an attacker swaps in their own public key and Alice encrypts to that, Bob is not the only reader. Authenticity of the public key is part of the threat model. "I fetched a blob from `/keys/bob`" is not enough unless you know who signed that blob.
+
+### Authenticity: Alice signs, Bob checks
+
+1. Alice signs with her private key.
+2. Bob verifies with Alice's public key, which he also has to trust.
+
+The document stays readable. That is why signatures and encryption are separate passes. The usual order when you want both: sign, then encrypt to the recipient, so the ciphertext carries a signature an outsider cannot even see. Details live in [Digital Signatures](../Digital%20Signatures/Digital%20Signatures%20-%20Comprehensive%20Guide.md).
+
+### Hybrid encryption for a real payload
+
+RSA (and most public-key encryption) is a poor bulk cipher. Size limits, cost, and the fact that you should not encrypt megabytes under a raw public key. What you actually ship:
+
+1. Generate a random symmetric key (a DEK).
+2. Encrypt the body with an authenticated cipher, AES-GCM or ChaCha20-Poly1305.
+3. Wrap that DEK with Bob's public key (RSA-OAEP, or an equivalent KEM).
+4. Store or send the ciphertext plus the wrapped DEK together.
+
+Bob unwraps the DEK with his private key, then opens the body. Same idea as envelope encryption in a KMS, except the KEK is Bob's asymmetric key instead of a cloud master key. See [Secrets Management](../Secrets%20Management%20and%20Key%20Lifecycle/Secrets%20Management%20and%20Key%20Lifecycle%20-%20Comprehensive%20Guide.md) for the KEK/DEK hierarchy.
+
+### The server can hold ciphertext and still not read it
+
+You can put AuthN and AuthZ in front of that blob without giving the server the private key. That is a useful design, and it is also easy to over-claim.
+
+Alice encrypts to Bob and POSTs the ciphertext to your API. The API stores bytes. When someone asks for message `m-4412`:
+
+1. Authenticate them (password plus MFA, OIDC, a client cert). Who are you.
+2. Authorize them against that message. What may they read.
+3. If yes, return the ciphertext and the wrapped DEK. If no, 404 or 403. I prefer 404 on a cross-tenant id so you do not confirm the message exists.
+4. Bob unwraps locally. The server never saw plaintext.
+
+```mermaid
+flowchart TD
+  Alice[Alice] -->|wrap DEK to Bob public key| Store[API stores ciphertext]
+  Store --> Auth{Authenticate then authorize}
+  Auth -->|Bob| Bob[Bob unwraps DEK locally]
+  Auth -->|Charlie| Deny[Reject]
+```
+
+Charlie can be logged in and still get denied. Authentication is not authorization. The [Authorization and Authentication](../Authorization%20and%20Authentication/Authorization%20and%20Authentication%20-%20Comprehensive%20G.md) topic owns that distinction. Crypto does not replace it, and it does not make AuthZ optional.
+
+### A public key is not a secret
+
+Locking `/keys/bob` behind login feels like extra security. It is access control on a download, not confidentiality of the message. Public keys are meant to travel. Someone can copy Bob's key from a cert, a git repo, a previous email, a CT log. If Charlie already has the ciphertext and Bob's public key, hiding the key endpoint does nothing. Charlie still cannot decrypt. The private key is the boundary.
+
+Hiding the public key also does not stop a substitution attack. Alice has to know the key she used is Bob's. That is PKI, or a pinning story, or a first-use trust you recorded.
+
+### One message, several readers
+
+Encrypting to Bob's public key means Bob can read it. It does not mean "every user your AuthZ policy likes." If Dana is also allowed to open `m-4412`, wrap the same DEK to Dana's public key too, or you have a policy the crypto cannot enforce.
+
+Options that actually match a multi-user ACL:
+
+- Wrap the DEK once per authorized recipient.
+- Hold the DEK in a KMS and let the KMS evaluate IAM before unwrap (envelope encryption with a service).
+- A shared symmetric key you distribute only to the current ACL, and you rotate it when membership changes.
+- Attribute-based encryption if the policy is honestly that complex. Most product teams should not start there.
+
+Pick from the threat model. "Only Bob can read this even if the database dumps" is option one or two. "Only logged-in users can hit the download URL, and we also encrypt at rest with a server key" is a different product: the server can read it. Say which one you are building.
+
+### Three goals people collapse into one sentence
+
+When someone says "only a verified receiver should get the public key and the encrypted message," ask which of these they mean.
+
+1. Only the intended recipient can read the plaintext, even if the ciphertext leaks. Public-key (or KMS) wrap of a DEK. Private key stays on the client or in an HSM the server cannot use for this message.
+2. Only authorized users can download the blob from your API. AuthN plus AuthZ. The server may or may not be able to decrypt.
+3. Only verified users can fetch a public key, as an extra friction layer. Fine as hygiene. Do not treat it as a confidentiality control.
+
+You can do 1 and 2 together: hybrid encryption plus an authorized download. That is the design I would ship for a messaging feature where the host should not read mail. Goal 3 is optional and weak on its own.
+
+### Stream Cipher vs Block Cipher
+
+Stream Cipher:
 
 - Encrypts data bit by bit
 - Generates stream of random numbers
 - XOR with plaintext
 - Example: RC4, ChaCha20
 
-**Block Cipher:**
+Block Cipher:
 
 - Encrypts data in fixed-size blocks
 - Processes blocks independently or chained
@@ -300,11 +394,11 @@ const original = reverseHash(hash);  // ❌ IMPOSSIBLE
 
 ---
 
-## **Hashing Algorithms**
+## Hashing Algorithms
 
-### **Cryptographic Hash Functions**
+### Cryptographic Hash Functions
 
-**Requirements:**
+Requirements:
 
 - ✅ Deterministic (same input = same output)
 - ✅ Fast computation
@@ -312,68 +406,68 @@ const original = reverseHash(hash);  // ❌ IMPOSSIBLE
 - ✅ Collision resistance (hard to find two inputs with same hash)
 - ✅ Avalanche effect (small change = big hash change)
 
-### **Common Hash Algorithms**
+### Common Hash Algorithms
 
-**1. MD5 (Message Digest 5)**
+1. MD5 (Message Digest 5)
 
-- ❌ **Deprecated** - Not secure
+- ❌ Deprecated - Not secure
 - 128-bit hash value
 - Vulnerable to collision attacks
-- **Never use for security** - only for non-security checksums
+- Never use for security - only for non-security checksums
 
-**2. SHA-1 (Secure Hash Algorithm 1)**
+2. SHA-1 (Secure Hash Algorithm 1)
 
-- ❌ **Deprecated** - Not secure
+- ❌ Deprecated - Not secure
 - 160-bit hash value
 - Vulnerable to collision attacks
-- **Never use for security**
+- Never use for security
 
-**3. SHA-256 (SHA-2 family)**
+3. SHA-256 (SHA-2 family)
 
 - ✅ Secure (when used properly)
 - 256-bit hash value
 - Used for data integrity checks
 - ⚠️ Too fast for password hashing (use with salt + iterations)
 
-**4. SHA-512 (SHA-2 family)**
+4. SHA-512 (SHA-2 family)
 
 - ✅ Secure
 - 512-bit hash value
 - More secure than SHA-256
 - Used for high-security applications
 
-**5. SHA-3**
+5. SHA-3
 
 - ✅ Modern standard
 - Variable output length
 - Different design from SHA-2
 - Future-proof
 
-### **Password Hashing Algorithms**
+### Password Hashing Algorithms
 
-**Specialized algorithms for password storage:**
+Specialized algorithms for password storage:
 
-**1. bcrypt**
+1. bcrypt
 
 - ✅ Widely used
 - Adaptive (can increase cost factor)
 - Slow by design (resistant to brute force)
 - Includes salt automatically
 
-**2. Argon2**
+2. Argon2
 
 - ✅ Modern standard (winner of Password Hashing Competition)
 - Memory-hard function
 - Resistant to GPU/ASIC attacks
 - Recommended for new systems
 
-**3. scrypt**
+3. scrypt
 
 - ✅ Memory-hard function
 - Configurable memory and time costs
 - Good alternative to bcrypt
 
-**4. PBKDF2 (Password-Based Key Derivation Function 2)**
+4. PBKDF2 (Password-Based Key Derivation Function 2)
 
 - ✅ Standard algorithm
 - Uses iterations to slow down
@@ -382,29 +476,29 @@ const original = reverseHash(hash);  // ❌ IMPOSSIBLE
 
 ---
 
-## **Use Cases**
+## Use Cases
 
-### **When to Use Encryption**
+### When to Use Encryption
 
-**1. Data Confidentiality**
+1. Data Confidentiality
 
 - Protecting sensitive data (PII, credit cards, secrets)
 - Data transmission (HTTPS/TLS)
 - Data at rest (encrypted databases)
 
-**2. When You Need Original Data**
+2. When You Need Original Data
 
 - Credit card processing (need to decrypt for transactions)
 - Encrypted backups (need to restore)
 - Encrypted messages (need to read)
 
-**3. Temporary Data Protection**
+3. Temporary Data Protection
 
 - In-memory encryption
 - Session data encryption
 - Temporary file encryption
 
-**Example:**
+Example:
 
 ```jsx
 // Encrypt credit card number
@@ -415,33 +509,33 @@ const encrypted = aes256.encrypt(cardNumber, key);
 
 ```
 
-### **When to Use Hashing**
+### When to Use Hashing
 
-**1. Password Storage**
+1. Password Storage
 
 - User passwords (one-way, cannot reverse)
 - Authentication tokens
 - API keys (sometimes)
 
-**2. Data Integrity Verification**
+2. Data Integrity Verification
 
 - File checksums
 - Download verification
 - Database integrity checks
 
-**3. Digital Signatures**
+3. Digital Signatures
 
 - Hash document, then sign hash
 - Message authentication
 - Certificate validation
 
-**4. Deduplication**
+4. Deduplication
 
 - Same content = same hash
 - File deduplication
 - Content addressing
 
-**Example:**
+Example:
 
 ```jsx
 // Hash password
@@ -455,11 +549,11 @@ const hashed = bcrypt.hash(password, 10);
 
 ---
 
-## **Security Considerations**
+## Security Considerations
 
-### **Encryption Security**
+### Encryption Security
 
-**Key Management:**
+Key Management:
 
 - ✅ Store keys securely (HSM, key management services)
 - ✅ Rotate keys periodically
@@ -467,36 +561,36 @@ const hashed = bcrypt.hash(password, 10);
 - ✅ Never hardcode keys
 - ✅ Use different keys for different purposes
 
-**Algorithm Selection:**
+Algorithm Selection:
 
 - ✅ Use AES-256 for symmetric encryption
 - ✅ Use RSA-2048+ or ECC for asymmetric encryption
 - ✅ Use authenticated encryption (AES-GCM)
 - ❌ Never use DES, RC4, or other deprecated algorithms
 
-**Implementation:**
+Implementation:
 
 - ✅ Use well-tested libraries
 - ✅ Use proper modes (GCM, CCM for authenticated encryption)
 - ✅ Use proper IV/nonce generation
 - ✅ Never reuse IVs/nonces
 
-### **Hashing Security**
+### Hashing Security
 
-**Password Hashing:**
+Password Hashing:
 
 - ✅ Use bcrypt, Argon2, or scrypt
 - ✅ Always use salt (included in bcrypt/Argon2)
 - ✅ Use appropriate cost factors
 - ❌ Never use MD5, SHA-1, or plain SHA-256 for passwords
 
-**Data Integrity:**
+Data Integrity:
 
 - ✅ Use SHA-256 or SHA-512 for checksums
 - ✅ Verify hashes after transmission
 - ✅ Use HMAC for authenticated hashing
 
-**Salt Usage:**
+Salt Usage:
 
 - ✅ Always use unique salt per password
 - ✅ Store salt with hash
@@ -505,41 +599,41 @@ const hashed = bcrypt.hash(password, 10);
 
 ---
 
-## **Best Practices**
+## Best Practices
 
-### **Encryption Best Practices**
+### Encryption Best Practices
 
-1. ✅ **Use strong algorithms** (AES-256, RSA-2048+)
-2. ✅ **Secure key management** (HSM, key vaults)
-3. ✅ **Use authenticated encryption** (AES-GCM)
-4. ✅ **Rotate keys periodically**
-5. ✅ **Never reuse IVs/nonces**
-6. ✅ **Use HTTPS/TLS for data in transit**
-7. ✅ **Encrypt sensitive data at rest**
+1. ✅ Use strong algorithms (AES-256, RSA-2048+)
+2. ✅ Secure key management (HSM, key vaults)
+3. ✅ Use authenticated encryption (AES-GCM)
+4. ✅ Rotate keys periodically
+5. ✅ Never reuse IVs/nonces
+6. ✅ Use HTTPS/TLS for data in transit
+7. ✅ Encrypt sensitive data at rest
 
-### **Hashing Best Practices**
+### Hashing Best Practices
 
-1. ✅ **Use proper algorithms** (bcrypt/Argon2 for passwords)
-2. ✅ **Always use salt** (unique per password)
-3. ✅ **Use appropriate cost factors** (balance security vs performance)
-4. ✅ **Never use MD5/SHA-1** for security purposes
-5. ✅ **Verify hashes** after transmission
-6. ✅ **Use HMAC** when authentication is needed
+1. ✅ Use proper algorithms (bcrypt/Argon2 for passwords)
+2. ✅ Always use salt (unique per password)
+3. ✅ Use appropriate cost factors (balance security vs performance)
+4. ✅ Never use MD5/SHA-1 for security purposes
+5. ✅ Verify hashes after transmission
+6. ✅ Use HMAC when authentication is needed
 
-### **Password Storage Best Practices**
+### Password Storage Best Practices
 
-1. ✅ **Always hash passwords** (never encrypt)
-2. ✅ **Use bcrypt, Argon2, or scrypt**
-3. ✅ **Use unique salt per password**
-4. ✅ **Use appropriate cost factors**
-5. ✅ **Never store plaintext passwords**
-6. ✅ **Implement password policies** (length, complexity)
+1. ✅ Always hash passwords (never encrypt)
+2. ✅ Use bcrypt, Argon2, or scrypt
+3. ✅ Use unique salt per password
+4. ✅ Use appropriate cost factors
+5. ✅ Never store plaintext passwords
+6. ✅ Implement password policies (length, complexity)
 
 ---
 
-## **Common Mistakes**
+## Common Mistakes
 
-### **❌ Mistake 1: Encrypting Passwords**
+### ❌ Mistake 1: Encrypting Passwords
 
 ```jsx
 // ❌ WRONG
@@ -557,7 +651,7 @@ const hashed = bcrypt.hash(password, 10);
 
 ```
 
-### **❌ Mistake 2: Using MD5/SHA-1 for Passwords**
+### ❌ Mistake 2: Using MD5/SHA-1 for Passwords
 
 ```jsx
 // ❌ WRONG
@@ -571,7 +665,7 @@ const hash = bcrypt.hash(password, 10);  // Slow, secure
 
 ```
 
-### **❌ Mistake 3: Hashing for Confidentiality**
+### ❌ Mistake 3: Hashing for Confidentiality
 
 ```jsx
 // ❌ WRONG
@@ -589,7 +683,7 @@ const encrypted = encrypt(secret, key);
 
 ```
 
-### **❌ Mistake 4: No Salt for Password Hashing**
+### ❌ Mistake 4: No Salt for Password Hashing
 
 ```jsx
 // ❌ WRONG
@@ -606,13 +700,13 @@ const hash = bcrypt.hash(password, salt, 10);  // Salt included
 
 ---
 
-## **Real-World Examples**
+## Real-World Examples
 
-### **Example 1: Password Storage**
+### Example 1: Password Storage
 
-**Scenario:** Storing user passwords in database
+Scenario: Storing user passwords in database
 
-**✅ Correct Approach:**
+✅ Correct Approach:
 
 ```jsx
 // Registration
@@ -630,7 +724,7 @@ if (isValid) {
 
 ```
 
-**❌ Wrong Approach:**
+❌ Wrong Approach:
 
 ```jsx
 // ❌ Encrypting passwords
@@ -639,11 +733,11 @@ const encrypted = encrypt(password, key);
 
 ```
 
-### **Example 2: Credit Card Storage**
+### Example 2: Credit Card Storage
 
-**Scenario:** Storing credit card numbers for processing
+Scenario: Storing credit card numbers for processing
 
-**✅ Correct Approach:**
+✅ Correct Approach:
 
 ```jsx
 // Store credit card
@@ -659,7 +753,7 @@ const cardNumber = aes256.decrypt(encrypted, key);
 
 ```
 
-**❌ Wrong Approach:**
+❌ Wrong Approach:
 
 ```jsx
 // ❌ Hashing credit cards
@@ -668,11 +762,11 @@ const hash = sha256(cardNumber);
 
 ```
 
-### **Example 3: File Integrity Verification**
+### Example 3: File Integrity Verification
 
-**Scenario:** Verifying downloaded file hasn't been tampered with
+Scenario: Verifying downloaded file hasn't been tampered with
 
-**✅ Correct Approach:**
+✅ Correct Approach:
 
 ```jsx
 // Server calculates hash
@@ -693,46 +787,46 @@ if (downloadedHash === publishedHash) {
 
 ---
 
-## **Summary**
+## Summary
 
-### **Key Points**
+### Key Points
 
-1. **Encryption = Confidentiality** (reversible, requires key)
-2. **Hashing = Integrity** (irreversible, no key needed)
-3. **Passwords = Always hash** (never encrypt)
-4. **Sensitive data = Encrypt** (when you need to retrieve it)
-5. **Use proper algorithms** (AES for encryption, bcrypt/Argon2 for passwords)
-6. **Always use salt** for password hashing
-7. **Never use MD5/SHA-1** for security purposes
+1. Encryption = Confidentiality (reversible, requires key)
+2. Hashing = Integrity (irreversible, no key needed)
+3. Passwords = Always hash (never encrypt)
+4. Sensitive data = Encrypt (when you need to retrieve it)
+5. Use proper algorithms (AES for encryption, bcrypt/Argon2 for passwords)
+6. Always use salt for password hashing
+7. Never use MD5/SHA-1 for security purposes
 
-### **Decision Tree**
+### Decision Tree
 
-**Need to retrieve original data?**
+Need to retrieve original data?
 
 - Yes → Use Encryption
 - No → Consider Hashing
 
-**Storing passwords?**
+Storing passwords?
 
 - Always → Use Hashing (bcrypt/Argon2)
 
-**Protecting data confidentiality?**
+Protecting data confidentiality?
 
 - Use Encryption (AES)
 
-**Verifying data integrity?**
+Verifying data integrity?
 
 - Use Hashing (SHA-256)
 
-Remember: **Encryption protects confidentiality (secrecy), Hashing protects integrity (verification). They're complementary, not interchangeable!**
+Remember: Encryption protects confidentiality (secrecy), Hashing protects integrity (verification). They're complementary, not interchangeable!
 
 ---
 
 ## Interview clusters
 
-- **Fundamentals:** “Encrypt passwords in the database—yes or no?” “SHA-256 for passwords?”
-- **Senior:** “When do you need AEAD vs plain AES?” “KDF vs hash for passwords?”
-- **Staff:** “Design a key hierarchy for multi-tenant SaaS with customer-managed keys.”
+- Fundamentals: "Encrypt passwords in the database-yes or no?" "SHA-256 for passwords?"
+- Senior: "When do you need AEAD vs plain AES?" "KDF vs hash for passwords?"
+- Staff: "Design a key hierarchy for multi-tenant SaaS with customer-managed keys."
 
 ---
 

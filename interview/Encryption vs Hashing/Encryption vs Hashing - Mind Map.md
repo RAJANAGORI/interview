@@ -27,7 +27,11 @@ mindmap
     "Encryption Algorithms"
       "Symmetric Key Encryption"
       "Asymmetric Key Encryption"
-      "Stream Cipher vs Block Cipher"
+    "Who encrypts with whose key"
+      "Confidentiality - Alice writes to Bob"
+      "Authenticity - Alice signs, Bob checks"
+      "Hybrid encryption for a real payload"
+      "The server can hold ciphertext and stil..."
     "Hashing Algorithms"
       "Cryptographic Hash Functions"
       "Common Hash Algorithms"
@@ -38,10 +42,6 @@ mindmap
     "Security Considerations"
       "Encryption Security"
       "Hashing Security"
-    "Best Practices"
-      "Encryption Best Practices"
-      "Hashing Best Practices"
-      "Password Storage Best Practices"
 ```
 
 ## What is Encryption
@@ -124,10 +124,10 @@ mindmap
 - Efficient for large data
 - ️ Key distribution challenge
 - ️ Key must be shared securely
+- AES (Advanced Encryption Standard)
 - Most widely used
 - Key sizes: 128, 192, 256 bits
 - Block size: 128 bits
-- Modes: CBC, GCM, CTR
 
 ### Asymmetric Key Encryption
 - Definition: Uses different keys for encryption and decryption (public/private key pair).
@@ -135,9 +135,52 @@ mindmap
 - ️ Slower than symmetric
 - Digital signatures possible
 - ️ Limited data size
+- RSA (Rivest-Shamir-Adleman)
 - Most common asymmetric algorithm
 - Key sizes: 2048, 4096 bits
-- Used for key exchange and digital signatures
+
+## Who encrypts with whose key
+- A pair has two jobs, and they are not interchangeable.
+
+### Confidentiality: Alice writes to Bob
+- Bob generates a public-private pair and publishes the public half through something that proves it is his (a certificate, a key directory your app already trusts).
+- Alice encrypts for that public key.
+- Only Bob's private key opens it, if the algorithm is sound and that key stayed private.
+
+### Authenticity: Alice signs, Bob checks
+- Alice signs with her private key.
+- Bob verifies with Alice's public key, which he also has to trust.
+
+### Hybrid encryption for a real payload
+- RSA (and most public-key encryption) is a poor bulk cipher. Size limits, cost, and the fact that you should not encrypt megabytes under a raw public key. What you actually ship:
+- Generate a random symmetric key (a DEK).
+- Encrypt the body with an authenticated cipher, AES-GCM or ChaCha20-Poly1305.
+- Wrap that DEK with Bob's public key (RSA-OAEP, or an equivalent KEM).
+- Store or send the ciphertext plus the wrapped DEK together.
+
+### The server can hold ciphertext and still not read it
+- You can put AuthN and AuthZ in front of that blob without giving the server the private key. That is a useful design, and it is also easy to over-claim.
+- Alice encrypts to Bob and POSTs the ciphertext to your API. The API stores bytes. When someone asks for message m-4412:
+- Authenticate them (password plus MFA, OIDC, a client cert). Who are you.
+- Authorize them against that message. What may they read.
+- If yes, return the ciphertext and the wrapped DEK. If no, 404 or 403. I prefer 404 on a cross-tenant id so you do not confirm the message exists.
+- Bob unwraps locally. The server never saw plaintext.
+
+### A public key is not a secret
+- Hiding the public key also does not stop a substitution attack. Alice has to know the key she used is Bob's. That is PKI, or a pinning story, or a first-use trust you recorded.
+
+### One message, several readers
+- Options that actually match a multi-user ACL:
+- Wrap the DEK once per authorized recipient.
+- Hold the DEK in a KMS and let the KMS evaluate IAM before unwrap (envelope encryption with a service).
+- A shared symmetric key you distribute only to the current ACL, and you rotate it when membership changes.
+- Attribute-based encryption if the policy is honestly that complex. Most product teams should not start there.
+
+### Three goals people collapse into one sentence
+- When someone says "only a verified receiver should get the public key and the encrypted message," ask which of these they mean.
+- Only the intended recipient can read the plaintext, even if the ciphertext leaks. Public-key (or KMS) wrap of a DEK. Private key stays on the client or in an HSM the server cannot use for this message.
+- Only authorized users can download the blob from your API. AuthN plus AuthZ. The server may or may not be able to decrypt.
+- Only verified users can fetch a public key, as an extra friction layer. Fine as hygiene. Do not treat it as a confidentiality control.
 
 ### Stream Cipher vs Block Cipher
 - Encrypts data bit by bit
@@ -158,14 +201,14 @@ mindmap
 - Avalanche effect (small change = big hash change)
 
 ### Common Hash Algorithms
+- MD5 (Message Digest 5)
 - Deprecated - Not secure
 - 128-bit hash value
 - Vulnerable to collision attacks
 - Never use for security - only for non-security checksums
+- SHA-1 (Secure Hash Algorithm 1)
 - 160-bit hash value
 - Never use for security
-- Secure (when used properly)
-- 256-bit hash value
 
 ### Password Hashing Algorithms
 - Specialized algorithms for password storage:
@@ -180,24 +223,24 @@ mindmap
 ## Use Cases
 
 ### When to Use Encryption
+- Data Confidentiality
 - Protecting sensitive data (PII, credit cards, secrets)
 - Data transmission (HTTPS/TLS)
 - Data at rest (encrypted databases)
+- When You Need Original Data
 - Credit card processing (need to decrypt for transactions)
 - Encrypted backups (need to restore)
 - Encrypted messages (need to read)
-- In-memory encryption
-- Session data encryption
 
 ### When to Use Hashing
+- Password Storage
 - User passwords (one-way, cannot reverse)
 - Authentication tokens
 - API keys (sometimes)
+- Data Integrity Verification
 - File checksums
 - Download verification
 - Database integrity checks
-- Hash document, then sign hash
-- Message authentication
 
 ## Security Considerations
 
@@ -374,7 +417,9 @@ mindmap
 - Use Encryption (AES)
 - Use Hashing (SHA-256)
 
-## Key Takeaways
+## Who uses which key
+
+## Pocket list
 - Encryption = Confidentiality (reversible, requires key)
 - Hashing = Integrity (irreversible, no key needed)
 - Passwords = Always hash (never encrypt)
@@ -447,7 +492,13 @@ mindmap
 - Adds randomness to hashing process
 - Does NOT make hashing reversible
 
-## Key Takeaways
+### "Alice encrypts with her private key, Bob decrypts with her public key"
+- See the source section `"Alice encrypts with her private key, Bob decrypts with her public key"` for the worked example.
+
+### "If I hide Bob's public key behind login, the message stays secret"
+- See the source section `"If I hide Bob's public key behind login, the message stays secret"` for the worked example.
+
+## What to keep straight
 
 ### Understanding
 - Encryption = Reversible (can decrypt back to original)
@@ -487,16 +538,12 @@ mindmap
 - Implementation Questions
 - How would you implement secure password storage?
 - How would you implement data encryption for sensitive information?
+- Design a messaging feature that uses public-key encryption plus login. Who encrypts with whose key, and does hiding the public key keep the message secret?
 - Depth: Interview follow-ups - Encryption vs Hashing
 
 ## Use Case Questions
 
 ## Security Questions
-
-## Depth: Interview follow-ups - Encryption vs Hashing
-- When is hashing wrong for passwords? (fast hash, no salt, pepper mishandled.)
-- Authenticated encryption: Why AES-GCM/ChaCha20-Poly1305 vs AES-CBC alone?
-- MAC vs signature: Symmetric integrity vs asymmetric non-repudiation (tie to Digital Signatures topic).
 
 
 ## Sibling folders
