@@ -179,15 +179,26 @@ function topicIsDone(topic, progress) {
   return keys.every((k) => !!progress.modules?.[topic.id]?.[k]);
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function topicsForPath(pathId) {
+  if (!pathId) return [];
+  const path = state.paths.find((p) => p.id === pathId);
+  if (!path?.topicIds?.length) return [];
+  const byId = Object.fromEntries(state.topics.map((t) => [t.id, t]));
+  return path.topicIds.map((tid) => byId[tid]).filter(Boolean);
+}
+
 function findNextTopic(pathId) {
   if (!pathId) return null;
-  const path = state.paths.find((p) => p.id === pathId);
-  if (!path?.topicIds?.length) return null;
   const progress = loadProgress();
-  const byId = Object.fromEntries(state.topics.map((t) => [t.id, t]));
-  for (const tid of path.topicIds) {
-    const topic = byId[tid];
-    if (!topic) continue;
+  for (const topic of topicsForPath(pathId)) {
     if (!topicIsDone(topic, progress)) return topic;
   }
   return null;
@@ -1073,36 +1084,100 @@ function updatePathBlurb(pathId) {
   const path = state.paths.find((p) => p.id === pathId);
   els.pathBlurb.textContent = path
     ? `${path.blurb} ${path.topicIds.length} topics in order.`
-    : "Choose a path to unlock Next recommended.";
+    : "Choose a path. Its topics show up under Next recommended.";
+}
+
+let pathTopicClicksBound = false;
+let renderedPathListId;
+
+function bindPathTopicClicks() {
+  if (pathTopicClicksBound || !els.nextTopicCard) return;
+  pathTopicClicksBound = true;
+  els.nextTopicCard.addEventListener("click", (event) => {
+    const btn = event.target.closest("[data-path-topic]");
+    if (!btn || !els.nextTopicCard.contains(btn)) return;
+    const topic = state.topics.find((t) => t.id === btn.getAttribute("data-path-topic"));
+    if (!topic) return;
+    setView("topics");
+    selectTopic(topic);
+  });
 }
 
 function renderNextTopic() {
   if (!els.nextTopicCard) return;
-  const pathId = loadProgress().pathId;
-  const next = findNextTopic(pathId);
+  bindPathTopicClicks();
+  const pathId = loadProgress().pathId || "";
+  const topics = topicsForPath(pathId);
   if (!pathId) {
+    renderedPathListId = "";
     els.nextTopicCard.innerHTML =
-      `<p class="kpi-sub">Pick a study path to get an ordered next topic.</p>`;
+      `<p class="kpi-sub">Pick a study path to list its topics, in order.</p>`;
     return;
   }
-  if (!next) {
+  if (!topics.length) {
+    renderedPathListId = pathId;
     els.nextTopicCard.innerHTML =
-      `<p class="kpi-sub">Path complete. Every topic in this path is marked done. Nice work.</p>`;
+      `<p class="kpi-sub">This path has no topics yet.</p>`;
     return;
   }
-  const meta = topicMeta(next.id);
-  const stats = computeProgress().byTopic[next.id] || { done: 0, total: 0 };
+
+  const progress = loadProgress();
+  const byTopic = computeProgress().byTopic;
+  const next = findNextTopic(pathId);
+  const shouldScroll = renderedPathListId !== pathId;
+  renderedPathListId = pathId;
+
+  const rows = topics
+    .map((topic, index) => {
+      const meta = topicMeta(topic.id);
+      const stats = byTopic[topic.id] || { done: 0, total: 0 };
+      const done = topicIsDone(topic, progress);
+      const isNext = !!(next && topic.id === next.id);
+      const bits = [];
+      if (meta?.difficulty) bits.push(meta.difficulty);
+      else if (topic.category) bits.push(topic.category);
+      if (meta?.minutes) bits.push(`~${meta.minutes} min`);
+      bits.push(`${stats.done}/${stats.total} modules`);
+      const rowClass = ["topic-progress-row", "path-topic-row", isNext ? "is-next" : "", done ? "is-done" : ""]
+        .filter(Boolean)
+        .join(" ");
+      const badge = isNext
+        ? `<span class="pill path-next-pill">Next</span>`
+        : done
+          ? `<span class="pill">Done</span>`
+          : "";
+      return `
+        <div class="${rowClass}" role="listitem">
+          <div>
+            <strong>${index + 1}. ${escapeHtml(topic.name)}</strong>
+            <small>${escapeHtml(bits.join(" · "))}</small>
+          </div>
+          <div class="path-topic-actions">
+            ${badge}
+            <button type="button" class="btn" data-path-topic="${escapeHtml(topic.id)}">Open</button>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  const summary = next
+    ? `${topics.length} topics on this path. Next up is ${escapeHtml(next.name)}.`
+    : `All ${topics.length} topics on this path are marked done.`;
+
   els.nextTopicCard.innerHTML = `
-    <strong>${next.name}</strong>
-    <p class="kpi-sub">${meta?.difficulty || next.category}${
-      meta?.minutes ? ` · ~${meta.minutes} min` : ""
-    } · ${stats.done}/${stats.total} modules</p>
-    <button id="openNextTopic" class="btn btn-primary" type="button">Open topic</button>
+    <p class="kpi-sub path-topic-summary">${summary}</p>
+    <div class="path-topic-list" role="list">${rows}</div>
   `;
-  els.nextTopicCard.querySelector("#openNextTopic")?.addEventListener("click", () => {
-    setView("topics");
-    selectTopic(next);
-  });
+
+  if (shouldScroll && next) {
+    const list = els.nextTopicCard.querySelector(".path-topic-list");
+    const nextRow = els.nextTopicCard.querySelector(".path-topic-row.is-next");
+    if (list && nextRow) {
+      const top = nextRow.getBoundingClientRect().top - list.getBoundingClientRect().top;
+      list.scrollTop += top - 8;
+    }
+  }
 }
 
 function reviewIntervalDays(confidence) {
