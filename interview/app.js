@@ -8,6 +8,8 @@ const state = {
   topicMeta: {},
   searchDocs: null,
   searchLoading: null,
+  wordPostings: null,
+  searchSkip: null,
   contentHitTopicIds: null,
 };
 
@@ -354,6 +356,29 @@ function tokenizeQuery(q) {
     .filter((t) => t.length >= 2);
 }
 
+function contentTerms(q) {
+  const skip = state.searchSkip;
+  return tokenizeQuery(q).filter((term) => !skip || !skip.has(term));
+}
+
+function buildWordPostings(docs, dict) {
+  const postings = new Map();
+  if (!Array.isArray(dict) || !dict.length) return postings;
+  docs.forEach((doc, index) => {
+    const ids = doc.w;
+    if (!Array.isArray(ids)) return;
+    for (const id of ids) {
+      const word = dict[id];
+      if (!word) continue;
+      let bucket = postings.get(word);
+      if (!bucket) postings.set(word, (bucket = []));
+      bucket.push(index);
+    }
+    delete doc.w;
+  });
+  return postings;
+}
+
 async function ensureSearchIndex() {
   if (Array.isArray(state.searchDocs)) return state.searchDocs;
   if (state.searchLoading) return state.searchLoading;
@@ -363,8 +388,12 @@ async function ensureSearchIndex() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const payload = await res.json();
       state.searchDocs = Array.isArray(payload?.docs) ? payload.docs : [];
+      state.searchSkip = new Set(Array.isArray(payload?.skip) ? payload.skip : []);
+      state.wordPostings = buildWordPostings(state.searchDocs, payload?.dict);
     } catch {
       state.searchDocs = [];
+      state.searchSkip = new Set();
+      state.wordPostings = new Map();
     } finally {
       state.searchLoading = null;
     }
@@ -373,45 +402,98 @@ async function ensureSearchIndex() {
   return state.searchLoading;
 }
 
+function headingHasTerm(heading, term) {
+  if (!heading || !term) return false;
+  const hay = heading.toLowerCase();
+  let from = 0;
+  while (from <= hay.length) {
+    const at = hay.indexOf(term, from);
+    if (at < 0) return false;
+    const before = at === 0 ? "" : hay[at - 1];
+    const after = hay[at + term.length] || "";
+    const bound = (ch) => !ch || !/[a-z0-9]/.test(ch);
+    if (bound(before) && bound(after)) return true;
+    from = at + 1;
+  }
+  return false;
+}
+
+function intersectDocIds(lists) {
+  if (!lists.length) return [];
+  let acc = lists[0];
+  for (let n = 1; n < lists.length; n += 1) {
+    const next = lists[n];
+    const out = [];
+    let i = 0;
+    let j = 0;
+    while (i < acc.length && j < next.length) {
+      if (acc[i] === next[j]) {
+        out.push(acc[i]);
+        i += 1;
+        j += 1;
+      } else if (acc[i] < next[j]) i += 1;
+      else j += 1;
+    }
+    acc = out;
+    if (!acc.length) break;
+  }
+  return acc;
+}
+
 function scoreSearchDoc(doc, terms, rawQ) {
   let score = 0;
   const topic = (doc.topic || "").toLowerCase();
   const heading = (doc.heading || "").toLowerCase();
-  const text = doc.text || "";
+  const parent = (doc.parent || "").toLowerCase();
   if (topic.includes(rawQ)) score += 40;
   if (heading.includes(rawQ)) score += 28;
+  else if (parent && parent.includes(rawQ)) score += 10;
   for (const term of terms) {
     if (topic.includes(term)) score += 12;
-    if (heading.includes(term)) score += 8;
-    if (text.includes(term)) score += 3;
-    else return -1;
+    if (headingHasTerm(heading, term)) score += 8;
+    else if (headingHasTerm(parent, term)) score += 4;
+    else score += 3;
   }
   if (doc.fileKey === "comprehensive") score += 2;
   if (doc.fileKey === "questions") score += 1;
   return score;
 }
 
-function searchContent(q) {
-  const terms = tokenizeQuery(q);
-  if (!terms.length || !Array.isArray(state.searchDocs)) return [];
-  const rawQ = q.toLowerCase().trim();
-  const hits = [];
-  for (const doc of state.searchDocs) {
-    const score = scoreSearchDoc(doc, terms, rawQ);
-    if (score < 0) continue;
-    hits.push({ score, doc });
-  }
+function takeTopHits(hits) {
   hits.sort((a, b) => b.score - a.score || a.doc.topic.localeCompare(b.doc.topic));
   const seen = new Set();
   const out = [];
   for (const hit of hits) {
-    const key = `${hit.doc.topicId}|${hit.doc.fileKey}|${hit.doc.heading}`;
+    const key = `${hit.doc.topicId}|${hit.doc.fileKey}|${hit.doc.anchor || hit.doc.heading}`;
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(hit);
     if (out.length >= 20) break;
   }
   return out;
+}
+
+function searchContent(q) {
+  const terms = contentTerms(q);
+  const empty = { hits: [], topicIds: new Set() };
+  if (!terms.length || !Array.isArray(state.searchDocs) || !state.wordPostings) return empty;
+  const lists = [];
+  for (const term of terms) {
+    const bucket = state.wordPostings.get(term);
+    if (!bucket || !bucket.length) return empty;
+    lists.push(bucket);
+  }
+  lists.sort((a, b) => a.length - b.length);
+  const rawQ = q.toLowerCase().trim();
+  const hits = [];
+  const topicIds = new Set();
+  for (const index of intersectDocIds(lists)) {
+    const doc = state.searchDocs[index];
+    if (!doc) continue;
+    topicIds.add(doc.topicId);
+    hits.push({ score: scoreSearchDoc(doc, terms, rawQ), doc });
+  }
+  return { hits: takeTopHits(hits), topicIds };
 }
 
 function escapeHtml(str) {
@@ -434,26 +516,27 @@ function renderSearchHits(hits, q) {
     els.searchHits.innerHTML = `<p class="kpi-sub">No guide hits for "${escapeHtml(q.trim())}". Topic names still filter below.</p>`;
     return;
   }
-  els.searchHits.innerHTML = `<p class="search-hits-label">${hits.length} guide hit${hits.length === 1 ? "" : "s"}</p>`;
+  els.searchHits.innerHTML = `<p class="search-hits-label">${hits.length} section hit${hits.length === 1 ? "" : "s"}</p>`;
   for (const { doc } of hits) {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "search-hit";
+    const title = doc.parent ? `${doc.parent} / ${doc.heading}` : doc.heading;
     btn.innerHTML = `
-      <strong>${escapeHtml(doc.heading)}</strong>
+      <strong>${escapeHtml(title)}</strong>
       <small>${escapeHtml(doc.topic)} · ${escapeHtml(doc.fileLabel)}</small>
       <span class="search-hit-snippet">${escapeHtml(doc.snippet || "")}</span>
     `;
-    btn.addEventListener("click", () => openTopicFile(doc.topicId, doc.fileKey));
+    btn.addEventListener("click", () => openTopicFile(doc.topicId, doc.fileKey, doc.anchor));
     els.searchHits.appendChild(btn);
   }
 }
 
-function openTopicFile(topicId, fileKey) {
+function openTopicFile(topicId, fileKey, anchor) {
   const topic = state.topics.find((t) => t.id === topicId);
   if (!topic || !topic.files?.[fileKey]) return;
   setView("topics");
-  selectTopic(topic, { fileKey });
+  selectTopic(topic, { fileKey, anchor: anchor || "" });
 }
 
 async function applyFilters() {
@@ -465,8 +548,9 @@ async function applyFilters() {
 
   if (q.length >= 2) {
     await ensureSearchIndex();
-    contentHits = searchContent(q);
-    state.contentHitTopicIds = new Set(contentHits.map((h) => h.doc.topicId));
+    const found = searchContent(q);
+    contentHits = found.hits;
+    state.contentHitTopicIds = found.topicIds;
   }
   renderSearchHits(contentHits, q);
 
@@ -579,14 +663,13 @@ function tocLabel(text) {
 
 function enhanceMarkdownDocument(container) {
   const h1 = container.querySelector("h1");
-  if (!h1) return;
-
-  if (!h1.id) {
-    h1.id = "doc-top";
+  const usedIds = new Set();
+  if (h1) {
+    if (!h1.id) h1.id = "doc-top";
+    usedIds.add(h1.id);
   }
 
-  const usedIds = new Set([h1.id]);
-  container.querySelectorAll("h2, h3").forEach((heading) => {
+  container.querySelectorAll("h2, h3, h4").forEach((heading) => {
     let id = slugifyHeading(heading.textContent);
     const base = id;
     let n = 2;
@@ -596,6 +679,8 @@ function enhanceMarkdownDocument(container) {
     heading.id = id;
     usedIds.add(id);
   });
+
+  if (!h1) return;
 
   const h2s = container.querySelectorAll("h2");
   const tocHeadings = h2s.length ? { type: "h2", nodes: h2s } : { type: "h3", nodes: container.querySelectorAll("h3") };
@@ -868,9 +953,10 @@ async function loadLogicChart(topicId, token) {
   }
 }
 
-function showTopicFile(topic, fileKey) {
+function showTopicFile(topic, fileKey, anchor) {
   if (!topic || !fileKey || !topic.files?.[fileKey]) return;
   const token = ++topicLoadToken;
+  const headingAnchor = anchor || "";
   els.fileTypeSelector.value = fileKey;
   state.selectedFileKey = fileKey;
   syncCompletionCheckbox();
@@ -880,7 +966,10 @@ function showTopicFile(topic, fileKey) {
   Promise.resolve(loader).then(() => {
     if (token !== topicLoadToken) return;
     updateTopicQuery();
-    if (isMobileLayout()) {
+    const heading = headingAnchor ? document.getElementById(headingAnchor) : null;
+    if (heading) {
+      heading.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (isMobileLayout()) {
       els.markdownContent.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   });
@@ -940,7 +1029,7 @@ function selectTopic(topic, opts = {}) {
   scrollPanelIntoView(els.topicsView);
   const fileKey =
     opts.fileKey && topic.files?.[opts.fileKey] ? opts.fileKey : defaultFileKey(topic);
-  if (fileKey) showTopicFile(topic, fileKey);
+  if (fileKey) showTopicFile(topic, fileKey, opts.anchor || "");
   else if (!opts.fromQuery) updateTopicQuery();
 }
 
