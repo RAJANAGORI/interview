@@ -428,8 +428,8 @@ mindmap
 - Key Point: HTTPS protects data in transit but doesn't verify that the request originated from the legitimate application.
 
 ### "HttpOnly cookies prevent CSRF"
-- Truth: HttpOnly cookies do NOT prevent CSRF. HttpOnly only prevents JavaScript from accessing cookies (protects against XSS).
-- Key Point: HttpOnly prevents JavaScript access (XSS protection), but browsers still automatically send HttpOnly cookies with requests (CSRF vulnerability remains).
+- Truth: HttpOnly cookies do NOT prevent CSRF. HttpOnly stops JavaScript from reading the cookie. That limits cookie theft during XSS. It does not stop XSS from acting as the user.
+- Key Point: HttpOnly blocks document.cookie. The browser still sends the cookie on a forged request, so CSRF still works. A script on the page can still call APIs as the user.
 
 ### "Only POST requests can be CSRF vulnerable"
 - Truth: Any state-changing operation can be vulnerable, regardless of HTTP method (GET, POST, PUT, DELETE).
@@ -453,7 +453,7 @@ mindmap
 ### Understanding
 - CSRF and XSS are different - Different attack vectors, different mitigations
 - HTTPS doesn't prevent CSRF - Only encrypts, doesn't verify origin
-- HttpOnly doesn't prevent CSRF - Only prevents JavaScript access
+- HttpOnly doesn't prevent CSRF. It only blocks document.cookie. XSS can still act as the user.
 - Any state-changing operation can be vulnerable - Not just POST
 - CSRF tokens are primary defense - But use defense in depth
 - SameSite helps but isn't sufficient alone - Use with other controls
@@ -605,15 +605,6 @@ mindmap
 ## Security Questions
 
 ## Advanced Questions
-
-## Depth: Interview follow-ups - CSRF
-- Authoritative references: OWASP CSRF; CSRF Prevention Cheat Sheet.
-- Double-submit vs synchronizer token - trade-offs for SPAs.
-- SameSite as defense-in-depth-browser coverage caveats.
-- Login CSRF - often forgotten.
-
-## Flagship Mock Question Ladder - CSRF
-- Primary competency axis: cross-site request trust abuse and anti-CSRF architecture.
 
 ### Staff (Strategy and scale)
 - How do you build default CSRF protection into platform frameworks?

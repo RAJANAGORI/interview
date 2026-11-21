@@ -13,11 +13,16 @@ const state = {
   contentHitTopicIds: null,
 };
 
-const CHART = {
-  track: "#181818",
-  fill: "#ff8c00",
-  label: "rgba(242, 240, 236, 0.68)",
-};
+function chartColors() {
+  const styles = getComputedStyle(document.documentElement);
+  return {
+    track: styles.getPropertyValue("--surface").trim() || "#181818",
+    fill: styles.getPropertyValue("--accent").trim() || "#ff8c00",
+    label: styles.getPropertyValue("--muted").trim() || "rgba(242, 240, 236, 0.68)",
+  };
+}
+
+let CHART = chartColors();
 
 const els = {
   search: document.getElementById("searchInput"),
@@ -292,6 +297,60 @@ function toAbsolute(filePath) {
   const normalized = filePath.replace(/^\.?\//, "");
   const base = basePrefix();
   return `${base}${normalized}`;
+}
+
+function resolveGuidePath(href, markdownPath) {
+  if (!href) return null;
+  const rawHref = href.trim();
+  if (!rawHref || rawHref.startsWith("#") || /^(https?:|mailto:|tel:)/i.test(rawHref)) return null;
+  const hashAt = rawHref.indexOf("#");
+  const hash = hashAt >= 0 ? rawHref.slice(hashAt + 1) : "";
+  let raw = hashAt >= 0 ? rawHref.slice(0, hashAt) : rawHref;
+  if (!raw) return null;
+  try {
+    raw = decodeURIComponent(raw);
+  } catch {
+    return null;
+  }
+  if (raw.startsWith("/")) return { path: raw.replace(/^\//, ""), hash };
+  const dir = markdownPath.includes("/") ? markdownPath.slice(0, markdownPath.lastIndexOf("/") + 1) : "";
+  const stack = [];
+  for (const part of `${dir}${raw}`.split("/")) {
+    if (!part || part === ".") continue;
+    if (part === "..") stack.pop();
+    else stack.push(part);
+  }
+  return { path: stack.join("/"), hash };
+}
+
+function topicFileIndex() {
+  const index = new Map();
+  for (const topic of state.topics) {
+    for (const [key, rel] of Object.entries(topic.files || {})) {
+      if (rel) index.set(rel, { topic, key });
+    }
+  }
+  return index;
+}
+
+function bindGuideLinks(container, markdownPath) {
+  const index = topicFileIndex();
+  container.querySelectorAll("a[href]").forEach((a) => {
+    const resolved = resolveGuidePath(a.getAttribute("href"), markdownPath);
+    if (!resolved?.path) return;
+    const hit = index.get(resolved.path);
+    if (hit) {
+      const topicId = encodeURIComponent(hit.topic.id);
+      const fileKey = encodeURIComponent(hit.key);
+      a.href = `?topic=${topicId}&file=${fileKey}`;
+      a.addEventListener("click", (event) => {
+        event.preventDefault();
+        selectTopic(hit.topic, { fileKey: hit.key, anchor: resolved.hash || "" });
+      });
+      return;
+    }
+    a.href = toAbsolute(resolved.path) + (resolved.hash ? `#${resolved.hash}` : "");
+  });
 }
 
 function availableFileTypes(files) {
@@ -920,6 +979,7 @@ async function loadMarkdown(path, token) {
     document.querySelectorAll("#markdownContent pre code").forEach((block) => hljs.highlightElement(block));
     buildCodeLabs(els.markdownContent);
     enhanceMarkdownDocument(els.markdownContent);
+    bindGuideLinks(els.markdownContent, path);
   } catch (error) {
     if (token !== topicLoadToken) return;
     els.markdownContent.innerHTML = `<p>Unable to load content from <code>${path}</code>.</p>`;
@@ -1566,5 +1626,10 @@ async function init() {
     els.markdownContent.innerHTML = "<p>Failed to load topics index.</p>";
   }
 }
+
+document.addEventListener("site-theme", () => {
+  CHART = chartColors();
+  if (state.view === "dashboard") renderDashboard();
+});
 
 init();

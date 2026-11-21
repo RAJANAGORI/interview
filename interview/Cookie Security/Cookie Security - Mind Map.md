@@ -70,19 +70,18 @@ mindmap
 ## HttpOnly Attribute
 
 ### Definition
-- The HttpOnly attribute prevents client-side JavaScript from accessing the cookie through document.cookie or other DOM APIs. This attribute is important for protecting sensitive cookies from XSS attacks.
 - The Secure attribute ensures cookies are only transmitted over HTTPS connections. Browsers will refuse to send Secure cookies over unencrypted HTTP connections.
 - The SameSite attribute controls whether cookies are sent with cross-site requests, providing protection against CSRF attacks. It's one of the most important modern cookie security features.
 
 ### ️ CRITICAL: HttpOnly Does NOT Protect Against CSRF
-- HttpOnly protects against XSS (Cross-Site Scripting)
-- HttpOnly does NOT protect against CSRF (Cross-Site Request Forgery)
+- HttpOnly keeps the cookie value out of JavaScript. That limits theft during XSS. It does not stop XSS.
+- HttpOnly does not protect against CSRF (Cross-Site Request Forgery)
 
 ### How It Works
 - The cookie is sent with HTTP requests automatically
 - Server-side code can read and write the cookie
-- JavaScript cannot access the cookie via document.cookie
-- Browser extensions cannot access the cookie (in most cases)
+- Page script cannot read the cookie via document.cookie
+- An extension with the browser's cookie permission can still read it
 - Cookie is sent only over HTTPS
 - Cookie is sent only over secure WebSocket connections (wss://)
 - Cookie is NOT sent over HTTP
@@ -94,8 +93,8 @@ mindmap
 ### Example: Without HttpOnly (Vulnerable to XSS)
 - See the source section `Example: Without HttpOnly (Vulnerable to XSS)` for the worked example.
 
-### Example: With HttpOnly (Protected from XSS)
-- See the source section `Example: With HttpOnly (Protected from XSS)` for the worked example.
+### Example: With HttpOnly (script cannot read the value)
+- See the source section `Example: With HttpOnly (script cannot read the value)` for the worked example.
 
 ### Example: HttpOnly Does NOT Prevent CSRF
 - See the source section `Example: HttpOnly Does NOT Prevent CSRF` for the worked example.
@@ -440,7 +439,7 @@ mindmap
 - Third-Party Configuration:
 
 ### Key Takeaways
-- HttpOnly protects against XSS, NOT CSRF
+- HttpOnly stops JavaScript from reading the cookie. It does not stop CSRF, and it does not stop an XSS payload from calling your APIs.
 - SameSite protects against CSRF
 - Secure ensures HTTPS-only transmission
 - Use all three together for maximum security
@@ -450,12 +449,13 @@ mindmap
 ## Flags I check in 90 seconds
 
 ## ️ Critical Clarification
-- HttpOnly protects against XSS, NOT CSRF!
-- HttpOnly = XSS protection
-- SameSite = CSRF protection
+- HttpOnly stops JavaScript from reading the cookie. It does not stop CSRF, and it does not stop XSS from acting as the user.
+- HttpOnly = no document.cookie
+- SameSite = fewer cross-site cookies
 - Secure = HTTPS-only transmission
 
 ## Cookie Attributes Cheat Sheet
+- Lax still sends the cookie when someone follows a cross-site link. Strict does not, but a sibling subdomain is still same-site. Put a CSRF token on state-changing requests either way.
 
 ## Recommended Configurations
 
@@ -503,14 +503,14 @@ mindmap
 - See the source section `PHP` for the worked example.
 
 ## Testing Checklist
-- [ ] Cookies have HttpOnly attribute
-- [ ] Cookies have Secure attribute (production)
-- [ ] Cookies have SameSite attribute (Strict or Lax)
-- [ ] [ ] SameSite=None cookies have Secure
-- [ ] [ ] __Host- cookies don't have Domain
-- [ ] [ ] __Host- cookies have Path=/
-- [ ] Expiration times are reasonable
-- [ ] Cookies not accessible via document.cookie
+- Cookies have the HttpOnly attribute
+- Cookies have the Secure attribute in production
+- Cookies have SameSite set to Strict or Lax
+- SameSite=None cookies also have Secure
+- __Host- cookies do not set Domain
+- __Host- cookies use Path=/
+- Expiration times are reasonable
+- The session cookie is not readable via document.cookie
 
 ## Browser Compatibility
 
@@ -518,7 +518,7 @@ mindmap
 
 ## Common Interview Questions
 - Does HttpOnly protect against CSRF?
-- No, HttpOnly protects against XSS. Use SameSite for CSRF.
+- No. The browser still sends the cookie. Use SameSite or a CSRF token.
 - What's the difference between SameSite=Strict and Lax?
 - Strict: No cross-site requests. Lax: Allows top-level GET navigations.
 - Why does SameSite=None require Secure?
@@ -552,12 +552,12 @@ mindmap
 ## The Truth
 
 ### HttpOnly Does NOT Protect Against CSRF Attacks
-- HttpOnly protects against XSS (Cross-Site Scripting), NOT CSRF (Cross-Site Request Forgery).
+- HttpOnly stops JavaScript from reading the cookie. That limits cookie theft during XSS. It does not stop XSS from acting as the user, and it does not stop CSRF.
 - These are two completely different attack vectors:
 
 ## Understanding the Attacks
 
-### XSS Attack (What HttpOnly Protects Against)
+### XSS cookie theft (what HttpOnly limits)
 - Prevents JavaScript from accessing cookies
 - Protects against XSS cookie theft
 - Does NOT protect against CSRF
@@ -623,7 +623,7 @@ mindmap
 - See the source section `Vulnerable Configuration (CSRF Attack Succeeds)` for the worked example.
 
 ### Protected Configuration (CSRF Attack Fails)
-- Remember: HttpOnly protects against XSS, not CSRF. Use SameSite or CSRF tokens to protect against CSRF.
+- Remember: HttpOnly stops script from reading the cookie. It does not stop XSS from acting as the user, and it does not stop CSRF. Use SameSite or a CSRF token for CSRF.
 
 
 ## Lab methodology
@@ -761,10 +761,10 @@ mindmap
 ## Quick Reference Answers
 
 ### What protects against XSS?
-- See the source section `What protects against XSS?` for the worked example.
+- Answer: Encode output for the sink, and use CSP as a backstop. HttpOnly only stops script from reading the cookie. It does not stop XSS.
 
 ### What protects against CSRF?
-- Answer: SameSite attribute (Strict or Lax) or CSRF tokens
+- Answer: A CSRF token, plus SameSite=Lax or Strict. Lax still sends the cookie on a top-level GET, so do not change state on GET.
 
 ### What protects against MitM attacks?
 - See the source section `What protects against MitM attacks?` for the worked example.
@@ -773,7 +773,7 @@ mindmap
 - Answer: __Secure-sessionId=token; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600
 
 ### Does HttpOnly protect against CSRF?
-- Answer: No, HttpOnly only protects against XSS. Use SameSite or CSRF tokens for CSRF protection.
+- Answer: No. The browser still sends the cookie. Use SameSite or a CSRF token. HttpOnly does not stop XSS either. It only blocks document.cookie.
 
 ## Depth: Interview follow-ups - Cookie Security
 - Authoritative references: RFC 6265 (HTTP cookies); SameSite cookies (MDN-browser behavior); OWASP Session Management.

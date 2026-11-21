@@ -2,7 +2,7 @@
 
 # 🚀 Quick Start Guide - Interview Preparation
 ## How this library is organized
-Use [Content Mastery Framework](Content%20Mastery%20Framework.md) for the learning model (basics → expert + interview). Use [Topic Syllabus Index](Topic%20Syllabus%20Index.md) for the full map of topics backed by `interview/Config/topics.json` (65 entries: 23 core, 34 product, 8 special-including navigational/meta items). New here? Start with [Baseline Diagnostic - Interview Preparation](Baseline%20Diagnostic%20-%20Interview%20Preparation.md), then [Role-Based Study Paths](Role-Based%20Study%20Paths.md). For drills by interview round, use [Interview Round Playbook](Interview%20Round%20Playbook.md).
+Use [Content Mastery Framework](Content%20Mastery%20Framework.md) for the learning model (basics → expert + interview). Use [Topic Syllabus Index](Topic%20Syllabus%20Index.md) for the full map of topics backed by `interview/Config/topics.json` (105 topics: 37 core, 50 product, 18 special). New here? Start with [Baseline Diagnostic - Interview Preparation](Baseline%20Diagnostic%20-%20Interview%20Preparation.md), then [Role-Based Study Paths](Role-Based%20Study%20Paths.md). For drills by interview round, use [Interview Round Playbook](Interview%20Round%20Playbook.md).
 
 Typical files inside a topic folder: Comprehensive Guide, Interview Questions & Answers, Critical Clarification (where applicable), Quick Reference, and a Mind Map (`... - Mind Map.md`) for last-minute recall of the whole folder. Some flagship topics also include a Mastery Track (deeper syllabus and drills)-for example, Microsoft Product Security Engineer II Interview Prep.
 

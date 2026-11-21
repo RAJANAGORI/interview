@@ -1,46 +1,48 @@
 # Cookie Security - Quick Reference Guide
 
-## **⚠️ Critical Clarification**
+## ⚠️ Critical Clarification
 
-**HttpOnly protects against XSS, NOT CSRF!**
+HttpOnly stops JavaScript from reading the cookie. It does not stop CSRF, and it does not stop XSS from acting as the user.
 
-- ✅ HttpOnly = XSS protection
-- ✅ SameSite = CSRF protection
-- ✅ Secure = HTTPS-only transmission
+- HttpOnly = no `document.cookie`
+- SameSite = fewer cross-site cookies
+- Secure = HTTPS-only transmission
 
 ---
 
-## **Cookie Attributes Cheat Sheet**
+## Cookie Attributes Cheat Sheet
 
 | Attribute | Purpose | Protects Against | Required For |
 | --- | --- | --- | --- |
 | `HttpOnly` | Prevent JavaScript access | XSS (cookie theft) | All sensitive cookies |
-| `Secure` | HTTPS-only transmission | MitM attacks | Production, `SameSite=None` |
-| `SameSite=Strict` | Same-site only | CSRF attacks | High-security apps |
-| `SameSite=Lax` | Same-site + top GET | CSRF attacks | Most web apps (recommended) |
+| `Secure` | HTTPS-only transmission | MitM attacks | Production, `SameSite=None` |
+| `SameSite=Strict` | Same-site only | Cross-site CSRF | High-security apps |
+| `SameSite=Lax` | Same-site + top-level GET | Cross-site POST CSRF | Most web apps (recommended) |
 | `SameSite=None` | All requests | None (allows CSRF) | Third-party integrations |
-| `__Secure-` prefix | Enforce Secure | Insecure cookies | Additional validation |
-| `__Host-` prefix | Subdomain isolation | Subdomain attacks | Maximum security |
+| `__Secure-` prefix | Enforce Secure | Insecure cookies | Additional validation |
+| `__Host-` prefix | Subdomain isolation | Subdomain attacks | Maximum security |
+
+Lax still sends the cookie when someone follows a cross-site link. Strict does not, but a sibling subdomain is still same-site. Put a CSRF token on state-changing requests either way.
 
 ---
 
-## **Recommended Configurations**
+## Recommended Configurations
 
-### **Standard Web Application**
+### Standard Web Application
 
 ```
 Set-Cookie: __Secure-sessionId=<token>; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600
 
 ```
 
-### **High-Security Application (Banking)**
+### High-Security Application (Banking)
 
 ```
 Set-Cookie: __Host-sessionId=<token>; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=1800
 
 ```
 
-### **Third-Party Integration**
+### Third-Party Integration
 
 ```
 Set-Cookie: __Secure-widgetId=<token>; Secure; HttpOnly; SameSite=None; Path=/; Max-Age=1800
@@ -49,21 +51,21 @@ Set-Cookie: __Secure-widgetId=<token>; Secure; HttpOnly; SameSite=None; Path=/; 
 
 ---
 
-## **Attack Protection Matrix**
+## Attack Protection Matrix
 
 | Attack Type | HttpOnly | Secure | SameSite | CSRF Token |
 | --- | --- | --- | --- | --- |
-| **XSS (cookie theft)** | ✅ Yes | ❌ No | ❌ No | ❌ No |
-| **CSRF** | ❌ No | ❌ No | ✅ Yes | ✅ Yes |
-| **MitM (HTTP)** | ❌ No | ✅ Yes | ❌ No | ❌ No |
-| **Subdomain attack** | ❌ No | ❌ No | ❌ No | ✅ Yes* |
-- With `__Host-` prefix
+| XSS (cookie theft) | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| CSRF | ❌ No | ❌ No | ✅ Yes | ✅ Yes |
+| MitM (HTTP) | ❌ No | ✅ Yes | ❌ No | ❌ No |
+| Subdomain attack | ❌ No | ❌ No | ❌ No | ✅ Yes* |
+- With `__Host-` prefix
 
 ---
 
-## **Common Mistakes**
+## Common Mistakes
 
-### **❌ Wrong: HttpOnly protects against CSRF**
+### ❌ Wrong: HttpOnly protects against CSRF
 
 ```jsx
 Set-Cookie: sessionId=abc123; HttpOnly; Secure
@@ -71,14 +73,14 @@ Set-Cookie: sessionId=abc123; HttpOnly; Secure
 
 ```
 
-### **✅ Correct: Use SameSite for CSRF protection**
+### ✅ Correct: Use SameSite for CSRF protection
 
 ```jsx
 Set-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Lax
 
 ```
 
-### **❌ Wrong: SameSite=None without Secure**
+### ❌ Wrong: SameSite=None without Secure
 
 ```jsx
 Set-Cookie: sessionId=abc123; SameSite=None
@@ -86,14 +88,14 @@ Set-Cookie: sessionId=abc123; SameSite=None
 
 ```
 
-### **✅ Correct: SameSite=None with Secure**
+### ✅ Correct: SameSite=None with Secure
 
 ```jsx
 Set-Cookie: sessionId=abc123; SameSite=None; Secure
 
 ```
 
-### **❌ Wrong: __Host- with Domain**
+### ❌ Wrong: __Host- with Domain
 
 ```jsx
 Set-Cookie: __Host-sessionId=abc123; Domain=example.com; Secure; Path=/
@@ -101,7 +103,7 @@ Set-Cookie: __Host-sessionId=abc123; Domain=example.com; Secure; Path=/
 
 ```
 
-### **✅ Correct: __Host- without Domain**
+### ✅ Correct: __Host- without Domain
 
 ```jsx
 Set-Cookie: __Host-sessionId=abc123; Secure; Path=/
@@ -110,9 +112,9 @@ Set-Cookie: __Host-sessionId=abc123; Secure; Path=/
 
 ---
 
-## **Implementation Snippets**
+## Implementation Snippets
 
-### **Node.js/Express**
+### Node.js/Express
 
 ```jsx
 res.cookie('__Host-sessionId', token, {
@@ -125,7 +127,7 @@ res.cookie('__Host-sessionId', token, {
 
 ```
 
-### **Python/Flask**
+### Python/Flask
 
 ```python
 response.set_cookie(
@@ -140,7 +142,7 @@ response.set_cookie(
 
 ```
 
-### **PHP**
+### PHP
 
 ```php
 setcookie('__Host-sessionId', $token, [
@@ -155,22 +157,22 @@ setcookie('__Host-sessionId', $token, [
 
 ---
 
-## **Testing Checklist**
+## Testing Checklist
 
-- [ ]  Cookies have `HttpOnly` attribute
-- [ ]  Cookies have `Secure` attribute (production)
-- [ ]  Cookies have `SameSite` attribute (Strict or Lax)
-- [ ]  [ ] `SameSite=None` cookies have `Secure`
-- [ ]  [ ] `__Host-` cookies don't have `Domain`
-- [ ]  [ ] `__Host-` cookies have `Path=/`
-- [ ]  Expiration times are reasonable
-- [ ]  Cookies not accessible via `document.cookie`
-- [ ]  Cookies only sent over HTTPS
-- [ ]  CSRF protection working (test with external form)
+- Cookies have the `HttpOnly` attribute
+- Cookies have the `Secure` attribute in production
+- Cookies have `SameSite` set to Strict or Lax
+- `SameSite=None` cookies also have `Secure`
+- `__Host-` cookies do not set `Domain`
+- `__Host-` cookies use `Path=/`
+- Expiration times are reasonable
+- The session cookie is not readable via `document.cookie`
+- The session cookie is only sent over HTTPS
+- A cross-site form without a CSRF token is rejected
 
 ---
 
-## **Browser Compatibility**
+## Browser Compatibility
 
 | Feature | Chrome | Firefox | Safari | Edge |
 | --- | --- | --- | --- | --- |
@@ -182,7 +184,7 @@ setcookie('__Host-sessionId', $token, [
 
 ---
 
-## **Quick Decision Tree**
+## Quick Decision Tree
 
 ```
 Need cookie security?
@@ -209,22 +211,22 @@ Need cookie security?
 
 ---
 
-## **Common Interview Questions**
+## Common Interview Questions
 
-1. **Does HttpOnly protect against CSRF?**
-    - No, HttpOnly protects against XSS. Use SameSite for CSRF.
-2. **What's the difference between SameSite=Strict and Lax?**
+1. Does HttpOnly protect against CSRF?
+    - No. The browser still sends the cookie. Use SameSite or a CSRF token.
+2. What's the difference between SameSite=Strict and Lax?
     - Strict: No cross-site requests. Lax: Allows top-level GET navigations.
-3. **Why does SameSite=None require Secure?**
+3. Why does SameSite=None require Secure?
     - Modern browsers enforce this to prevent insecure cross-site cookies.
-4. **What's the purpose of __Host- prefix?**
+4. What's the purpose of __Host- prefix?
     - Prevents subdomain access and enforces Path=/ and no Domain.
-5. **How do you test if cookies are secure?**
+5. How do you test if cookies are secure?
     - Browser DevTools, curl, SecurityHeaders.com
 
 ---
 
-## **Security Best Practices**
+## Security Best Practices
 
 1. ✅ Always use HttpOnly for sensitive cookies
 2. ✅ Always use Secure in production
@@ -239,9 +241,9 @@ Need cookie security?
 
 ---
 
-## **Remember**
+## Remember
 
-- **HttpOnly** = XSS protection (JavaScript cannot access)
-- **Secure** = HTTPS-only (prevents interception)
-- **SameSite** = CSRF protection (controls when cookie sent)
-- **Use all three together** for maximum security
+- HttpOnly = XSS protection (JavaScript cannot access)
+- Secure = HTTPS-only (prevents interception)
+- SameSite = CSRF protection (controls when cookie sent)
+- Use all three together for maximum security

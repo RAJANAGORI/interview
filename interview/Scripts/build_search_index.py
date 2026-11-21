@@ -132,7 +132,21 @@ def sections_for(md: str) -> list[dict]:
     if matches:
         lead = md[: matches[0].start()]
         if clean_plain(lead):
-            add("Introduction", lead, "")
+            # The page title is doc-top. Do not take the "introduction" slug
+            # from a real heading later in the file.
+            body_plain = clean_plain(lead)
+            snippet = body_plain[:MAX_SNIPPET]
+            if len(body_plain) > MAX_SNIPPET:
+                snippet = snippet.rsplit(" ", 1)[0] + "..."
+            out.append(
+                {
+                    "heading": "Introduction",
+                    "parent": "",
+                    "snippet": snippet,
+                    "anchor": "doc-top" if has_h1 else assign_anchor("preamble", used),
+                    "plain": f"Introduction {body_plain}",
+                }
+            )
 
     for i, match in enumerate(matches):
         level = len(match.group(1))
